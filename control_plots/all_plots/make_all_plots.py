@@ -204,9 +204,6 @@ if __name__=="__main__":
             if not (plot_def["enabled"]):
                 continue
 
-            if 'mva' in pd and not 'MVA' in tree:
-                continue
-
             var = plot_def['var']
 
 

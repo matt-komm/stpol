@@ -30,11 +30,10 @@ cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
 cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
-#FIXME @ Mario: provide new WP-s, migrate the cutlists to cuts.py
-cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.7')
-cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.5')
-cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.32')
-cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.38')
+cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.6')
+cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.7')
+cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.36')
+cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.2')
 
 
 #Fit parameters from the final fit
@@ -547,7 +546,7 @@ plot_defs['final_BDT']={
     'iso': True,
     'estQcd': 'final_2j1t',
     'gev': False,
-    'log': False,
+    'log': True,
     'xlab': varnames["BDT_uncat"],
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['final_ele'],
@@ -571,7 +570,7 @@ plot_defs['final_cosTheta_mva_loose']={
 }
 plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_tight']
-plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_mu_tight']
+plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
