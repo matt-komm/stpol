@@ -16,10 +16,14 @@ class Sample:
                 raise FileOpenException("Could not open TFile %s: %s" % (self.file_name, self.tfile))
         except Exception as e:
             raise e
+        try:
+            self.tree = self.tfile.Get("trees").Get("Events")
+        except Exception as e:
+            raise TObjectOpenException("Could not open tree Events from file %s: %s" % (self.file_name, self.tfile))
 
-        self.tree = self.tfile.Get("trees").Get("Events")
         if not self.tree:
             raise TObjectOpenException("Could not open tree Events from file %s: %s" % (self.tfile.GetName(), self.tree))
+
         self.tree.SetCacheSize(100*1024*1024)
         #self.tree.AddBranchToCache("*", 1)
 
