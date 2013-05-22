@@ -30,7 +30,7 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result):
         return (hQCD.Integral(), hQCD.Integral()*(fit_result.qcd_uncert/fit_result.qcd))
 
 def get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup):
-    fit = Fit()    
+    fit = Fit()
     make_histos_with_cuts(var, cuts, dataGroup, MCGroups, systematics, lumis, openedFiles, useMCforQCDTemplate, QCDGroup)
     fit_qcd(var, cuts.name, fit)
     return get_yield(var, cuts.name, cutMT, mtMinValue, fit)
@@ -38,41 +38,43 @@ def get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, syst
 #Run as ~andres/theta_testing/utils2/theta-auto.py get_qcd_yield.py
 if __name__=="__main__":
     #Specify variable on which to fit
-    var = Variable("mt_mu", 0, 200, 20, "mtwMass", "m_{T }")    
-    
+    var = Variable("mt_mu", 0, 200, 20, "mtwMass", "m_{T }")
+
     #Do you want to get the resulting yield after a cut on the fitted variable?
     cutMT = True
     #If yes, specify minumum value for the variable the cut. Obviously change to MET for electrons
     #Remember that the cut should be on the edge of 2 bins, otherwise the result will be inaccurate
     mtMinValue = 50. # M_T>50
-    
+
     #Use Default cuts for final selection. See FitConfig for details on how to change the cuts.
     cuts = FitConfig("final_selection")
     #For example:
     cuts.setWeightMC("pu_weight")
+    cuts.setBaseCuts("top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && abs(eta_lj)>2.5")
     #Recreate all necessary cuts after manual changes
     cuts.calcCuts()
 
     #Luminosities for each different set of data have to be specified.
     #Now only for iso and anti-iso. In the future additional ones for systematics.
     #See DataLumiStorage for details if needed
-    lumiABIso = 5140.
-    lumiCIso = 6451.
-    lumiDIso = 6471.
+
+    lumiABIso = 5306
+    lumiCIso = 6781
+    lumiDIso = 7274
     dataLumiIso = lumiABIso + lumiCIso + lumiDIso
-    lumiABAntiIso = 5140.
-    lumiCAntiIso = 6451.
-    lumiDAntiIso = 6471.
-    dataLumiAntiIso = lumiABAntiIso + lumiCAntiIso + lumiDAntiIso   
-    
+    lumiABAntiIso = 5306
+    lumiCAntiIso = 6781
+    lumiDAntiIso = 7274
+    dataLumiAntiIso = lumiABAntiIso + lumiCAntiIso + lumiDAntiIso
+
     lumis = DataLumiStorage(dataLumiIso, dataLumiAntiIso)
-    
+
     #Different groups are defined in init_data. Select one you need or define a new one.
     dataGroup = dgDataMuons
 
     #MC Default is a set muon specific groups with inclusive t-channel for now. MC Groups are without QCD
     MCGroups = MC_groups_noQCD_InclusiveTCh
-    
+
     #Do you want to get QCD template from MC?
     useMCforQCDTemplate = False
 
@@ -83,18 +85,18 @@ if __name__=="__main__":
     systematics = ["Nominal"] #Systematics to be added in the future
     #Generate path structure as base_path/iso/systematic, see util_scripts
     #If you have a different structure, change paths manually
-    base_path = "~andres/single_top/stpol/out_step3/17052013"
+    base_path = "~/Documents/stpol/data/out_step3_05_11_23_10/"
     paths = generate_paths(systematics, base_path)
     #For example:
     paths["iso"]["Nominal"] = base_path+"/iso/nominal/"
     paths["antiiso"]["Nominal"] = base_path+"/antiiso/nominal/"
-    #Then open files    
+    #Then open files
     openedFiles = open_all_data_files(dataGroup, MCGroups, QCDGroup, paths)
-    
+
     #Before Running make sure you have 'templates' and 'fits' subdirectories where you're running
     #Root files with templates and fit results will be saved there.
-    #Name from FitConfig will be used in file names    
+    #Name from FitConfig will be used in file names
     (y, error) = get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup)
-    
+
     print "QCD yield with selection: %s" % cuts.name
     print y, "+-", error
