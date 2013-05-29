@@ -1,0 +1,2 @@
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_tW/res/output_1_1_nZn.root
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_tW/res/output_2_1_7NV.root

@@ -49,8 +49,9 @@ if __name__=="__main__":
     #Use Default cuts for final selection. See FitConfig for details on how to change the cuts.
     cuts = FitConfig("final_selection")
     #For example:
-    cuts.setWeightMC("pu_weight")
-    cuts.setBaseCuts("top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && abs(eta_lj)>2.5")
+    cuts.setWeightMC("pu_weight*muon_IDWeight*muon_TriggerWeight*muon_IsoWeight*b_weight_nominal")
+    from plots.common.cuts import Cuts
+    cuts.setBaseCuts(str(Cuts.mu*Cuts.final(2,1)))
     #Recreate all necessary cuts after manual changes
     cuts.calcCuts()
 
@@ -85,7 +86,7 @@ if __name__=="__main__":
     systematics = ["Nominal"] #Systematics to be added in the future
     #Generate path structure as base_path/iso/systematic, see util_scripts
     #If you have a different structure, change paths manually
-    base_path = "~/Documents/stpol/data/out_step3_05_11_23_10/"
+    base_path = "~/Documents/stpol/data/out_step3_05_27_13_58/"
     paths = generate_paths(systematics, base_path)
     #For example:
     paths["iso"]["Nominal"] = base_path+"/iso/nominal/"

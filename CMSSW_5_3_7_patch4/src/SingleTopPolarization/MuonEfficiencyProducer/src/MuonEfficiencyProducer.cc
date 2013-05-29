@@ -76,15 +76,15 @@ MuonEfficiencyProducer::MuonEfficiencyProducer(const edm::ParameterSet& iConfig)
 , dataRun(iConfig.getParameter<std::string>("dataRun"))
 {
    edm::LogInfo("constructor") << "dataRun=" << dataRun;
-   produces<float>("muonIDWeight");
-   produces<float>("muonIDWeightUp");
-   produces<float>("muonIDWeightDown");
-   produces<float>("muonIsoWeight");
-   produces<float>("muonIsoWeightUp");
-   produces<float>("muonIsoWeightDown");   
-   produces<float>("muonTriggerWeight");
-   produces<float>("muonTriggerWeightUp");
-   produces<float>("muonTriggerWeightDown");   
+   produces<double>("muonIDWeight");
+   produces<double>("muonIDWeightUp");
+   produces<double>("muonIDWeightDown");
+   produces<double>("muonIsoWeight");
+   produces<double>("muonIsoWeightUp");
+   produces<double>("muonIsoWeightDown");   
+   produces<double>("muonTriggerWeight");
+   produces<double>("muonTriggerWeightUp");
+   produces<double>("muonTriggerWeightDown");   
 }
 
 
@@ -170,8 +170,8 @@ MuonEfficiencyProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
 
          //weighted avg according to lumi
          else if(dataRun == "RunABCD") {
-             weightTrig = 0.0;
-             float err = 0.0;
+             weightTrig = 0.980917;
+             float err = 0.000187267;
              weightTrigUp = weightTrig + err;
              weightTrigDown = weightTrig - err; 
          }
@@ -218,8 +218,8 @@ MuonEfficiencyProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
          }
          //weighted avg according to lumi
          else if(dataRun == "RunABCD") {
-             weightTrig = 0.0;
-             float err = 0.0;
+             weightTrig = 0.963837;
+             float err = 0.00052732;
              weightTrigUp = weightTrig + err;
              weightTrigDown = weightTrig - err; 
          }
@@ -266,8 +266,8 @@ MuonEfficiencyProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
          }
          //weighted avg according to lumi
          else if(dataRun == "RunABCD") {
-             weightTrig = 0.0;
-             float err = 0.0;
+             weightTrig = 0.994706;
+             float err = 0.000407864;
              weightTrigUp = weightTrig + err;
              weightTrigDown = weightTrig - err; 
          }
@@ -307,15 +307,15 @@ MuonEfficiencyProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
    1.2<abs(eta)<2.1 -> 1.0023+-0.0001
 
    */
-   iEvent.put(std::auto_ptr<float>(new float(weightID)), "muonIDWeight");
-   iEvent.put(std::auto_ptr<float>(new float(weightIDUp)), "muonIDWeightUp");
-   iEvent.put(std::auto_ptr<float>(new float(weightIDDown)), "muonIDWeightDown");
-   iEvent.put(std::auto_ptr<float>(new float(weightIso)), "muonIsoWeight");
-   iEvent.put(std::auto_ptr<float>(new float(weightIsoUp)), "muonIsoWeightUp");
-   iEvent.put(std::auto_ptr<float>(new float(weightIsoDown)), "muonIsoWeightDown");
-   iEvent.put(std::auto_ptr<float>(new float(weightTrig)), "muonTriggerWeight");
-   iEvent.put(std::auto_ptr<float>(new float(weightTrigUp)), "muonTriggerWeightUp");
-   iEvent.put(std::auto_ptr<float>(new float(weightTrigDown)), "muonTriggerWeightDown");
+   iEvent.put(std::auto_ptr<double>(new double(weightID)), "muonIDWeight");
+   iEvent.put(std::auto_ptr<double>(new double(weightIDUp)), "muonIDWeightUp");
+   iEvent.put(std::auto_ptr<double>(new double(weightIDDown)), "muonIDWeightDown");
+   iEvent.put(std::auto_ptr<double>(new double(weightIso)), "muonIsoWeight");
+   iEvent.put(std::auto_ptr<double>(new double(weightIsoUp)), "muonIsoWeightUp");
+   iEvent.put(std::auto_ptr<double>(new double(weightIsoDown)), "muonIsoWeightDown");
+   iEvent.put(std::auto_ptr<double>(new double(weightTrig)), "muonTriggerWeight");
+   iEvent.put(std::auto_ptr<double>(new double(weightTrigUp)), "muonTriggerWeightUp");
+   iEvent.put(std::auto_ptr<double>(new double(weightTrigDown)), "muonTriggerWeightDown");
 }
 
 // ------------ method called once each job just before starting event loop  ------------

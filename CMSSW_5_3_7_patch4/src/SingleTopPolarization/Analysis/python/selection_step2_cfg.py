@@ -82,7 +82,7 @@ def SingleTopStep2():
                   VarParsing.varType.bool,
                   "Run the PDF weight generation module")
 
-        options.register ('dataRun', "",
+        options.register ('dataRun', "RunABCD",
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.string,
                   "A string Run{A,B,C,D} to specify the data period")

@@ -24,6 +24,7 @@ public:
     BEffCalcs(const edm::ParameterSet& pars, BranchVars& _branch_vars, TFileDirectory& dir);
 
     bool process(const edm::EventBase& event);
-    const float b_discriminator_wp;  
+    const float b_discriminator_wp;
+    const bool doBEffCalcs;
 };
 #endif

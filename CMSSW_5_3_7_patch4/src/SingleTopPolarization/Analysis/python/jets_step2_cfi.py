@@ -26,14 +26,7 @@ def JetSetup(process, conf):
         isOriginal=cms.bool(conf.Jets.source == "selectedPatJets")
     )
 
-#    if conf.isMC:
-#        process.smearedJets = cms.EDProducer('JetMCSmearProducer',
-#            src=cms.InputTag("noPUJets"),
-#            reportMissingGenJet=cms.untracked.bool(conf.doDebug)
-#        )
-
     bTagCutStr = 'bDiscriminator("%s") >= %f' % (conf.Jets.bTagDiscriminant, conf.Jets.BTagWorkingPointVal())
-
 
     process.deltaRJets = cms.EDProducer("DeltaRProducer",
         leptonSrc=cms.InputTag("goodSignalLeptons"),
@@ -183,12 +176,13 @@ def JetSetup(process, conf):
     )
 
     #Take the jet with the lowest overall b-discriminator value as the light jet
+    #FIXME: make this sample dependent
     process.lowestBTagJet = process.highestBTagJet.clone(
         src = cms.InputTag("goodJets"),
         reverse = cms.bool(True)
     )
 
-    #Events failing the following jet cuts are not processed further (deliberately loose)
+    #Events failing the following jet cuts are not processed further (deliberately loose to keep as much as possible the events in the output)
     process.nJets = cms.EDFilter(
         "PATCandViewCountFilter",
         src=cms.InputTag("goodJets"),
@@ -202,7 +196,7 @@ def JetSetup(process, conf):
         maxNumber=cms.uint32(conf.Jets.nBTags if conf.Jets.cutJets else 9999),
     )
 
-    #Require at least 1 untagged jet
+    #Require at least 1 untagged jet (unused at the moment)
     process.oneUntaggedJet = cms.EDFilter(
         "PATCandViewCountFilter",
         src=cms.InputTag("untaggedJets"),
@@ -211,50 +205,31 @@ def JetSetup(process, conf):
     )
 
     if conf.isMC:
-        effs_2J = Calibrations.getEfficiencies(2, conf.subChannel)
-        effs_3J = Calibrations.getEfficiencies(3, conf.subChannel)
-        #if conf.subChannel in (Calibrations.bTaggingEfficiencies_2J.keys()+Calibrations.bTaggingEfficiencies_3J.keys()):
-        #    sampleBEffs_2J = Calibrations.bTaggingEfficiencies_2J[conf.subChannel]
-        #    sampleBEffs_3J = Calibrations.bTaggingEfficiencies_3J[conf.subChannel]
-        #    logging.info("B-tagging efficiencies for subChannel %s loaded" % conf.subChannel)
-        #else:
-        #    logging.warning("B-tagging efficiencies for subChannel %s not defined" % conf.subChannel)
-        #    raise Exception("B-tagging efficiencies not defined")
-        #    sampleBEffs_2J = Calibrations.BTaggingEfficiency.default
-        #    sampleBEffs_3J = Calibrations.BTaggingEfficiency.default
-        #logger.debug("Using the following calibration coefficients for sample {0}: {1}".format(conf.subChannel, sampleBEffs))
-
-        #The b-tag weight calculation is different for each required n-jet/m-btag bin
-        process.bTagWeightProducerNJMT = cms.EDProducer('BTagSystematicsWeightProducer',
+        effB, effC, effL = Calibrations.getEffFiles(conf.subChannel)
+        logger.info("using the following efficiency files for channel %s (b, c, l): %s" % (conf.subChannel, str((effB, effC, effL))))
+        process.bTagWeightProducerMtwMtop = cms.EDProducer('BTagSystematicsWeightProducer',
             src=cms.InputTag("goodJets"),
-            nJets=cms.uint32(0),
-            nTags=cms.uint32(0),
             nJetSrc=cms.InputTag("goodJetCount"),
             nTagSrc=cms.InputTag("bJetCount"),
-            effBin2J=cms.double(effs_2J.eff_b),
-            effCin2J=cms.double(effs_2J.eff_c),
-            effLin2J=cms.double(effs_2J.eff_l),
-            effBin3J=cms.double(effs_3J.eff_b),
-            effCin3J=cms.double(effs_3J.eff_c),
-            effLin3J=cms.double(effs_3J.eff_l),
+            efficiencyFileB=cms.FileInPath("data/b_eff_hists/MtwMtop/%s.root" % effB),
+            efficiencyFileC=cms.FileInPath("data/b_eff_hists/MtwMtop/%s.root" % effC),
+            efficiencyFileL=cms.FileInPath("data/b_eff_hists/MtwMtop/%s.root" % effL),
             algo=cms.string(conf.Jets.bTagWorkingPoint)
         )
-        #process.bTagWeightProducer3J1T = process.bTagWeightProducerNJMT.clone(nJets=cms.uint32(3), nTags=cms.uint32(1))
-        #process.bTagWeightProducer3J2T = process.bTagWeightProducerNJMT.clone(nJets=cms.uint32(3), nTags=cms.uint32(2))
-        #process.bTagWeightProducer3J0T = process.bTagWeightProducerNJMT.clone(nJets=cms.uint32(3), nTags=cms.uint32(0))
-        #process.bTagWeightProducer2J0T = process.bTagWeightProducerNJMT.clone(nJets=cms.uint32(2), nTags=cms.uint32(0))
-
-        process.bEffSequence = cms.Sequence(
-            process.bJetBTagEffSequence *
-            process.cJetBTagEffSequence *
-            process.lJetBTagEffSequence *
-            process.bTagWeightProducerNJMT
-            #process.bTagWeightProducer3J1T *
-            #process.bTagWeightProducer3J2T *
-            #process.bTagWeightProducer3J0T *
-            #process.bTagWeightProducer2J0T
+        process.bTagWeightProducerNoCut = cms.EDProducer('BTagSystematicsWeightProducer',
+            src=cms.InputTag("goodJets"),
+            nJetSrc=cms.InputTag("goodJetCount"),
+            nTagSrc=cms.InputTag("bJetCount"),
+            efficiencyFileB=cms.FileInPath("data/b_eff_hists/nocut/%s.root" % effB),
+            efficiencyFileC=cms.FileInPath("data/b_eff_hists/nocut/%s.root" % effC),
+            efficiencyFileL=cms.FileInPath("data/b_eff_hists/nocut/%s.root" % effL),
+            algo=cms.string(conf.Jets.bTagWorkingPoint)
         )
 
+        process.bEffSequence = cms.Sequence(
+            process.bTagWeightProducerMtwMtop *
+            process.bTagWeightProducerNoCut
+        )
 
     process.jetSequence = cms.Sequence()
 

@@ -13,6 +13,7 @@ class Cut:
 
 class Cuts:
     hlt_isomu = Cut("HLT_IsoMu24_eta2p1_v11 == 1 || HLT_IsoMu24_eta2p1_v12 == 1 || HLT_IsoMu24_eta2p1_v13 == 1 || HLT_IsoMu24_eta2p1_v14 == 1 || HLT_IsoMu24_eta2p1_v15 == 1 || HLT_IsoMu24_eta2p1_v16 == 1  || HLT_IsoMu24_eta2p1_v17 == 1")
+    hlt_isoele = Cut("( (HLT_Ele27_WP80_v10 ==1) || (HLT_Ele27_WP80_v11 == 1) || (HLT_Ele27_WP80_v9==1) || (HLT_Ele27_WP80_v8==1) )")
     eta_lj = Cut("abs(eta_lj) > 2.5")
     mt_mu = Cut("mt_mu > 50")
     rms_lj = Cut("rms_lj < 0.025")
@@ -30,5 +31,9 @@ class Cuts:
     def n_tags(n):
         return Cut("n_tags == %d" % int(n))
 
-Cuts.final = Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.eta_lj*Cuts.top_mass_sig
-Cuts.mu = Cuts.hlt_isomu*Cuts.one_muon*Cuts.lepton_veto
+    @staticmethod
+    def final(n, m):
+        return Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.n_tags(m)*Cuts.eta_lj*Cuts.top_mass_sig
+
+#Cuts.final = lambda n,m: Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.n_tags(m)*Cuts.eta_lj*Cuts.top_mass_sig
+Cuts.mu = Cuts.one_muon*Cuts.lepton_veto

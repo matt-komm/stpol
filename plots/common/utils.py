@@ -4,11 +4,12 @@ import string
 
 #Here the latter items will become topmost in stacks
 merge_cmds = dict()
-merge_cmds["data"] = ["SingleMuAB", "SingleMuC", "SingleMuD"]
+merge_cmds["data"] = ["SingleMu"]
 merge_cmds["diboson"] = ["WW", "WZ", "ZZ"]
 merge_cmds["W(#rightarrow l #nu) + jets"] = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
 merge_cmds["DY-jets"] = ["DYJets"]
-merge_cmds["t#bar{t}"] = ["TTJets_FullLept", "TTJets_SemiLept"]
+merge_cmds["t#bar{t} (#rightarrow lq, ll)"] = ["TTJets_FullLept", "TTJets_SemiLept"]
+#merge_cmds["t#bar{t}"] = ["TTJets_MassiveBinDECAY"]
 merge_cmds["tW-channel"] = ["T_tW", "Tbar_tW"]
 merge_cmds["s-channel"] = ["T_s", "Tbar_s"]
 merge_cmds["t-channel"] = ["T_t", "Tbar_t"]
@@ -69,3 +70,6 @@ def get_max_bin(hists):
     Returns the maximum value of the bin heights in the list of TH1 objects
     """
     return max([h.GetMaximum() for h in hists])
+
+def get_sample_name(tfile):
+    return tfile.GetPath().split("/")[-2].split(".")[0]

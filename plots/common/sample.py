@@ -4,6 +4,10 @@ from plots.common.histogram import Histogram
 from plots.common.utils import filter_alnum
 import numpy
 
+class HistogramException(Exception):
+    pass
+class TObjectOpenException(Exception):
+    pass
 class Sample:
     def __init__(self, name, file_name):
         self.name = name
@@ -79,7 +83,7 @@ class Sample:
         self.logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
         if n_entries<0:
-            raise HistogramException("Could not draw histogram")
+            raise HistogramException("Could not draw histogram: %s" % self.name)
 
         if hist.Integral() != hist.Integral():
             raise HistogramException("Histogram had 'nan' Integral(), probably weight was 'nan'")

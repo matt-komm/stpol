@@ -11,7 +11,7 @@ def plot_hists(hists, name="canv", **kwargs):
     y_label = kwargs.get("y_label", "events/bin")
     do_log_y = kwargs["do_log_y"] if "do_log_y" in kwargs.keys() else False
     min_bin = kwargs.get("min_bin", 0)
-    max_bin_mult = kwargs.get("max_bin", 1.5)
+    max_bin_mult = kwargs.get("max_bin_mult", 1.5)
     styles = kwargs.get("styles", {})
 
     max_bin = get_max_bin([hist for hist in hists])

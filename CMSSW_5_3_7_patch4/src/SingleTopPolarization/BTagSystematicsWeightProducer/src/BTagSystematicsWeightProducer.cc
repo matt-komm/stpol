@@ -39,6 +39,7 @@
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include <TFormula.h>
 #include <TMath.h>
+#include <TH2D.h>
 #include <TFile.h>
 #include <string.h>
 
@@ -78,11 +79,10 @@ private:
     
     void combinations(const unsigned int n, const unsigned int k, Combinations& combs);
     
-    const std::unique_ptr<std::map<BTagSystematicsWeightProducer::Flavour, double>> effs_in2J;
-    const std::unique_ptr<std::map<BTagSystematicsWeightProducer::Flavour, double>> effs_in3J;
+    //const std::unique_ptr<std::map<BTagSystematicsWeightProducer::Flavour, double>> effs_in2J;
+    //const std::unique_ptr<std::map<BTagSystematicsWeightProducer::Flavour, double>> effs_in3J;
     const edm::InputTag jetSrc;
     const edm::InputTag nJetSrc, nTagSrc;
-    const unsigned int nJets, nTags;
     Combinations combs;
     double scaleFactor(BTagSystematicsWeightProducer::Flavour flavour, BTagSystematicsWeightProducer::BTagAlgo algo, double pt, double eta, double& sfUp, double& sfDown);
     double piecewise(double x, const std::vector<double>& bin_low, const std::vector<double>& bin_val);
@@ -92,8 +92,14 @@ private:
     static const std::vector<double> SFb_CSVM_Err;
     static const std::vector<double> SFb_TCHPT_Err;
     
-    edm::FileInPath effFile;
-    TFile* effTFile;
+    std::map<BTagSystematicsWeightProducer::Flavour, TH2D*> effHists_2J;
+    std::map<BTagSystematicsWeightProducer::Flavour, TH2D*> effHists_3J;
+    edm::FileInPath effFileB;
+    edm::FileInPath effFileC;
+    edm::FileInPath effFileL;
+    TFile* effTFileB;
+    TFile* effTFileC;
+    TFile* effTFileL;
 
     BTagSystematicsWeightProducer::BTagAlgo bTagAlgo;
 };
@@ -321,33 +327,13 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
 }
 
 BTagSystematicsWeightProducer::BTagSystematicsWeightProducer(const edm::ParameterSet& iConfig)
-: effs_in2J(new std::map<BTagSystematicsWeightProducer::Flavour, double>())
-, effs_in3J(new std::map<BTagSystematicsWeightProducer::Flavour, double>())
-, jetSrc(iConfig.getParameter<edm::InputTag>("src"))
+: jetSrc(iConfig.getParameter<edm::InputTag>("src"))
 , nJetSrc(iConfig.getParameter<edm::InputTag>("nJetSrc"))
 , nTagSrc(iConfig.getParameter<edm::InputTag>("nTagSrc"))
-, nJets(iConfig.getParameter<unsigned int>("nJets"))
-, nTags(iConfig.getParameter<unsigned int>("nTags"))
-, effFile(iConfig.getParameter<edm::FileInPath>("efficiencyFile"))
+, effFileB(iConfig.getParameter<edm::FileInPath>("efficiencyFileB"))
+, effFileC(iConfig.getParameter<edm::FileInPath>("efficiencyFileC"))
+, effFileL(iConfig.getParameter<edm::FileInPath>("efficiencyFileL"))
 {
-    
-    //The efficiencies are the probabilities of a jet of given flavour to be b-tagged. In general, these are sample-dependent.
-    (*effs_in3J)[BTagSystematicsWeightProducer::b] = iConfig.getParameter<double>("effBin3J");
-    (*effs_in3J)[BTagSystematicsWeightProducer::c] = iConfig.getParameter<double>("effCin3J");
-    (*effs_in3J)[BTagSystematicsWeightProducer::l] = iConfig.getParameter<double>("effLin3J");
-    
-    (*effs_in2J)[BTagSystematicsWeightProducer::b] = iConfig.getParameter<double>("effBin2J");
-    (*effs_in2J)[BTagSystematicsWeightProducer::c] = iConfig.getParameter<double>("effCin2J");
-    (*effs_in2J)[BTagSystematicsWeightProducer::l] = iConfig.getParameter<double>("effLin2J");
-    
-    LogDebug("constructor") <<
-        "efficiencies_2J are: eff_b=" << (*effs_in2J)[BTagSystematicsWeightProducer::b] << 
-                        " eff_c=" << (*effs_in2J)[BTagSystematicsWeightProducer::c] << 
-                        " eff_l=" << (*effs_in2J)[BTagSystematicsWeightProducer::l]; 
-    LogDebug("constructor") <<
-        "efficiencies_3J are: eff_b=" << (*effs_in3J)[BTagSystematicsWeightProducer::b] << 
-                        " eff_c=" << (*effs_in3J)[BTagSystematicsWeightProducer::c] << 
-                        " eff_l=" << (*effs_in3J)[BTagSystematicsWeightProducer::l]; 
     const std::string algo = iConfig.getParameter<std::string>("algo");
     if(algo.compare("CSVM") == 0) {
         bTagAlgo = BTagSystematicsWeightProducer::CSVM;
@@ -357,14 +343,26 @@ BTagSystematicsWeightProducer::BTagSystematicsWeightProducer(const edm::Paramete
         throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
     }
 
-    effTFile = new TFile(effFile.fullPath().c_str());
+    edm::LogInfo("constructor") << "Using efficency files: b=" << effFileB.fullPath()
+        << " c=" << effFileC.fullPath() << " l=" << effFileL.fullPath();
+    effTFileB = new TFile(effFileB.fullPath().c_str());
+    effTFileC = new TFile(effFileC.fullPath().c_str());
+    effTFileL = new TFile(effFileL.fullPath().c_str());
     
+    effHists_2J[BTagSystematicsWeightProducer::b] = (TH2D*)effTFileB->Get("2J/eff_b");
+    effHists_2J[BTagSystematicsWeightProducer::c] = (TH2D*)effTFileC->Get("2J/eff_c");
+    effHists_2J[BTagSystematicsWeightProducer::l] = (TH2D*)effTFileL->Get("2J/eff_l");
+    
+    effHists_3J[BTagSystematicsWeightProducer::b] = (TH2D*)effTFileB->Get("3J/eff_b");
+    effHists_3J[BTagSystematicsWeightProducer::c] = (TH2D*)effTFileC->Get("3J/eff_c");
+    effHists_3J[BTagSystematicsWeightProducer::l] = (TH2D*)effTFileL->Get("3J/eff_l");
     
     produces<float>("bTagWeight");
     produces<float>("bTagWeightSystBCUp");
     produces<float>("bTagWeightSystBCDown");
     produces<float>("bTagWeightSystLUp");
     produces<float>("bTagWeightSystLDown");
+
     produces<std::vector<float>>("scaleFactors");
 }
 
@@ -422,18 +420,13 @@ BTagSystematicsWeightProducer::produce(edm::Event& iEvent, const edm::EventSetup
     unsigned int nJets_ev=0;
     unsigned int nTags_ev=0;
 
-    if (nJets == 0 && nTags == 0) {
-        Handle<int> nJetsIn;
-        iEvent.getByLabel(nJetSrc, nJetsIn);
-        Handle<int> nTagsIn;
-        iEvent.getByLabel(nTagSrc, nTagsIn);
+    Handle<int> nJetsIn;
+    iEvent.getByLabel(nJetSrc, nJetsIn);
+    Handle<int> nTagsIn;
+    iEvent.getByLabel(nTagSrc, nTagsIn);
 
-        nJets_ev = *nJetsIn;
-        nTags_ev = *nTagsIn;
-    } else {
-        nJets_ev = nJets;
-        nTags_ev = nTags;
-    }
+    nJets_ev = *nJetsIn;
+    nTags_ev = *nTagsIn;
     
     //Precalculate the tagging combinations
     combs.clear();
@@ -501,15 +494,24 @@ BTagSystematicsWeightProducer::produce(edm::Event& iEvent, const edm::EventSetup
                 };
                 
                 //The probability associated with a jet is eff if the jet is in the combination of b-tagged jets, (1-eff) otherwise
-                double eff_val = 0.0; 
+                double eff_val = TMath::QuietNaN();
+
+                auto get_hist_eff = [&jet] (TH2D* hist) {
+                    return hist->GetBinContent(hist->FindBin(jet.pt(), std::fabs(jet.eta()))); 
+                };
+
                 if (nJets_ev==2) {
-                    eff_val = (*effs_in2J)[flavour];
+                    eff_val = get_hist_eff(effHists_2J[flavour]);
+                    LogDebug("jetLoop") << "2J eff = " << eff_val;
+                    //eff_val = (*effs_in2J)[flavour];
                 }
-                else if (nJets_ev==3) {
-                    eff_val = (*effs_in3J)[flavour];
+                else if (nJets_ev>2) {
+                    eff_val = get_hist_eff(effHists_3J[flavour]);
+                    LogDebug("jetLoop") << "2+J eff = " << eff_val;
+                    //eff_val = (*effs_in3J)[flavour];
                 }
                 else {
-                    eff_val = (*effs_in3J)[flavour];
+                    edm::LogInfo("jetLoop") << "Don't know what efficiency to take for NJ=" << nJets_ev;
                 }
                 LogDebug("jetLoop") << "\t\teff_val=" << eff_val;
                 //double e = eff(eff_val, inComb);

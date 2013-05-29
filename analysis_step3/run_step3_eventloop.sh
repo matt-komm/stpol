@@ -2,14 +2,10 @@
 #set -e #Abort if errors
 uname -a
 echo "SLURM job ID="$SLURM_JOBID
-WD=$CMSSW_BASE/..
+WD=$STPOL_DIR
 INFILE=$1
 OUTDIR=$2
-if [ -z $3 ]; then
-    CONF=$STPOL_DIR/runconfs/step3_eventloop_test.py
-else
-    CONF=$3
-fi
+CONF="${*:3}"
 
 OFNAME=$SLURM_JOB_ID
 if [ -z $OFNAME ]
@@ -35,4 +31,5 @@ for i in `seq 1 5`;
         done    
 
 cd $OUTDIR
-time cat $INFILE | STPOL_STEP3_OUTPUTFILE="out_step3_"$OFNAME".root" $CMSSW_BASE/bin/slc5_amd64_gcc462/Step3_EventLoop $CONF
+echo $CONF
+time cat $INFILE | $CMSSW_BASE/bin/slc5_amd64_gcc462/Step3_EventLoop $CONF --outputFile=out_step3_$OFNAME.root

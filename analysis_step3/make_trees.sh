@@ -2,15 +2,22 @@
 timestamp=`eval date +%m_%d_%H_%M`
 OFDIR=out_step3_$timestamp
 FLDIR=filelist_step2_latest
-mkdir $OFDIR
-mkdir $OFDIR/iso
-mkdir $OFDIR/iso/mc
-mkdir $OFDIR/iso/data
-mkdir $OFDIR/anti-iso
-mkdir $OFDIR/anti-iso/mc
-mkdir $OFDIR/anti-iso/data
+mkdir -p $OFDIR/mu
+mkdir -p $OFDIR/mu/iso/nominal
+mkdir -p $OFDIR/mu/antiiso/nominal
+mkdir -p $OFDIR/ele
+mkdir -p $OFDIR/ele/iso/nominal
+mkdir -p $OFDIR/ele/antiiso/nominal
 
-STPOL_ISMC=false analysis_step3/suball.sh $OFDIR/iso/data $FLDIR/iso/data/*
-STPOL_ISMC=false analysis_step3/suball.sh $OFDIR/anti-iso/data $FLDIR/antiiso/data/*
-STPOL_ISMC=true analysis_step3/suball.sh $OFDIR/iso/mc $FLDIR/iso/mc/*
-STPOL_ISMC=true analysis_step3/suball.sh $OFDIR/anti-iso/mc $FLDIR/antiiso/mc/*
+$STPOL_DIR/analysis_step3/suball.sh "--lepton=mu" $OFDIR/mu/iso/nominal $FLDIR/iso/nominal/data/*
+$STPOL_DIR/analysis_step3/suball.sh "--lepton=mu" $OFDIR/mu/antiiso/nominal $FLDIR/antiiso/nominal/data/*
+$STPOL_DIR/analysis_step3/suball.sh "--lepton=mu --doControlVars --isMC" $OFDIR/mu/iso/nominal $FLDIR/iso/nominal/mc/*
+$STPOL_DIR/analysis_step3/suball.sh "--lepton=mu --doControlVars --isMC" $OFDIR/mu/antiiso/nominal $FLDIR/antiiso/nominal/mc/*
+
+$STPOL_DIR/analysis_step3/suball.sh "--lepton=ele" $OFDIR/ele/iso/nominal $FLDIR/iso/nominal/data/*
+$STPOL_DIR/analysis_step3/suball.sh "--lepton=ele" $OFDIR/ele/antiiso/nominal $FLDIR/antiiso/nominal/data/*
+$STPOL_DIR/analysis_step3/suball.sh "--lepton=ele --doControlVars --isMC" $OFDIR/ele/iso/nominal $FLDIR/iso/nominal/mc/*
+$STPOL_DIR/analysis_step3/suball.sh "--lepton=ele --doControlVars --isMC" $OFDIR/ele/antiiso/nominal $FLDIR/antiiso/nominal/mc/*
+
+
+

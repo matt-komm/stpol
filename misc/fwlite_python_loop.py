@@ -1,32 +1,16 @@
 import ROOT
 from DataFormats.FWLite import Events, Handle
+import sys
+events = Events(sys.argv[1])
 
-events = Events('/hdfs/local/joosep/stpol/step2_MC_Iso_04_01/WD_T_t/res/output_10_1_zTW.root')
+muL = ("muonsWithIDAll")
+muH = Handle("std::vector<pat::Muon>")
 
-nrElSrc = ("electronCount")
-nrElHandle = Handle( 'int')
-
+n = 0
 for event in events:
-    event.getByLabel(nrElSrc, nrElHandle)
-    print nrElHandle.isValid()
-    try:
-        nrEl = (nrElHandle.product())[0]
-    except RuntimeError as e:
-        print "exception: %s" % (str(e))
-        nrEl = 0
-
-    print "nr electrons = " + str(nrEl)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    print n
+    event.getByLabel(muL, muH)
+    if muH.isValid():
+    	for mu in muH.product():
+    		print "pt=",mu.pt()
+    n += 1

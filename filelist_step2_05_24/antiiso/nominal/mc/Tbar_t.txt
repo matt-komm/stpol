@@ -1,0 +1,7 @@
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_1_1_lLt.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_2_1_XHw.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_3_1_KyK.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_4_1_u5A.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_5_1_TPS.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_6_1_QFG.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_7_1_n6Z.root

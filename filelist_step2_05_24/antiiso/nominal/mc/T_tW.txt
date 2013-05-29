@@ -1,0 +1,2 @@
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_T_tW/res/output_1_1_bzP.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_T_tW/res/output_2_2_lA3.root

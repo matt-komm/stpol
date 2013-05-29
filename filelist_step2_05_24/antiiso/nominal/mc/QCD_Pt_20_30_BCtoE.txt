@@ -1,0 +1,4 @@
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_QCD_Pt_20_30_BCtoE/res/output_1_1_nWQ.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_QCD_Pt_20_30_BCtoE/res/output_2_1_Zxu.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_QCD_Pt_20_30_BCtoE/res/output_3_1_IQJ.root
+file:/hdfs/local/joosep/stpol/step2_MC_antiIso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_QCD_Pt_20_30_BCtoE/res/output_4_1_2cc.root

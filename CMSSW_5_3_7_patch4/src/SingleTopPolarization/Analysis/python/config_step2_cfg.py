@@ -77,8 +77,8 @@ class Config(C):
         nBTags = 1
         ptCut = 40
         etaCut = 4.5
-        doLightJetRMSClean = True
-        source = "selectedPatJets"
+        doLightJetRMSClean = False
+        source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
         #source = "selectedPatJetsForMETtype1p2CorrEnDown"
 
         class BTagDiscriminant:
@@ -129,7 +129,7 @@ class Config(C):
     class Electrons(Leptons):
         pt = "ecalDrivenMomentum.Pt()"
         mvaCut = 0.1
-        mvaCutAntiIso = 0.9
+        mvaCutAntiIso = 1.1
         cutOnMVA = True
         cutOnIso = True
         cutWWlnuj = False
