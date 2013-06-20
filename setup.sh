@@ -53,3 +53,13 @@ cmsenv
 
 scram b -j 8 &> scram_log
 cd $CMSSW_BASE/../
+source setenv.sh
+
+cd unfold
+mkdir tunfold
+cd tunfold
+wget --no-check-certificate http://www.desy.de/~sschmitt/TUnfold/TUnfold_V17.2beta1.tgz
+tar xf TUnfold_V17.2beta1.tgz
+make lib
+make bin
+cd $STPOL_DIR
