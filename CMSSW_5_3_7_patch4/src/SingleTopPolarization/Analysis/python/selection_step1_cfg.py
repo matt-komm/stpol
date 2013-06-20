@@ -43,6 +43,11 @@ def SingleTopStep1(
     VarParsing.varType.bool,
     "Drop unnecessary collections"
   )
+  options.register ('runOnFastSim', False,
+    VarParsing.multiplicity.singleton,
+    VarParsing.varType.bool,
+    "FastSim-specific processing"
+  )
 
 #Tag from https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?redirectedfrom=CMS.SWGuideFrontierConditions#2012_MC_production
 # Latest for "53Y Releases (MC)"
@@ -104,7 +109,8 @@ def SingleTopStep1(
   , src = cms.InputTag('offlinePrimaryVertices')
   )
 
-
+  from EventFilters_cff import ApplyEventFilters
+  ApplyEventFilters(process, runOnFastSim=options.runOnFastSim)
   #-------------------------------------------------
   # Muons
   #-------------------------------------------------
@@ -330,6 +336,7 @@ def SingleTopStep1(
   #Need separate paths because of skimming
   process.singleTopSequence = cms.Sequence(
       process.goodOfflinePrimaryVertices
+      * process.eventFiltersSequence
       * process.patPF2PATSequence
   )
 
