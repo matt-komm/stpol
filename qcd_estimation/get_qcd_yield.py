@@ -183,8 +183,7 @@ if __name__=="__main__":
 
     cut = cuts[args.cut]
     ((y, error), fit) = get_qcd_yield_with_selection(cut, args.lepton, do_systematics=args.doSystematics)
-    #print cuts
-    print "Selection: %s" % cuts.name
+    print "Selection: %s" % cut.name
     print "QCD yield in selected region: %.2f +- %.2f, ratio to template from ONLY data %.3f" % (y, error, y/fit.orig["qcd_no_mc_sub"])
     print "Total: QCD: %.2f +- %.2f, ratio to template from data %.3f" % (fit.qcd, fit.qcd_uncert, fit.qcd/fit.orig["qcd"])
     print "W+Jets: %.2f +- %.2f, ratio to template: %.2f" % (fit.wjets, fit.wjets_uncert, fit.wjets/fit.wjets_orig)
@@ -192,4 +191,4 @@ if __name__=="__main__":
 
     print "Fit info:"
     print fit
-    plot_fit(fit.var, cuts, fit.dataHisto, fit)
+    plot_fit(fit.var, cut, fit.dataHisto, fit)
