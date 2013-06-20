@@ -11,5 +11,5 @@
 <use name="PhysicsTools/SelectorUtils"/>
 <use name="lhapdf"/>
 <environment>
-  <bin name="Step3_EventLoop" file="Step3_EventLoop.cpp,cuts_base.cpp,hlt_cuts.cpp,b_efficiency_calc.cc"></bin>
+  <bin name="Step3_EventLoop" file="Step3_EventLoop.cpp,cuts_base.cpp,hlt_cuts.cpp,b_efficiency_calc.cc,event_shape.cc"></bin>
 </environment>

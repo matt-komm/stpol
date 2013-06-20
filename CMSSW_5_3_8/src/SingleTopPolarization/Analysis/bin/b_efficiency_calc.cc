@@ -4,7 +4,7 @@
 
 const float eps = std::numeric_limits<float>::epsilon();
 bool AreSame(float a, float b) {
-        return std::fabs(a - b) < eps;
+    return std::fabs(a - b) < eps;
 }
 
 static const unsigned int n_eta_bins = 4;
@@ -53,20 +53,20 @@ BEffCalcs::BEffCalcs(const edm::ParameterSet& pars, BranchVars& _branch_vars, TF
     const Double_t* p_eta_bins_low = (const Double_t*)&eta_bins_low;
     Int_t _n_pt_bins = (Int_t)n_pt_bins-1;
     Int_t _n_eta_bins = (Int_t)n_eta_bins-1;
-
+    
     true_b_distribution = dir.make<TH2D>("true_b", "True b", _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low);
-    true_b_tagged_distribution = dir.make<TH2D>("true_b_tagged", "True b tagged", _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low); 
+    true_b_tagged_distribution = dir.make<TH2D>("true_b_tagged", "True b tagged", _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low);
     
     true_c_distribution = dir.make<TH2D>("true_c", "True c",  _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low);
-    true_c_tagged_distribution = dir.make<TH2D>("true_c_tagged", "True c tagged", _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low); 
+    true_c_tagged_distribution = dir.make<TH2D>("true_c_tagged", "True c tagged", _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low);
     
     true_l_distribution = dir.make<TH2D>("true_l", "True l",  _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low);
-    true_l_tagged_distribution = dir.make<TH2D>("true_l_tagged", "True l tagged", _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low); 
+    true_l_tagged_distribution = dir.make<TH2D>("true_l_tagged", "True l tagged", _n_pt_bins, p_pt_bins_low, _n_eta_bins, p_eta_bins_low);
 }
 
 bool BEffCalcs::process(const edm::EventBase& event) {
     pre_process();
-
+    
     std::vector<float> jet_pts = get_collection<std::vector<float>>(event, jet_pt_src, empty_vec);
     std::vector<float> jet_etas = get_collection<std::vector<float>>(event, jet_eta_src, empty_vec);
     std::vector<float> jet_bdiscs = get_collection<std::vector<float>>(event, jet_bdisc_src, empty_vec);
@@ -75,33 +75,33 @@ bool BEffCalcs::process(const edm::EventBase& event) {
     if(jet_etas.size() != size || jet_bdiscs.size() != size || jet_flavours.size() != size) {
         throw;
     }
-
+    
     for (unsigned int i=0; i<size; i++) {
-        float pt = jet_pts[i]; 
-        float eta = jet_etas[i]; 
-        float bdisc = jet_bdiscs[i]; 
+        float pt = jet_pts[i];
+        float eta = jet_etas[i];
+        float bdisc = jet_bdiscs[i];
         float flavour = jet_flavours[i];
-
+        
         TH2D* true_distr = 0;
         TH2D* true_tagged_distr = 0;
-
+        
         //b
         if(AreSame(std::fabs(flavour), 5.0)) {
-            true_distr = true_b_distribution; 
-            true_tagged_distr = true_b_tagged_distribution; 
+            true_distr = true_b_distribution;
+            true_tagged_distr = true_b_tagged_distribution;
         }
         //c
         else if(AreSame(std::fabs(flavour), 4.0)) {
-            true_distr = true_c_distribution; 
-            true_tagged_distr = true_c_tagged_distribution; 
+            true_distr = true_c_distribution;
+            true_tagged_distr = true_c_tagged_distribution;
         }
         //l
         else {
-            true_distr = true_l_distribution; 
-            true_tagged_distr = true_l_tagged_distribution; 
+            true_distr = true_l_distribution;
+            true_tagged_distr = true_l_tagged_distribution;
         }
-
-        true_distr->Fill(pt, std::fabs(eta)); 
+        
+        true_distr->Fill(pt, std::fabs(eta));
         if (bdisc >= b_discriminator_wp) {
             true_tagged_distr->Fill(pt, std::fabs(eta));
         }

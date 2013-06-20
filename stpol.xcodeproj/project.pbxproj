@@ -83,7 +83,6 @@
 		A767FCB21769C4ED004A6D7A /* hlt_cuts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hlt_cuts.cpp; sourceTree = "<group>"; };
 		A767FCB31769C4ED004A6D7A /* hlt_cuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hlt_cuts.h; sourceTree = "<group>"; };
 		A767FCB41769C4ED004A6D7A /* Step3_EventLoop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Step3_EventLoop.cpp; sourceTree = "<group>"; };
-		A767FCB51769C4ED004A6D7A /* Step3_EventLoop_unfolding_presel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Step3_EventLoop_unfolding_presel.cpp; sourceTree = "<group>"; };
 		A767FCBB1769C70E004A6D7A /* file_names.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = file_names.py; sourceTree = "<group>"; };
 		A767FCBC1769C70E004A6D7A /* make_histograms.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = make_histograms.py; sourceTree = "<group>"; };
 		A767FCBD1769C70E004A6D7A /* make_stackplots.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = make_stackplots.py; sourceTree = "<group>"; };
@@ -262,6 +261,8 @@
 		A7F046C617453D3700C1CF79 /* muonefficiencyproducer_cfg.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = muonefficiencyproducer_cfg.py; sourceTree = "<group>"; };
 		A7F046C817453D3700C1CF79 /* muonefficiencyproducer_cfi.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = muonefficiencyproducer_cfi.py; sourceTree = "<group>"; };
 		A7F046CA17453D3700C1CF79 /* MuonEfficiencyProducer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MuonEfficiencyProducer.cc; sourceTree = "<group>"; };
+		A7FAB6BC1770A063004BAB4D /* event_shape.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = event_shape.cc; sourceTree = "<group>"; };
+		A7FAB6BD1770A063004BAB4D /* event_shape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = event_shape.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -465,6 +466,8 @@
 		A767FCAC1769C4ED004A6D7A /* bin */ = {
 			isa = PBXGroup;
 			children = (
+				A7FAB6BC1770A063004BAB4D /* event_shape.cc */,
+				A7FAB6BD1770A063004BAB4D /* event_shape.h */,
 				A767FCAD1769C4ED004A6D7A /* b_efficiency_calc.cc */,
 				A767FCAE1769C4ED004A6D7A /* b_efficiency_calc.h */,
 				A767FCAF1769C4ED004A6D7A /* BuildFile.xml */,
@@ -473,7 +476,6 @@
 				A767FCB21769C4ED004A6D7A /* hlt_cuts.cpp */,
 				A767FCB31769C4ED004A6D7A /* hlt_cuts.h */,
 				A767FCB41769C4ED004A6D7A /* Step3_EventLoop.cpp */,
-				A767FCB51769C4ED004A6D7A /* Step3_EventLoop_unfolding_presel.cpp */,
 			);
 			name = bin;
 			sourceTree = "<group>";

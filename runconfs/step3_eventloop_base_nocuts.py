@@ -35,6 +35,7 @@ parser.add_option("--etalj", dest="doEtaLj", action="store_true", default=False)
 parser.add_option("--isMC", dest="isMC", action="store_true", default=False)
 parser.add_option("--mtop", dest="doMtop", action="store_true", default=False)
 parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False)
+parser.add_option("--doEventShape", dest="doEventShape", action="store_true", default=False)
 parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False)
 parser.add_option("--skipTree", dest="skipTree", action="store_true", default=False)
 #parser.add_option("--doFinal", dest="doFinal", action="store_true", default=False)
@@ -215,7 +216,7 @@ process.mtMuCuts = cms.PSet(
     )
 
 process.evtShapeVars = cms.PSet(
-    doEvtShapeVars = cms.bool(True),
+    doEvtShapeVars = cms.bool(options.doEventShape),
     leptonChannel = cms.string(options.lepton),
 
     muPtSrc = cms.InputTag("goodSignalMuonsNTupleProducer", "Pt"),
@@ -315,3 +316,6 @@ def print_process(p):
     for k, v in p.__dict__.items():
         if isinstance(v, cms.PSet):
             print k, v
+
+if __name__=="__main__":
+    print_process(process)

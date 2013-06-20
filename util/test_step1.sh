@@ -1,5 +1,6 @@
 #!/bin/bash
-IN=/store/relval/CMSSW_5_3_6-START53_V14/RelValTTbar/GEN-SIM-RECO/v2/00000/62B0DFF3-F729-E211-9754-001A92811744.root
+#IN=/store/relval/CMSSW_5_3_6-START53_V14/RelValTTbar/GEN-SIM-RECO/v2/00000/62B0DFF3-F729-E211-9754-001A92811744.root
+IN=/store/relval/CMSSW_5_3_2-START53_V6/RelValTTbar/GEN-SIM-RECO/v1/0000/0A0607D6-7AB9-E111-AB16-002618943886.root
 OFDIR=$CMSSW_BASE/../testing_step1
 echo "Running test_step1 with input $IN and output to $OFDIR"
 rm -Rf $OFDIR

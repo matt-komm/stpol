@@ -1,6 +1,7 @@
 import ROOT
 from odict import OrderedDict as dict
 import string
+import logging
 
 #Here the latter items will become topmost in stacks
 merge_cmds = dict()
@@ -73,3 +74,19 @@ def get_max_bin(hists):
 
 def get_sample_name(tfile):
     return tfile.GetPath().split("/")[-2].split(".")[0]
+
+def get_sample_dict(path, sample_d):
+    out_d = dict()
+    for (name, samples) in sample_d.items():
+        files = []
+        for samp in samples:
+            fn = path + "/" + samp + ".root"
+            try:
+                fi = ROOT.TFile(fn)
+            except Exception as e:
+                logging.getLogger().warning("Could not open sample %s: %s" % (fn, str(e)))
+                fi = None
+            if fi:
+                files.append(fi)
+        out_d[name] = files
+    return out_d

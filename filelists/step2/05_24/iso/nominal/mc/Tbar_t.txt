@@ -1,7 +1,7 @@
-file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_1_1_vnl.root
-file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_2_1_eQD.root
-file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_3_1_FaY.root
-file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_4_1_3Q7.root
-file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_5_1_0ka.root
-file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_6_1_lBt.root
-file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_24_d61eb83392323657b9c0b458d4994bc04b104bdf/WD_Tbar_t/res/output_7_1_0es.root
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_28_a9b699a39a9bfd5e817c1afb4e57b5f363b70ac1/WD_Tbar_t/res/output_1_1_OUG.root
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_28_a9b699a39a9bfd5e817c1afb4e57b5f363b70ac1/WD_Tbar_t/res/output_2_1_aVA.root
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_28_a9b699a39a9bfd5e817c1afb4e57b5f363b70ac1/WD_Tbar_t/res/output_3_1_VGT.root
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_28_a9b699a39a9bfd5e817c1afb4e57b5f363b70ac1/WD_Tbar_t/res/output_4_1_o7S.root
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_28_a9b699a39a9bfd5e817c1afb4e57b5f363b70ac1/WD_Tbar_t/res/output_5_1_UGx.root
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_28_a9b699a39a9bfd5e817c1afb4e57b5f363b70ac1/WD_Tbar_t/res/output_6_1_6AW.root
+file:/hdfs/local/joosep/stpol/step2_MC_Iso_05_28_a9b699a39a9bfd5e817c1afb4e57b5f363b70ac1/WD_Tbar_t/res/output_7_1_iLQ.root
