@@ -1,5 +1,4 @@
 *.swp
 *.swo
-trees
-histos
+*.root
 plots
