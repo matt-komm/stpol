@@ -55,6 +55,7 @@ scram b -j 8 &> scram_log
 cd $CMSSW_BASE/../
 source setenv.sh
 
+echo "Setting up TUnfold"
 cd unfold
 mkdir tunfold
 cd tunfold
@@ -62,4 +63,10 @@ wget --no-check-certificate http://www.desy.de/~sschmitt/TUnfold/TUnfold_V17.2be
 tar xf TUnfold_V17.2beta1.tgz
 make lib
 make bin
+cd $STPOL_DIR
+
+echo "Setting up theta"
+svn co https://ekptrac.physik.uni-karlsruhe.de/public/theta/tags/testing theta
+cd theta
+make
 cd $STPOL_DIR
