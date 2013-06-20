@@ -61,9 +61,8 @@ def ApplyEventFilters(process, goodVertices = 'goodOfflinePrimaryVertices', runO
     # HCAL laser events
     # https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFilters#HCAL_laser_events
     # https://twiki.cern.ch/twiki/bin/view/CMS/PdmVKnowFeatures#HCAL_laser_events_in_prompt_2012
-    process.load("EventFilter.HcalRawToDigi.hcallasereventfilter2012_cff")
-
-    eventFiltersSequence += process.hcallLaserEvent2012Filter
+    process.load("RecoMET.METFilters.hcalLaserEventFilter_cfi")
+    eventFiltersSequence += process.hcalLaserEventFilter
 
 
     # ECAL dead cell filter

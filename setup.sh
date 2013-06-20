@@ -34,12 +34,16 @@ addpkg DataFormats/TrackReco                V10-02-02
 addpkg DataFormats/VertexReco               V02-00-04 
 addpkg RecoLuminosity/LumiDB                V04-01-09 ##Newer than in TagCollector for 5_3_X
 
-#https://twiki.cern.ch/twiki/bin/view/CMS/BeamHaloId#CMSSW_4_2_X_and_beyond
+#https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFilters#EB_or_EE_Xtals_with_large_laser
+addpkg RecoMET/METFilters V00-00-13-01
 addpkg RecoMET/METAnalyzers V00-00-08
-addpkg DataFormats/METReco V03-03-05
-addpkg RecoMET/METAlgorithms V03-02-03
-addpkg RecoMET/METProducers V03-03-07
-addpkg DataFormats/CSCRecHit V02-05-01
+
+##OLD
+#https://twiki.cern.ch/twiki/bin/view/CMS/BeamHaloId#CMSSW_4_2_X_and_beyond
+#addpkg DataFormats/METReco V03-03-10 #V03-03-05
+#addpkg RecoMET/METAlgorithms V03-04-03 #V03-02-03
+#addpkg RecoMET/METProducers V03-03-12-02 #V03-03-07
+#addpkg DataFormats/CSCRecHit V02-07-00 #V02-05-01
 
 cvs co -r V00-00-31 -d EGamma/EGammaAnalysisTools UserCode/EGamma/EGammaAnalysisTools
 cd EGamma/EGammaAnalysisTools/data
@@ -47,8 +51,6 @@ cat download.url | xargs wget
 
 cd $CMSSW_BASE/src
 
-#https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFilters#EB_or_EE_Xtals_with_large_laser
-addpkg RecoMET/METFilters  V00-00-09 
 
 #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupJetID
 cvs co -r V00-02-10 -d CMGTools/External UserCode/CMG/CMGTools/External
