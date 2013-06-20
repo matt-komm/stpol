@@ -163,6 +163,9 @@ if __name__=="__main__":
         print "Could not find the STPOL_DIR environment variable, did you run `source setenv.sh` in the code base directory?"
         raise e
 
+    if "theta-auto2.py" not in sys.argv[0]:
+        raise Exception("Must run with qcd_estimation/theta-auto2.py to use command line arguments")
+
     cuts_final = FitConfig( "final_selection", trigger="1.0")
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
     cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0")
