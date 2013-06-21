@@ -55,6 +55,12 @@ class Sample:
             raise TObjectOpenException("Failed to open count histogram")
         return count_hist.GetBinContent(1)
 
+    def lumiScaleFactor(self, lumi):
+        expected_events = sample_xs_map[self.name] * lumi
+        total_events = self.getTotalEventCount()
+        scale_factor = float(expected_events)/float(total_events)
+        return scale_factor
+
     def drawHistogram(self, var, cut_str, dtype="float", **kwargs):
         name = self.name + "_" + Histogram.unique_name(var, cut_str, kwargs.get("weight"))
 
