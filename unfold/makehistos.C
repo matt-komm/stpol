@@ -10,11 +10,14 @@
 
 using namespace std;
 
-void makehisto(TString varname, TString process, TString ofile, TString file)
+void makehisto(TString varname, TString process, TString ofile, TString file, TString datapath="")
 {
 	TFile *fo = new TFile("histos/input/"+ofile+".root","RECREATE");
-	TFile *f = new TFile("trees_8TeV/Nominal/"+file+".root");
-
+	TFile *f = new TFile(datapath+file+".root");
+    if((f->IsZombie()) || (fo->IsZombie())) {
+        std::cerr << "INput/output file is not valid!" << std::endl;
+        throw 1;
+    }
 	TTree *tree = (TTree*)f->Get("trees/Events");
 
 	cout << "Filling histogram " << varname << "__" << process << endl;
