@@ -111,17 +111,24 @@ SimpleJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     const pat::Jet& obj = (const pat::Jet& )pobj;
     edm::LogInfo("analyze()") << o.label() << "(" << i << "):" <<
     " pt: " << obj.pt() << 
-    " pt_smear: " << obj.userFloat("pt_smear") << 
+    //" pt_smear: " << obj.userFloat("pt_smear") << 
     " eta: " << obj.eta() <<
     " phi: " << obj.phi() << 
     " et: " << obj.et() <<
+    " rms: " << obj.userFloat("rms") <<
+    " mva: " << obj.userFloat("mva") <<
+    " dR: " << obj.userFloat("deltaR") <<
+    " numberOfDaughters: " << obj.numberOfDaughters() <<
+    " chargedMultiplicity: " << obj.chargedMultiplicity() <<
     " bTag('TCHP'): " << obj.bDiscriminator("trackCountingHighPurBJetTags") <<
     " numberOfDaughters: " << obj.numberOfDaughters() << 
     " neutralHadronEnergyFraction: " << obj.neutralHadronEnergyFraction() << 
     " neutralEmEnergyFraction: " << obj.neutralEmEnergyFraction() << 
     " chargedEmEnergyFraction: " << obj.chargedEmEnergyFraction() <<
+    " chargedHadronEnergyFraction: " << obj.chargedHadronEnergyFraction() <<
+    " neut+HFhad fraction: " << (obj.neutralHadronEnergy() + obj.HFHadronEnergy())/obj.energy() << 
     " isJet: " << obj.isJet() <<
-    " smearedJet " << obj.genJet();
+//    " smearedJet " << obj.genJet();
     i++;
     if(obj.genJet()!=0 && i<maxJets) {
       edm::LogInfo("analyze()") <<
