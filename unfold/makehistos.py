@@ -44,8 +44,19 @@ def rebinned(var_reco, binning_reco, var_gen, binning_gen, cut, weight, lumi, sa
     fo.cd()
     hgen = ROOT.TH1F(var_gen + "_rebin", var_gen + " rebinned", len(binning_gen)-1, binning_gen)
     hreco = ROOT.TH1F(var_reco + "_rebin", var_reco + " rebinned", len(binning_reco)-1, binning_reco)
+    hgenreco = ROOT.TH2F("matrix", "matrix", len(binning_gen)-1, binning_gen, len(binning_reco)-1, binning_reco)
+    for h in [hgen, hreco, hgenreco]:
+        h.Sumw2()
 
+    sample_T_t.Draw("%s >> %s"%(var_gen, hgen.GetName()), "%s*%s*(%s)" % (weight, cut))
+    sample_Tbar_t.Draw("%s >> +%s"%(var_gen, hgen.GetName()), "%s*%s*(%s)" % (weight, cut))
+    sample_T_t.Draw("%s >> %s"%(var_reco, hreco.GetName()), "%s*%s*(%s)" % (weight, cut))
+    sample_Tbar_t.Draw("%s >> +%s"%(var_reco, hreco.GetName()), "%s*%s*(%s)" % (weight, cut))
+    sample_T_t.Draw("%s,%s >> %s"%(var_gen, var-reco, hgenreco.GetName()), "%s*%s*(%s)" % (weight, cut))
+    sample_Tbar_t.Draw("%s,%s >> +%s"%(var_reco, hgenreco.GetName()), "%s*%s*(%s)" % (weight, cut))
 
+    for h in [hgen, hreco, hgenreco]:
+        h.Scale()
 
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO)
