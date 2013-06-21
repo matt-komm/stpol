@@ -9,8 +9,9 @@ try:
     from sqlalchemy import Column, Integer, String
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
-except:
-    print "plots/common/histogram.py: SQLAlchemy needed, please install by running util/install_sqlalchemy.sh"
+except Exception as e:
+    logging.error("plots/common/histogram.py: SQLAlchemy needed, please install by running util/install_sqlalchemy.sh")
+    raise e
 
 class Histogram(Base):
     __tablename__ = "histograms"
