@@ -2,6 +2,7 @@ import ROOT
 from odict import OrderedDict as dict
 import string
 import logging
+import os
 
 #Here the latter items will become topmost in stacks
 merge_cmds = dict()
@@ -90,3 +91,10 @@ def get_sample_dict(path, sample_d):
                 files.append(fi)
         out_d[name] = files
     return out_d
+
+def mkdir_p(d):
+    try:
+        os.makedirs(d)
+    except Exception as e:
+        logging.warning(str(e))
+    return
