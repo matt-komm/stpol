@@ -212,8 +212,8 @@ def SingleTopStep1(
   # MET corrections as https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMetAnalysis#Type_I_0_with_PAT
   #-------------------------------------------------
 
-  #pfNoTau == True => remove taus from jets
-  #process.pfNoTau.enable = noTau
+  #Taus are NOT removed from jets
+  process.pfNoTau.enable = False
 
   process.selectedPatJets.cut = cms.string("pt>30 && abs(eta)<5.0")
   process.load("CMGTools.External.pujetidsequence_cff")
@@ -244,6 +244,10 @@ def SingleTopStep1(
        jetCorrPayloadName="AK5PFchs",
        addToPatDefaultSequence=False
   )
+
+  #Switch of checking for overlaps between leptons and jets
+  process.patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty.checkOverlaps = cms.PSet()
+
   process.stpolMetUncertaintySequence = cms.Sequence(
       process.metUncertaintySequence
   )

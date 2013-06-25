@@ -267,7 +267,7 @@ def JetSetup(process, conf):
     if conf.doDebug:
         #process.sourceJetAnalyzer = cms.EDAnalyzer("SimpleJetAnalyzer", interestingCollections=cms.untracked.VInputTag(conf.Jets.source))
         #process.jetSequence.insert(0, process.sourceJetAnalyzer)
-        process.jetAnalyzer = cms.EDAnalyzer("SimpleJetAnalyzer", interestingCollections=cms.untracked.VInputTag(conf.Jets.source, "noPUJets", "goodJets"))
+        process.jetAnalyzer = cms.EDAnalyzer("SimpleJetAnalyzer", interestingCollections=cms.untracked.VInputTag("selectedPatJets", conf.Jets.source, "noPUJets", "goodJets"))
         process.jetSequence += process.jetAnalyzer
 
     print process.jetSequence
