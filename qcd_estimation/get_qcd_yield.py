@@ -2,7 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import sys,os
-from theta_auto import *
+
+try:
+    from theta_auto import *
+except Exception as e:
+    sys.stderr.write("You need a working version of theta. See the script $STPOL_DIR/setup/install_theta.sh")
+    raise e
+
 from ROOT import *
 
 from make_input_histos import *
@@ -11,8 +17,12 @@ from plot_fit import plot_fit
 from FitConfig import FitConfig
 from util_scripts import *
 from DataLumiStorage import *
-from plots.common.cross_sections import lumi_iso, lumi_antiiso
 
+try:
+    from plots.common.cross_sections import lumi_iso, lumi_antiiso
+except Exception as e:
+    sys.stderr.write("You need to run $STPOL_DIR/setenv.sh to use the custom python libraries")
+    raise e
 
 def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     infile = "fits/"+var.shortName+"_fit_"+filename+".root"
@@ -178,7 +188,7 @@ if __name__=="__main__":
     cuts["final_without_eta"] = cuts_final_without_eta
 
     import argparse
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Does the QCD fit using theta-auto')
     parser.add_argument('--lepton', dest='lepton', choices=["mu", "ele"], required=True, help="The lepton channel used for the fit")
     parser.add_argument('--cut', dest='cut', choices=cuts.keys(), required=True, help="The cut region to use in the fit")
     parser.add_argument('--doSystematics', dest='doSystematics', action="store_true", default=False)
