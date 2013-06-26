@@ -6,7 +6,7 @@ import sys,os
 try:
     from theta_auto import *
 except Exception as e:
-    sys.stderr.write("You need a working version of theta. See the script $STPOL_DIR/setup/install_theta.sh")
+    sys.stderr.write("You need a working version of theta in your PATH. See the script $STPOL_DIR/setup/install_theta.sh and $STPOL_DIR/setenv.sh.\n")
     raise e
 
 from ROOT import *
@@ -21,7 +21,7 @@ from DataLumiStorage import *
 try:
     from plots.common.cross_sections import lumi_iso, lumi_antiiso
 except Exception as e:
-    sys.stderr.write("You need to run $STPOL_DIR/setenv.sh to use the custom python libraries")
+    sys.stderr.write("You need to run `source $STPOL_DIR/setenv.sh` to use the custom python libraries\n")
     raise e
 
 def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
@@ -174,7 +174,7 @@ if __name__=="__main__":
         raise e
 
     if "theta-auto2.py" not in sys.argv[0]:
-        raise Exception("Must run with qcd_estimation/theta-auto2.py to use command line arguments")
+        raise Exception("Must run as `$STPOL_DIR/qcd_estimation/theta-auto2.py get_qcd_yield.py`")
 
     cuts_final = FitConfig( "final_selection", trigger="1.0")
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
