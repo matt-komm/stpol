@@ -13,7 +13,7 @@ def makehisto(sample, varname, cut, weight, binning, lumi=None, **kwargs):
     process = kwargs.get("process", sample.name)
     ofile = kwargs.get("ofile", sample.name)
 
-    mkdir_p(ofile.split("/")[:-1])
+    mkdir_p("/".join(ofile.split("/")[:-1]))
     fo = ROOT.TFile(ofile, "RECREATE")
 
     if not sample.isMC:
@@ -39,7 +39,7 @@ def makehisto(sample, varname, cut, weight, binning, lumi=None, **kwargs):
 
 def rebinned(var_reco, binning_reco, var_gen, binning_gen, cut, weight, lumi, sample_T_t, sample_Tbar_t, ofname):
 
-    mkdir_p(ofname.split("/")[:-1])
+    mkdir_p("/".join(ofname.split("/")[:-1]))
     fo = ROOT.TFile(ofname, "RECREATE")
     fo.cd()
     hgen = ROOT.TH1F(var_gen + "_rebin", var_gen + " rebinned", len(binning_gen)-1, binning_gen)
@@ -48,15 +48,35 @@ def rebinned(var_reco, binning_reco, var_gen, binning_gen, cut, weight, lumi, sa
     for h in [hgen, hreco, hgenreco]:
         h.Sumw2()
 
-    sample_T_t.Draw("%s >> %s"%(var_gen, hgen.GetName()), "%s*%s*(%s)" % (weight, cut))
-    sample_Tbar_t.Draw("%s >> +%s"%(var_gen, hgen.GetName()), "%s*%s*(%s)" % (weight, cut))
-    sample_T_t.Draw("%s >> %s"%(var_reco, hreco.GetName()), "%s*%s*(%s)" % (weight, cut))
-    sample_Tbar_t.Draw("%s >> +%s"%(var_reco, hreco.GetName()), "%s*%s*(%s)" % (weight, cut))
-    sample_T_t.Draw("%s,%s >> %s"%(var_gen, var-reco, hgenreco.GetName()), "%s*%s*(%s)" % (weight, cut))
-    sample_Tbar_t.Draw("%s,%s >> +%s"%(var_reco, hgenreco.GetName()), "%s*%s*(%s)" % (weight, cut))
+    sample_T_t.tree.Draw("%s >> %s"%(var_gen, hgen.GetName()), "%s*%s*(%s)" % (sample_T_t.lumiScaleFactor(lumi), weight, cut))
+    sample_Tbar_t.tree.Draw("%s >> +%s"%(var_gen, hgen.GetName()), "%s*%s*(%s)" % (sample_Tbar_t.lumiScaleFactor(lumi), weight, cut))
+    sample_T_t.tree.Draw("%s >> %s"%(var_reco, hreco.GetName()), "%s*%s*(%s)" % (sample_T_t.lumiScaleFactor(lumi), weight, cut))
+    sample_Tbar_t.tree.Draw("%s >> +%s"%(var_reco, hreco.GetName()), "%s*%s*(%s)" % (sample_Tbar_t.lumiScaleFactor(lumi), weight, cut))
+    sample_T_t.tree.Draw("%s:%s >> %s"%(var_gen, var_reco, hgenreco.GetName()), "%s*%s*(%s)" % (sample_T_t.lumiScaleFactor(lumi), weight, cut))
+    sample_Tbar_t.tree.Draw("%s:%s >> +%s"%(var_gen, var_reco, hgenreco.GetName()), "%s*%s*(%s)" % (sample_Tbar_t.lumiScaleFactor(lumi), weight, cut))
 
     for h in [hgen, hreco, hgenreco]:
-        h.Scale()
+        h.Write()
+    fo.Close()
+
+def efficiency(fn_presel, fn_postsel, ofname):
+    logging.info("Calculating selection efficiency")
+    fi_presel = ROOT.TFile(fn_presel)
+    hgen_presel = fi_presel.Get(var_gen + "_rebin")
+    fi_postsel = ROOT.TFile(fn_postsel)
+    hgen_postsel = fi_postsel.Get(var_gen + "_rebin")
+
+    mkdir_p("histos")
+    fi = ROOT.TFile(ofname, "RECREATE")
+    fi.cd()
+    
+    heff = hgen_postsel.Clone("efficiency")
+    heff.SetTitle("Selection efficiency")
+    heff.Divide(hgen_presel)
+    heff.Write()
+    fi.Close()
+    fi_presel.Close()
+    fi_postsel.Close()
 
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO)
@@ -78,21 +98,39 @@ if __name__=="__main__":
     weight = "1.0"
     lumi=19700 #FIXME
 
-#1. TODO: Draw the rebinned signal hists (rebin.C) => histos/rebinned.root
-    rebinned(var_reco, var_gen, cut, weight, lumi, samples["T_t_ToLeptons"], samples["Tbar_t_ToLeptons"], "histos/rebinned.root")
+#1. Draw the rebinned signal hists
+    logging.info("Projecting the rebinned histograms for signal before selection")
+    fn_presel = "histos/rebinned_presel.root"
+    rebinned(var_reco, binning_reco, var_gen, binning_gen, "1.0", weight, lumi, samples["T_t_ToLeptons"], samples["Tbar_t_ToLeptons"], fn_presel)
+
+    logging.info("Projecting the rebinned histograms for signal after selection")
+    fn_postsel = "histos/rebinned.root"
+    rebinned(var_reco, binning_reco, var_gen, binning_gen, cut, weight, lumi, samples["T_t_ToLeptons"], samples["Tbar_t_ToLeptons"], fn_postsel)
 
 #2. Draw the input hists (sig+bkg)
+    logging.info("Projecting the input histograms for signal, background and data")
     args = (var_reco, cut, weight, binning_reco, lumi)
     hdir = "histos/input/"
     #TODO: add background samples
+    #tchan (T_t, Tbar_t)
+    #top (T*_s,tW, TTbar)
+    #wzjets (W*Jets_exclusive, *Jets)
+    #qcd (data anti-iso)
+    #DATA (data iso)
+    
     makehisto(samples["T_t_ToLeptons"], *args, process="tchan", ofile=hdir+"tchan_t.root")
     makehisto(samples["Tbar_t_ToLeptons"], *args, process="tchan", ofile=hdir+"tchan_tbar.root")
     makehisto(samples["SingleMu"], *args, process="DATA", ofile=hdir+"DATA_SingleMu.root")
     makehisto(samples["SingleMu_aiso"], *args, process="qcd", ofile=hdir+"qcd.root")
 
 #3. TODO: Calculate the selection efficiency (efficiency.C) => histos/efficiency.root
+#The selection efficiency is hgen_rebin/hgen_presel_rebin
+    efficiency(fn_presel, fn_postsel, "histos/efficiency.root")
 
 #4. TODO: Sum the input histograms from step 2 (hadd) => histos/data.root
 
-#5. TODO: Create the pseudo-data histograms (pseudoData.C) => histos/pseudo_data.root
+#5. TODO: Create the pseudo-data histograms (pseudodata.C) => histos/pseudo_data.root
 
+#6. Unfold
+
+#pseudo_data.root -> var_rec histogram
