@@ -20,26 +20,67 @@ print "Waiting for input files over stdin..."
 for line in sys.stdin.readlines():
     input_files.append(line.strip())
 
-parser = optparse.OptionParser()
-#parser.add_option("--outfile", dest="outfile", type="string")
-parser.add_option("--doLepton", dest="doLepton", action="store_true", default=False)
-parser.add_option("--doHLT", dest="doHLT", action="store_true", default=False)
-parser.add_option("--lepton", dest="lepton", type="string", default="mu")
-parser.add_option("--doNJets", dest="doNJets", action="store_true", default=False)
-parser.add_option("--nJ", dest="nJ", type="string", default="0,10")
-parser.add_option("--doNTags", dest="doNTags", action="store_true", default=False)
-parser.add_option("--nT", dest="nT", type="string", default="0,10")
-parser.add_option("--mtw", dest="doMtw", action="store_true", default=False)
-parser.add_option("--met", dest="doMet", action="store_true", default=False)
-parser.add_option("--etalj", dest="doEtaLj", action="store_true", default=False)
-parser.add_option("--isMC", dest="isMC", action="store_true", default=False)
-parser.add_option("--mtop", dest="doMtop", action="store_true", default=False)
-parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False)
-parser.add_option("--doEventShape", dest="doEventShape", action="store_true", default=False)
-parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False)
-parser.add_option("--skipTree", dest="skipTree", action="store_true", default=False)
-#parser.add_option("--doFinal", dest="doFinal", action="store_true", default=False)
-parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root")
+#FIXME: replace old-style OptionParser with ArgumentParser for more flexibility
+class OptionParser(optparse.OptionParser):
+    def add_option(self, *args, **kwargs):
+        if "description" in kwargs.keys():
+            kwargs.pop("description")
+        if "choices" in kwargs.keys():
+            kwargs.pop("choices")
+        optparse.OptionParser.add_option(self, *args, **kwargs)
+
+parser = OptionParser()
+parser.add_option("--doLepton", dest="doLepton", action="store_true", default=False,
+    description="Select events that had exactly one good lepton."
+)
+parser.add_option("--doHLT", dest="doHLT", action="store_true", default=False,
+    description="Select events that pass the HLT corresponding to the lepton channel."
+)
+parser.add_option("--lepton", dest="lepton", type="string", default="mu", choices=["mu", "ele"],
+    description="Specify the lepton channel."
+)
+parser.add_option("--doNJets", dest="doNJets", action="store_true", default=False,
+    description="Select events that had a particular number of jets."
+)
+parser.add_option("--nJ", dest="nJ", type="string", default="0,10",
+    description="The number of jets to consider."
+)
+parser.add_option("--doNTags", dest="doNTags", action="store_true", default=False,
+    description="Select events that had a number of tags."
+)
+parser.add_option("--nT", dest="nT", type="string", default="0,10",
+    description="A comma separated list of min,max of the number of tags to consider."
+)
+parser.add_option("--mtw", dest="doMtw", action="store_true", default=False,
+    description="Select events that pass an MtW(mu) cut."
+)
+parser.add_option("--met", dest="doMet", action="store_true", default=False,
+    description="Select events that pass a MET cut."
+)
+parser.add_option("--etalj", dest="doEtaLj", action="store_true", default=False,
+    description="Select events that pass the |eta_lj|>2.5 cut."
+)
+parser.add_option("--isMC", dest="isMC", action="store_true", default=False,
+    description="Processed files are MC."
+)
+parser.add_option("--mtop", dest="mtop", type="string", default="none", choices=["SR", "SB", "none"],
+    description="Select events that pass the top mass window cut in a predefined signal/sideband region."
+)
+parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False,
+    description="Add several additional variables in the trees."
+)
+parser.add_option("--doEventShape", dest="doEventShape", action="store_true", default=False,
+    description="Do runtime calculation of the event shape variables."
+)
+parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False,
+    description="Enable anti-iso lepton specific processing."
+)
+parser.add_option("--skipTree", dest="skipTree", action="store_true", default=False,
+    description="Do not produce the output tree."
+)
+parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root",
+    description="Filename of the flat ROOT output file."
+)
 
 options, args = parser.parse_args()
 
@@ -48,13 +89,18 @@ options.nJMax = int(options.nJ.split(",")[1])
 options.nTMin = int(options.nT.split(",")[0])
 options.nTMax = int(options.nT.split(",")[1])
 
-
-if(options.isAntiIso and options.lepton=="mu"):
-    isoC = 0.2
-    isoCHigh = 0.9
+#Note: the isolation cut is already necesarily applied in step 2. Applying it here is redundant, unless
+#one wants to tighten the single (anti)-isolated lepton
+if options.lepton=="mu":
+    if options.isAntiIso:
+        isoC = 0.2
+        isoCHigh = 0.9
+    else:
+        isoC = 0.12
+        isoCHigh = 0.12
 else:
-    isoC = 0.12
-    isoCHigh = 0.12
+    isoC = -1
+    isoCHigh = -1
 
 process = cms.Process("STPOLSEL3")
 process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
@@ -78,8 +124,7 @@ process.muonCuts = cms.PSet(
     requireOneMuon  = cms.bool(options.doLepton and options.lepton=="mu"),
     doControlVars  = cms.bool(options.doControlVars),
     reverseIsoCut  = cms.bool(options.isAntiIso),
-    cutOnIso  = cms.bool(False),
-
+    cutOnIso = cms.bool(False), #by default this is NOT necessary (done @ step2)
     isoCut  = cms.double(isoC),
     isoCutHigh  = cms.double(isoCHigh),
 
@@ -166,8 +211,8 @@ process.bTagCuts = cms.PSet(
 )
 
 process.topCuts = cms.PSet(
-        applyMassCut = cms.bool(options.doMtop),
-        signalRegion = cms.bool(True),
+        applyMassCut = cms.bool(options.mtop != "none"),
+        signalRegion = cms.bool(options.mtop == "SR"),
         signalRegionMassLow = cms.double(130),
         signalRegionMassHigh = cms.double(220),
         topMassSrc = cms.InputTag("recoTopNTupleProducer", "Mass")
@@ -206,7 +251,7 @@ process.weights = cms.PSet(
     electronTriggerWeightDownSrc = cms.InputTag("electronWeightsProducer","electronTriggerWeightDown"),
 )
 
-process.mtMuCuts = cms.PSet(
+process.metCuts = cms.PSet(
     mtMuSrc = cms.InputTag("muAndMETMT"),
     metSrc = cms.InputTag("patMETNTupleProducer", "Pt"),
     doMTCut = cms.bool( options.doMtw ),
@@ -273,7 +318,9 @@ process.finalVars = cms.PSet(
     cosThetaSrc = cms.InputTag("cosTheta", "cosThetaLightJet"),
     nVerticesSrc = cms.InputTag("goodOfflinePVCount"),
     #scaleFactorsSrc = cms.InputTag("bTagWeightProducerNJMT", "scaleFactors")
+)
 
+process.pdfWeights = cms.PSet(
     #PDF stuff
     addPDFInfo = cms.bool(False),
     scalePDFSrc = cms.InputTag("PDFweights", "scalePDF"),
