@@ -96,5 +96,5 @@ def mkdir_p(d):
     try:
         os.makedirs(d)
     except Exception as e:
-        logging.warning(str(e))
+        logging.debug(str(e))
     return
