@@ -3,6 +3,7 @@ import logging
 from plots.common.histogram import Histogram
 from plots.common.utils import filter_alnum
 import numpy
+from cross_sections import xs as sample_xs_map
 
 class HistogramException(Exception):
     pass
