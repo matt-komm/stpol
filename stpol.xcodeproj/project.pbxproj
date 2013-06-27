@@ -45,6 +45,9 @@
 		A72001C6177C98980092972C /* update.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = update.sh; sourceTree = "<group>"; };
 		A72001C7177C98980092972C /* utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = utils.hpp; sourceTree = "<group>"; };
 		A72001C8177C98980092972C /* xsec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xsec.h; sourceTree = "<group>"; };
+		A72001C9177CA3D60092972C /* pdf_weights.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = pdf_weights.cc; sourceTree = "<group>"; };
+		A72001CA177CA51B0092972C /* pdf_weights.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pdf_weights.h; sourceTree = "<group>"; };
+		A72001CB177CAACA0092972C /* step3_eventloop_base_nocuts.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = step3_eventloop_base_nocuts.py; sourceTree = "<group>"; };
 		A73D461D16A83DFB00703EF6 /* babysit2.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = babysit2.sh; sourceTree = "<group>"; };
 		A73D461E16A83DFB00703EF6 /* bcmsRun */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = bcmsRun; sourceTree = "<group>"; };
 		A73D461F16A83DFB00703EF6 /* datasets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = datasets.py; sourceTree = "<group>"; };
@@ -72,7 +75,7 @@
 		A767FCB11769C4ED004A6D7A /* cuts_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cuts_base.h; sourceTree = "<group>"; };
 		A767FCB21769C4ED004A6D7A /* hlt_cuts.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hlt_cuts.cpp; sourceTree = "<group>"; };
 		A767FCB31769C4ED004A6D7A /* hlt_cuts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hlt_cuts.h; sourceTree = "<group>"; };
-		A767FCB41769C4ED004A6D7A /* Step3_EventLoop.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Step3_EventLoop.cpp; sourceTree = "<group>"; };
+		A767FCB41769C4ED004A6D7A /* Step3_EventLoop.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Step3_EventLoop.cc; sourceTree = "<group>"; };
 		A767FCBB1769C70E004A6D7A /* file_names.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = file_names.py; sourceTree = "<group>"; };
 		A767FCBC1769C70E004A6D7A /* make_histograms.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = make_histograms.py; sourceTree = "<group>"; };
 		A767FCBD1769C70E004A6D7A /* make_stackplots.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = make_stackplots.py; sourceTree = "<group>"; };
@@ -407,7 +410,9 @@
 				A767FCB11769C4ED004A6D7A /* cuts_base.h */,
 				A767FCB21769C4ED004A6D7A /* hlt_cuts.cpp */,
 				A767FCB31769C4ED004A6D7A /* hlt_cuts.h */,
-				A767FCB41769C4ED004A6D7A /* Step3_EventLoop.cpp */,
+				A767FCB41769C4ED004A6D7A /* Step3_EventLoop.cc */,
+				A72001C9177CA3D60092972C /* pdf_weights.cc */,
+				A72001CA177CA51B0092972C /* pdf_weights.h */,
 			);
 			name = bin;
 			sourceTree = "<group>";
@@ -1241,6 +1246,7 @@
 		A76CFA8516A6C81B00DC8250 /* runconfs */ = {
 			isa = PBXGroup;
 			children = (
+				A72001CB177CAACA0092972C /* step3_eventloop_base_nocuts.py */,
 				A7AE61F716FAD1BF0001FFB7 /* step3_eventLoop_cfg.py */,
 				A70C271E16AFD8FC00495932 /* step2_newCmdLine_cfg.py */,
 			);
