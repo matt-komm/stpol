@@ -90,7 +90,7 @@ options.nTMin = int(options.nT.split(",")[0])
 options.nTMax = int(options.nT.split(",")[1])
 
 #Note: the isolation cut is already necesarily applied in step 2. Applying it here is redundant, unless
-#one wants to tighten the single (anti)-isolated lepton
+#one wants to tighten the single (anti)-isolated lepton and get a strict subset of the selected events.
 if options.lepton=="mu":
     if options.isAntiIso:
         isoC = 0.2
@@ -99,6 +99,7 @@ if options.lepton=="mu":
         isoC = 0.12
         isoCHigh = 0.12
 else:
+    #FIXME: whatever is needed for electrons
     isoC = -1
     isoCHigh = -1
 
