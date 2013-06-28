@@ -1,5 +1,5 @@
 CC=g++
-CXXFLAGS= -Wall -O2 -g -I./tunfold -L./tunfold -Wl,-rpath=./tunfold -lunfold `root-config --cflags --libs` -lMinuit 
+CXXFLAGS= -Wall -O2 -g -I./tunfold -L./tunfold -Wl,-rpath=./tunfold -lunfold `root-config --cflags --libs` -lMinuit -lXMLIO -lXMLParser 
 
 all: unfold calc_asymmetry eigenvalues makehistos bkg_asymmetry findbinning efficiency rebin plotfit pseudodata
 

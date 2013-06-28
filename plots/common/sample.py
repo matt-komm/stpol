@@ -3,6 +3,7 @@ import logging
 from plots.common.histogram import Histogram
 from plots.common.utils import filter_alnum
 import numpy
+from cross_sections import xs as sample_xs_map
 
 class HistogramException(Exception):
     pass
@@ -54,6 +55,12 @@ class Sample:
         if not count_hist:
             raise TObjectOpenException("Failed to open count histogram")
         return count_hist.GetBinContent(1)
+
+    def lumiScaleFactor(self, lumi):
+        expected_events = sample_xs_map[self.name] * lumi
+        total_events = self.getTotalEventCount()
+        scale_factor = float(expected_events)/float(total_events)
+        return scale_factor
 
     def drawHistogram(self, var, cut_str, dtype="float", **kwargs):
         name = self.name + "_" + Histogram.unique_name(var, cut_str, kwargs.get("weight"))

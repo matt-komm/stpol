@@ -144,13 +144,6 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     #Generate path structure as base_path/iso/systematic, see util_scripts
     #If you have a different structure, change paths manually
-
-    #if channel == "mu":
-    #    base_path = "/home/andres/single_top/stpol/out_step3_06_01"
-    #    #base_path = "~liis/SingleTopJoosep/stpol/out_step3_05_31_18_43/mu"
-    #if channel == "ele":
-    #    base_path = "~liis/SingleTopJoosep/stpol/out_step3_05_31_18_43/ele"
-
     paths = generate_paths(systematics, base_path)
     #For example:
     paths["iso"]["Nominal"] = base_path+"/iso/nominal/"
@@ -165,7 +158,6 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     return get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup)
 
-#Run as /scratch/mario/theta/utils2/theta-auto.py get_qcd_yield.py - only works in phys!
 if __name__=="__main__":
     try:
         sys.path.append(os.environ["STPOL_DIR"] )
