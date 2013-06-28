@@ -81,7 +81,9 @@ class Config(C):
         ptCut = 40
         etaCut = 4.5
         doLightJetRMSClean = False
-        source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
+        doPUClean = False
+        #source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
+        source = "patJetsWithOwnRef"
         #source = "selectedPatJetsForMETtype1p2CorrEnDown"
 
         class BTagDiscriminant:
