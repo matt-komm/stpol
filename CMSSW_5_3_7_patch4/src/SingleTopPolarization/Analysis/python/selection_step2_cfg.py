@@ -256,6 +256,21 @@ def SingleTopStep2():
     from SingleTopPolarization.Analysis.top_step2_cfi import TopRecoSetup
     TopRecoSetup(process)
 
+    process.allEventObjects = cms.EDProducer(
+         'CandRefCombiner',
+         sources=cms.untracked.vstring(["goodJets", "goodSignalLeptons"]),
+             maxOut=cms.untracked.uint32(9999),
+             minOut=cms.untracked.uint32(0)
+    )
+    process.eventShapeVars = cms.EDProducer(
+        'EventShapeVarsProducer',
+        src = cms.InputTag("allEventObjects")
+    )
+    process.eventShapeSequence = cms.Sequence(
+        process.allEventObjects *
+        process.eventShapeVars
+    )
+
     #-----------------------------------------------
     # Treemaking
     #-----------------------------------------------
@@ -890,6 +905,7 @@ def SingleTopStep2():
         process.muPath.insert(process.muPath.index(process.singleIsoMu)+1, process.goodSignalLeptons)
         process.muPath.insert(process.muPath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
         process.muPath.insert(process.muPath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
+        process.muPath += process.eventShapeSequence
 
     if Config.doElectron:
         from SingleTopPolarization.Analysis.electrons_step2_cfi import ElectronPath
@@ -897,6 +913,7 @@ def SingleTopStep2():
         process.elePath.insert(process.elePath.index(process.singleIsoEle)+1, process.goodSignalLeptons)
         process.elePath.insert(process.elePath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
         process.elePath.insert(process.elePath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
+        process.elePath += process.eventShapeSequence
 
     if Config.isMC:
         process.puWeightProducer = cms.EDProducer('PUWeightProducer'

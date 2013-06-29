@@ -20,7 +20,7 @@
 #include "cuts_base.h"
 #include "hlt_cuts.h"
 #include "b_efficiency_calc.h"
-#include "event_shape.h"
+//#include "event_shape.h"
 
 //Enable to compile with LHAPDF
 //#define WITH_LHAPDF
@@ -917,7 +917,7 @@ int main(int argc, char* argv[])
     #ifdef WITH_LHAPDF
     PDFWeights pdf_weights(pdfweights_pars, branch_vars);
     #endif
-    EvtShapeVars evt_shape_vars(evtshapevars_pars, branch_vars);
+    //EvtShapeVars evt_shape_vars(evtshapevars_pars, branch_vars);
     GenParticles gen_particles(gen_particle_pars, branch_vars);
     HLTCuts hlt_mu_cuts(hlt_pars_mu, branch_vars);
     HLTCuts hlt_ele_cuts(hlt_pars_ele, branch_vars);
@@ -1033,7 +1033,7 @@ int main(int argc, char* argv[])
                 if(!passes_top_cuts) continue;
                 
                 misc_vars.process(event);
-                if(evt_shape_vars.doEvtShapeVars) evt_shape_vars.process(event);
+                //if(evt_shape_vars.doEvtShapeVars) evt_shape_vars.process(event);
                 if(weights.doWeights) weights.process(event);
                 
                 bool passes_gen_cuts = true;
