@@ -73,8 +73,11 @@ def get_max_bin(hists):
     """
     return max([h.GetMaximum() for h in hists])
 
-def get_sample_name(tfile):
-    return tfile.GetPath().split("/")[-2].split(".")[0]
+def get_sample_name(arg):
+    if isinstance(arg, ROOT.TFile):
+        return get_sample_name(str(arg.GetPath()))
+    else:
+        return arg.split("/")[-1].split(".")[0]
 
 def get_sample_dict(path, sample_d):
     out_d = dict()

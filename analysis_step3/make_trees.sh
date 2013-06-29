@@ -1,4 +1,8 @@
 #!/bin/bash
+
+echo "This script is deprecated. move to make_trees.py"
+exit 1
+
 timestamp=`eval date +%m_%d_%H_%M`
 OFDIR=out_step3_$timestamp
 FLDIR=filelists/step2/latest/
@@ -9,6 +13,7 @@ mkdir -p $OFDIR/ele
 mkdir -p $OFDIR/ele/iso/nominal
 mkdir -p $OFDIR/ele/antiiso/nominal
 CUT="--doHLT --doNJets --nJ=2,9999"
+NOCUT=""
 
 $STPOL_DIR/analysis_step3/suball.sh "$CUT --lepton=mu" $OFDIR/mu/iso/nominal $FLDIR/iso/nominal/data/SingleMu*
 $STPOL_DIR/analysis_step3/suball.sh "$CUT --lepton=mu" $OFDIR/mu/antiiso/nominal $FLDIR/antiiso/nominal/data/SingleMu*
