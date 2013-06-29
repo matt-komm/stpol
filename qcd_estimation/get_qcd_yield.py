@@ -165,8 +165,8 @@ if __name__=="__main__":
         print "Could not find the STPOL_DIR environment variable, did you run `source setenv.sh` in the code base directory?"
         raise e
 
-    if "theta-auto2.py" not in sys.argv[0]:
-        raise Exception("Must run as `$STPOL_DIR/qcd_estimation/theta-auto2.py get_qcd_yield.py`")
+    if "theta-auto.py" not in sys.argv[0]:
+        raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py`")
 
     cuts_final = FitConfig( "final_selection", trigger="1.0")
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
@@ -178,6 +178,9 @@ if __name__=="__main__":
     cuts["final"] = cuts_final
     cuts["2j0t"] = cuts_2j0t
     cuts["final_without_eta"] = cuts_final_without_eta
+
+    #Remove the name of this script from the argument list in order to not confuse ArgumentParser
+    sys.argv.pop(sys.argv.index("get_qcd_yield.py"))
 
     import argparse
     parser = argparse.ArgumentParser(description='Does the QCD fit using theta-auto')
