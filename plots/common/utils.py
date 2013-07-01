@@ -2,6 +2,7 @@ import ROOT
 from odict import OrderedDict as dict
 import string
 import logging
+import os
 
 #Here the latter items will become topmost in stacks
 merge_cmds = dict()
@@ -72,8 +73,11 @@ def get_max_bin(hists):
     """
     return max([h.GetMaximum() for h in hists])
 
-def get_sample_name(tfile):
-    return tfile.GetPath().split("/")[-2].split(".")[0]
+def get_sample_name(arg):
+    if isinstance(arg, ROOT.TFile):
+        return get_sample_name(str(arg.GetPath()))
+    else:
+        return arg.split("/")[-1].split(".")[0]
 
 def get_sample_dict(path, sample_d):
     out_d = dict()
@@ -90,3 +94,10 @@ def get_sample_dict(path, sample_d):
                 files.append(fi)
         out_d[name] = files
     return out_d
+
+def mkdir_p(d):
+    try:
+        os.makedirs(d)
+    except Exception as e:
+        logging.debug(str(e))
+    return

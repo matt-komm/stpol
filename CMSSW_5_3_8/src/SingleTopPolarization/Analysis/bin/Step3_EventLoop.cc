@@ -6,21 +6,27 @@
 #include <TStopwatch.h>
 #include <TMath.h>
 
-#include "DataFormats/FWLite/interface/Event.h"
-#include "DataFormats/Common/interface/Handle.h"
-#include "FWCore/FWLite/interface/AutoLibraryLoader.h"
+#include <DataFormats/FWLite/interface/Event.h>
+#include <DataFormats/Common/interface/Handle.h>
+#include <FWCore/FWLite/interface/AutoLibraryLoader.h>
 
-#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
-#include "DataFormats/MuonReco/interface/Muon.h"
-#include "PhysicsTools/FWLite/interface/TFileService.h"
-#include "FWCore/ParameterSet/interface/ProcessDesc.h"
-#include "FWCore/PythonParameterSet/interface/PythonProcessDesc.h"
-#include "DataFormats/Common/interface/MergeableCounter.h"
+#include <SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h>
+#include <DataFormats/MuonReco/interface/Muon.h>
+#include <PhysicsTools/FWLite/interface/TFileService.h>
+#include <FWCore/ParameterSet/interface/ProcessDesc.h>
+#include <FWCore/PythonParameterSet/interface/PythonProcessDesc.h>
+#include <DataFormats/Common/interface/MergeableCounter.h>
 
 #include "cuts_base.h"
 #include "hlt_cuts.h"
 #include "b_efficiency_calc.h"
 #include "event_shape.h"
+
+//Enable to compile with LHAPDF
+//#define WITH_LHAPDF
+#ifdef WITH_LHAPDF
+#include "pdf_weights.h"
+#endif
 
 #include <stdio.h>
 #include <time.h>
@@ -63,22 +69,6 @@ int get_parent(const std::string& decay_tree, int self_pdgid) {
     std::cerr << "Couldn't parse decay tree: " << decay_tree << std::endl;
     return 0;
 }
-
-namespace LHAPDF
-{
-    void initPDFSet(int nset, const std::string &filename, int member = 0);
-    int numberPDF(int nset);
-    void usePDFMember(int nset, int member);
-    double xfx(int nset, double x, double Q, int fl);
-    double getXmin(int nset, int member);
-    double getXmax(int nset, int member);
-    double getQ2min(int nset, int member);
-    double getQ2max(int nset, int member);
-    void extrapolate(bool extrapolate = true);
-    int	numberPDF();
-}
-
-
 
 const std::string default_str("");
 
@@ -618,7 +608,7 @@ public:
         pre_process();
         if(doWeights) {
             
-            edm::Handle<GenEventInfoProduct>                  genEventInfo;
+            edm::Handle<GenEventInfoProduct> genEventInfo;
             edm::InputTag genWeightSrc1("generator");
             event.getByLabel(genWeightSrc1, genEventInfo);
             if (genEventInfo.isValid())
@@ -712,7 +702,7 @@ public:
     }
 };
 
-class MTMuCuts : public CutsBase {
+class METCuts : public CutsBase {
 public:
     edm::InputTag mtMuSrc;
     edm::InputTag metSrc;
@@ -726,7 +716,7 @@ public:
         branch_vars.vars_float["met"] = BranchVars::def_val;
     }
     
-    MTMuCuts(const edm::ParameterSet& pars, BranchVars& _branch_vars) :
+    METCuts(const edm::ParameterSet& pars, BranchVars& _branch_vars) :
     CutsBase(_branch_vars)
     {
         initialize_branches();
@@ -757,85 +747,17 @@ public:
     edm::InputTag nVerticesSrc;
     edm::InputTag scaleFactorsSrc;
     
-    // for PDF uncertanty
-    bool addPDFInfo;
-    edm::InputTag scalePDFSrc;
-    edm::InputTag x1Src;
-    edm::InputTag x2Src;
-    edm::InputTag id1Src;
-    edm::InputTag id2Src;
-    
-    float scalePDF;
-    float x1,x2;
-    int id1,id2;
-    
-    std::vector<std::string>	PDFSets;
-    std::vector<std::string>	PDFnames;
-    
     void initialize_branches() {
         branch_vars.vars_float["cos_theta"] = BranchVars::def_val;
         branch_vars.vars_int["n_vertices"] = BranchVars::def_val;
-        //branch_vars_vec["scale_factors"] = std::vector<float>();
-        //branch_vars_vec["scale_factors"].clear();
     }
-    
-    void initialize_branches_PDF(bool addPDFs) {
-        if(!addPDFs) return;
-        branch_vars.vars_float["scalePDF"] = BranchVars::def_val;
-        branch_vars.vars_float["x1"] = BranchVars::def_val;
-        branch_vars.vars_float["x2"] = BranchVars::def_val;
-        branch_vars.vars_float["id1"] = BranchVars::def_val;
-        branch_vars.vars_float["id2"] = BranchVars::def_val;
-    }
-    
     
     MiscVars(const edm::ParameterSet& pars, BranchVars& _branch_vars) :
     CutsBase(_branch_vars)
     {
-        addPDFInfo = pars.getParameter<bool>("addPDFInfo");
-        if(addPDFInfo) {
-            PDFSets = pars.getParameter<std::vector<std::string>>("PDFSets");
-            std::map<string,int> map_name;
-            //cout << "size " << PDFSets.size() <<endl;
-            for( unsigned int i = 0; i < PDFSets.size(); i++ ) {
-                if( i > 2 ) break;	// lhapdf cannot manage with more PDFs
-                
-                // make names of PDF sets to be saved
-                string name = PDFSets[i];
-                size_t pos = name.find_first_not_of("ZXCVBNMASDFGHJKLQWERTYUIOPabcdefghijklmnopqrstuvwxyz1234567890");
-                if (pos!=std::string::npos) name = name.substr(0,pos);
-                if( map_name.count(name) == 0 ) {
-                    map_name[name]=0;
-                    PDFnames.push_back(name);
-                }
-                else {
-                    map_name[name]++;
-                    ostringstream ostr;
-                    ostr << name << "xxx" << map_name[name];
-                    PDFnames.push_back(ostr.str());
-                }
-                
-                // initialise the PDF set
-                //cout<<"PDFnames[i]="<<PDFnames[i]<<"\tPDFSets[i]="<<PDFSets[i]<<endl;
-                LHAPDF::initPDFSet(i+1, PDFSets[i]);
-                branch_vars.vars_float[string("w0"+PDFnames[i])] = BranchVars::def_val;
-                branch_vars.vars_float[string("n"+PDFnames[i])] = BranchVars::def_val;
-                branch_vars.vars_vfloat[string("weights"+PDFnames[i])] = std::vector<float>();
-                branch_vars.vars_vfloat[string("weights"+PDFnames[i])].clear();
-            }
-        }
         initialize_branches();
         cosThetaSrc = pars.getParameter<edm::InputTag>("cosThetaSrc");
         nVerticesSrc = pars.getParameter<edm::InputTag>("nVerticesSrc");
-        //scaleFactorsSrc = pars.getParameter<edm::InputTag>("scaleFactorsSrc");
-        
-        if(addPDFInfo) {
-            scalePDFSrc = pars.getParameter<edm::InputTag>("scalePDFSrc");
-            x1Src = pars.getParameter<edm::InputTag>("x1Src");
-            x2Src = pars.getParameter<edm::InputTag>("x2Src");
-            id1Src = pars.getParameter<edm::InputTag>("id1Src");
-            id2Src = pars.getParameter<edm::InputTag>("id2Src");
-        }
     }
     
     bool process(const edm::EventBase& event) {
@@ -844,52 +766,6 @@ public:
         branch_vars.vars_float["cos_theta"] = get_collection<double>(event, cosThetaSrc, BranchVars::def_val);
         branch_vars.vars_int["n_vertices"] = get_collection<int>(event, nVerticesSrc, BranchVars::def_val_int);
         
-        //edm::Handle<std::vector<float>> scale_factors;
-        //event.getByLabel(scaleFactorsSrc, scale_factors);
-        //if(scale_factors.isValid()) {
-        //    for (auto sf : *scale_factors) {
-        //        branch_vars_vec["scale_factors"].push_back(sf);
-        //    }
-        //}
-        
-        // for PDF uncertainty
-        if(addPDFInfo) {
-            branch_vars.vars_float["scalePDF"] = get_collection<float>(event, scalePDFSrc, BranchVars::def_val);
-            branch_vars.vars_float["x1"] = get_collection<float>(event, x1Src, BranchVars::def_val);
-            branch_vars.vars_float["x2"] = get_collection<float>(event, x2Src, BranchVars::def_val);
-            branch_vars.vars_int["id1"] = get_collection<int>(event, id1Src, BranchVars::def_val);
-            branch_vars.vars_int["id2"] = get_collection<int>(event, id2Src, BranchVars::def_val);
-            
-            
-            for( unsigned int i = 0; i < PDFSets.size(); i++ ) {
-                if( i > 2 ) break;	// lhapdf cannot manage with more PDFs
-                
-                int InitNr = i+1;
-                
-                // calculate the PDF weights
-                std::auto_ptr < std::vector<double> > weights(new std::vector<double>());
-                LHAPDF::usePDFMember(InitNr, 0);
-                double	xpdf1	= LHAPDF::xfx(InitNr, branch_vars.vars_float["x1"], branch_vars.vars_float["scalePDF"], branch_vars.vars_int["id1"]);
-                double	xpdf2	= LHAPDF::xfx(InitNr, branch_vars.vars_float["x2"], branch_vars.vars_float["scalePDF"], branch_vars.vars_int["id2"]);
-                double	w0		= xpdf1 * xpdf2;
-                int		nPDFSet = LHAPDF::numberPDF(InitNr);
-                for (int p = 1; p <= nPDFSet; p++)
-                {
-                    LHAPDF::usePDFMember(InitNr, p);
-                    double xpdf1_new	= LHAPDF::xfx(InitNr, branch_vars.vars_float["x1"], branch_vars.vars_float["scalePDF"], branch_vars.vars_int["id1"]);
-                    double xpdf2_new	= LHAPDF::xfx(InitNr, branch_vars.vars_float["x2"], branch_vars.vars_float["scalePDF"], branch_vars.vars_int["id2"]);
-                    double pweight		= xpdf1_new * xpdf2_new / w0;
-                    weights->push_back(pweight);
-                }
-                
-                // save weights
-                for (auto sf : (*weights)) {
-                    branch_vars.vars_vfloat[std::string("weights"+PDFnames[i])].push_back(float(sf));
-                }
-                branch_vars.vars_float[std::string("n"+PDFnames[i])] = nPDFSet;
-                branch_vars.vars_float[std::string("w0"+PDFnames[i])] = w0;
-            }
-        }
         post_process();
         return true;
     }
@@ -898,12 +774,12 @@ public:
 
 class GenParticles : public CutsBase {
 public:
-    edm::InputTag trueBJetCount;
-    edm::InputTag trueCJetCount;
-    edm::InputTag trueLJetCount;
-    edm::InputTag trueBJetTaggedCount;
-    edm::InputTag trueCJetTaggedCount;
-    edm::InputTag trueLJetTaggedCount;
+    //    edm::InputTag trueBJetCount;
+    //    edm::InputTag trueCJetCount;
+    //    edm::InputTag trueLJetCount;
+    //    edm::InputTag trueBJetTaggedCount;
+    //    edm::InputTag trueCJetTaggedCount;
+    //    edm::InputTag trueLJetTaggedCount;
     edm::InputTag trueCosTheta;
     edm::InputTag trueLeptonPdgIdSrc;
     
@@ -914,13 +790,13 @@ public:
     
     void initialize_branches() {
         if (doGenParticles) {
-            branch_vars.vars_int["true_b_count"] = BranchVars::def_val_int;
-            branch_vars.vars_int["true_c_count"] = BranchVars::def_val_int;
-            branch_vars.vars_int["true_l_count"] = BranchVars::def_val_int;
-            
-            branch_vars.vars_int["true_b_tagged_count"] = BranchVars::def_val_int;
-            branch_vars.vars_int["true_c_tagged_count"] = BranchVars::def_val_int;
-            branch_vars.vars_int["true_l_tagged_count"] = BranchVars::def_val_int;
+            //            branch_vars.vars_int["true_b_count"] = BranchVars::def_val_int;
+            //            branch_vars.vars_int["true_c_count"] = BranchVars::def_val_int;
+            //            branch_vars.vars_int["true_l_count"] = BranchVars::def_val_int;
+            //
+            //            branch_vars.vars_int["true_b_tagged_count"] = BranchVars::def_val_int;
+            //            branch_vars.vars_int["true_c_tagged_count"] = BranchVars::def_val_int;
+            //            branch_vars.vars_int["true_l_tagged_count"] = BranchVars::def_val_int;
             
             branch_vars.vars_float["true_cos_theta"] = BranchVars::def_val;
             branch_vars.vars_int["true_lepton_pdgId"] = BranchVars::def_val_int;
@@ -934,13 +810,13 @@ public:
         doGenParticles = pars.getParameter<bool>("doGenParticles");
         initialize_branches();
         
-        trueBJetCount = pars.getParameter<edm::InputTag>("trueBJetCountSrc");
-        trueCJetCount = pars.getParameter<edm::InputTag>("trueCJetCountSrc");
-        trueLJetCount = pars.getParameter<edm::InputTag>("trueLJetCountSrc");
-        trueBJetTaggedCount = pars.getParameter<edm::InputTag>("trueBJetTaggedCountSrc");
-        trueCJetTaggedCount = pars.getParameter<edm::InputTag>("trueCJetTaggedCountSrc");
-        trueLJetTaggedCount = pars.getParameter<edm::InputTag>("trueLJetTaggedCountSrc");
-        
+        //        trueBJetCount = pars.getParameter<edm::InputTag>("trueBJetCountSrc");
+        //        trueCJetCount = pars.getParameter<edm::InputTag>("trueCJetCountSrc");
+        //        trueLJetCount = pars.getParameter<edm::InputTag>("trueLJetCountSrc");
+        //        trueBJetTaggedCount = pars.getParameter<edm::InputTag>("trueBJetTaggedCountSrc");
+        //        trueCJetTaggedCount = pars.getParameter<edm::InputTag>("trueCJetTaggedCountSrc");
+        //        trueLJetTaggedCount = pars.getParameter<edm::InputTag>("trueLJetTaggedCountSrc");
+        //
         trueCosTheta = pars.getParameter<edm::InputTag>("trueCosThetaSrc");
         trueLeptonPdgIdSrc = pars.getParameter<edm::InputTag>("trueLeptonPdgIdSrc");
         
@@ -951,15 +827,15 @@ public:
     
     bool process(const edm::EventBase& event) {
         pre_process();
-        
-        branch_vars.vars_int["true_b_count"] = get_collection<int>(event, trueBJetCount, BranchVars::def_val_int);
-        branch_vars.vars_int["true_c_count"] = get_collection<int>(event, trueCJetCount, BranchVars::def_val_int);
-        branch_vars.vars_int["true_l_count"] = get_collection<int>(event, trueLJetCount, BranchVars::def_val_int);
-        
-        branch_vars.vars_int["true_b_tagged_count"] = get_collection<int>(event, trueBJetTaggedCount, BranchVars::def_val_int);
-        branch_vars.vars_int["true_c_tagged_count"] = get_collection<int>(event, trueCJetTaggedCount, BranchVars::def_val_int);
-        branch_vars.vars_int["true_l_tagged_count"] = get_collection<int>(event, trueLJetTaggedCount, BranchVars::def_val_int);
-        
+        //
+        //        branch_vars.vars_int["true_b_count"] = get_collection<int>(event, trueBJetCount, BranchVars::def_val_int);
+        //        branch_vars.vars_int["true_c_count"] = get_collection<int>(event, trueCJetCount, BranchVars::def_val_int);
+        //        branch_vars.vars_int["true_l_count"] = get_collection<int>(event, trueLJetCount, BranchVars::def_val_int);
+        //
+        //        branch_vars.vars_int["true_b_tagged_count"] = get_collection<int>(event, trueBJetTaggedCount, BranchVars::def_val_int);
+        //        branch_vars.vars_int["true_c_tagged_count"] = get_collection<int>(event, trueCJetTaggedCount, BranchVars::def_val_int);
+        //        branch_vars.vars_int["true_l_tagged_count"] = get_collection<int>(event, trueLJetTaggedCount, BranchVars::def_val_int);
+        //
         branch_vars.vars_int["wjets_classification"] = (int)get_collection<unsigned int>(event, wJetsClassificationSrc, BranchVars::def_val_int);
         
         branch_vars.vars_float["true_cos_theta"] = (float)get_collection<double>(event, trueCosTheta, BranchVars::def_val_int);
@@ -999,9 +875,10 @@ int main(int argc, char* argv[])
     const edm::ParameterSet& btag_cuts_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("bTagCuts");
     
     const edm::ParameterSet& top_cuts_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("topCuts");
-    const edm::ParameterSet& mt_mu_cuts_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("mtMuCuts");
+    const edm::ParameterSet& mt_mu_cuts_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("metCuts");
     const edm::ParameterSet& weight_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("weights");
     const edm::ParameterSet& miscvars_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("finalVars");
+    const edm::ParameterSet& pdfweights_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("pdfWeights");
     const edm::ParameterSet& evtshapevars_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("evtShapeVars");
     const edm::ParameterSet& gen_particle_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("genParticles");
     const edm::ParameterSet& hlt_pars_mu = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("HLTmu");
@@ -1035,8 +912,11 @@ int main(int argc, char* argv[])
     TagCuts btag_cuts(btag_cuts_pars, branch_vars);
     TopCuts top_cuts(top_cuts_pars, branch_vars);
     Weights weights(weight_pars, branch_vars);
-    MTMuCuts mt_mu_cuts(mt_mu_cuts_pars, branch_vars);
+    METCuts mt_mu_cuts(mt_mu_cuts_pars, branch_vars);
     MiscVars misc_vars(miscvars_pars, branch_vars);
+    #ifdef WITH_LHAPDF
+    PDFWeights pdf_weights(pdfweights_pars, branch_vars);
+    #endif
     EvtShapeVars evt_shape_vars(evtshapevars_pars, branch_vars);
     GenParticles gen_particles(gen_particle_pars, branch_vars);
     HLTCuts hlt_mu_cuts(hlt_pars_mu, branch_vars);
@@ -1045,8 +925,9 @@ int main(int argc, char* argv[])
     
     fwlite::TFileService fs = fwlite::TFileService(outputFile_.c_str());
     
-    // now get each parameter
     int maxEvents_( in.getParameter<int>("maxEvents") );
+    
+    //Making the output tree is optional
     bool make_tree ( in.getParameter<bool>("makeTree") );
     unsigned int outputEvery_( in.getParameter<unsigned int>("outputEvery") );
     
@@ -1098,7 +979,7 @@ int main(int argc, char* argv[])
     }
     
     // loop the events
-    int ievt=0;
+    int ievt = 0;
     long bytes_read = 0;
     TStopwatch* stopwatch = new TStopwatch();
     stopwatch->Start();
@@ -1161,9 +1042,16 @@ int main(int argc, char* argv[])
                 }
                 if(!passes_gen_cuts) continue;
                 
-                if(b_eff_calcs.doBEffCalcs)
+                if(b_eff_calcs.doBEffCalcs) {
                     b_eff_calcs.process(event);
+                }
                 
+                #ifdef WITH_LHAPDF
+                if(pdf_weights.enabled) {
+                    pdf_weights.process(event);
+                }
+                #endif
+                    
                 event_id_branches["event_id"] = (unsigned int)event.id().event();
                 event_id_branches["run_id"] = (unsigned int)event.id().run();
                 event_id_branches["lumi_id"] = (unsigned int)event.id().luminosityBlock();
@@ -1186,6 +1074,10 @@ int main(int argc, char* argv[])
             bytes_read += in_file->GetBytesRead();
             LogInfo << "Closing file " << in_file->GetPath() << " with " << in_file->GetBytesRead()/(1024*1024) << " Mb read, "
             << in_file->GetBytesRead()/(1024*1024) / file_time << " Mb/s" << std::endl;
+        }
+        else {
+            std::cerr << "Couldn't open an input file: " << inputFiles_[iFile] << std::endl;
+            throw 1;
         }
     }
     

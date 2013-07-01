@@ -135,7 +135,6 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 			//cout << names.at(i+1) << endl;
 			for(int j = 0; j < nbkgs; j++) {
 				covmatrix[i][j] = hcov->GetBinContent(i+2,j+2);
-				covmatrix[i][j] *= preds[i]*preds[j];
 			}
 		}
 
@@ -183,7 +182,7 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 			eigenhistos.push_back((TH1F*)eigenhisto);
 			sum_rot += eigenhisto->Integral();
 			//cout << "eigenhisto" << i << " " << eigenhisto->Integral() << endl;
-			eigenerrors.push_back(sqrt(eigenvalues[i]) / eigenhisto->Integral());
+			eigenerrors.push_back(sqrt(eigenvalues[i]));
 		}
 		//cout << "background events rotated: " << sum_rot << endl;
 	}
@@ -238,8 +237,8 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 		for(int i = 0; i < nbkgs; i++)
 		{
 			// FIXME
-			//unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
-			unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i]);
+			unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
+			//unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i]);
 		}
 	}
 
@@ -302,17 +301,21 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 		hpseudo->Reset();
 		if(subtractData) {
 			for(int i = 0; i < nbkgs ; i++) {
-				//TH1F *heigen = (TH1F*)eigenhistos[i];
+				TH1F *heigen = (TH1F*)eigenhistos[i];
 				// FIXME
-				TH1F *heigen = (TH1F*)bkghistos[i];
+				//TH1F *heigen = (TH1F*)bkghistos[i];
 				TH1F *hclone = (TH1F*)heigen->Clone();
 				
-				//Float_t bla = random.Gaus(heigen->Integral(),eigenerrors[i]*heigen->Integral());
-				Float_t bla = random.Gaus(heigen->Integral(),uncs[i]*heigen->Integral());
+				Float_t bla = random.Gaus(heigen->Integral(),eigenerrors[i]*heigen->Integral());
+				//Float_t bla = random.Gaus(heigen->Integral(),uncs[i+1]*heigen->Integral());
+				
+				// FIXME Restrict negative subtractions?
+				/*
 				if (bla < 0) { 
 					//cout << eigenerrors[i] << " " << bla << endl;
 					bla = 0;
 				}
+				*/
 				int n = random.Poisson(bla);
 
 				for(int ibin = 1; ibin <= bin_y; ibin++) {
@@ -351,7 +354,6 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 		unfold.GetOutput(hupseudo);
 		// Ematrix not containing all errors,
 		// check http://root.cern.ch/root/html/TUnfoldSys.html
-		//TH2D *hperr = unfold.GetEmatrix("perror","perror");
 		TH2F *hperr = new TH2F("perror","perror",bin_x,1,bin_x,bin_x,1,bin_x);
 		unfold.GetEmatrix(hperr);
 		// Add migration matrix stat. error
