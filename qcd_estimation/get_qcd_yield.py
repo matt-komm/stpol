@@ -180,8 +180,10 @@ if __name__=="__main__":
     cuts["final_without_eta"] = cuts_final_without_eta
 
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
-    sys.argv.pop(sys.argv.index("get_qcd_yield.py"))
-
+    try:
+        sys.argv.pop(sys.argv.index("get_qcd_yield.py"))
+    except ValueError:
+        pass
     import argparse
     parser = argparse.ArgumentParser(description='Does the QCD fit using theta-auto')
     parser.add_argument('--lepton', dest='lepton', choices=["mu", "ele"], required=True, help="The lepton channel used for the fit")
