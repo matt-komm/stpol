@@ -3,8 +3,17 @@ from subprocess import check_call
 from glob import glob
 from plots.common.utils import get_sample_name
 import os
+import argparse
+import datetime
 
 if __name__=="__main__":
+    parser = argparse.ArgumentParser(
+        description='Runs step3 trees on the cluster'
+    )
+    parser.add_argument("-o", "--ofdir", type=str, default=None, required=False,
+                        help="the output directory for the step3 trees")
+    cmdline_args = parser.parse_args()
+
     fldir = "filelists/step2/latest"
 
     leptons = ["mu", "ele"]
@@ -13,8 +22,9 @@ if __name__=="__main__":
 
     signal_samples = ["T_t", "Tbar_t", "T_t_ToLeptons", "Tbar_t_ToLeptons"]
     data_samples = ["SingleMu", "SingleEle"]
-    cutstr = "--doNJets --nJ=2,3 --doHLT --doLepton"
-    ofdir = "out_step3_test3"
+    cutstr = " --doNJets --nJ=2,3 --doHLT --doLepton"
+    if not cmdline_args.ofdir:
+        cmdline_args.ofdir = "out_step3_%s_%s" % (os.getlogin(), datetime.datetime.now().strftime("%d_%m_%H_%M"))
 
     for iso in isos:
         for syst in systs:
@@ -24,7 +34,7 @@ if __name__=="__main__":
                 sampn = get_sample_name(fi)
                 isSignal = sampn in signal_samples
                 isMC = not sampn in data_samples
-                if iso=="antiiso" and isMC: continue
+                #if iso=="antiiso" and isMC: continue
                 for lep in leptons:
                     args = "--lepton=%s" % lep
                     if isMC:
@@ -33,7 +43,7 @@ if __name__=="__main__":
                     #Signal sample must be processed unskimmed
                     if not isSignal:
                         args += cutstr
-                    ofpath = "/".join([ofdir, lep, iso, syst])
+                    ofpath = "/".join([cmdline_args.ofdir, lep, iso, syst])
 
                     try:
                         os.makedirs(ofpath)
