@@ -2,7 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import sys,os
-from theta_auto import *
+
+try:
+    from theta_auto import *
+except Exception as e:
+    sys.stderr.write("You need a working version of theta in your PATH. See the script $STPOL_DIR/setup/install_theta.sh and $STPOL_DIR/setenv.sh.\n")
+    raise e
+
 from ROOT import *
 
 from make_input_histos import *
@@ -11,8 +17,12 @@ from plot_fit import plot_fit
 from FitConfig import FitConfig
 from util_scripts import *
 from DataLumiStorage import *
-from plots.common.cross_sections import lumi_iso, lumi_antiiso
 
+try:
+    from plots.common.cross_sections import lumi_iso, lumi_antiiso
+except Exception as e:
+    sys.stderr.write("You need to run `source $STPOL_DIR/setenv.sh` to use the custom python libraries\n")
+    raise e
 
 def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     infile = "fits/"+var.shortName+"_fit_"+filename+".root"
@@ -134,13 +144,6 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     #Generate path structure as base_path/iso/systematic, see util_scripts
     #If you have a different structure, change paths manually
-
-    #if channel == "mu":
-    #    base_path = "/home/andres/single_top/stpol/out_step3_06_01"
-    #    #base_path = "~liis/SingleTopJoosep/stpol/out_step3_05_31_18_43/mu"
-    #if channel == "ele":
-    #    base_path = "~liis/SingleTopJoosep/stpol/out_step3_05_31_18_43/ele"
-
     paths = generate_paths(systematics, base_path)
     #For example:
     paths["iso"]["Nominal"] = base_path+"/iso/nominal/"
@@ -155,7 +158,6 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     return get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup)
 
-#Run as /scratch/mario/theta/utils2/theta-auto.py get_qcd_yield.py - only works in phys!
 if __name__=="__main__":
     try:
         sys.path.append(os.environ["STPOL_DIR"] )
@@ -163,8 +165,8 @@ if __name__=="__main__":
         print "Could not find the STPOL_DIR environment variable, did you run `source setenv.sh` in the code base directory?"
         raise e
 
-    if "theta-auto2.py" not in sys.argv[0]:
-        raise Exception("Must run with qcd_estimation/theta-auto2.py to use command line arguments")
+    if "theta-auto.py" not in sys.argv[0]:
+        raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py`")
 
     cuts_final = FitConfig( "final_selection", trigger="1.0")
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
@@ -177,8 +179,13 @@ if __name__=="__main__":
     cuts["2j0t"] = cuts_2j0t
     cuts["final_without_eta"] = cuts_final_without_eta
 
+    #Remove the name of this script from the argument list in order to not confuse ArgumentParser
+    try:
+        sys.argv.pop(sys.argv.index("get_qcd_yield.py"))
+    except ValueError:
+        pass
     import argparse
-    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser = argparse.ArgumentParser(description='Does the QCD fit using theta-auto')
     parser.add_argument('--lepton', dest='lepton', choices=["mu", "ele"], required=True, help="The lepton channel used for the fit")
     parser.add_argument('--cut', dest='cut', choices=cuts.keys(), required=True, help="The cut region to use in the fit")
     parser.add_argument('--doSystematics', dest='doSystematics', action="store_true", default=False)

@@ -79,7 +79,12 @@ class Config(C):
         nJets = 2
         nBTags = 1
         ptCut = 40
-        etaCut = 4.5
+
+        #etaCut=4.5
+        #FIXME: where did the 4.5 come from? The reference selection is clearly 5.0. --JP
+        #https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiTopRefEventSel#Jets_and_MET
+        etaCut = 5.0
+
         doLightJetRMSClean = False
         doPUClean = False
         #source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
