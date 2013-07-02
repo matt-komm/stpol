@@ -36,7 +36,7 @@ def plot_fit(var, fitConf, hData, fit_result):
     WJETS = fit_result.wjets
     WJETS_UP = fit_result.wjets + fit_result.wjets_uncert
     WJETS_DOWN = fit_result.wjets - fit_result.wjets_uncert
-
+    
     cst = TCanvas("Histogram_"+fitConf.name,fitConf.name,10,10,1000,1000)
 
     hNonQCD = TH1D(f.Get(var.shortName+"__nonqcd"))
@@ -69,7 +69,7 @@ def plot_fit(var, fitConf, hData, fit_result):
 
     hData.SetNameTitle(var.shortName+"__DATA", "Data")
     hData.SetMarkerStyle(20)
-
+     
     #print "data integral: ",hData.Integral()
     hQCD = f.Get(var.shortName+"__qcd")
     hQCD.SetNameTitle(var.shortName+"__qcd", "QCD")
@@ -102,7 +102,8 @@ def plot_fit(var, fitConf, hData, fit_result):
     hNonQCD.Draw("same")
     hNonQCDm.Draw("same")
     hQCDp.Draw("same")
-    hQCDm.Draw("same")
+    hQCDm.Draw("same") 
+   
     hWJets.Draw("same")
     hWJetsp.Draw("same")
     hWJetsm.Draw("same")
@@ -126,3 +127,64 @@ def plot_fit(var, fitConf, hData, fit_result):
     cst.SaveAs(outfile_name+".pdf")
     cst.Draw()
     return cst
+   
+def plot_fit_shapes(var, fitConf, hData, fit_result):
+   tdrstyle()
+   canvases = []
+   infile = "fits/"+var.shortName+"_fit_"+fitConf.name+".root"
+   f = TFile(infile)
+   
+   print fitConf.name
+   outfile_name = "fit_plots/"+var.shortName+"_shapes_"+fitConf.name
+   
+   cst = TCanvas("Histogram_"+fitConf.name,fitConf.name,10,10,1000,1000)
+   
+   hNonQCD = TH1D(f.Get(var.shortName+"__nonqcd"))
+   hNonQCD.SetTitle("Non-QCD")   
+   hNonQCD.SetLineColor(kRed)
+   hNonQCD.Scale(1/hNonQCD.Integral())
+      
+   hWJets = TH1D(f.Get(var.shortName+"__wjets"))
+   hWJets.SetTitle("W+Jets")   
+   hWJets.SetLineColor(kGreen+4)
+   hWJets.Scale(1/hWJets.Integral())
+   
+   hData.SetNameTitle(var.shortName+"__DATA", "Data")
+   hData.SetMarkerStyle(20)
+   hData.Scale(1/hData.Integral())
+
+   #print "data integral: ",hData.Integral()
+   hQCD = f.Get(var.shortName+"__qcd")
+   hQCD.SetNameTitle(var.shortName+"__qcd", "QCD")
+   hQCD.SetLineColor(kGray)
+   hQCD.Scale(1/hQCD.Integral())   
+   
+   max_bin = hData.GetMaximum()*1.6
+   hData.SetAxisRange(0, max_bin, "Y")
+   hData.GetXaxis().SetTitle(var.displayName)
+   #hTotal.Draw("")
+   title = fit_result.getTitle()
+   hData.SetMarkerStyle(20)
+   hData.Draw("E1")
+   hQCD.Draw("same")
+   hNonQCD.Draw("same") 
+   hWJets.Draw("same")
+   #hData.SetTitle("QCD fit, "+title)
+   hData.Draw("E1 same")
+
+   lumibox = lumi_textbox(19739)
+
+   leg = legend(
+        [hData, hQCD, hNonQCD, hWJets],
+        styles=["p", "l"],
+        width=0.2
+    ) 
+
+   leg.Draw()
+          
+   #print hNonQCD.Integral(), hData.Integral(), hQCD.Integral(), hTotal.Integral(), hQCDp.Integral(), hQCDm.Integral()
+   cst.Update()
+   cst.SaveAs(outfile_name+".png")
+   cst.SaveAs(outfile_name+".pdf")
+   cst.Draw()
+   return cst

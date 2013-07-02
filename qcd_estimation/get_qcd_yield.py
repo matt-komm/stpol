@@ -13,7 +13,7 @@ from ROOT import *
 
 from make_input_histos import *
 from fit_with_theta import fit_qcd
-from plot_fit import plot_fit
+from plot_fit import *
 from FitConfig import FitConfig
 from util_scripts import *
 from DataLumiStorage import *
