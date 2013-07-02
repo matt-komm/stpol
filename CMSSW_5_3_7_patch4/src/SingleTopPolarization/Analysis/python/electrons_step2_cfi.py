@@ -25,6 +25,7 @@ def ElectronSetup(process, conf):
         goodSignalElectronCut += " && ((abs(eta) < 0.8 && (electronID('mvaTrigV0') > %f))" % 0.94
         goodSignalElectronCut += " || (abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f))" % 0.85
         goodSignalElectronCut += " || (abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f)))" % 0.92
+
     #Impact parameter dropped because using MVA ID
     #https://hypernews.cern.ch/HyperNews/CMS/get/egamma-elecid/72.html
     #goodSignalElectronCut += " && abs(userFloat('dxy')) < 0.02"
@@ -78,6 +79,11 @@ def ElectronSetup(process, conf):
     print "goodSignalElectronCut={0}".format(goodSignalElectronCut)
     print "looseVetoElectronCut={0}".format(looseVetoElectronCut)
 
+
+    #process.correctedIsoElectrons = cms.EDProducer(
+    #    "CorrectedElectronEcalIsoProducer",
+    #    src=cms.InputTag("elesWithIso")
+    #)
     process.goodSignalElectrons = cms.EDFilter("CandViewSelector",
       src=cms.InputTag("elesWithIso"), cut=cms.string(goodSignalElectronCut)
     )
