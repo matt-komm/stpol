@@ -101,6 +101,7 @@ ElectronIDProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     
     float dxy = TMath::QuietNaN();
     int nHits = -9999;
+    int nHitsLost = -9999;
     
     const reco::Vertex::Point* pvPoint;
     if (!(primaryVertices.isValid()) || primaryVertices->size()==0) {
@@ -114,6 +115,7 @@ ElectronIDProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     for (auto & electron : (*outElectrons)) {
         if (electron.gsfTrack().isNonnull()) {
             nHits = electron.gsfTrack()->trackerExpectedHitsInner().numberOfHits();
+            nHitsLost = electron.gsfTrack()->trackerExpectedHitsInner().numberOfLostHits();
             if (pvPoint) {
                 dxy = electron.gsfTrack()->dxy(*pvPoint);
             }
@@ -127,6 +129,7 @@ ElectronIDProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
             edm::LogError("produce()") << "electron does not have gsfTrack()";
         }
         electron.addUserInt("gsfTrack_trackerExpectedHitsInner_numberOfHits", nHits);
+        electron.addUserInt("gsfTrack_trackerExpectedHitsInner_numberOfHitsLost", nHitsLost);
         electron.addUserFloat("dxy", dxy);
         
     }
