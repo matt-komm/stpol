@@ -18,7 +18,7 @@
 #include <DataFormats/Common/interface/MergeableCounter.h>
 
 //Enable to compile with lots of debugging printout
-#define DEBUG
+//#define DEBUG
 
 #include "cuts_base.h"
 #include "hlt_cuts.h"
