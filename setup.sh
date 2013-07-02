@@ -38,6 +38,9 @@ addpkg RecoLuminosity/LumiDB                V04-01-09 ##Newer than in TagCollect
 addpkg RecoMET/METFilters V00-00-13-01
 addpkg RecoMET/METAnalyzers V00-00-08
 
+#ECAL bug fix https://twiki.cern.ch/twiki/bin/viewauth/CMS/EcalIsolationCorrection2012Data
+cvs co EgammaAnalysis/ElectronTools 
+
 ##OLD
 #https://twiki.cern.ch/twiki/bin/view/CMS/BeamHaloId#CMSSW_4_2_X_and_beyond
 #addpkg DataFormats/METReco V03-03-10 #V03-03-05
