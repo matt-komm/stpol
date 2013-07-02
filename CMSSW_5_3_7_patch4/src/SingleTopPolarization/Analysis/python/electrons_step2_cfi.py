@@ -15,29 +15,19 @@ def ElectronSetup(process, conf):
     goodElectronCut += " && (abs(eta) < 2.5)"
     goodElectronCut += " && !(1.4442 < abs(superCluster.eta) < 1.5660)"
     goodElectronCut += " && passConversionVeto() "
-    #goodElectronCut += "&& (0.0 < electronID('mvaTrigV0') < 1.0)"
     goodSignalElectronCut = goodElectronCut
-    if conf.Electrons.cutWWlnuj:
-        if conf.Electrons.reverseIsoCut:
-            goodSignalElectronCut += ' && userFloat("{0}") >= {1} && userFloat("{0}") < {2}'.format(
-                conf.Electrons.relIsoType,
-                conf.Electrons.relIsoCutRangeAntiIsolatedRegion[0],
-                conf.Electrons.relIsoCutRangeAntiIsolatedRegion[1]
-                )
-        else:
-            goodSignalElectronCut += """
-            && ( (abs(eta) < 0.8 && electronID('mvaTrigV0') > 0.913 && userFloat('{0}') < 0.105) ||
-            ( abs(eta) > 0.8 && abs(eta) < 1.479 && electronID('mvaTrigV0') > 0.964 && userFloat('{0}') < 0.178 ) ||
-            ( abs(eta) > 1.479 && electronID('mvaTrigV0') > 0.899 && userFloat('{0}') < 0.150 ) )""".format(conf.Electrons.relIsoType)
 
-    if conf.Electrons.cutOnMVA:
-        if conf.Electrons.reverseIsoCut:
-            goodSignalElectronCut += " && (electronID('mvaTrigV0') > 0.0) && (electronID('mvaTrigV0') < %f)" % conf.Electrons.mvaCutAntiIso
-        else:
-            goodSignalElectronCut += " && (electronID('mvaTrigV0') > %f)" % conf.Electrons.mvaCut
-
-
-    goodSignalElectronCut += " && abs(userFloat('dxy')) < 0.02"
+    #Sanity cut
+    goodSignalElectronCut += " && (electronID('mvaTrigV0') > 0.0)"
+    if not conf.Electrons.reverseIsoCut:
+        #Latest MVA ID WP-s
+        #https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentification#Training_of_the_MVA
+        goodSignalElectronCut += " && ((abs(eta) < 0.8 && (electronID('mvaTrigV0') > %f))" % 0.94
+        goodSignalElectronCut += " || (abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f))" % 0.85
+        goodSignalElectronCut += " || (abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f)))" % 0.92
+    #Impact parameter dropped because using MVA ID
+    #https://hypernews.cern.ch/HyperNews/CMS/get/egamma-elecid/72.html
+    #goodSignalElectronCut += " && abs(userFloat('dxy')) < 0.02"
     goodSignalElectronCut += " && userInt('gsfTrack_trackerExpectedHitsInner_numberOfHits') <= 0"
 
     if conf.Electrons.cutOnIso:
@@ -56,10 +46,30 @@ def ElectronSetup(process, conf):
                 conf.Electrons.relIsoCutRangeIsolatedRegion[1]
             )
 
+    #Trigger preselection emulation
+    #https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentification#Training_of_the_MVA
+    goodSignalElectronCut += """
+    && (abs(superCluster()->eta()) < 1.479 ? (
+            sigmaIetaIeta() < 0.014 &&
+            hadronicOverEm() < 0.15 &&
+            dr03TkSumPt()/ele.pt() < 0.2 &&
+            dr03EcalRecHitSumEt()/ele.pt() < 0.2 &&
+            dr03HcalTowerSumEt()/ele.pt() < 0.2 &&
+            gsfTrack()->trackerExpectedHitsInner().numberOfLostHits() == 0
+        ) : (
+            sigmaIetaIeta() < 0.035 &&
+            hadronicOverEm() < 0.10 &&
+            dr03TkSumPt()/ele.pt() < 0.2 &&
+            dr03EcalRecHitSumEt()/ele.pt() < 0.2 &&
+            dr03HcalTowerSumEt()/ele.pt() < 0.2 &&
+            gsfTrack()->trackerExpectedHitsInner().numberOfLostHits() == 0
+        ))
+    """
 
     looseVetoElectronCut = "%s > 20.0" % conf.Electrons.pt
     looseVetoElectronCut += " && (abs(eta) < 2.5)"
-    looseVetoElectronCut += " && (electronID('mvaTrigV0') > %f)" % 0.1
+    #FIXME: what is this based on? Most likely historical. Currently fix to 0.0 for clarity in sync
+    looseVetoElectronCut += " && (electronID('mvaTrigV0') > %f)" % 0.0
     looseVetoElectronCut += " && (userFloat('{0}') < {1})".format(conf.Electrons.relIsoType, conf.Electrons.looseVetoRelIsoCut)
 
     #Loose veto electrons must not overlap with good signal electrons

@@ -138,13 +138,13 @@ class Config(C):
 
     class Electrons(Leptons):
         pt = "ecalDrivenMomentum.Pt()"
-        mvaCut = 0.1
-        mvaCutAntiIso = 1.1
-        cutOnMVA = True
+        #mvaCut = 0.1
+        #mvaCutAntiIso = 1.1
+        #cutOnMVA = True
         cutOnIso = True
-        cutWWlnuj = False
-        relIsoCutRangeIsolatedRegion = [0.0, 0.1]
-        relIsoCutRangeAntiIsolatedRegion = [0.1, 0.5]
+        #cutWWlnuj = False
+        relIsoCutRangeIsolatedRegion = [0.0, 0.15]
+        relIsoCutRangeAntiIsolatedRegion = [0.15, 0.5]
         looseVetoRelIsoCut = 0.15
         transverseMassType = "MET"
         source = "electronsWithID"
