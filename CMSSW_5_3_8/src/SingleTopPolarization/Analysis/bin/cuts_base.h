@@ -16,10 +16,15 @@ T get_collection(const edm::EventBase& evt, edm::InputTag src, T retval) {
     evt.getByLabel(src, coll);
     if(!coll.isValid()) {
 #ifdef DEBUG
-        std::cerr << "Collection " << src.label() << " is not valid!" << std::endl;
+        std::cerr << "Collection " << src.encode() << " is not valid!" << std::endl;
 #endif
         return retval;
     }
+
+#ifdef DEBUG
+    std::cout << "Got " << src.encode() << " = " << *coll << std::endl;
+#endif
+
     return *coll;
 }
 
