@@ -35,7 +35,7 @@ def select_cuts():
     cutsMtwMass70.setFinalCuts("abs(eta_lj)>2.5 && top_mass < 220 && top_mass > 130 && mt_mu < 70")
     cutsMtwMass70.calcCuts()
     cuts.append(cutsMtwMass70)
-    
+
     cutsMtwMass20plus = FitConfig("2J_1T_m_T_20plus")
     cutsMtwMass20plus.setFinalCuts("abs(eta_lj)>2.5 && top_mass < 220 && top_mass > 130 && mt_mu > 20")
     cutsMtwMass20plus.calcCuts()
@@ -82,43 +82,44 @@ def do_fit(var,fit, systematics, open_files):
 
 
 if __name__=="__main__":
+    raise Expcetion("This file is not supposed to be run, superseded by get_qcd_yield.py!")
 #    channel = "ele"
     channel = "mu"
 
     print "QCD estimation in " + channel + " channel"
-    
+
     #Specify variable on which to fit
     if channel == "mu":
-        var = Variable("mt_mu", 0, 200, 20, "mtwMass", "m_{T }")    
+        var = Variable("mt_mu", 0, 200, 20, "mtwMass", "m_{T }")
     elif channel == "ele":
         var = Variable("met", 0, 200, 20, "MET", "MET")
     else:
         print "Set either 'ele' or 'mu' as channel"
         sys.exit(1)
-    
+
     #Do you want to get the resulting yield after a cut on the fitted variable?
     cutMT = True
     #If yes, specify minumum value for the variable the cut. Obviously change to MET for electrons
     #Remember that the cut should be on the edge of 2 bins, otherwise the result will be inaccurate
     mtMinValue = 50.01 # M_T>50
-    
+
     #Use Default cuts for final selection. See FitConfig for details on how to change the cuts.
     cuts = FitConfig("final_selection")
-    #For example:  
-    
+    #For example:
+
     #Recreate all necessary cuts after manual changes
     cuts.calcCuts()
 
     dataLumiIso = 19739
     dataLumiAntiIso = 19739
     lumis = DataLumiStorage(dataLumiIso, dataLumiAntiIso)
-    
+
     dataGroup = dgDataMuons
 
     #MC Default is a set muon specific groups with inclusive t-channel for now. MC Groups are without QCD
     #MCGroups = MC_groups_noQCD_InclusiveTCh
     MCGroups = MC_groups_noQCD_AllExclusive
-    
+
     #QCD MC group from init_data
     QCDGroup = None#dgQCDMu #can change to dgQCDMu, for example
 
@@ -128,18 +129,18 @@ if __name__=="__main__":
     #If you have a different structure, change paths manually
 
     base_path = "/home/andres/single_top/stpol/out_step3_06_01"
-    
+
     paths = generate_paths(systematics, base_path)
     #For example:
     paths["iso"]["Nominal"] = base_path+"/iso/Nominal/"
     paths["antiiso"]["Nominal"] = base_path+"/antiiso/Nominal/"
-    #Then open files    
+    #Then open files
     print "opening data and MC files"
     openedFiles = open_all_data_files(dataGroup, MCGroups, QCDGroup, paths)
-    
+
     cutconfs = select_cuts()
-    canvases = []   
-    for cuts in cutconfs: 
+    canvases = []
+    for cuts in cutconfs:
         #cuts.setTrigger("1")
         cuts.calcCuts()
         print cuts
