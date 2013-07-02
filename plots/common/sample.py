@@ -62,13 +62,14 @@ class Sample:
         scale_factor = float(expected_events)/float(total_events)
         return scale_factor
 
-    def drawHistogram(self, var, cut_str, dtype="float", **kwargs):
+    def drawHistogram(self, var, cut_str, **kwargs):
         name = self.name + "_" + Histogram.unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)
         binning = kwargs.get("binning", None)
 
         weight_str = kwargs.get("weight", None)
+        dtype = kwargs.get("dtype", "float")
 
         ROOT.gROOT.cd()
         if plot_range is not None:
@@ -82,6 +83,8 @@ class Sample:
             histfn = ROOT.TH1F
         elif dtype=="int":
             histfn = ROOT.TH1I
+        else:
+            raise ValueError("Unrecognized dtype: %s" % dtype)
 
         hist = histfn(*hist_args)
 
