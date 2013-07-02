@@ -49,23 +49,26 @@ def ElectronSetup(process, conf):
 
     #Trigger preselection emulation
     #https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentification#Training_of_the_MVA
-    goodSignalElectronCut += """
-    && (abs(superCluster()->eta()) < 1.479 ? (
-            sigmaIetaIeta() < 0.014 &&
-            hadronicOverEm() < 0.15 &&
-            dr03TkSumPt()/ele.pt() < 0.2 &&
-            dr03EcalRecHitSumEt()/ele.pt() < 0.2 &&
-            dr03HcalTowerSumEt()/ele.pt() < 0.2 &&
-            gsfTrack()->trackerExpectedHitsInner().numberOfLostHits() == 0
-        ) : (
-            sigmaIetaIeta() < 0.035 &&
-            hadronicOverEm() < 0.10 &&
-            dr03TkSumPt()/ele.pt() < 0.2 &&
-            dr03EcalRecHitSumEt()/ele.pt() < 0.2 &&
-            dr03HcalTowerSumEt()/ele.pt() < 0.2 &&
-            gsfTrack()->trackerExpectedHitsInner().numberOfLostHits() == 0
-        ))
-    """
+    goodSignalElectronCut += " && (\
+            (abs(superCluster.eta()) < 1.479 && \
+            sigmaIetaIeta() < 0.014 && \
+            hadronicOverEm() < 0.15 && \
+            dr03TkSumPt()/pt() < 0.2 && \
+            dr03EcalRecHitSumEt()/pt() < 0.2 && \
+            dr03HcalTowerSumEt()/pt() < 0.2 && \
+            userInt('gsfTrack_trackerExpectedHitsInner_numberOfHitsLost') == 0) || \
+            (abs(superCluster.eta()) >= 1.479 && \
+            sigmaIetaIeta() < 0.035 && \
+            hadronicOverEm() < 0.10 && \
+            dr03TkSumPt()/pt() < 0.2 && \
+            dr03EcalRecHitSumEt()/pt < 0.2 && \
+            dr03HcalTowerSumEt()/pt < 0.2 && \
+            userInt('gsfTrack_trackerExpectedHitsInner_numberOfHitsLost') == 0)\
+        )"
+
+    #Remove the excess whitespace from formatting
+    import re
+    goodSignalElectronCut = re.sub( '\s+', ' ', goodSignalElectronCut ).strip()
 
     looseVetoElectronCut = "%s > 20.0" % conf.Electrons.pt
     looseVetoElectronCut += " && (abs(eta) < 2.5)"
@@ -89,7 +92,9 @@ def ElectronSetup(process, conf):
     )
 
     process.looseVetoElectrons = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag("elesWithIso"), cut=cms.string(looseVetoElectronCut)
+      src=cms.InputTag("elesWithIso"),
+      #cut=cms.string(looseVetoElectronCut)
+      cut=cms.string("")
     )
 
     process.oneIsoEle = cms.EDFilter(
