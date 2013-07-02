@@ -3,6 +3,7 @@ import logging
 from plots.common.histogram import Histogram
 from plots.common.utils import filter_alnum
 import numpy
+from cross_sections import xs as sample_xs_map
 
 class HistogramException(Exception):
     pass
@@ -37,9 +38,9 @@ class Sample:
             self.logger.warning("Sample was empty: %s" % self.name)
             #raise Exception("Sample event count was <= 0: %s" % self.name)
 
-        self.isMC = not self.file_name.startswith("Single")
+        self.isMC = not self.file_name.split("/")[-1].startswith("Single")
 
-        self.logger.info("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
+        self.logger.debug("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
 
     def getEventCount(self):
         if self.event_count is None:
@@ -55,18 +56,34 @@ class Sample:
             raise TObjectOpenException("Failed to open count histogram")
         return count_hist.GetBinContent(1)
 
+    def lumiScaleFactor(self, lumi):
+        expected_events = sample_xs_map[self.name] * lumi
+        total_events = self.getTotalEventCount()
+        scale_factor = float(expected_events)/float(total_events)
+        return scale_factor
+
     def drawHistogram(self, var, cut_str, dtype="float", **kwargs):
         name = self.name + "_" + Histogram.unique_name(var, cut_str, kwargs.get("weight"))
 
-        plot_range = kwargs.get("plot_range", [100, 0, 100])
+        plot_range = kwargs.get("plot_range", None)
+        binning = kwargs.get("binning", None)
 
         weight_str = kwargs.get("weight", None)
 
         ROOT.gROOT.cd()
+        if plot_range is not None:
+            hist_args = ["htemp", "htemp"] + plot_range
+        elif binning is not None:
+            hist_args = "htemp", "htemp", binning[0], binning[1]
+        else:
+            raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=(nbins, numpy.array(..))")
+
         if dtype=="float":
-            hist = ROOT.TH1F("htemp", "htemp", plot_range[0], plot_range[1], plot_range[2])
+            histfn = ROOT.TH1F
         elif dtype=="int":
-            hist = ROOT.TH1I("htemp", "htemp", plot_range[0], plot_range[1], plot_range[2])
+            histfn = ROOT.TH1I
+
+        hist = histfn(*hist_args)
 
         hist.Sumw2()
 
@@ -126,10 +143,16 @@ class Sample:
         return sample
 
     @staticmethod
-    def fromDirectory(directory):
+    def fromDirectory(directory, out_type="list"):
         import glob
         file_names = glob.glob(directory + "/*.root")
-        samples = [Sample.fromFile(file_name) for file_name in file_names]
+        logging.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
+        if out_type=="list":
+            samples = [Sample.fromFile(file_name) for file_name in file_names]
+        elif out_type=="dict":
+            samples = dict((file_name.split("/")[-1].split(".")[0], Sample.fromFile(file_name)) for file_name in file_names)
+        else:
+            raise ValueError("out_type must be 'list' or 'dict'")
         return samples
 
     def __repr__(self):

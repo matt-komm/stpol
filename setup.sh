@@ -53,3 +53,7 @@ cmsenv
 
 scram b -j 8 &> scram_log
 cd $CMSSW_BASE/../
+source setenv.sh
+
+$STPOL_DIR/setup/install_tunfold.sh
+$STPOL_DIR/setup/install_theta.sh

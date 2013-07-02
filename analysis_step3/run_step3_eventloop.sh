@@ -35,3 +35,4 @@ echo $CONF
 echo "Input file is "$INFILE
 cat $INFILE | $CMSSW_BASE/bin/slc5_amd64_gcc462/Step3_EventLoop $CONF --outputFile=out_step3_$OFNAME.root
 echo "step3 exit code: "$?
+echo ""

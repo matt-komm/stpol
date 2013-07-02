@@ -9,6 +9,4 @@ find $dir -name "*.out" -type f | wc -l
 echo "total slurm jobs successfully finished"
 find $dir -name "*.out" -type f -exec grep "processing speed" {} \; | wc -l
 echo "total slurm jobs with error"
-#find $dir -name "*.out" -type f -exec grep -i "error" {} \; | wc -l
-find $dir -name "*.out" -type f -exec grep -e "step3 exit code: [^0]" {} \; -print0
-echo
+$STPOL_DIR/analysis_step3/failed_tasks.sh $dir

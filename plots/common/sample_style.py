@@ -46,3 +46,9 @@ class ColorStyleGen:
 
     def reset(self):
         self.colstyles = itertools.product(colors, styles)
+
+    @staticmethod
+    def style_hists(hists):
+        cg = ColorStyleGen()
+        for h in hists:
+            cg.style_next(h)
