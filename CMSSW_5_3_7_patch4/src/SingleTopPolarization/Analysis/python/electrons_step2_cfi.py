@@ -1,6 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 import SingleTopPolarization.Analysis.eventCounting as eventCounting
 
+import re
+#Remove the excess whitespace from formatting
+def clean_whitespace(s):
+    return re.sub( '\s+', ' ', s).strip()
+
 """
 This method sets up the electron channel lepton selection.
 isMC - run on MC (vs. run on data)
@@ -22,9 +27,9 @@ def ElectronSetup(process, conf):
     if not conf.Electrons.reverseIsoCut:
         #Latest MVA ID WP-s
         #https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentification#Training_of_the_MVA
-        goodSignalElectronCut += " && ((abs(eta) < 0.8 && (electronID('mvaTrigV0') > %f))" % 0.94
-        goodSignalElectronCut += " || (abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f))" % 0.85
-        goodSignalElectronCut += " || (abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f)))" % 0.92
+        goodSignalElectronCut += " && ((abs(eta)>0.0 && abs(eta) < 0.8 && (electronID('mvaTrigV0') > %f))" % 0.94
+        goodSignalElectronCut += " || (abs(eta)>0.8 && abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f))" % 0.85
+        goodSignalElectronCut += " || (abs(eta)>1.479 && abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f)))" % 0.92
 
     #Impact parameter dropped because using MVA ID
     #https://hypernews.cern.ch/HyperNews/CMS/get/egamma-elecid/72.html
@@ -65,16 +70,33 @@ def ElectronSetup(process, conf):
             dr03HcalTowerSumEt()/pt < 0.2 && \
             userInt('gsfTrack_trackerExpectedHitsInner_numberOfHitsLost') == 0)\
         )"
-
-    #Remove the excess whitespace from formatting
-    import re
-    goodSignalElectronCut = re.sub( '\s+', ' ', goodSignalElectronCut ).strip()
+    goodSignalElectronCut = clean_whitespace(goodSignalElectronCut)
 
     looseVetoElectronCut = "%s > 20.0" % conf.Electrons.pt
     looseVetoElectronCut += " && (abs(eta) < 2.5)"
     #FIXME: what is this based on? Most likely historical. Currently fix to 0.0 for clarity in sync
-    looseVetoElectronCut += " && (electronID('mvaTrigV0') > %f)" % 0.0
+    #looseVetoElectronCut += " && (electronID('mvaTrigV0') > %f)" % 0.0
+
+    #Veto cut based ID: https://twiki.cern.ch/twiki/bin/view/CMS/EgammaCutBasedIdentification
+    cutBasedLooseID = "\
+        (abs(superCluster().eta()) < 1.479 && (\
+            abs(deltaEtaSuperClusterTrackAtVtx()) < 0.007 && \
+            abs(deltaPhiSuperClusterTrackAtVtx()) < 0.8 && \
+            sigmaIetaIeta() < 0.01 && \
+            hadronicOverEm() < 0.15 && \
+            userFloat('dxy') < 0.04 && \
+            userFloat('dz') < 0.2 && \
+        )) || (\
+        abs(superCLuster().eta())>1.479 && abs(superCLuster().eta())<2.5 && (\
+            abs(deltaEtaSuperClusterTrackAtVtx()) < 0.01 && \
+            abs(deltaPhiSuperClusterTrackAtVtx()) < 0.7 && \
+            sigmaIetaIeta() < 0.03 && \
+            userFloat('dxy') < 0.04 && \
+            userFloat('dz') < 0.2 && \
+        ))"
+    looseVetoElectronCut += cutBasedLooseID
     looseVetoElectronCut += " && (userFloat('{0}') < {1})".format(conf.Electrons.relIsoType, conf.Electrons.looseVetoRelIsoCut)
+    looseVetoElectronCut = clean_whitespace(looseVetoElectronCut)
 
     #Loose veto electrons must not overlap with good signal electrons
     looseVetoElectronCut += " && !(%s)" % goodSignalElectronCut
