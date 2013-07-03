@@ -41,6 +41,8 @@
 
 #include "FWCore/Utilities/interface/InputTag.h"
 
+#include "SingleTopPolarization/Analysis/interface/defaults.h"
+
 #include <TMath.h>
 
 //
@@ -100,7 +102,8 @@ ElectronIDProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     LogDebug("produce()") << "Input collection " << electronSrc.label() << " has " << electrons->size() << " items";
     
     float dxy = TMath::QuietNaN();
-    int nHits = -9999;
+    int nHits = DEFAULT_INT;
+    int nHitsLost = DEFAULT_INT;
     
     const reco::Vertex::Point* pvPoint;
     if (!(primaryVertices.isValid()) || primaryVertices->size()==0) {
@@ -119,11 +122,11 @@ ElectronIDProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
             }
             else {
                 dxy = TMath::QuietNaN();
-                nHits = -9999;
+                nHits = DEFAULT_INT;
                 edm::LogError("produce()") << "Could not use primary vertex";
             }
         } else {
-            nHits = -9999;
+            nHits = DEFAULT_INT;
             edm::LogError("produce()") << "electron does not have gsfTrack()";
         }
         electron.addUserInt("gsfTrack_trackerExpectedHitsInner_numberOfHits", nHits);
