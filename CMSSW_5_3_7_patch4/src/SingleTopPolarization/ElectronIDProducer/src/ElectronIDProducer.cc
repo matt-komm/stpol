@@ -11,7 +11,7 @@
  [Notes on implementation]
  */
 //
-// Original Author:
+// Original Author:  Joosep Pata <joosep.pata@cern.ch>
 //         Created:  Thu Sep 27 14:36:33 EEST 2012
 // $Id$
 //
