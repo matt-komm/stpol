@@ -2,20 +2,30 @@
 #mv CMSSW_5_3_4_cand1/SingleTopPolarization ./
 
 #Tags for https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATReleaseNotes52X#V08_09_43
-CMSVERSION=CMSSW_5_3_7_patch4
+CMSVERSION=CMSSW_5_3_11
 #echo "Stashing current working directory, use 'git stash pop' later to retrieve"
 git stash
 rm -Rf $CMSVERSION
 export SCRAM_ARCH=slc5_amd64_gcc462
 cmsrel $CMSVERSION #Base code
 cmsrel CMSSW_5_3_8 #Create separate directory for FWLite
-git reset --hard
+#git reset --hard
 cd $CMSVERSION 
 
 cmsenv
 cd $CMSSW_BASE/src
-addpkg DataFormats/PatCandidates     V06-05-06-05
-addpkg PhysicsTools/PatAlgos         V08-09-50
+
+addpkg DataFormats/PatCandidates V06-05-06-12
+addpkg PhysicsTools/PatAlgos     V08-09-62
+addpkg PhysicsTools/PatUtils
+addpkg RecoBTag/ImpactParameter V01-04-09-01
+addpkg RecoBTag/SecondaryVertex V01-10-06
+addpkg RecoBTag/SoftLepton      V05-09-11
+addpkg RecoBTau/JetTagComputer  V02-03-02
+addpkg RecoBTag/Configuration   V00-07-05
+
+#addpkg DataFormats/PatCandidates     V06-05-06-05
+#addpkg PhysicsTools/PatAlgos         V08-09-50
 addpkg DataFormats/StdDictionaries   V00-02-14
 addpkg FWCore/GuiBrowsers            V00-00-70
 addpkg RecoParticleFlow/PFProducer   V15-02-06
