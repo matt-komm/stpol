@@ -60,7 +60,7 @@ NtpProducer2<C>::NtpProducer2( const edm::ParameterSet& par ) :
      produces<std::vector<float> >(tag).setBranchAlias(tag);
      
    }
-   std::cout << "Initializing NtpProducer2 with src=" << src_.encode() << std::endl;
+   //std::cout << "Initializing NtpProducer2 with src=" << src_.encode() << std::endl;
 }
 
 template<typename C>
@@ -70,7 +70,7 @@ NtpProducer2<C>::~NtpProducer2() {
 template<typename C>
 void NtpProducer2<C>::produce( edm::Event& iEvent, const edm::EventSetup& ) {
    edm::Handle<C> coll;
-   std::cout << "Getting " << src_.encode() << " by label" << std::endl;
+   //std::cout << "Getting " << src_.encode() << " by label" << std::endl;
    LogDebug("ntuples") << "Getting " << src_.encode() << " by label";
    iEvent.getByLabel(src_, coll);
    if(eventInfo_){   
