@@ -69,6 +69,7 @@
 		A72064F0178175A400EFC8E4 /* xsec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = xsec.h; sourceTree = "<group>"; };
 		A72064F11781DCFC00EFC8E4 /* makehistos.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = makehistos.py; sourceTree = "<group>"; };
 		A72064F21781DF1100EFC8E4 /* sample.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sample.py; sourceTree = "<group>"; };
+		A72064F617846CAE00EFC8E4 /* cuts.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = cuts.py; sourceTree = "<group>"; };
 		A73D461D16A83DFB00703EF6 /* babysit2.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = babysit2.sh; sourceTree = "<group>"; };
 		A73D461E16A83DFB00703EF6 /* bcmsRun */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = bcmsRun; sourceTree = "<group>"; };
 		A73D461F16A83DFB00703EF6 /* datasets.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = datasets.py; sourceTree = "<group>"; };
@@ -340,6 +341,7 @@
 		A71F5D791701D8A200AB8E33 /* common */ = {
 			isa = PBXGroup;
 			children = (
+				A72064F617846CAE00EFC8E4 /* cuts.py */,
 				A72064F21781DF1100EFC8E4 /* sample.py */,
 				A72001CC177D70F50092972C /* histogram.py */,
 				A71F5D7A1701D8A200AB8E33 /* colors.py */,
