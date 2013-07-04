@@ -15,6 +15,7 @@ cd $CMSVERSION
 cmsenv
 cd $CMSSW_BASE/src
 
+#From official PAT recipe
 addpkg DataFormats/PatCandidates V06-05-06-12
 addpkg PhysicsTools/PatAlgos     V08-09-62
 addpkg PhysicsTools/PatUtils
@@ -40,6 +41,7 @@ addpkg RecoParticleFlow/PFProducer V15-02-06
 #addpkg DataFormats/VertexReco               V02-00-04 
 #addpkg RecoLuminosity/LumiDB                V04-01-09 ##Newer than in TagCollector for 5_3_X
 
+#For electron MVA
 cvs co -r V00-00-31 -d EGamma/EGammaAnalysisTools UserCode/EGamma/EGammaAnalysisTools
 cd EGamma/EGammaAnalysisTools/data
 cat download.url | xargs wget
