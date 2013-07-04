@@ -11,10 +11,10 @@ fi
 
 mkdir $OFDIR
 
-cmsRun $CMSSW_BASE/../runconfs/step2_newCmdLine_cfg.py doDebug=True inputFiles=file:$IN isMC=True channel=background subChannel=TTbar outputFile=$OFDIR/out.root &> $OFDIR/log_step2.txt
+cmsRun $STPOL_DIR/runconfs/step2_newCmdLine_cfg.py doDebug=True inputFiles=file:$IN isMC=True channel=background subChannel=TTbar outputFile=$OFDIR/out.root &> $OFDIR/log_step2.txt
 EX=$?
 echo "Exit code:"$EX 
 if [ "$EX" -ne 0 ]
 then
-    tail -n 50 $OFDIR/log*.txt
+    grep -A50 "Exception" $OFDIR/log_step2.txt
 fi

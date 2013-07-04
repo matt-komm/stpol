@@ -41,9 +41,11 @@ addpkg RecoParticleFlow/PFProducer V15-02-06
 #addpkg DataFormats/VertexReco               V02-00-04 
 #addpkg RecoLuminosity/LumiDB                V04-01-09 ##Newer than in TagCollector for 5_3_X
 
-#For electron MVA
-cvs co -r V00-00-31 -d EGamma/EGammaAnalysisTools UserCode/EGamma/EGammaAnalysisTools
-cd EGamma/EGammaAnalysisTools/data
+#For electron MVA https://twiki.cern.ch/twiki/bin/view/CMS/MultivariateElectronIdentification#Recipe_for_5_3_X
+cvs co -r V00-00-09 EgammaAnalysis/ElectronTools
+cvs co -r V09-00-01 RecoEgamma/EgammaTools
+scram b -j 9
+cd EgammaAnalysis/ElectronTools/data
 cat download.url | xargs wget
 
 cd $CMSSW_BASE/src
@@ -52,7 +54,7 @@ cd $CMSSW_BASE/src
 #addpkg RecoMET/METFilters  V00-00-09 
 
 #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupJetID
-#cvs co -r V00-02-10 -d CMGTools/External UserCode/CMG/CMGTools/External
+cvs co -r V00-03-04 -d CMGTools/External UserCode/CMG/CMGTools/External
 
 #LHAPDF setup must be done prior to full compile
 cmsenv

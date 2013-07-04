@@ -156,10 +156,14 @@ def SingleTopStep1(
   #    it's already gsfElectrons, which is a superset of the pfElectrons
   process.patElectrons.pfElectronSource = cms.InputTag("pfElectrons")
 
-  process.load('EGamma.EGammaAnalysisTools.electronIdMVAProducer_cfi')
-  process.mvaID = cms.Sequence(process.mvaTrigV0 + process.mvaNonTrigV0)
-  process.patElectrons.electronIDSources.mvaTrigV0 = cms.InputTag("mvaTrigV0")
-  process.patElectrons.electronIDSources.mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0")
+  #From EgammaAnalysis/ElectronTools/test/patTuple_electronId_cfg.py
+  process.load('EgammaAnalysis.ElectronTools.electronIdMVAProducer_cfi')
+  process.mvaID = cms.Sequence(  process.mvaTrigV0 + process.mvaTrigNoIPV0 + process.mvaNonTrigV0 )
+  process.patElectrons.electronIDSources = cms.PSet(
+    mvaTrigV0 = cms.InputTag("mvaTrigV0"),
+    mvaNonTrigV0 = cms.InputTag("mvaNonTrigV0"),
+    mvaTrigNoIPV0 = cms.InputTag("mvaTrigNoIPV0"),
+  )
   process.patPF2PATSequence.replace(process.patElectrons, process.mvaID * process.patElectrons)
   process.selectedPatElectrons.cut = "pt>25 && abs(eta)<3.0"
 
@@ -168,12 +172,6 @@ def SingleTopStep1(
     electronSrc = cms.InputTag("selectedPatElectrons"),
     primaryVertexSource = cms.InputTag("goodOfflinePrimaryVertices")
   )
-  #process.electronClones = cms.EDProducer("ElectronShallowCloneProducer",
-  #    src = cms.InputTag("selectedPatElectrons")
-  #)
-
-  #if not maxLeptonIso is None:
-  #    process.pfIsolatedElectrons.isolationCut = maxLeptonIso
 
   #electron dR=0.3
   process.pfElectrons.isolationValueMapsCharged = cms.VInputTag(cms.InputTag("elPFIsoValueCharged03PFId"))

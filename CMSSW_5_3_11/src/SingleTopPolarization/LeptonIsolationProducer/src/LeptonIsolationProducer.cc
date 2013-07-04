@@ -37,8 +37,8 @@
 #include <DataFormats/PatCandidates/interface/Electron.h>
 
 //Electron effective area
-#include <EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h>
-
+//#include <EGamma/EGammaAnalysisTools/interface/ElectronEffectiveArea.h>
+#include <EgammaAnalysis/ElectronTools/interface/ElectronEffectiveArea.h>
 
 
 //

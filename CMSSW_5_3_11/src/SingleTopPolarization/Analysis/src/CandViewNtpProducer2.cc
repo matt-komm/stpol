@@ -6,10 +6,10 @@
  *
  */
 #include "FWCore/Framework/interface/MakerMacros.h"
-#include "CommonTools/UtilAlgos/interface/NtpProducer.h"
+#include "SingleTopPolarization/Analysis/interface/NtpProducer2.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 
-typedef NtpProducer<reco::CandidateView> CandViewNtpProducer2;
+typedef NtpProducer2<reco::CandidateView> CandViewNtpProducer2;
 
 DEFINE_FWK_MODULE( CandViewNtpProducer2 );
 
