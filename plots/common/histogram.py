@@ -88,6 +88,8 @@ class Histogram(Base):
                 self.hist_file = self.hist.GetDirectory().GetFile().GetName()
             except ReferenceError as e:
                 self.hist_file = None
+        if dir:
+            self.hist.SetDirectory(dir)
         self.pretty_name = str(self.hist.GetTitle())
 
     def loadFile(self):
@@ -104,6 +106,19 @@ class Histogram(Base):
         hi = self.hist.Clone(self.name + "_plus_" + other.name)
         hi.Add(other.hist)
         return Histogram.make(hi)
+    
+    @staticmethod
+    def sum(histograms):
+        if len(histograms)>0:
+            hi = histograms[0]
+        else:
+            return ValueError("Must have at least 1 histogram")
+        for h in histograms[1:]:
+            hi = hi + h
+        hi.hist.SetName("summed")
+        hi.hist.SetTitle("summed")
+        hi.update()
+        return hi
 
     @staticmethod
     def unique_name(var, cut, weight):

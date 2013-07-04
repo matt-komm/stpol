@@ -17,6 +17,9 @@
 #include <FWCore/PythonParameterSet/interface/PythonProcessDesc.h>
 #include <DataFormats/Common/interface/MergeableCounter.h>
 
+//Enable to compile with lots of debugging printout
+//#define DEBUG
+
 #include "cuts_base.h"
 #include "hlt_cuts.h"
 #include "b_efficiency_calc.h"
@@ -498,6 +501,7 @@ class Weights : public CutsBase {
 public:
     edm::InputTag bWeightNominalSrc;
     edm::InputTag puWeightSrc;
+    edm::InputTag ttbarWeightSrc;
     
     edm::InputTag muonIDWeightSrc;
     edm::InputTag muonIsoWeightSrc;
@@ -532,6 +536,7 @@ public:
     void initialize_branches() {
         if (doWeights) {
             branch_vars.vars_float["b_weight_nominal"] = 1.0;
+            branch_vars.vars_float["ttbar_weight"] = 1.0;
             branch_vars.vars_float["pu_weight"] = 1.0;
             branch_vars.vars_float["gen_weight"] = 1.0;
             branch_vars.vars_float["muon_IDWeight"] = 1.0;
@@ -576,6 +581,7 @@ public:
         
         bWeightNominalSrc = pars.getParameter<edm::InputTag>("bWeightNominalSrc");
         puWeightSrc = pars.getParameter<edm::InputTag>("puWeightSrc");
+        ttbarWeightSrc = pars.getParameter<edm::InputTag>("ttbarWeightSrc");
         
         muonIDWeightSrc = pars.getParameter<edm::InputTag>("muonIDWeightSrc");
         muonIsoWeightSrc = pars.getParameter<edm::InputTag>("muonIsoWeightSrc");
@@ -611,14 +617,16 @@ public:
             edm::Handle<GenEventInfoProduct> genEventInfo;
             edm::InputTag genWeightSrc1("generator");
             event.getByLabel(genWeightSrc1, genEventInfo);
-            if (genEventInfo.isValid())
-            {
+            if (genEventInfo.isValid()) {
                 branch_vars.vars_float["gen_weight"] = genEventInfo->weight();
             }
-            else branch_vars.vars_float["gen_weight"] =1.;
+            else {
+                branch_vars.vars_float["gen_weight"] =1.;
+            }
             
             branch_vars.vars_float["b_weight_nominal"] = get_collection<float>(event, bWeightNominalSrc, 0.0);
             branch_vars.vars_float["pu_weight"] = get_collection<double>(event, puWeightSrc, 0.0);
+            branch_vars.vars_float["ttbar_weight"] = get_collection<double>(event, ttbarWeightSrc, 0.0);
             
             branch_vars.vars_float["muon_IDWeight"] = get_collection<double>(event, muonIDWeightSrc, 0.0);
             branch_vars.vars_float["muon_IsoWeight"] = get_collection<double>(event, muonIsoWeightSrc, 0.0);
@@ -662,6 +670,7 @@ public:
                 branch_vars.vars_float[key] = 0.0;
             }
         };
+
         if(doWeights) {
             
             not_nan("b_weight_nominal");

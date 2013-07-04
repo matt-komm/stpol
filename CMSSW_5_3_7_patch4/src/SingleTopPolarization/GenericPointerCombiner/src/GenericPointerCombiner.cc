@@ -5,13 +5,13 @@
 // 
 /**\class GenericPointerCombiner GenericPointerCombiner.cc SingleTopPolarization/GenericPointerCombiner/src/GenericPointerCombiner.cc
 
- Description: [one line class summary]
+ Description: Combines multiple View<inClass> type objects into a OwnVector<outClass> type collection, where outClass must be a superclass of inClass.
 
  Implementation:
      [Notes on implementation]
 */
 //
-// Original Author:  
+// Original Author:  Joosep Pata <joosep.pata@cern.ch>
 //         Created:  Tue Oct  2 12:09:11 EEST 2012
 // $Id$
 //
