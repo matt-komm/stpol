@@ -38,6 +38,10 @@ cd $CMSSW_BASE/src
 #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupJetID
 cvs co -r V00-03-04 -d CMGTools/External UserCode/CMG/CMGTools/External
 
+#https://twiki.cern.ch/twiki/bin/viewauth/CMS/MissingETOptionalFilters#EB_or_EE_Xtals_with_large_laser
+addpkg RecoMET/METFilters V00-00-13-01
+addpkg RecoMET/METAnalyzers V00-00-08
+
 #LHAPDF setup must be done prior to full compile
 cmsenv
 scram setup lhapdffull

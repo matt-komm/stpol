@@ -31,6 +31,7 @@ def ApplyEventFilters(process, goodVertices = 'goodOfflinePrimaryVertices', runO
         """
     eventFiltersSequence = cms.Sequence()
 
+
     # Scraping events
     # https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookCollisionsDataAnalysis#Recipes_to_get_started
     process.scrapingFilter = cms.EDFilter('FilterOutScraping',
@@ -61,8 +62,9 @@ def ApplyEventFilters(process, goodVertices = 'goodOfflinePrimaryVertices', runO
     # HCAL laser events
     # https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFilters#HCAL_laser_events
     # https://twiki.cern.ch/twiki/bin/view/CMS/PdmVKnowFeatures#HCAL_laser_events_in_prompt_2012
-    process.load("RecoMET.METFilters.hcalLaserEventFilter_cfi")
-    eventFiltersSequence += process.hcalLaserEventFilter
+    process.load("EventFilter.HcalRawToDigi.hcallasereventfilter2012_cff")
+
+    eventFiltersSequence += process.hcallLaserEvent2012Filter
 
 
     # ECAL dead cell filter
@@ -109,6 +111,8 @@ def ApplyEventFilters(process, goodVertices = 'goodOfflinePrimaryVertices', runO
     if not runOnFastSim and run53XFilters:
         process.load('RecoMET.METFilters.trackingPOGFilters_cff')
         eventFiltersSequence += process.trkPOGFilters
+
+
 
     # Add the sequence containing all the filters to the process
     process.eventFiltersSequence = eventFiltersSequence
