@@ -131,7 +131,7 @@ class DS_S2MC(DS):
 #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmV2012Analysis#Analysis_based_on_CMSSW_5_3_X_re
 #The global tags come from:
 #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?redirectedfrom=CMS.SWGuideFrontierConditions
-global_tag_Data_ABCD = "FT_53_V21_AN3::All"
+global_tag_Data_ABCD = "FT_53_V21_AN4::All"
 
 step1_data_rereco_2013Jan = [
 
