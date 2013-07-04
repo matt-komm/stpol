@@ -32,6 +32,7 @@
 
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "FWCore/MessageLogger/interface/MessageLogger.h"
 
 #include <TMath.h>
 
@@ -53,13 +54,32 @@ class TopPtReweightProducer : public edm::EDProducer {
       virtual void endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
     
     double top_scale_factor(double pt);
-    edm::InputTag src;
+    const edm::InputTag src;
+    const std::string channel;
+    double a,b;
 };
 
 TopPtReweightProducer::TopPtReweightProducer(const edm::ParameterSet& iConfig)
 : src(iConfig.getParameter<edm::InputTag>("src"))
+, channel(iConfig.getParameter<std::string>("channel"))
 {
-   produces<double>("weight");
+    if (channel!="FullLept" && channel!="SemiLept" && channel!="FullSemiLept") {
+        edm::LogError("channel") << "channel must be one of {FullLept, SemiLept, FullSemiLept} to use the correct scale factors. channel=" << channel;
+        throw 1;
+    }
+    //8 TeV   l+jets  0.159   -0.00141
+    if (channel=="SemiLept") {
+        a = 0.159;
+        b = -0.00141;
+    }
+    else if (channel=="FullLept") {
+        a = 0.148;
+        b = -0.00129;
+    } else {
+        a = 0.156;
+        b = -0.00137;
+    }
+    produces<double>("weight");
 }
 
 
@@ -109,8 +129,7 @@ TopPtReweightProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
 }
 
 double TopPtReweightProducer::top_scale_factor(double pt) {
-    //8 TeV   l+jets  0.159   -0.00141
-    return TMath::Exp(0.159+ -0.00141*pt);
+    return TMath::Exp(a + b*pt);
 }
 
 void 
