@@ -193,11 +193,11 @@ LeptonIsolationProducer<T>::produce(edm::Event& iEvent, const edm::EventSetup& i
         
         //Calculate the delta-beta corrected relative isolation
         float dbc_iso = (lepton.chargedHadronIso() + std::max(0., lepton.neutralHadronIso() + lepton.photonIso() - 0.5*lepton.puChargedHadronIso()))/lepton.userFloat("ptCorr");
-        LogDebug("produce") << "dbcIso=" << dbc_iso << " chHad=" << lepton.chargedHadronIso() << " nHad=" << lepton.neutralHadronIso() << " ph=" << lepton.photonIso() << " puChHad=" << lepton.puChargedHadronIso() << " pt=" << lepton.userFloat("ptCorr");
+        LogDebug("delta beta corrected iso produce") << "dbcIso=" << dbc_iso << " chHad=" << lepton.chargedHadronIso() << " nHad=" << lepton.neutralHadronIso() << " ph=" << lepton.photonIso() << " puChHad=" << lepton.puChargedHadronIso() << " pt=" << lepton.userFloat("ptCorr");
         //Calculate the rho-corrected relative isolation
         double ea = effectiveArea(lepton);
         float rc_iso = (lepton.chargedHadronIso() + std::max(0., lepton.neutralHadronIso() + lepton.photonIso() - ea*(*rho)))/lepton.userFloat("ptCorr");
-        LogDebug("produce") << "rcIso=" << rc_iso << " ea=" << ea << " rho=" << *rho;
+        LogDebug("rho corrected iso produce") << "rcIso=" << rc_iso << " ea=" << ea << " rho=" << *rho;
         
         //Calculate the uncorrected relative isolation
         float uncorr_iso = (lepton.chargedHadronIso() + std::max((float)0.0, lepton.neutralHadronIso() + lepton.photonIso()))/lepton.et();

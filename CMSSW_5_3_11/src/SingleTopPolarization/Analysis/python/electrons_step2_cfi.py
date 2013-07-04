@@ -1,6 +1,11 @@
 import FWCore.ParameterSet.Config as cms
 import SingleTopPolarization.Analysis.eventCounting as eventCounting
 
+import re
+#Remove the excess whitespace from formatting
+def clean_whitespace(s):
+    return re.sub( '\s+', ' ', s).strip()
+
 """
 This method sets up the electron channel lepton selection.
 isMC - run on MC (vs. run on data)
@@ -15,29 +20,20 @@ def ElectronSetup(process, conf):
     goodElectronCut += " && (abs(eta) < 2.5)"
     goodElectronCut += " && !(1.4442 < abs(superCluster.eta) < 1.5660)"
     goodElectronCut += " && passConversionVeto() "
-    #goodElectronCut += "&& (0.0 < electronID('mvaTrigV0') < 1.0)"
     goodSignalElectronCut = goodElectronCut
-    if conf.Electrons.cutWWlnuj:
-        if conf.Electrons.reverseIsoCut:
-            goodSignalElectronCut += ' && userFloat("{0}") >= {1} && userFloat("{0}") < {2}'.format(
-                conf.Electrons.relIsoType,
-                conf.Electrons.relIsoCutRangeAntiIsolatedRegion[0],
-                conf.Electrons.relIsoCutRangeAntiIsolatedRegion[1]
-                )
-        else:
-            goodSignalElectronCut += """
-            && ( (abs(eta) < 0.8 && electronID('mvaTrigV0') > 0.913 && userFloat('{0}') < 0.105) ||
-            ( abs(eta) > 0.8 && abs(eta) < 1.479 && electronID('mvaTrigV0') > 0.964 && userFloat('{0}') < 0.178 ) ||
-            ( abs(eta) > 1.479 && electronID('mvaTrigV0') > 0.899 && userFloat('{0}') < 0.150 ) )""".format(conf.Electrons.relIsoType)
 
-    if conf.Electrons.cutOnMVA:
-        if conf.Electrons.reverseIsoCut:
-            goodSignalElectronCut += " && (electronID('mvaTrigV0') > 0.0) && (electronID('mvaTrigV0') < %f)" % conf.Electrons.mvaCutAntiIso
-        else:
-            goodSignalElectronCut += " && (electronID('mvaTrigV0') > %f)" % conf.Electrons.mvaCut
+    #Sanity cut
+    goodSignalElectronCut += " && (electronID('mvaTrigV0') > 0.0)"
+    if not conf.Electrons.reverseIsoCut:
+        #Latest MVA ID WP-s
+        #https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentification#Training_of_the_MVA
+        goodSignalElectronCut += " && ((abs(eta)>0.0 && abs(eta) < 0.8 && (electronID('mvaTrigV0') > %f))" % 0.94
+        goodSignalElectronCut += " || (abs(eta)>0.8 && abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f))" % 0.85
+        goodSignalElectronCut += " || (abs(eta)>1.479 && abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f)))" % 0.92
 
-
-    goodSignalElectronCut += " && abs(userFloat('dxy')) < 0.02"
+    #Impact parameter dropped because using MVA ID
+    #https://hypernews.cern.ch/HyperNews/CMS/get/egamma-elecid/72.html
+    #goodSignalElectronCut += " && abs(userFloat('dxy')) < 0.02"
     goodSignalElectronCut += " && userInt('gsfTrack_trackerExpectedHitsInner_numberOfHits') <= 0"
 
     if conf.Electrons.cutOnIso:
@@ -56,11 +52,51 @@ def ElectronSetup(process, conf):
                 conf.Electrons.relIsoCutRangeIsolatedRegion[1]
             )
 
+    #Trigger preselection emulation
+    #https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentification#Training_of_the_MVA
+    goodSignalElectronCut += " && (\
+            (abs(superCluster.eta()) < 1.479 && \
+            sigmaIetaIeta() < 0.014 && \
+            hadronicOverEm() < 0.15 && \
+            dr03TkSumPt()/pt() < 0.2 && \
+            dr03EcalRecHitSumEt()/pt() < 0.2 && \
+            dr03HcalTowerSumEt()/pt() < 0.2 && \
+            userInt('gsfTrack_trackerExpectedHitsInner_numberOfHitsLost') == 0) || \
+            (abs(superCluster.eta()) >= 1.479 && \
+            sigmaIetaIeta() < 0.035 && \
+            hadronicOverEm() < 0.10 && \
+            dr03TkSumPt()/pt() < 0.2 && \
+            dr03EcalRecHitSumEt()/pt < 0.2 && \
+            dr03HcalTowerSumEt()/pt < 0.2 && \
+            userInt('gsfTrack_trackerExpectedHitsInner_numberOfHitsLost') == 0)\
+        )"
+    goodSignalElectronCut = clean_whitespace(goodSignalElectronCut)
 
     looseVetoElectronCut = "%s > 20.0" % conf.Electrons.pt
     looseVetoElectronCut += " && (abs(eta) < 2.5)"
-    looseVetoElectronCut += " && (electronID('mvaTrigV0') > %f)" % 0.1
+    #FIXME: what is this based on? Most likely historical. Currently fix to 0.0 for clarity in sync
+    #looseVetoElectronCut += " && (electronID('mvaTrigV0') > %f)" % 0.0
+
+    #Veto cut based ID: https://twiki.cern.ch/twiki/bin/view/CMS/EgammaCutBasedIdentification
+    cutBasedLooseID = "\
+        (abs(superCluster().eta()) < 1.479 && (\
+            abs(deltaEtaSuperClusterTrackAtVtx()) < 0.007 && \
+            abs(deltaPhiSuperClusterTrackAtVtx()) < 0.8 && \
+            sigmaIetaIeta() < 0.01 && \
+            hadronicOverEm() < 0.15 && \
+            userFloat('dxy') < 0.04 && \
+            userFloat('dz') < 0.2 && \
+        )) || (\
+        abs(superCLuster().eta())>1.479 && abs(superCLuster().eta())<2.5 && (\
+            abs(deltaEtaSuperClusterTrackAtVtx()) < 0.01 && \
+            abs(deltaPhiSuperClusterTrackAtVtx()) < 0.7 && \
+            sigmaIetaIeta() < 0.03 && \
+            userFloat('dxy') < 0.04 && \
+            userFloat('dz') < 0.2 && \
+        ))"
+    looseVetoElectronCut += cutBasedLooseID
     looseVetoElectronCut += " && (userFloat('{0}') < {1})".format(conf.Electrons.relIsoType, conf.Electrons.looseVetoRelIsoCut)
+    looseVetoElectronCut = clean_whitespace(looseVetoElectronCut)
 
     #Loose veto electrons must not overlap with good signal electrons
     looseVetoElectronCut += " && !(%s)" % goodSignalElectronCut
@@ -68,12 +104,19 @@ def ElectronSetup(process, conf):
     print "goodSignalElectronCut={0}".format(goodSignalElectronCut)
     print "looseVetoElectronCut={0}".format(looseVetoElectronCut)
 
+
+    #process.correctedIsoElectrons = cms.EDProducer(
+    #    "CorrectedElectronEcalIsoProducer",
+    #    src=cms.InputTag("elesWithIso")
+    #)
     process.goodSignalElectrons = cms.EDFilter("CandViewSelector",
       src=cms.InputTag("elesWithIso"), cut=cms.string(goodSignalElectronCut)
     )
 
     process.looseVetoElectrons = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag("elesWithIso"), cut=cms.string(looseVetoElectronCut)
+      src=cms.InputTag("elesWithIso"),
+      #cut=cms.string(looseVetoElectronCut)
+      cut=cms.string("")
     )
 
     process.oneIsoEle = cms.EDFilter(

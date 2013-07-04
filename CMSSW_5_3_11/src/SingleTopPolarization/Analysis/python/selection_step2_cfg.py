@@ -190,27 +190,28 @@ def SingleTopStep2():
     #process.muonClones = cms.EDProducer("MuonShallowCloneProducer",
     #    src = cms.InputTag(Config.Muons.source)
     #)
-    process.skimmedMuons = cms.EDFilter("PtMinCandViewCloneSelector",
-      src=cms.InputTag(Config.Muons.source), ptMin=cms.double(20)
-    )
+
+    if Config.Muons.reverseIsoCut:
+        Config.Muons.source = "muonsWithIDAll"
+
     process.muonsWithIso = cms.EDProducer(
       'MuonIsolationProducer',
-      leptonSrc = cms.InputTag("skimmedMuons"),
+      leptonSrc = cms.InputTag(Config.Muons.source),
       rhoSrc = cms.InputTag("kt6PFJets", "rho"),
       dR = cms.double(0.4)
     )
-    process.muIsoSequence = cms.Sequence(process.skimmedMuons*process.muonsWithIso)
+    process.muIsoSequence = cms.Sequence(process.muonsWithIso)
 
-    process.skimmedElectrons = cms.EDFilter("PtMinCandViewCloneSelector",
-      src=cms.InputTag(Config.Electrons.source), ptMin=cms.double(20)
-    )
+    if Config.Electrons.reverseIsoCut:
+        Config.Electrons.source = "electronsWithIDAll"
+
     process.elesWithIso = cms.EDProducer(
       'ElectronIsolationProducer',
-      leptonSrc = cms.InputTag("skimmedElectrons"),
+      leptonSrc = cms.InputTag(Config.Electrons.source),
       rhoSrc = cms.InputTag("kt6PFJets", "rho"),
       dR = cms.double(0.3)
     )
-    process.eleIsoSequence = cms.Sequence(process.skimmedElectrons*process.elesWithIso)
+    process.eleIsoSequence = cms.Sequence(process.elesWithIso)
 
     from SingleTopPolarization.Analysis.muons_step2_cfi import MuonSetup
     MuonSetup(process, Config)
@@ -459,13 +460,6 @@ def SingleTopStep2():
 
     from SingleTopPolarization.Analysis.hlt_step2_cfi import HLTSetup
     HLTSetup(process, Config)
-
-    #if Config.isMC and options.doPDFWeights:
-    #    process.PDFweights = cms.EDProducer('PDFweightsProducer')
-    #    process.pdfPath = cms.Path(
-    #          process.PDFweights
-    #    )
-
 
     if Config.doDebug:
         from SingleTopPolarization.Analysis.debugAnalyzers_step2_cfi import DebugAnalyzerSetup

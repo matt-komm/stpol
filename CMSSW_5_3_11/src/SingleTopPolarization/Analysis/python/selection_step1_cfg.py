@@ -43,15 +43,10 @@ def SingleTopStep1(
     VarParsing.varType.bool,
     "Drop unnecessary collections"
   )
-  options.register ('doMuon', True,
+  options.register ('runOnFastSim', False,
     VarParsing.multiplicity.singleton,
     VarParsing.varType.bool,
-    "Do muon paths"
-  )
-  options.register ('doElectron', True,
-    VarParsing.multiplicity.singleton,
-    VarParsing.varType.bool,
-    "Do electron paths"
+    "FastSim-specific processing"
   )
 
 #Tag from https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?redirectedfrom=CMS.SWGuideFrontierConditions#2012_MC_production
@@ -114,21 +109,28 @@ def SingleTopStep1(
   , src = cms.InputTag('offlinePrimaryVertices')
   )
 
-
+  from EventFilters_cff import ApplyEventFilters
+  ApplyEventFilters(process, runOnFastSim=options.runOnFastSim)
   #-------------------------------------------------
   # Muons
   #-------------------------------------------------
 
-  #if not maxLeptonIso is None:
-  #    process.pfIsolatedMuons.isolationCut = maxLeptonIso
-
-  #Use both isolated and non-isolated muons as a patMuon source
-  #process.patMuons.pfMuonSource = cms.InputTag("pfMuons")
-  #process.muonMatch.src = cms.InputTag("pfMuons")
+  process.selectedPatMuons.cut = "pt>10 && abs(eta)<3.0"
+  process.pfIsolatedMuons.doDeltaBetaCorrection = True
+  process.pfIsolatedMuons.isolationCut = 0.2
   process.patMuons.pfMuonSource = cms.InputTag("pfIsolatedMuons")
   process.muonMatch.src = cms.InputTag("pfIsolatedMuons")
 
-  process.selectedPatMuons.cut = "pt>20 && abs(eta)<3.0"
+  process.muonMatchAll = process.muonMatch.clone(
+    src = cms.InputTag("pfMuons")
+  )
+  process.patMuonsAll = process.patMuons.clone(
+    pfMuonSource = cms.InputTag("pfMuons"),
+    genParticleMatch = cms.InputTag("muonMatchAll"),
+  )
+  process.selectedPatMuonsAll = process.selectedPatMuons.clone(
+    src = cms.InputTag("patMuonsAll"),
+  )
 
   # muon ID production (essentially track count embedding) must be here
   # because tracks get dropped from the collection after this step, resulting
@@ -138,23 +140,27 @@ def SingleTopStep1(
     muonSrc = cms.InputTag("selectedPatMuons"),
     primaryVertexSource = cms.InputTag("goodOfflinePrimaryVertices")
   )
+  process.muonsWithIDAll = process.muonsWithID.clone(
+    muonSrc = cms.InputTag("selectedPatMuonsAll")
+  )
 
-  #process.muonClones = cms.EDProducer("MuonShallowCloneProducer",
-  #    src = cms.InputTag("selectedPatMuons")
-  #)
+  process.muonSequence = cms.Sequence(
+    process.muonMatchAll*
+    process.patMuonsAll *
+    process.selectedPatMuonsAll *
+    process.muonsWithIDAll
+  )
 
   #-------------------------------------------------
   # Electrons
   # Implemented as in https://indico.cern.ch/getFile.py/access?contribId=1&resId=0&materialId=slides&confId=208765
   #-------------------------------------------------
 
-
   #if not maxLeptonIso is None:
   #    process.pfIsolatedElectrons.isolationCut = maxLeptonIso
   #Use both isolated and un-isolated electrons as patElectrons.
   #NB: no need to change process.electronMatch.src to pfElectrons,
   #    it's already gsfElectrons, which is a superset of the pfElectrons
-  process.patElectrons.pfElectronSource = cms.InputTag("pfElectrons")
 
   #From EgammaAnalysis/ElectronTools/test/patTuple_electronId_cfg.py
   process.load('EgammaAnalysis.ElectronTools.electronIdMVAProducer_cfi')
@@ -165,7 +171,8 @@ def SingleTopStep1(
     mvaTrigNoIPV0 = cms.InputTag("mvaTrigNoIPV0"),
   )
   process.patPF2PATSequence.replace(process.patElectrons, process.mvaID * process.patElectrons)
-  process.selectedPatElectrons.cut = "pt>25 && abs(eta)<3.0"
+  process.selectedPatElectrons.cut = "pt>20 && abs(eta)<3.0"
+  process.pfIsolatedElectrons.isolationCut = 0.2
 
   process.electronsWithID = cms.EDProducer(
     'ElectronIDProducer',
@@ -173,7 +180,6 @@ def SingleTopStep1(
     primaryVertexSource = cms.InputTag("goodOfflinePrimaryVertices")
   )
 
-  #electron dR=0.3
   process.pfElectrons.isolationValueMapsCharged = cms.VInputTag(cms.InputTag("elPFIsoValueCharged03PFId"))
   process.pfElectrons.deltaBetaIsolationValueMap = cms.InputTag("elPFIsoValuePU03PFId")
   process.pfElectrons.isolationValueMapsNeutral = cms.VInputTag(cms.InputTag("elPFIsoValueNeutral03PFId"), cms.InputTag("elPFIsoValueGamma03PFId"))
@@ -190,14 +196,28 @@ def SingleTopStep1(
   process.pfIsolatedElectrons.deltaBetaIsolationValueMap = cms.InputTag("elPFIsoValuePU03PFId")
   process.pfIsolatedElectrons.isolationValueMapsNeutral = cms.VInputTag(cms.InputTag("elPFIsoValueNeutral03PFId"), cms.InputTag("elPFIsoValueGamma03PFId"))
 
+  process.patElectronsAll = process.patElectrons.clone(
+    pfElectronSource=cms.InputTag("pfElectrons")
+  )
+  process.selectedPatElectronsAll = process.selectedPatElectrons.clone(
+    src=cms.InputTag("patElectronsAll")
+  )
+  process.electronsWithIDAll = process.electronsWithID.clone(
+    electronSrc = cms.InputTag("selectedPatElectronsAll")
+  )
 
+  process.electronSequence = cms.Sequence(
+    process.patElectronsAll *
+    process.selectedPatElectronsAll *
+    process.electronsWithIDAll
+  )
   #-------------------------------------------------
   # Jets
   # MET corrections as https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMetAnalysis#Type_I_0_with_PAT
   #-------------------------------------------------
 
-  #pfNoTau == True => remove taus from jets
-  #process.pfNoTau.enable = noTau
+  #Taus are NOT removed from jets
+  process.pfNoTau.enable = False
 
   process.selectedPatJets.cut = cms.string("pt>30 && abs(eta)<5.0")
   process.load("CMGTools.External.pujetidsequence_cff")
@@ -228,6 +248,10 @@ def SingleTopStep1(
        jetCorrPayloadName="AK5PFchs",
        addToPatDefaultSequence=False
   )
+
+  #Switch of checking for overlaps between leptons and jets
+  process.patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty.checkOverlaps = cms.PSet()
+
   process.stpolMetUncertaintySequence = cms.Sequence(
       process.metUncertaintySequence
   )
@@ -253,7 +277,9 @@ def SingleTopStep1(
           'keep *_jetClones__*',
 
           # Muons
-          'keep patMuons_*__*',
+          'keep *_muons__*', #reco muons
+          'keep patMuons_muonsWithID__*',
+          'keep patMuons_muonsWithIDAll__*',
           'keep *_muonClones__*',
 
           # Electrons
@@ -292,11 +318,9 @@ def SingleTopStep1(
           'keep floats_*__PAT',
       ])
 
-  #FIXME: is this correct?
-  #Keep events that pass either the muon OR the electron path
   process.out.SelectEvents = cms.untracked.PSet(
     SelectEvents = cms.vstring(
-      []
+      ["singleTopPathStep1Mu", "singleTopPathStep1Ele"]
     )
   )
 
@@ -318,40 +342,18 @@ def SingleTopStep1(
   process.patPF2PATSequence.insert(process.patPF2PATSequence.index(process.selectedPatElectrons) + 1, process.electronsWithID)
 
   #Need separate paths because of skimming
-
-  if options.doMuon:
-    process.singleTopPathStep1Mu = cms.Path(
+  process.singleTopSequence = cms.Sequence(
       process.goodOfflinePrimaryVertices
+      * process.eventFiltersSequence
       * process.patPF2PATSequence
-      #* process.muonClones
-      #* process.electronClones
-      #* process.jetClones
-    )
-
-  if options.doElectron:
-    process.singleTopPathStep1Ele = cms.Path(
-      process.goodOfflinePrimaryVertices
-      * process.patPF2PATSequence
-      #* process.muonClones
-      #* process.electronClones
-      #* process.jetClones
-    )
-
-  if options.doMuon:
-    process.out.SelectEvents.SelectEvents.append("singleTopPathStep1Mu")
-  if options.doElectron:
-    process.out.SelectEvents.SelectEvents.append("singleTopPathStep1Ele")
+  )
 
   process.GlobalTag.globaltag = cms.string(options.globalTag)
 
-  process.singleTopPathStep1Mu += process.preCalcSequences
-  process.singleTopPathStep1Ele += process.preCalcSequences
-
-  if options.doMuon:
-    process.singleTopPathStep1Mu += process.stpolMetUncertaintySequence
-  if options.doElectron:
-    process.singleTopPathStep1Ele += process.stpolMetUncertaintySequence
-
+  process.singleTopSequence += process.preCalcSequences
+  process.singleTopSequence += process.stpolMetUncertaintySequence
+  process.singleTopSequence += process.muonSequence
+  process.singleTopSequence += process.electronSequence
 
   if options.isMC:
     #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagJetProbabilityCalibration?redirectedfrom=CMS.SWGuideBTagJetProbabilityCalibration#Calibration_in_53x_Data_and_MC
@@ -385,24 +387,16 @@ def SingleTopStep1(
       , thresh = cms.untracked.double(0.25)
     )
 
-    #if doElectron:
-    #  process.singleTopPathStep1Ele.insert(0, process.scrapingFilter)
-    #if doMuon:
-    #  process.singleTopPathStep1Mu.insert(0, process.scrapingFilter)
-
-    process.patPF2PATSequence += process.scrapingFilter
-    process.patPF2PATSequence += process.ecalLaserCorrFilter
-
-  #if not onGrid:
-  #  from SingleTopPolarization.Analysis.cmdlineParsing import enableCommandLineArguments
-  #  enableCommandLineArguments(process)
-  #else:
-  #  process.out.fileName = "step1.root"
+    process.singleTopSequence += process.scrapingFilter
+    process.singleTopSequence += process.ecalLaserCorrFilter
 
   if options.doSkimming:
     process.out.fileName.setValue(process.out.fileName.value().replace(".root", "_Skim.root"))
   else:
     process.out.fileName.setValue(process.out.fileName.value().replace(".root", "_noSkim.root"))
+
+  process.singleTopPathStep1Mu = cms.Path(process.singleTopSequence)
+  process.singleTopPathStep1Ele = cms.Path(process.singleTopSequence)
 
   #-----------------------------------------------
   # Skimming
@@ -410,14 +404,10 @@ def SingleTopStep1(
 
   #Throw away events before particle flow?
   if options.doSkimming:
-      from SingleTopPolarization.Analysis.eventSkimming_cfg import skimFilters
-      skimFilters(process)
-
-      if options.doMuon:
-        process.singleTopPathStep1Mu.insert(0, process.muonSkim)
-      if options.doElectron:
-        process.singleTopPathStep1Ele.insert(0, process.electronSkim)
-
+    from SingleTopPolarization.Analysis.eventSkimming_cfg import skimFilters
+    skimFilters(process)
+    process.singleTopPathStep1Mu.insert(0, process.muonSkim)
+    process.singleTopPathStep1Ele.insert(0, process.electronSkim)
 
   #-----------------------------------------------
   # Skim efficiency counters
@@ -427,14 +417,8 @@ def SingleTopStep1(
   countProcessed(process)
 
   #count events passing mu and ele paths
-
-  if options.doMuon:
-    countInSequence(process, process.singleTopPathStep1Mu)
-  if options.doElectron:
-    countInSequence(process, process.singleTopPathStep1Ele)
-  #-------------------------------------------------
-  #
-  #-------------------------------------------------
+  countInSequence(process, process.singleTopPathStep1Mu)
+  countInSequence(process, process.singleTopPathStep1Ele)
 
   if not options.doSlimming:
     process.out.fileName.setValue(process.out.fileName.value().replace(".root", "_noSlim.root"))

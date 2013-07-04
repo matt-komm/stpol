@@ -79,9 +79,16 @@ class Config(C):
         nJets = 2
         nBTags = 1
         ptCut = 40
-        etaCut = 4.5
+
+        #etaCut=4.5
+        #FIXME: where did the 4.5 come from? The reference selection is clearly 5.0. --JP
+        #https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiTopRefEventSel#Jets_and_MET
+        etaCut = 5.0
+
         doLightJetRMSClean = False
-        source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
+        doPUClean = False
+        #source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
+        source = "patJetsWithOwnRef"
         #source = "selectedPatJetsForMETtype1p2CorrEnDown"
 
         class BTagDiscriminant:
@@ -131,13 +138,13 @@ class Config(C):
 
     class Electrons(Leptons):
         pt = "ecalDrivenMomentum.Pt()"
-        mvaCut = 0.1
-        mvaCutAntiIso = 1.1
-        cutOnMVA = True
+        #mvaCut = 0.1
+        #mvaCutAntiIso = 1.1
+        #cutOnMVA = True
         cutOnIso = True
-        cutWWlnuj = False
-        relIsoCutRangeIsolatedRegion = [0.0, 0.1]
-        relIsoCutRangeAntiIsolatedRegion = [0.1, 0.5]
+        #cutWWlnuj = False
+        relIsoCutRangeIsolatedRegion = [0.0, 0.15]
+        relIsoCutRangeAntiIsolatedRegion = [0.15, 0.5]
         looseVetoRelIsoCut = 0.15
         transverseMassType = "MET"
         source = "electronsWithID"
