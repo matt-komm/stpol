@@ -12,8 +12,6 @@ process.eleCuts.doVetoLeptonCut = False
 process.jetCuts.cutOnNJets = False
 process.bTagCuts.cutOnNTags = False
 
-process.mtMuCuts.doMTCut = False
-
 process.HLTmu.saveHLTVars = True
 process.HLTmu.doCutOnHLT = False
 
