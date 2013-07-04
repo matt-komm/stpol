@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 from runconfs.step3_eventloop_base_nocuts import *
-process.fwliteInput.maxEvents = cms.int32(500000)
+process.fwliteInput.maxEvents = cms.int32(50000)
 
 process.muonCuts.requireOneMuon = False
 process.muonCuts.doVetoLeptonCut = False
