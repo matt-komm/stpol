@@ -1,4 +1,11 @@
+#STPOL environment script
+#Author: Joosep Pata <joosep.pata@cern.ch>
+#Usage: source setenv.sh
+
 echo "Setting up stpol env..."
+#Note: as much as possible DON'T add references to your privately installed libraries,
+#instead try to make some scripts to install them into the working directory of the user
+#--JP
 
 # Extract directories
 CURRENT_DIR=`pwd`
@@ -22,7 +29,7 @@ PYTHONPATH=$PYTHONPATH:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/local/lib/python
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/qcd_estimation/
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/theta/utils2/
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/scratch/mario/boost_1_53_0/lib
+#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/scratch/mario/boost_1_53_0/lib
 
 cd ${SCRIPT_DIR}/$CMSSW_DIR
 source /cvmfs/cms.cern.ch/cmsset_default.sh
