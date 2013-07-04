@@ -783,12 +783,6 @@ public:
 
 class GenParticles : public CutsBase {
 public:
-    //    edm::InputTag trueBJetCount;
-    //    edm::InputTag trueCJetCount;
-    //    edm::InputTag trueLJetCount;
-    //    edm::InputTag trueBJetTaggedCount;
-    //    edm::InputTag trueCJetTaggedCount;
-    //    edm::InputTag trueLJetTaggedCount;
     edm::InputTag trueCosTheta;
     edm::InputTag trueLeptonPdgIdSrc;
     
@@ -799,13 +793,6 @@ public:
     
     void initialize_branches() {
         if (doGenParticles) {
-            //            branch_vars.vars_int["true_b_count"] = BranchVars::def_val_int;
-            //            branch_vars.vars_int["true_c_count"] = BranchVars::def_val_int;
-            //            branch_vars.vars_int["true_l_count"] = BranchVars::def_val_int;
-            //
-            //            branch_vars.vars_int["true_b_tagged_count"] = BranchVars::def_val_int;
-            //            branch_vars.vars_int["true_c_tagged_count"] = BranchVars::def_val_int;
-            //            branch_vars.vars_int["true_l_tagged_count"] = BranchVars::def_val_int;
             
             branch_vars.vars_float["true_cos_theta"] = BranchVars::def_val;
             branch_vars.vars_int["true_lepton_pdgId"] = BranchVars::def_val_int;
@@ -819,13 +806,6 @@ public:
         doGenParticles = pars.getParameter<bool>("doGenParticles");
         initialize_branches();
         
-        //        trueBJetCount = pars.getParameter<edm::InputTag>("trueBJetCountSrc");
-        //        trueCJetCount = pars.getParameter<edm::InputTag>("trueCJetCountSrc");
-        //        trueLJetCount = pars.getParameter<edm::InputTag>("trueLJetCountSrc");
-        //        trueBJetTaggedCount = pars.getParameter<edm::InputTag>("trueBJetTaggedCountSrc");
-        //        trueCJetTaggedCount = pars.getParameter<edm::InputTag>("trueCJetTaggedCountSrc");
-        //        trueLJetTaggedCount = pars.getParameter<edm::InputTag>("trueLJetTaggedCountSrc");
-        //
         trueCosTheta = pars.getParameter<edm::InputTag>("trueCosThetaSrc");
         trueLeptonPdgIdSrc = pars.getParameter<edm::InputTag>("trueLeptonPdgIdSrc");
         
@@ -836,15 +816,6 @@ public:
     
     bool process(const edm::EventBase& event) {
         pre_process();
-        //
-        //        branch_vars.vars_int["true_b_count"] = get_collection<int>(event, trueBJetCount, BranchVars::def_val_int);
-        //        branch_vars.vars_int["true_c_count"] = get_collection<int>(event, trueCJetCount, BranchVars::def_val_int);
-        //        branch_vars.vars_int["true_l_count"] = get_collection<int>(event, trueLJetCount, BranchVars::def_val_int);
-        //
-        //        branch_vars.vars_int["true_b_tagged_count"] = get_collection<int>(event, trueBJetTaggedCount, BranchVars::def_val_int);
-        //        branch_vars.vars_int["true_c_tagged_count"] = get_collection<int>(event, trueCJetTaggedCount, BranchVars::def_val_int);
-        //        branch_vars.vars_int["true_l_tagged_count"] = get_collection<int>(event, trueLJetTaggedCount, BranchVars::def_val_int);
-        //
         branch_vars.vars_int["wjets_classification"] = (int)get_collection<unsigned int>(event, wJetsClassificationSrc, BranchVars::def_val_int);
         
         branch_vars.vars_float["true_cos_theta"] = (float)get_collection<double>(event, trueCosTheta, BranchVars::def_val_int);
@@ -874,7 +845,8 @@ int main(int argc, char* argv[])
     const edm::ParameterSet& in  = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteInput" );
     const edm::ParameterSet& out = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteOutput");
     
-    std::string outputFile_( out.getParameter<std::string>("fileName" ) );
+    const std::string outputFile_( out.getParameter<std::string>("fileName"));
+    const std::string cut_str( out.getParameter<std::string>("cutString"));
     std::vector<std::string> inputFiles_( in.getParameter<std::vector<std::string> >("fileNames") );
     
     const edm::ParameterSet& mu_cuts_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("muonCuts");
@@ -1128,11 +1100,11 @@ int main(int argc, char* argv[])
     LogInfo << "processing speed = " << speed << " events/sec" << std::endl;
     LogInfo << "read " << mb_total << " Mb in total, average speed " << (double)mb_total / time << " Mb/s" << std::endl;
   
-    std::string cut_str("mu_pt>50");
     LogInfo << "Copying tree with cut " << cut_str << std::endl;
+    dir.cd();
     TTree* cut_tree = out_tree->CopyTree(cut_str.c_str());
-    cut_tree->SetName("selected_events");
-    cut_tree->Write();
+    cut_tree->SetName("Events_selected");
+    //cut_tree->Write();
 
     return 0;
 }

@@ -81,6 +81,11 @@ parser.add_option("--skipTree", dest="skipTree", action="store_true", default=Fa
 parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root",
     description="Filename of the flat ROOT output file."
 )
+parser.add_option("--cutString", dest="cutString", type="string", default="1.0",
+    description="An additional TTree called Events_selected will be created by applying this cutstring.\
+    Note that applying this cut string will NOT decrease processing time by skipping some events,\
+    which is conceptually different from the above cuts."
+)
 
 options, args = parser.parse_args()
 
@@ -118,7 +123,8 @@ for fi in input_files:
 print "Output file: %s" % options.outputFile
 
 process.fwliteOutput = cms.PSet(
-    fileName  = cms.string(options.outputFile),
+    fileName = cms.string(options.outputFile),
+    cutString = cms.string(options.cutString)
 )
 
 process.muonCuts = cms.PSet(

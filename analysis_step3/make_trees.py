@@ -12,6 +12,8 @@ if __name__=="__main__":
     )
     parser.add_argument("-o", "--ofdir", type=str, default=None, required=False,
                         help="the output directory for the step3 trees")
+    parser.add_argument("--cutString", type=str, default="1.0", required=False,
+                        help="The additional cutstring for which to create an Events_selected TTree.")
     cmdline_args = parser.parse_args()
 
     fldir = "filelists/step2/latest"
@@ -22,7 +24,7 @@ if __name__=="__main__":
 
     signal_samples = ["T_t", "Tbar_t", "T_t_ToLeptons", "Tbar_t_ToLeptons"]
     data_samples = ["SingleMu", "SingleEle"]
-    cutstr = " --doNJets --nJ=2,3 --doHLT --doLepton"
+    cutstr = " --doNJets --nJ=2,3 --doHLT --doLepton --cutString='%s'" % cmdline_args.cutString
     if not cmdline_args.ofdir:
         cmdline_args.ofdir = "out_step3_%s_%s" % (os.getlogin(), datetime.datetime.now().strftime("%d_%m_%H_%M"))
 
