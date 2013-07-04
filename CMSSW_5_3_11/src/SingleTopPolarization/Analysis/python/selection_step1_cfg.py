@@ -80,6 +80,7 @@ def SingleTopStep1(
   jetCorr = ['L1FastJet', 'L2Relative', 'L3Absolute']
   if not options.isMC:
       jetCorr += ['L2L3Residual']
+  print options
 
   usePF2PAT(process, runPF2PAT=True, jetAlgo='AK5', runOnMC=options.isMC, postfix=postfix,
     jetCorrections=('AK5PFchs', jetCorr),
@@ -143,9 +144,11 @@ def SingleTopStep1(
   process.muonsWithIDAll = process.muonsWithID.clone(
     muonSrc = cms.InputTag("selectedPatMuonsAll")
   )
+  process.muonSequence = cms.Sequence()
 
-  process.muonSequence = cms.Sequence(
-    process.muonMatchAll*
+  if options.isMC:
+    process.muonSequence += process.muonMatchAll
+  process.muonSequence += (
     process.patMuonsAll *
     process.selectedPatMuonsAll *
     process.muonsWithIDAll
