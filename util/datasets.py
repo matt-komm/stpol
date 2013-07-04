@@ -8,6 +8,7 @@ Author: Joosep Pata joosep.pata@cern.ch
 import sys
 import os
 import argparse
+from SingleTopPolarization.Analysis.config_step2_cfg import Config
 
 """
 Represents a lumi file.
@@ -65,6 +66,7 @@ class DS(object):
     def __init__(self, name, ds, **kwargs):
         self.name = name
         self.ds = ds
+        self.globalTag = Config.globalTagMC
         self.cmdline = kwargs.get("cmdline", "")
 
     def parseTemplate(self, template, tag):
@@ -77,7 +79,7 @@ class DS(object):
         return out
 
     def __str__(self):
-        return self.ds
+        return "| {0} | {1} | {2} | {3} |".format(self.name, self.ds, self.globalTag, self.cmdline)
 
 """
 Represents a Real Data dataset
@@ -100,7 +102,7 @@ class DS_Data(DS):
         return out
 
     def __str__(self):
-        return "{0} {1} {2} {3}".format(self.name, self.ds, self.lumi, self.globalTag)
+        return "| {0} | {1} | {2} | {3} |".format(self.name, self.ds, self.globalTag, self.cmdline)
 
 """
 Represents a step2 MC dataset
