@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "Running step3 test"
 cd "$STPOL_DIR"
-source setenv.sh CMSSW_5_3_8
+source setenv.sh
 OFDIR="$STPOL_DIR"/test_step3
 if [ -d "$OFDIR" ]; then
     echo "removing '"$OFDIR"'"

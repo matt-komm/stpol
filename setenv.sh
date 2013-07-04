@@ -4,7 +4,7 @@ echo "Setting up stpol env..."
 CURRENT_DIR=`pwd`
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CMSSW_DIR=$1
-if [ -z "$CMSSW_DIR" ]; then CMSSW_DIR="CMSSW_5_3_7_patch4"; fi
+if [ -z "$CMSSW_DIR" ]; then CMSSW_DIR="CMSSW_5_3_11"; fi
 #echo "Current:" $CURRENT_DIR
 #echo "Script:" $SCRIPT_DIR
 
