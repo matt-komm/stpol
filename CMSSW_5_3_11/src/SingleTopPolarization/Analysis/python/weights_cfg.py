@@ -6,9 +6,14 @@ def WeightSetup(process, conf):
 
     process.weightSequence = cms.Sequence()
     if conf.subChannel.lower() == "ttbar":
+        channel = dict()
+        channel["TTJets_FullLept"] = "FullLept"
+        channel["TTJets_SemiLept"] = "FullLept"
+        channel["TTbar"] = "FullSemiLept"
         process.ttbarTopWeight = cms.EDProducer(
             'TopPtReweightProducer',
-            src=cms.InputTag("genParticles")
+            src=cms.InputTag("genParticles"),
+            channel=channel[conf.subProcess]
         )
         process.weightSequence += process.ttbarTopWeight
 
