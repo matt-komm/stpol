@@ -407,7 +407,7 @@ if __name__=="__main__":
     template = read_template(args.template)
     dslist = possible_ds[args.data]
 
-    os.mkdir(ofdir)
+    os.makedirs(ofdir)
     for ds in dslist:
         ofn = "{2}/crab_{0}_{1}.cfg".format(ds.name, tag, ofdir)
         of = open(ofn, "w")
