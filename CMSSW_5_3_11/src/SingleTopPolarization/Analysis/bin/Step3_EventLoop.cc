@@ -1127,6 +1127,12 @@ int main(int argc, char* argv[])
     int mb_total = bytes_read/(1024*1024);
     LogInfo << "processing speed = " << speed << " events/sec" << std::endl;
     LogInfo << "read " << mb_total << " Mb in total, average speed " << (double)mb_total / time << " Mb/s" << std::endl;
-    
+  
+    std::string cut_str("mu_pt>50");
+    LogInfo << "Copying tree with cut " << cut_str << std::endl;
+    TTree* cut_tree = out_tree->CopyTree(cut_str.c_str());
+    cut_tree->SetName("selected_events");
+    cut_tree->Write();
+
     return 0;
 }
