@@ -66,7 +66,8 @@ class DS(object):
     def __init__(self, name, ds, **kwargs):
         self.name = name
         self.ds = ds
-        self.globalTag = Config.globalTagMC
+        self.globalTag = kwargs.get("globalTag", Config.globalTagMC)
+        self.site = kwargs.get("site", "ANY")
         self.cmdline = kwargs.get("cmdline", "")
 
     def parseTemplate(self, template, tag):
@@ -79,16 +80,15 @@ class DS(object):
         return out
 
     def __str__(self):
-        return "| {0} | {1} | {2} | {3} |".format(self.name, self.ds, self.globalTag, self.cmdline)
+        return "| {0} | {1} | {2} | {3} | {4} |".format(self.name, self.ds, self.globalTag, self.cmdline, self.site)
 
 """
 Represents a Real Data dataset
 """
 class DS_Data(DS):
-    def __init__(self, name, ds, lumi, globalTag, dataperiod, **kwargs):
+    def __init__(self, name, ds, lumi, dataperiod, **kwargs):
         DS.__init__(self, name, ds, **kwargs)
         self.lumi = lumi
-        self.globalTag = globalTag
         self.dataperiod = dataperiod
         self.run_range = runRanges[dataperiod]
 
@@ -133,21 +133,12 @@ class DS_S2MC(DS):
 #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PdmV2012Analysis#Analysis_based_on_CMSSW_5_3_X_re
 #The global tags come from:
 #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?redirectedfrom=CMS.SWGuideFrontierConditions
+
 global_tag_Data_ABCD = "FT_53_V21_AN4::All"
 
 step1_data_rereco_2013Jan = [
-
-#    DS_Data("SingleMu_RunA", "/SingleMu/Run2012A-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunA"),
-#    DS_Data("SingleMu_RunB", "/SingleMu/Run2012B-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunB"),
-#    DS_Data("SingleMu_RunC", "/SingleMu/Run2012C-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunC"),
-#    DS_Data("SingleMu_RunD", "/SingleMu/Run2012D-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunD"),
-#    DS_Data("SingleElectron_RunA", "/SingleElectron/Run2012A-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunA"),
-#    DS_Data("SingleElectron_RunB", "/SingleElectron/Run2012B-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunB"),
-#    DS_Data("SingleElectron_RunC", "/SingleElectron/Run2012C-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunC"),
-#    DS_Data("SingleElectron_RunD", "/SingleElectron/Run2012D-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunD")
-
-    DS_Data("SingleMu_RunABCD", "/SingleMu/Run2012D-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunABCD"),
-    DS_Data("SingleElectron_RunABCD", "/SingleElectron/Run2012D-22Jan2013-v1/AOD", "22jan_dcsonly", global_tag_Data_ABCD, "RunABCD")
+    DS_Data("SingleMu_RunABCD", "/SingleMu/Run2012D-22Jan2013-v1/AOD", "22jan_dcsonly", "RunABCD", globalTag=global_tag_Data_ABCD, site="T2_EE_ESTONIA"),
+    DS_Data("SingleElectron_RunABCD", "/SingleElectron/Run2012D-22Jan2013-v1/AOD", "22jan_dcsonly", "RunABCD", globalTag=global_tag_Data_ABCD)
 ]
 
 step1_MC = [
@@ -207,6 +198,9 @@ step1_MC = [
     , DS("WJets_excl3", "/W3JetsToLNu_TuneZ2Star_8TeV-madgraph/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM")
     , DS("WJets_excl4", "/W4JetsToLNu_TuneZ2Star_8TeV-madgraph/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM")
 ]
+
+for ds in step1_MC:
+    ds.site = "T2_EE_ESTONIA"
 
 step1_MC_systematic = [
     DS("Tbar_t_scaleup", "/TBarToLeptons_t-channel_scaleup_8TeV-powheg-tauola/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM", cmdline="doSkimming=False"),
@@ -386,8 +380,10 @@ if __name__=="__main__":
                                                   a template file.')
     parser.add_argument("-t", "--tag", type=str, default="notag",
                         help="A unique tag for publishing")
-    parser.add_argument("-T", "--template", type=str, default="", required=True,
-                        help="template file to use")
+    parser.add_argument("--templateLocal", type=str, default="", required=True,
+                        help="template file to use for local processing")
+    parser.add_argument("--templateAny", type=str, default="", required=True,
+                        help="template file to use processing anywhere (off-site)")
     parser.add_argument("-o", "--ofdir", type=str, default="", required=True,
                         help="output directory for files")
     parser.add_argument("-d", "--data", type=str, default="", required=True,
@@ -406,13 +402,22 @@ if __name__=="__main__":
         f.close()
         return s
 
-    template = read_template(args.template)
+    templateLocal = read_template(args.templateLocal)
+    templateAny = read_template(args.templateAny)
     dslist = possible_ds[args.data]
 
     os.makedirs(ofdir)
     for ds in dslist:
         ofn = "{2}/crab_{0}_{1}.cfg".format(ds.name, tag, ofdir)
         of = open(ofn, "w")
+
+        if ds.site == "T2_EE_ESTONIA":
+            template = templateLocal
+        elif ds.site == "ANY":
+            template = templateAny
+        else:
+            raise ValueError("unrecognized site: %s" % ds.site)
+
         if isinstance(ds, DS_S2MC):
             if len(systematic)>0 and systematic in ["SYST", "Presel", "EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
                 ds.cmdline += "%s" % systematic
