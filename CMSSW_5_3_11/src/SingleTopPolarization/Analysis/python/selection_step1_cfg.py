@@ -89,6 +89,9 @@ def SingleTopStep1(
     typeIMetCorrections = False #Type1 MET now applied later using runMETUncertainties
   )
 
+  from PhysicsTools.PatAlgos.tools.coreTools import removeCleaning
+  removeCleaning(process)
+
   # https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookJetEnergyCorrections#JetEnCorPFnoPU2012
   process.pfPileUp.Enable = True
   process.pfPileUp.checkClosestZVertex = False
@@ -138,18 +141,54 @@ def SingleTopStep1(
   # in null ptrs.
   process.muonsWithID = cms.EDProducer(
     'MuonIDProducer',
-    muonSrc = cms.InputTag("selectedPatMuons"),
+    muonSrc = cms.InputTag("selectedPatMuonsWithTriggerMatch"),
     primaryVertexSource = cms.InputTag("goodOfflinePrimaryVertices")
   )
   process.muonsWithIDAll = process.muonsWithID.clone(
-    muonSrc = cms.InputTag("selectedPatMuonsAll")
+    muonSrc = cms.InputTag("selectedPatMuonsAllWithTriggerMatch")
   )
   process.muonSequence = cms.Sequence()
 
+  process.selectedPatMuonTriggerMatchHLTMuons = cms.EDProducer(
+    # matching in DeltaR, sorting by best DeltaR
+    "PATTriggerMatcherDRLessByR"
+    # matcher input collections
+  , src = cms.InputTag('selectedPatMuons')
+  , matched = cms.InputTag('patTrigger')
+    # selections of trigger objects
+  , matchedCuts = cms.string('type("TriggerMuon") && path("HLT_IsoMu24_eta2p1_v*")')
+    # selection of matches
+  , maxDPtRel   = cms.double( 0.5 ) # no effect here
+  , maxDeltaR   = cms.double( 0.5 )
+  , maxDeltaEta = cms.double( 0.2 ) # no effect here
+    # definition of matcher output
+  , resolveAmbiguities    = cms.bool( True )
+  , resolveByMatchQuality = cms.bool( True )
+  )
+  process.selectedPatMuonsWithTriggerMatch = cms.EDProducer(
+      "PATTriggerMatchMuonEmbedder"
+    , src     = cms.InputTag( "selectedPatMuons" )
+    , matches = cms.VInputTag(
+        'selectedPatMuonsWithTriggerMatch'
+    )
+  )
+  process.selectedPatMuonAllTriggerMatchHLTMuons = process.selectedPatMuonTriggerMatchHLTMuons.clone(src=cms.InputTag("selectedPatMuonsAll"))
+  process.selectedPatMuonsAllWithTriggerMatch = process.selectedPatMuonsWithTriggerMatch.clone(
+    src=cms.InputTag("selectedPatMuonsAll"),
+    matches=cms.VInputTag("selectedPatMuonAllTriggerMatchHLTMuons")
+  )
+
+
+  from PhysicsTools.PatAlgos.tools.trigTools import *
+  switchOnTrigger(process) # This is optional and can be omitted.
+  #switchOnTriggerMatching(process, triggerMatchers=['muonTriggerMatchHLTMuons'])
+  #removeCleaningFromTriggerMatching(process)
   if options.isMC:
     process.muonSequence += process.muonMatchAll
   process.muonSequence += (
     process.patMuonsAll *
+    process.selectedPatMuonAllTriggerMatchHLTMuons *
+    process.selectedPatMuonsAllWithTriggerMatch *
     process.selectedPatMuonsAll *
     process.muonsWithIDAll
   )
@@ -281,6 +320,7 @@ def SingleTopStep1(
 
           # Muons
           'keep *_muons__*', #reco muons
+          'keep patMuons_*__*',
           'keep patMuons_muonsWithID__*',
           'keep patMuons_muonsWithIDAll__*',
           'keep *_muonClones__*',
@@ -341,7 +381,11 @@ def SingleTopStep1(
     process.goodOfflinePVCount
   )
 
-  process.patPF2PATSequence.insert(process.patPF2PATSequence.index(process.selectedPatMuons) + 1, process.muonsWithID)
+  process.patPF2PATSequence.insert(process.patPF2PATSequence.index(process.selectedPatMuons) + 1,
+    process.selectedPatMuonTriggerMatchHLTMuons*
+    process.selectedPatMuonsWithTriggerMatch *
+    process.muonsWithID
+  )
   process.patPF2PATSequence.insert(process.patPF2PATSequence.index(process.selectedPatElectrons) + 1, process.electronsWithID)
 
   #Need separate paths because of skimming
