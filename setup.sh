@@ -34,6 +34,9 @@ addpkg DataFormats/TrackReco                V10-02-02
 addpkg DataFormats/VertexReco               V02-00-04 
 addpkg RecoLuminosity/LumiDB                V04-01-09 ##Newer than in TagCollector for 5_3_X
 
+#for EventShapeVarsProducer
+addpkg PhysicsTools/CandAlgos V08-00-03
+
 cvs co -r V00-00-31 -d EGamma/EGammaAnalysisTools UserCode/EGamma/EGammaAnalysisTools
 cd EGamma/EGammaAnalysisTools/data
 cat download.url | xargs wget
