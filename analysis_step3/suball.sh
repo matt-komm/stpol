@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "$0: $@"
 #test
-CONFSCRIPT="$STPOL_DIR/runconfs/step3_eventloop_base_nocuts.py $1"
+CONFSCRIPT="$STPOL_DIR/runconfs/step3/base_nocuts.py $1"
 OFDIR=`readlink -f $2`
 INFILES="${*:3}"
 if [ -z "$OFDIR" ]
