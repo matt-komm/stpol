@@ -299,7 +299,7 @@ step1_MC_systematic = [
 ]
 
 step1_MC_systematic_out = [
-    DS_S2MC("Tbar_t_mass166_5", "/TBarToLe0ptons_t-channel_mass166_5_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "Tbar_t")
+    DS_S2MC("Tbar_t_mass166_5", "/TBarToLeptons_t-channel_mass166_5_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "Tbar_t")
     , DS_S2MC("Tbar_t_mass178_5", "/TBarToLeptons_t-channel_mass178_5_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "Tbar_t")
     , DS_S2MC("Tbar_t_scaledown", "/TBarToLeptons_t-channel_scaledown_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "Tbar_t")
     , DS_S2MC("Tbar_t_scaleup", "/TBarToLeptons_t-channel_scaleup_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "Tbar_t")
