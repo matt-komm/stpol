@@ -1,11 +1,11 @@
 #!/bin/bash
 echo "Running step2 test on data"
-IN=file:/hdfs/cms/store/user/joosep/SingleMu/step1_Data_Feb6/4ad4eefaf926ac722f9a48104acbb5cc/output_Skim_1_1_wWD.root
-OFDIR=$CMSSW_BASE/../testing_step2_data
+IN=`head -n1 $STPOL_DIR/filelists/step1/data/latest/SingleMu.txt`
+OFDIR=$STPOL_DIR/testing/step2/data
 rm -Rf $OFDIR
-mkdir $OFDIR
+mkdir -p $OFDIR
 
-time cmsRun $CMSSW_BASE/../runconfs/step2_newCmdLine_cfg.py doDebug=True inputFiles=$IN isMC=False outputFile=$OFDIR/out.root maxEvents=5000 &> $OFDIR/log.txt
+time cmsRun $STPOL_DIR/runconfs/step2_newCmdLine_cfg.py doDebug=True inputFiles=$IN isMC=False outputFile=$OFDIR/out.root maxEvents=10000 &> $OFDIR/log.txt
 EX=$?
 echo "Exit code:"$EX 
 if [ "$EX" -ne 0 ]

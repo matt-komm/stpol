@@ -1,11 +1,11 @@
 #!/bin/bash
 #IN=/store/relval/CMSSW_5_3_6-START53_V14/RelValTTbar/GEN-SIM-RECO/v2/00000/62B0DFF3-F729-E211-9754-001A92811744.root
-IN=/store/relval/CMSSW_5_3_2-START53_V6/RelValTTbar/GEN-SIM-RECO/v1/0000/0A0607D6-7AB9-E111-AB16-002618943886.root
-OFDIR=$STPOL_DIR/testing/step1/ttbar
+IN=/store/data/Run2012D/SingleMu/AOD/22Jan2013-v1/10000/0015EC7D-EAA7-E211-A9B9-E0CB4E5536A7.root
+OFDIR=$STPOL_DIR/testing/step1/data
 echo "Running test_step1 with input $IN and output to $OFDIR"
 rm -Rf $OFDIR
 mkdir -p $OFDIR
-cmsRun $STPOL_DIR/runconfs/step1_newCmdLine_cfg.py inputFiles=$IN outputFile=$OFDIR/out_step1.root maxEvents=1000 &> $OFDIR/log_step1.txt
+cmsRun $STPOL_DIR/runconfs/step1_newCmdLine_cfg.py inputFiles=$IN outputFile=$OFDIR/out_step1.root maxEvents=100 isMC=False &> $OFDIR/log_step1.txt
 EX=$?
 echo "Exit code:"$EX 
 if [ "$EX" -ne 0 ]
