@@ -141,54 +141,53 @@ def SingleTopStep1(
   # in null ptrs.
   process.muonsWithID = cms.EDProducer(
     'MuonIDProducer',
-    muonSrc = cms.InputTag("selectedPatMuonsWithTriggerMatch"),
+    muonSrc = cms.InputTag("selectedPatMuons"),
     primaryVertexSource = cms.InputTag("goodOfflinePrimaryVertices")
   )
   process.muonsWithIDAll = process.muonsWithID.clone(
-    muonSrc = cms.InputTag("selectedPatMuonsAllWithTriggerMatch")
+    muonSrc = cms.InputTag("selectedPatMuonsAll")
   )
   process.muonSequence = cms.Sequence()
 
-  process.selectedPatMuonTriggerMatchHLTMuons = cms.EDProducer(
-    # matching in DeltaR, sorting by best DeltaR
-    "PATTriggerMatcherDRLessByR"
-    # matcher input collections
-  , src = cms.InputTag('selectedPatMuons')
-  , matched = cms.InputTag('patTrigger')
-    # selections of trigger objects
-  , matchedCuts = cms.string('type("TriggerMuon") && path("HLT_IsoMu24_eta2p1_v*")')
-    # selection of matches
-  , maxDPtRel   = cms.double( 0.5 ) # no effect here
-  , maxDeltaR   = cms.double( 0.5 )
-  , maxDeltaEta = cms.double( 0.2 ) # no effect here
-    # definition of matcher output
-  , resolveAmbiguities    = cms.bool( True )
-  , resolveByMatchQuality = cms.bool( True )
-  )
-  process.selectedPatMuonsWithTriggerMatch = cms.EDProducer(
-      "PATTriggerMatchMuonEmbedder"
-    , src     = cms.InputTag( "selectedPatMuons" )
-    , matches = cms.VInputTag(
-        'selectedPatMuonsWithTriggerMatch'
-    )
-  )
-  process.selectedPatMuonAllTriggerMatchHLTMuons = process.selectedPatMuonTriggerMatchHLTMuons.clone(src=cms.InputTag("selectedPatMuonsAll"))
-  process.selectedPatMuonsAllWithTriggerMatch = process.selectedPatMuonsWithTriggerMatch.clone(
-    src=cms.InputTag("selectedPatMuonsAll"),
-    matches=cms.VInputTag("selectedPatMuonAllTriggerMatchHLTMuons")
-  )
+  #process.selectedPatMuonTriggerMatchHLTMuons = cms.EDProducer(
+  #  # matching in DeltaR, sorting by best DeltaR
+  #  "PATTriggerMatcherDRLessByR"
+  #  # matcher input collections
+  #, src = cms.InputTag('selectedPatMuons')
+  #, matched = cms.InputTag('patTrigger')
+  #  # selections of trigger objects
+  #, matchedCuts = cms.string('type("TriggerMuon") && path("HLT_IsoMu24_eta2p1_v*")')
+  #  # selection of matches
+  #, maxDPtRel   = cms.double( 0.5 ) # no effect here
+  #, maxDeltaR   = cms.double( 0.5 )
+  #, maxDeltaEta = cms.double( 0.2 ) # no effect here
+  #  # definition of matcher output
+  #, resolveAmbiguities    = cms.bool( True )
+  #, resolveByMatchQuality = cms.bool( True )
+  #)
+  #process.selectedPatMuonsWithTriggerMatch = cms.EDProducer(
+  #    "PATTriggerMatchMuonEmbedder"
+  #  , src     = cms.InputTag( "selectedPatMuons" )
+  #  , matches = cms.VInputTag(
+  #      'selectedPatMuonsWithTriggerMatch'
+  #  )
+  #)
+  #process.selectedPatMuonAllTriggerMatchHLTMuons = process.selectedPatMuonTriggerMatchHLTMuons.clone(src=cms.InputTag("selectedPatMuonsAll"))
+  #process.selectedPatMuonsAllWithTriggerMatch = process.selectedPatMuonsWithTriggerMatch.clone(
+  #  src=cms.InputTag("selectedPatMuonsAll"),
+  #  matches=cms.VInputTag("selectedPatMuonAllTriggerMatchHLTMuons")
+  #)
 
 
-  from PhysicsTools.PatAlgos.tools.trigTools import *
-  switchOnTrigger(process) # This is optional and can be omitted.
   #switchOnTriggerMatching(process, triggerMatchers=['muonTriggerMatchHLTMuons'])
   #removeCleaningFromTriggerMatching(process)
   if options.isMC:
     process.muonSequence += process.muonMatchAll
   process.muonSequence += (
     process.patMuonsAll *
-    process.selectedPatMuonAllTriggerMatchHLTMuons *
-    process.selectedPatMuonsAllWithTriggerMatch *
+   # process.selectedPatMuonAllTriggerMatchHLTMuons *
+   # process.selectedPatMuonsAllWithTriggerMatch *
+    process.muonsWithID *
     process.selectedPatMuonsAll *
     process.muonsWithIDAll
   )
@@ -332,6 +331,9 @@ def SingleTopStep1(
           # METs
           'keep patMETs_*__*',
 
+          #Trigger
+          'keep patTriggerObjects_*_*_*',
+
           #ECAL laser corr filter
           'keep bool_ecalLaserCorrFilter__*',
 
@@ -367,6 +369,7 @@ def SingleTopStep1(
     )
   )
 
+
   #-------------------------------------------------
   # Paths
   #-------------------------------------------------
@@ -381,11 +384,11 @@ def SingleTopStep1(
     process.goodOfflinePVCount
   )
 
-  process.patPF2PATSequence.insert(process.patPF2PATSequence.index(process.selectedPatMuons) + 1,
-    process.selectedPatMuonTriggerMatchHLTMuons*
-    process.selectedPatMuonsWithTriggerMatch *
-    process.muonsWithID
-  )
+  #process.patPF2PATSequence.insert(process.patPF2PATSequence.index(process.selectedPatMuons) + 1,
+  #  process.selectedPatMuonTriggerMatchHLTMuons*
+  #  process.selectedPatMuonsWithTriggerMatch *
+  #  process.muonsWithID
+  #)
   process.patPF2PATSequence.insert(process.patPF2PATSequence.index(process.selectedPatElectrons) + 1, process.electronsWithID)
 
   #Need separate paths because of skimming
@@ -398,9 +401,17 @@ def SingleTopStep1(
   process.GlobalTag.globaltag = cms.string(options.globalTag)
 
   process.singleTopSequence += process.preCalcSequences
-  process.singleTopSequence += process.stpolMetUncertaintySequence
   process.singleTopSequence += process.muonSequence
   process.singleTopSequence += process.electronSequence
+  process.singleTopSequence += process.stpolMetUncertaintySequence
+
+  from PhysicsTools.PatAlgos.tools.trigTools import *
+  switchOnTrigger(process,
+    sequence="singleTopSequence"
+  )
+
+  #process.singleTopSequence += process.patTrigger
+  #process.singleTopSequence += process.patTriggerEvent
 
   if options.isMC:
     #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagJetProbabilityCalibration?redirectedfrom=CMS.SWGuideBTagJetProbabilityCalibration#Calibration_in_53x_Data_and_MC
