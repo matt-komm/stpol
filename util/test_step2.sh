@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #IN=`find $STPOL_DIR/testing_step1 -name "out*.root"`
-IN=$STPOL_DIR/testing/step1/ttbar/out_step1_numEvent100_Skim.root
+IN=$STPOL_DIR/testing/step1/ttbar/*.root
 OFDIR="$STPOL_DIR"/testing_step2
 
 echo "Runnin step2 test on IN="$IN" with output to OFIR="$OFDIR
