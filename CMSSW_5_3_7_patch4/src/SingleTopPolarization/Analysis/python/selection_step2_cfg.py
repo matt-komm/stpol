@@ -6,8 +6,6 @@ from SingleTopPolarization.Analysis.config_step2_cfg import Config
 
 from FWCore.ParameterSet.VarParsing import VarParsing
 import SingleTopPolarization.Analysis.pileUpDistributions as pileUpDistributions
-from SingleTopPolarization.Analysis.weights_cfg import WeightSetup
-
 
 #BTag working points from https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagPerformanceOP#B_tagging_Operating_Points_for_5
 #TODO: place in proper class
@@ -83,6 +81,11 @@ def SingleTopStep2():
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.string,
                   "Apply Systematic variation")
+
+        options.register ('doPDFWeights', True,
+                  VarParsing.multiplicity.singleton,
+                  VarParsing.varType.bool,
+                  "Run the PDF weight generation module")
 
         options.register ('dataRun', "RunABCD",
                   VarParsing.multiplicity.singleton,
@@ -295,6 +298,395 @@ def SingleTopStep2():
             varVPSet.append(pset)
         return varVPSet
 
+    #Following treemakers for reference only, not to be used. Use CandViewNtpProducer2 instead! --joosep
+    #process.treesMu = cms.EDAnalyzer('MuonCandViewTreemakerAnalyzer',
+    #    collections = cms.untracked.VPSet(
+    #        treeCollection(
+    #            cms.untracked.InputTag("muonsWithIso"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["relIso", "userFloat('%s')" % Config.Muons.relIsoType],
+    #                ["Charge", "charge"],
+    #                ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
+    #                ["normChi2", "? globalTrack().isNonnull() ? normChi2 : -1.0"],
+    #                ["track_hitPattern_trackerLayersWithMeasurement", "userFloat('track_hitPattern_trackerLayersWithMeasurement')"],
+    #                ["globalTrack_hitPattern_numberOfValidMuonHits", "userFloat('globalTrack_hitPattern_numberOfValidMuonHits')"],
+    #                ["innerTrack_hitPattern_numberOfValidPixelHits", "userFloat('innerTrack_hitPattern_numberOfValidPixelHits')"],
+    #                ["db", "dB"],
+    #                ["dz", "userFloat('dz')"],
+    #                ["numberOfMatchedStations", "numberOfMatchedStations"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("goodSignalMuons"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["relIso", "userFloat('%s')" % Config.Muons.relIsoType],
+    #                ["Charge", "charge"],
+    #                ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("looseVetoMuons"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["relIso", "userFloat('%s')" % Config.Muons.relIsoType],
+    #                ["Charge", "charge"],
+    #                ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
+    #            ]
+    #        )
+    #    )
+    #)
+
+    #process.treesEle = cms.EDAnalyzer('ElectronCandViewTreemakerAnalyzer',
+    #    collections = cms.untracked.VPSet(
+    #        treeCollection(
+    #            cms.untracked.InputTag("elesWithIso"), 1,
+    #            [
+    #                ["Pt", "%s" % Config.Electrons.pt],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["relIso", "userFloat('%s')" % Config.Electrons.relIsoType],
+    #                ["mvaID", "electronID('mvaTrigV0')"],
+    #                ["Charge", "charge"],
+    #                ["superCluster_eta", "superCluster.eta"],
+    #                ["passConversionVeto", "passConversionVeto()"],
+    #                ["superCluster_eta", "superCluster.eta"],
+    #                ["gsfTrack_trackerExpectedHitsInner_numberOfHits", "userInt('gsfTrack_trackerExpectedHitsInner_numberOfHits')"]
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("goodSignalElectrons"), 1,
+    #            [
+    #                ["Pt", "%s" % Config.Electrons.pt],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["relIso", "userFloat('%s')" % Config.Electrons.relIsoType],
+    #                ["mvaID", "electronID('mvaTrigV0')"],
+    #                ["Charge", "charge"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("looseVetoElectrons"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["relIso", "userFloat('%s')" % Config.Electrons.relIsoType],
+    #                ["Charge", "charge"],
+    #                ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
+    #            ]
+    #        )
+    #    )
+    #)
+    #process.treesJets = cms.EDAnalyzer('JetCandViewTreemakerAnalyzer',
+    #        collections = cms.untracked.VPSet(
+    #        #all the selected jets in events, passing the reference selection cuts, ordered pt-descending
+    #        treeCollection(
+    #            cms.untracked.InputTag("goodJets"), 5,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Mass", "mass"],
+    #                ["bDiscriminator", "bDiscriminator('%s')" % Config.Jets.bTagDiscriminant],
+    #                ["bDiscriminatorTCHP", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.TCHP],
+    #                ["bDiscriminatorCSV_MVA", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV_MVA],
+    #                ["rms", "userFloat('rms')"],
+    #                ["partonFlavour", "partonFlavour()"],
+    #                ["deltaR", "userFloat('deltaR')"]
+    #            ]
+    #        ),
+    #        # treeCollection(
+    #        #     cms.untracked.InputTag("fwdMostLightJet"), 1,
+    #        #     [
+    #        #         ["Pt", "pt"],
+    #        #         ["Eta", "eta"],
+    #        #         ["Phi", "phi"],
+    #        #         ["Mass", "mass"],
+    #        #         ["bDiscriminator", "bDiscriminator('combinedSecondaryVertexBJetTags')"],
+    #        #         ["rms", "userFloat('rms')"]
+    #        #     ]
+    #        # ),
+
+    #        #the tagged jet with the highest b-discriminator value (== THE b-jet)
+    #        treeCollection(
+    #            cms.untracked.InputTag("highestBTagJet"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Mass", "mass"],
+    #                ["bDiscriminator", "bDiscriminator('%s')" % Config.Jets.bTagDiscriminant],
+    #                ["bDiscriminatorTCHP", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.TCHP],
+    #                ["bDiscriminatorCSV_MVA", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV_MVA],
+    #                ["rms", "userFloat('rms')"],
+    #                ["partonFlavour", "partonFlavour()"],
+    #                ["deltaR", "userFloat('deltaR')"]
+    #            ]
+    #        ),
+
+    #        #The jet with the lowest b-discriminator value (== THE light jet)
+    #        treeCollection(
+    #            cms.untracked.InputTag("lowestBTagJet"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Mass", "mass"],
+    #                ["bDiscriminator", "bDiscriminator('%s')" % Config.Jets.bTagDiscriminant],
+    #                ["bDiscriminatorTCHP", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.TCHP],
+    #                ["bDiscriminatorCSV_MVA", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV_MVA],
+    #                ["rms", "userFloat('rms')"],
+    #                ["partonFlavour", "partonFlavour()"],
+    #                ["deltaR", "userFloat('deltaR')"]
+    #            ]
+    #        ),
+
+    #    #all the b-tagged jets in the event, ordered pt-descending
+    #        treeCollection(
+    #            cms.untracked.InputTag("btaggedJets"), Config.Jets.nBTags,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Mass", "mass"],
+    #                ["bDiscriminator", "bDiscriminator('%s')" % Config.Jets.bTagDiscriminant],
+    #                ["bDiscriminatorTCHP", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.TCHP],
+    #                ["bDiscriminatorCSV_MVA", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV_MVA],
+    #                ["rms", "userFloat('rms')"],
+    #                ["partonFlavour", "partonFlavour()"],
+    #                ["deltaR", "userFloat('deltaR')"]
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("untaggedJets"), Config.Jets.nJets-Config.Jets.nBTags,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Mass", "mass"],
+    #                ["bDiscriminator", "bDiscriminator('%s')" % Config.Jets.bTagDiscriminant],
+    #                ["bDiscriminatorTCHP", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.TCHP],
+    #                ["bDiscriminatorCSV_MVA", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV_MVA],
+    #                ["rms", "userFloat('rms')"],
+    #                ["partonFlavour", "partonFlavour()"],
+    #                ["deltaR", "userFloat('deltaR')"]
+    #            ]
+    #        )
+    #    )
+    #)
+
+
+
+    ##process.treesEle = cms.EDAnalyzer('ElectronCandViewTreemakerAnalyzer',
+    ##        collections = cms.untracked.VPSet(treeCollection("goodSignalElectrons", 1,
+    ##            [
+    ##                ["Pt", "pt"],
+    ##                ["Eta", "eta"],
+    ##                ["Phi", "phi"],
+    ##                ["rhoCorrRelIso", "userFloat('rhoCorrRelIso')"],
+    ##            ]
+    ##            )
+    ##        )
+    ##)
+
+    #process.treesCands = cms.EDAnalyzer('CandViewTreemakerAnalyzer',
+    #        collections = cms.untracked.VPSet(
+    #        treeCollection(
+    #            cms.untracked.InputTag("recoTop"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Mass", "mass"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("recoNu"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Px", "p4().Px()"],
+    #                ["Py", "p4().Py()"],
+    #                ["Pz", "p4().Pz()"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Mass", "mass"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("genParticleSelector", "trueNeutrino", "STPOLSEL2"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #                ["Px", "p4().Px()"],
+    #                ["Py", "p4().Py()"],
+    #                ["Pz", "p4().Pz()"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("genParticleSelector", "trueLepton", "STPOLSEL2"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("genParticleSelector", "trueLightJet", "STPOLSEL2"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #                ["Eta", "eta"],
+    #                ["Phi", "phi"],
+    #            ]
+    #        ),
+    #        treeCollection(
+    #            cms.untracked.InputTag("patMETs"), 1,
+    #            [
+    #                ["Pt", "pt"],
+    #            ]
+    #        ),
+    #    )
+    #)
+
+    #process.treesDouble = cms.EDAnalyzer("FloatTreemakerAnalyzer",
+    #    collections = cms.VInputTag(
+    #        #Merged cosTheta*
+    #        cms.InputTag("cosTheta", "cosThetaLightJet"),
+
+    #        #cosTheta* separately from mu and ele
+    #        #cms.InputTag("cosThetaProducerEle", "cosThetaLightJet"),
+    #        #cms.InputTag("cosThetaProducerMu", "cosThetaLightJet"),
+
+    #        #cosTheta* from gen
+    #        cms.InputTag("cosThetaProducerTrueTop", "cosThetaLightJet"),
+    #        cms.InputTag("cosThetaProducerTrueLepton", "cosThetaLightJet"),
+    #        cms.InputTag("cosThetaProducerTrueJet", "cosThetaLightJet"),
+    #        cms.InputTag("cosThetaProducerTrueAll", "cosThetaLightJet"),
+
+    #        cms.InputTag("puWeightProducer", "nVerticesTrue"),
+
+    #        #Transverse mass of MET and lepton
+    #        cms.InputTag("muAndMETMT", ""),
+    #        cms.InputTag("eleAndMETMT", ""),
+
+    #        ##B-tag systematics
+    #        #cms.InputTag("bTagWeightProducer", "bTagWeight"),
+    #        #cms.InputTag("bTagWeightProducer", "bTagWeightSystBCUp"),
+    #        #cms.InputTag("bTagWeightProducer", "bTagWeightSystBCDown"),
+    #        #cms.InputTag("bTagWeightProducer", "bTagWeightSystLUp"),
+    #        #cms.InputTag("bTagWeightProducer", "bTagWeightSystLDown"),
+
+
+    #        #Some debugging data
+    #        #cms.InputTag("kt6PFJets", "rho", "RECO"),
+    #        #cms.InputTag("recoNu", "Delta"),
+    #    )
+    #)
+
+    #process.treesDoubleWeight = cms.EDAnalyzer("FloatTreemakerAnalyzer",
+    #    defaultValue = cms.untracked.double(0),
+    #    putNaNs = cms.untracked.bool(False),
+    #    collections = cms.VInputTag(
+    #        #B-tag systematics
+    #        cms.InputTag("bTagWeightProducerNJMT", "bTagWeight"),
+    #        cms.InputTag("bTagWeightProducerNJMT", "bTagWeightSystBCUp"),
+    #        cms.InputTag("bTagWeightProducerNJMT", "bTagWeightSystBCDown"),
+    #        cms.InputTag("bTagWeightProducerNJMT", "bTagWeightSystLUp"),
+    #        cms.InputTag("bTagWeightProducerNJMT", "bTagWeightSystLDown"),
+
+    #        #cms.InputTag("bTagWeightProducer2J1T", "bTagWeight"),
+    #        #cms.InputTag("bTagWeightProducer2J1T", "bTagWeightSystBCUp"),
+    #        #cms.InputTag("bTagWeightProducer2J1T", "bTagWeightSystBCDown"),
+    #        #cms.InputTag("bTagWeightProducer2J1T", "bTagWeightSystLUp"),
+    #        #cms.InputTag("bTagWeightProducer2J1T", "bTagWeightSystLDown"),
+
+    #        #cms.InputTag("bTagWeightProducer2J0T", "bTagWeight"),
+    #        #cms.InputTag("bTagWeightProducer2J0T", "bTagWeightSystBCUp"),
+    #        #cms.InputTag("bTagWeightProducer2J0T", "bTagWeightSystBCDown"),
+    #        #cms.InputTag("bTagWeightProducer2J0T", "bTagWeightSystLUp"),
+    #        #cms.InputTag("bTagWeightProducer2J0T", "bTagWeightSystLDown"),
+
+    #        #cms.InputTag("bTagWeightProducer3J0T", "bTagWeight"),
+    #        #cms.InputTag("bTagWeightProducer3J0T", "bTagWeightSystBCUp"),
+    #        #cms.InputTag("bTagWeightProducer3J0T", "bTagWeightSystBCDown"),
+    #        #cms.InputTag("bTagWeightProducer3J0T", "bTagWeightSystLUp"),
+    #        #cms.InputTag("bTagWeightProducer3J0T", "bTagWeightSystLDown"),
+
+    #        #cms.InputTag("bTagWeightProducer3J1T", "bTagWeight"),
+    #        #cms.InputTag("bTagWeightProducer3J1T", "bTagWeightSystBCUp"),
+    #        #cms.InputTag("bTagWeightProducer3J1T", "bTagWeightSystBCDown"),
+    #        #cms.InputTag("bTagWeightProducer3J1T", "bTagWeightSystLUp"),
+    #        #cms.InputTag("bTagWeightProducer3J1T", "bTagWeightSystLDown"),
+
+    #        #cms.InputTag("puWeightProducer", "PUWeightN0"),
+    #        cms.InputTag("puWeightProducer", "PUWeightNtrue"),
+
+    #        cms.InputTag("muonWeightsProducer", "muonIDWeight"),
+    #        cms.InputTag("muonWeightsProducer", "muonIDWeightUp"),
+    #        cms.InputTag("muonWeightsProducer", "muonIDWeightDown"),
+    #        cms.InputTag("muonWeightsProducer", "muonIsoWeight"),
+    #        cms.InputTag("muonWeightsProducer", "muonIsoWeightUp"),
+    #        cms.InputTag("muonWeightsProducer", "muonIsoWeightDown")
+    #    )
+    #)
+
+    #process.treesBool = cms.EDAnalyzer("BoolTreemakerAnalyzer",
+    #    collections = cms.VInputTag(
+    #        cms.InputTag("ecalLaserCorrFilter", "", "PAT"),
+    #    )
+    #)
+
+    #process.treesInt = cms.EDAnalyzer("IntTreemakerAnalyzer",
+    #    collections = cms.VInputTag(
+    #        [
+    #        #cms.InputTag("recoNuProducerMu", "solType"),
+    #        #cms.InputTag("recoNuProducerEle ", "solType"),
+    #        cms.InputTag("muonCount"),
+    #        cms.InputTag("electronCount"),
+    #        cms.InputTag("topCount"),
+    #        cms.InputTag("bJetCount"),
+    #        cms.InputTag("lightJetCount"),
+
+    #        cms.InputTag("looseVetoMuCount"),
+    #        cms.InputTag("looseVetoEleCount"),
+
+    #        cms.InputTag("btaggedTrueBJetCount"),
+    #        cms.InputTag("trueBJetCount"),
+    #        cms.InputTag("btaggedTrueCJetCount"),
+    #        cms.InputTag("trueCJetCount"),
+    #        cms.InputTag("btaggedTrueLJetCount"),
+    #        cms.InputTag("trueLJetCount"),
+
+    #        cms.InputTag("eventIDProducer", "eventId"),
+    #        cms.InputTag("eventIDProducer", "runId"),
+    #        cms.InputTag("eventIDProducer", "lumiId"),
+
+    #        cms.InputTag("offlinePVCount"),
+
+    #        cms.InputTag("genLeptonsTCount"),
+    #        cms.InputTag("trueLeptonPdgId")
+    #        ]
+    #    )
+    #)
+
+    #process.treeSequence = cms.Sequence(process.treesMu*process.treesEle*process.treesDouble*process.treesBool*process.treesCands*process.treesJets*process.treesInt*process.treesDoubleWeight)
+
     process.recoTopNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag("recoTop"),
@@ -475,11 +867,11 @@ def SingleTopStep2():
     from SingleTopPolarization.Analysis.hlt_step2_cfi import HLTSetup
     HLTSetup(process, Config)
 
-    #if Config.isMC and options.doPDFWeights:
-    #    process.PDFweights = cms.EDProducer('PDFweightsProducer')
-    #    process.pdfPath = cms.Path(
-    #          process.PDFweights
-    #    )
+    if Config.isMC and options.doPDFWeights:
+        process.PDFweights = cms.EDProducer('PDFweightsProducer')
+        process.pdfPath = cms.Path(
+              process.PDFweights
+        )
 
 
     if Config.doDebug:
@@ -496,12 +888,6 @@ def SingleTopStep2():
         src = cms.InputTag("looseVetoElectrons")
     )
 
-    process.leptonCommonSequence = cms.Sequence(
-        process.goodSignalLeptons *
-        process.looseVetoMuCount *
-        process.looseVetoEleCount
-    )
-
     if Config.isMC and options.doGenParticlePath:
         if Config.isCompHep:
             from SingleTopPolarization.Analysis.partonStudy_comphep_step2_cfi import PartonStudySetup
@@ -509,11 +895,9 @@ def SingleTopStep2():
             from SingleTopPolarization.Analysis.partonStudy_step2_cfi import PartonStudySetup
         PartonStudySetup(process)
         process.partonPath = cms.Path()
+        #process.partonPath = cms.Path(process.commonPartonSequence)
         if Config.channel==Config.Channel.signal:
             process.partonPath += process.partonStudyTrueSequence
-
-    if Config.isMC:
-        WeightSetup(process, Config)
 
     if Config.doMuon:
         from SingleTopPolarization.Analysis.muons_step2_cfi import MuonPath
@@ -521,8 +905,6 @@ def SingleTopStep2():
         process.muPath.insert(process.muPath.index(process.singleIsoMu)+1, process.goodSignalLeptons)
         process.muPath.insert(process.muPath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
         process.muPath.insert(process.muPath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
-        if Config.isMC:
-            process.muPath += process.weightSequence
         process.muPath += process.eventShapeSequence
 
     if Config.doElectron:
@@ -532,13 +914,30 @@ def SingleTopStep2():
         process.elePath.insert(process.elePath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
         process.elePath.insert(process.elePath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
         process.elePath += process.eventShapeSequence
-        if Config.isMC:
-            process.elePath += process.weightSequence
+
+    if Config.isMC:
+        process.puWeightProducer = cms.EDProducer('PUWeightProducer'
+            , maxVertices = cms.uint32(50)
+            , srcDistribution = cms.vdouble(Config.srcPUDistribution)
+            , destDistribution = cms.vdouble(Config.destPUDistribution)
+        )
+        if Config.doMuon:
+             process.muPath.insert(0, process.puWeightProducer)
+        if Config.doElectron:
+             process.elePath.insert(0, process.puWeightProducer)
+
+
+#    process.offlinePVCount = cms.EDProducer(
+#        "CollectionSizeProducer<reco::Vertex>",
+#        src = cms.InputTag("offlinePrimaryVertices")
+#    )
 
     process.eventIDProducer = cms.EDProducer('EventIDProducer'
     )
     process.treePath = cms.Path(
         process.eventIDProducer *
+        #process.offlinePVCount *
+       # process.treeSequence *
         process.treeSequenceNew
     )
 
@@ -558,6 +957,7 @@ def SingleTopStep2():
                  SelectEvents=cms.vstring(["*"])
              ),
             outputCommands=cms.untracked.vstring(
+                #'drop *',
                 'drop *',
                 'keep edmMergeableCounter_*__*',
                 'keep *_generator__*',
@@ -625,6 +1025,11 @@ def SingleTopStep2():
         #(inFiles, outFile) = enableCommandLineArguments(process)
     else:
         outFile = "step2.root"
+
+    #process.TFileService = cms.Service(
+    #    "TFileService",
+    #    fileName=cms.string(outFile.replace(".root", "_trees.root")),
+    #)
 
     #print "Output trees: %s" % process.TFileService.fileName.value()
     if hasattr(process, "out"):
