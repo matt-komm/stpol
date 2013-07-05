@@ -13,7 +13,7 @@ def WeightSetup(process, conf):
         process.ttbarTopWeight = cms.EDProducer(
             'TopPtReweightProducer',
             src=cms.InputTag("genParticles"),
-            channel=channel[conf.subProcess]
+            channel=cms.string(channel[conf.subChannel])
         )
         process.weightSequence += process.ttbarTopWeight
 

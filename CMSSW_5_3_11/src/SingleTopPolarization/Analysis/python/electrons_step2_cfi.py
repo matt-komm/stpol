@@ -207,25 +207,16 @@ def ElectronPath(process, conf):
     process.efficiencyAnalyzerEle = cms.EDAnalyzer('EfficiencyAnalyzer'
     , histogrammableCounters = cms.untracked.vstring(["elePath"])
     , elePath = cms.untracked.vstring([
-        "PATTotalEventsProcessedCount",
-        "singleTopPathStep1ElePreCount",
-        "singleTopPathStep1ElePostCount",
-        "elePathPreCount",
-        "elePathStepHLTsyncElePostCount",
-        "elePathOneIsoElePostCount",
-        "elePathLooseEleVetoElePostCount",
-        "elePathLooseMuVetoElePostCount",
-        "elePathNJetsPostCount",
-        "elePathMetEleSequencePostCount",
-        "elePathMBTagsPostCount"
+            "PATTotalEventsProcessedCount",
+            "singleTopPathStep1ElePreCount",
+            "singleTopPathStep1ElePostCount",
+            "elePathPreCount",
         ]
     ))
 
     process.elePath = cms.Path(
 
         process.elePathPreCount *
-
-        process.stepHLTsyncEle *
 
         process.muIsoSequence *
         process.eleIsoSequence *
@@ -307,14 +298,7 @@ def ElectronPath(process, conf):
             process.partonStudyCompareSequence
             )
 
-    eventCounting.countAfter(process, process.elePath,
-        [
-        "stepHLTsyncEle",
-        "oneIsoEle",
-        "looseEleVetoEle",
-        "looseMuVetoEle",
-        "metEleSequence",
-        "nJets",
-        "mBTags"
-        ]
-    )
+    #eventCounting.countAfter(process, process.elePath,
+    #    [
+    #    ]
+    #)

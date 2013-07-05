@@ -160,7 +160,7 @@ def SingleTopStep2():
 
     process.source = cms.Source("PoolSource",
         # replace 'myfile.root' with the source file you want to use
-        fileNames=cms.untracked.vstring(""),
+        fileNames=cms.untracked.vstring(options.inputFiles),
         cacheSize = cms.untracked.uint32(10*1024*1024),
     )
 
@@ -433,7 +433,7 @@ def SingleTopStep2():
     # Flavour analyzer
     #-----------------------------------------------
 
-    Config.doWJetsFlavour = Config.isMC and sample_type.is_wjets(Config.subChannel) and not Config.isSherpa
+    Config.doWJetsFlavour = Config.isMC and sample_types.is_wjets(Config.subChannel) and not Config.isSherpa
     if Config.doWJetsFlavour:
         process.flavourAnalyzer = cms.EDProducer('FlavourAnalyzer',
             genParticles = cms.InputTag('genParticles'),
@@ -448,8 +448,9 @@ def SingleTopStep2():
     # Paths
     #-----------------------------------------------
 
-    from SingleTopPolarization.Analysis.hlt_step2_cfi import HLTSetup
-    HLTSetup(process, Config)
+    #NOTE: HLT now done at step3
+    #from SingleTopPolarization.Analysis.hlt_step2_cfi import HLTSetup
+    #HLTSetup(process, Config)
 
     if Config.doDebug:
         from SingleTopPolarization.Analysis.debugAnalyzers_step2_cfi import DebugAnalyzerSetup
@@ -478,29 +479,27 @@ def SingleTopStep2():
             from SingleTopPolarization.Analysis.partonStudy_step2_cfi import PartonStudySetup
         PartonStudySetup(process)
         process.partonPath = cms.Path()
-        if sample_type.is_signal(Config.subChannel)
+        if sample_types.is_signal(Config.subChannel):
             process.partonPath += process.partonStudyTrueSequence
 
     if Config.isMC:
         WeightSetup(process, Config)
 
-    if Config.doMuon:
-        from SingleTopPolarization.Analysis.muons_step2_cfi import MuonPath
-        MuonPath(process, Config)
-        process.muPath.insert(process.muPath.index(process.singleIsoMu)+1, process.goodSignalLeptons)
-        process.muPath.insert(process.muPath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
-        process.muPath.insert(process.muPath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
-        if Config.isMC:
-            process.muPath += process.weightSequence
+    from SingleTopPolarization.Analysis.muons_step2_cfi import MuonPath
+    MuonPath(process, Config)
+    process.muPath.insert(process.muPath.index(process.singleIsoMu)+1, process.goodSignalLeptons)
+    process.muPath.insert(process.muPath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
+    process.muPath.insert(process.muPath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
+    if Config.isMC:
+        process.muPath += process.weightSequence
 
-    if Config.doElectron:
-        from SingleTopPolarization.Analysis.electrons_step2_cfi import ElectronPath
-        ElectronPath(process, Config)
-        process.elePath.insert(process.elePath.index(process.singleIsoEle)+1, process.goodSignalLeptons)
-        process.elePath.insert(process.elePath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
-        process.elePath.insert(process.elePath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
-        if Config.isMC:
-            process.elePath += process.weightSequence
+    from SingleTopPolarization.Analysis.electrons_step2_cfi import ElectronPath
+    ElectronPath(process, Config)
+    process.elePath.insert(process.elePath.index(process.singleIsoEle)+1, process.goodSignalLeptons)
+    process.elePath.insert(process.elePath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
+    process.elePath.insert(process.elePath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
+    if Config.isMC:
+        process.elePath += process.weightSequence
 
     process.eventIDProducer = cms.EDProducer('EventIDProducer'
     )
@@ -520,7 +519,7 @@ def SingleTopStep2():
         process.out = cms.OutputModule("PoolOutputModule",
             dropMetaData=cms.untracked.string("DROPPED"),
             splitLevel=cms.untracked.int32(99),
-            fileName=cms.untracked.string('out_step2.root'),
+            fileName=cms.untracked.string(options.outputFile),
              SelectEvents=cms.untracked.PSet(
                  SelectEvents=cms.vstring(["*"])
              ),
@@ -570,30 +569,13 @@ def SingleTopStep2():
             )
         )
         process.outpath = cms.EndPath(process.out)
-        if Config.doElectron:
-            process.out.SelectEvents.SelectEvents.append("elePath")
-        if Config.doMuon:
-            process.out.SelectEvents.SelectEvents.append("muPath")
+        process.out.SelectEvents.SelectEvents.append("elePath")
+        process.out.SelectEvents.SelectEvents.append("muPath")
 
     #-----------------------------------------------
-    #
+    # Final printout
     #-----------------------------------------------
 
-    #Command-line arguments
-    if not Config.onGrid:
-        process.source.fileNames = cms.untracked.vstring(options.inputFiles)
-        process.maxEvents = cms.untracked.PSet(
-          input = cms.untracked.int32(options.maxEvents)
-        )
-        if hasattr(process, "out"):
-            process.out.fileName = cms.untracked.string(options.outputFile)
-        outFile = options.outputFile
-        #from SingleTopPolarization.Analysis.cmdlineParsing import enableCommandLineArguments
-        #(inFiles, outFile) = enableCommandLineArguments(process)
-    else:
-        outFile = "step2.root"
-
-    #print "Output trees: %s" % process.TFileService.fileName.value()
     if hasattr(process, "out"):
         print "Output patTuples: %s" % process.out.fileName.value()
     print 80*"-"

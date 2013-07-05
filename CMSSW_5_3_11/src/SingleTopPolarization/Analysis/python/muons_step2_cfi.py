@@ -97,22 +97,6 @@ def MuonSetup(process, conf = None):
         dataRun=cms.string(conf.dataRun)
     )
 
-#    #Either use MET cut or MtW cut
-#    if conf.Muons.transverseMassType == conf.Leptons.WTransverseMassType.MET:
-#        if conf.Leptons.cutOnTransverseMass:
-#            process.hasMET = cms.EDFilter("PATCandViewCountFilter",
-#                src = cms.InputTag("goodMETs"),
-#                minNumber = cms.uint32(1),
-#                maxNumber = cms.uint32(1)
-#            )
-#    elif conf.Muons.transverseMassType == conf.Leptons.WTransverseMassType.MtW:
-#        if conf.Leptons.cutOnTransverseMass:
-#            process.hasMuMETMT = cms.EDFilter('EventDoubleFilter',
-#                src=cms.InputTag("muAndMETMT"),
-#                min=cms.double(conf.Muons.transverseMassCut),
-#                max=cms.double(9999999)
-#            )
-
     process.recoNuProducerMu = cms.EDProducer('ClassicReconstructedNeutrinoProducer',
         leptonSrc=cms.InputTag("singleIsoMu"),
         bjetSrc=cms.InputTag("btaggedJets"),
@@ -130,22 +114,12 @@ def MuonPath(process, conf):
         "singleTopPathStep1MuPreCount",
         "singleTopPathStep1MuPostCount",
         "muPathPreCount",
-        "muPathStepHLTsyncMuPostCount",
-        "muPathOneIsoMuPostCount",
-        "muPathLooseMuVetoMuPostCount",
-        "muPathLooseEleVetoMuPostCount",
-        "muPathNJetsPostCount",
-        "muPathMetMuSequencePostCount",
-        "muPathMBTagsPostCount"
         ]
     ))
 
     process.muPath = cms.Path(
 
         process.muPathPreCount *
-
-        #Optionally select the HLT
-        process.stepHLTsyncMu *
 
         process.muIsoSequence *
         process.eleIsoSequence *
@@ -219,14 +193,7 @@ def MuonPath(process, conf):
 
 
     #Count number of events passing the selection filters
-    eventCounting.countAfter(process, process.muPath,
-        [
-        "stepHLTsyncMu",
-        "oneIsoMu",
-        #"looseMuVetoMu",
-        #"looseEleVetoMu",
-        #"metMuSequence",
-        "nJets",
-        "mBTags"
-        ]
-    )
+    #eventCounting.countAfter(process, process.muPath,
+    #    [
+    #    ]
+    #)
