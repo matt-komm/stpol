@@ -4,12 +4,11 @@
 #Tags for https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATReleaseNotes52X#V08_09_43
 CMSVERSION=CMSSW_5_3_11
 #echo "Stashing current working directory, use 'git stash pop' later to retrieve"
-git stash
-rm -Rf $CMSVERSION
+git stash #temporaryily store changes
+rm -Rf $CMSVERSION #remove the source tree for cmsrel to work
 export SCRAM_ARCH=slc5_amd64_gcc462
 cmsrel $CMSVERSION #Base code
-cmsrel CMSSW_5_3_8 #Create separate directory for FWLite
-git reset --hard
+git reset --hard #bring back the source tree
 cd $CMSVERSION 
 
 cmsenv
