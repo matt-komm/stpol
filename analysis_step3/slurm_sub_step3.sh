@@ -10,10 +10,11 @@ if [ ! -f $1 ]; then
     exit 1
 fi
 INFILE=`readlink -f $1`
-OUTDIR=`readlink -f $2`
+OUTDIR=$2
 CONF="${*:3}"
 
 mkdir -p $OUTDIR
+OUTDIR=`readlink -f $OUTDIR`
 cd $OUTDIR
 echo $0 $@ > $OUTDIR/job
 
