@@ -59,7 +59,7 @@ if __name__=="__main__":
 
                     cmd = " ".join(["$STPOL_DIR/analysis_step3/suball.sh", "'"+args+"'", ofpath, fi])
                     print cmd
-        #            check_call(cmd, shell=True)
+                    check_call(cmd, shell=True)
 
 
 
