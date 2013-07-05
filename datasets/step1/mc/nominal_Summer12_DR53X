@@ -51,3 +51,5 @@ WJets_excl1 /W1JetsToLNu_TuneZ2Star_8TeV-madgraph/Summer12_DR53X-PU_S10_START53_
 WJets_excl2 /W2JetsToLNu_TuneZ2Star_8TeV-madgraph/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 WJets_excl3 /W3JetsToLNu_TuneZ2Star_8TeV-madgraph/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 WJets_excl4 /W4JetsToLNu_TuneZ2Star_8TeV-madgraph/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
+
+WJets_sherpa /WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa/Summer12_DR53X-PU_S10_START53_V7C-v1/AODSIM
