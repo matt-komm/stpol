@@ -1,3 +1,4 @@
+raise Exception("FIXME: Must port this script to conform to selection_step2_cfg.py! --JP")
 import logging
 logging.basicConfig(level=logging.INFO)
 import FWCore.ParameterSet.Config as cms
@@ -54,17 +55,17 @@ def SingleTopStep2Preselection():
                   "destination pile-up distribution"
         )
         options.parseArguments()
-        
+
         Config.channel = Config.Channel.signal
         Config.srcPUDistribution = pileUpDistributions.distributions[options.srcPUDistribution]
         Config.destPUDistribution = pileUpDistributions.distributions[options.destPUDistribution]
-        
-    
+
+
         Config.subChannel = options.subChannel
         Config.doDebug = options.doDebug
         Config.isMC = True
         Config.isCompHep = options.compHep
-        Config.dataRun = "RunABCD"        
+        Config.dataRun = "RunABCD"
 
     print "Configuration"
     print Config._toStr()
@@ -140,7 +141,7 @@ def SingleTopStep2Preselection():
             varVPSet.append(pset)
         return varVPSet
 
-	 
+
     process.recoTopNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag("recoTop"),
@@ -173,7 +174,7 @@ def SingleTopStep2Preselection():
             ]
       )
     )
-	 
+
     process.trueNuNTupleProducer = process.recoNuNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueNeutrino", "STPOLSEL2"),
     )
@@ -195,7 +196,7 @@ def SingleTopStep2Preselection():
     process.trueLightJetNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueLightJet", "STPOLSEL2"),
     )
-    
+
     process.trueMuonsNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag(Config.Muons.source),
@@ -210,7 +211,7 @@ def SingleTopStep2Preselection():
                 #["relIso", "userFloat('%s')" % Config.Muons.relIsoType],
                 ["Charge", "charge"],
                 ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
-                ["motherGenPdgId", "? genParticlesSize() > 0 ? genParticle(0).mother(0).pdgId() : 0"],                
+                ["motherGenPdgId", "? genParticlesSize() > 0 ? genParticle(0).mother(0).pdgId() : 0"],
             ]
       )
     )

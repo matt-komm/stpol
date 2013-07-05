@@ -1,5 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 import SingleTopPolarization.Analysis.eventCounting as eventCounting
+import SingleTopPolarization.Analysis.sample_types as sample_types
 
 def MuonSetup(process, conf = None):
 
@@ -175,7 +176,7 @@ def MuonPath(process, conf):
     )
 
     #Only do the parton identification in the signal channel
-    if conf.isMC and conf.channel == conf.Channel.signal:
+    if conf.isMC and sample_types.is_signal(conf.subChannel):
         process.muPath.insert(
             process.muPath.index(process.topRecoSequenceMu)+1,
             process.partonStudyCompareSequence

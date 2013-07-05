@@ -1,5 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 import SingleTopPolarization.Analysis.eventCounting as eventCounting
+import SingleTopPolarization.Analysis.sample_types as sample_types
 
 import re
 #Remove the excess whitespace from formatting
@@ -200,11 +201,6 @@ def ElectronSetup(process, conf):
         process.electronVetoAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("looseVetoElectrons"))
         process.metAnalyzer = cms.EDAnalyzer('SimpleMETAnalyzer', interestingCollections=cms.untracked.VInputTag(conf.metSource))
 
-"""
-Configures the electron path with full selection.
-channel:    'sig' - runs on signal (t-channel or tbar channel). Generator level comparisons are turned on.
-            'bkg' - runs on background (anything else). Generator level comparisons turned off.
-"""
 def ElectronPath(process, conf):
     process.elePathPreCount = cms.EDProducer("EventCountProducer")
 
@@ -304,7 +300,7 @@ def ElectronPath(process, conf):
             process.decayTreeProducerEle
         )
 
-    if conf.isMC and conf.channel == conf.Channel.signal:
+    if conf.isMC and sample_types.is_signal(conf.subChannel):
         #Put the parton level study after the top reco sequence.
         process.elePath.insert(
             process.elePath.index(process.topRecoSequenceEle)+1,
