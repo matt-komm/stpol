@@ -31,9 +31,13 @@ PYTHONPATH=$PYTHONPATH:$STPOL_DIR/theta/utils2/
 
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/scratch/mario/boost_1_53_0/lib
 
-cd ${SCRIPT_DIR}/$CMSSW_DIR
-source /cvmfs/cms.cern.ch/cmsset_default.sh
-eval `scramv1 runtime -sh`
+if [[ "`hostname`" == *hep.kbfi.ee ]]
+then
+    echo "Detected that we're on hep.kbfi.ee, sourcing CMS-specific stuff"
+    cd ${SCRIPT_DIR}/$CMSSW_DIR
+    source /cvmfs/cms.cern.ch/cmsset_default.sh
+    eval `scramv1 runtime -sh`
+fi
 
 # Return to original directory
 cd $CURRENT_DIR
