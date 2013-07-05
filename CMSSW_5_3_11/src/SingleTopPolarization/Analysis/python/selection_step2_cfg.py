@@ -7,6 +7,7 @@ from SingleTopPolarization.Analysis.config_step2_cfg import Config
 from FWCore.ParameterSet.VarParsing import VarParsing
 import SingleTopPolarization.Analysis.pileUpDistributions as pileUpDistributions
 from SingleTopPolarization.Analysis.weights_cfg import WeightSetup
+import SingleTopPolarization.Analysis.sample_types as sample_types
 
 
 #BTag working points from https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagPerformanceOP#B_tagging_Operating_Points_for_5
@@ -31,10 +32,6 @@ def SingleTopStep2():
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.string,
                   "The sample that you are running on")
-        options.register ('channel', 'signal',
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "Signal or Background")
         options.register ('reverseIsoCut', False,
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.bool,
@@ -93,15 +90,8 @@ def SingleTopStep2():
 
 
         if options.isMC:
-            if options.channel.lower() == "signal":
-                Config.channel = Config.Channel.signal
-            elif options.channel.lower() == "background":
-                Config.channel = Config.Channel.background
             Config.srcPUDistribution = pileUpDistributions.distributions[options.srcPUDistribution]
             Config.destPUDistribution = pileUpDistributions.distributions[options.destPUDistribution]
-        else:
-            Config.channel = "data"
-            Config.subChannel = None
 
 
         Config.Leptons.reverseIsoCut = options.reverseIsoCut
@@ -443,7 +433,7 @@ def SingleTopStep2():
     # Flavour analyzer
     #-----------------------------------------------
 
-    Config.doWJetsFlavour = Config.isMC and Config.subChannel.lower() == "wjets" and not Config.isSherpa
+    Config.doWJetsFlavour = Config.isMC and sample_type.is_wjets(Config.subChannel) and not Config.isSherpa
     if Config.doWJetsFlavour:
         process.flavourAnalyzer = cms.EDProducer('FlavourAnalyzer',
             genParticles = cms.InputTag('genParticles'),
@@ -488,7 +478,7 @@ def SingleTopStep2():
             from SingleTopPolarization.Analysis.partonStudy_step2_cfi import PartonStudySetup
         PartonStudySetup(process)
         process.partonPath = cms.Path()
-        if Config.channel==Config.Channel.signal:
+        if sample_type.is_signal(Config.subChannel)
             process.partonPath += process.partonStudyTrueSequence
 
     if Config.isMC:
