@@ -1,4 +1,4 @@
-#!/bin/bash
+#NOTE: you must source this script, not execute it!
 #mv CMSSW_5_3_4_cand1/SingleTopPolarization ./
 
 #Tags for https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATReleaseNotes52X#V08_09_43
