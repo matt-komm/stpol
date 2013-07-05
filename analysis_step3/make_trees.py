@@ -29,7 +29,7 @@ if __name__=="__main__":
 
     signal_samples = ["T_t", "Tbar_t", "T_t_ToLeptons", "Tbar_t_ToLeptons"]
     data_samples = ["SingleMu", "SingleEle"]
-    cutstr = cmdline_args.cutStringProcessed + " --cutString='%s'" % cmdline_args.cutStringSelected
+    cutstr = cmdline_args.cutStringProcessed + ' --cutString="%s"' % cmdline_args.cutStringSelected
     if not cmdline_args.ofdir:
         cmdline_args.ofdir = "out_step3_%s_%s" % (os.getlogin(), datetime.datetime.now().strftime("%d_%m_%H_%M"))
 

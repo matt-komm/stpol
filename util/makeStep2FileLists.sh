@@ -6,9 +6,9 @@ then
     exit 1
 fi
 
-for i in `find $1 -name 'WD_*' -type d`
+for i in `find $1 -type d`
 do
     foldername=`basename $i`
     i=`readlink -f $i` 
-    find $i/res -name "*.root" | $CMSSW_BASE/../util/dedupe.py | $CMSSW_BASE/../util/prependPrefix.py file: > ${foldername:3}.txt
+    find $i -name "*.root" | $STPOL_DIR/util/dedupe.py | $STPOL_DIR/util/prependPrefix.py file:
 done
