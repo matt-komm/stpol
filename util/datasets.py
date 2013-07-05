@@ -4,6 +4,7 @@ This file collects the various datasets used for the stpol analysis and creates
 crab.cfg files from these datasets based on a template.
 Author: Joosep Pata joosep.pata@cern.ch
 """
+raise Exception("This file is outdated. Move to datasets/datasets2.py")
 
 import sys
 import os
