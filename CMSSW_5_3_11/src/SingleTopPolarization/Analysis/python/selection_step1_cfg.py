@@ -153,32 +153,6 @@ def SingleTopStep1(
       process.muonsWithIDAll
       )
 
-
-  process.muonTriggerMatchHLTMuons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
-      # matcher input collections
-    , src     = cms.InputTag( 'selectedPatMuons' )
-    , matched = cms.InputTag( 'patTrigger' )
-      # selections of trigger objects
-    , matchedCuts = cms.string( 'type( "TriggerMuon" ) && path( "HLT_IsoMu24_eta2p1_v*" )' )
-      # selection of matches
-    , maxDPtRel   = cms.double( 0.5 ) # no effect here
-    , maxDeltaR   = cms.double( 0.5 )
-    , maxDeltaEta = cms.double( 0.2 ) # no effect here
-      # definition of matcher output
-    , resolveAmbiguities    = cms.bool( True )
-    , resolveByMatchQuality = cms.bool( True )
-    )
-
-  process.load('PhysicsTools.PatAlgos.triggerLayer1.triggerProducer_cfi')
-  process.load('PhysicsTools.PatAlgos.triggerLayer1.triggerEventProducer_cfi')
-  process.patTriggerEvent.patTriggerMatches  = cms.VInputTag( "muonTriggerMatchHLTMuons" )
-
-  process.patTriggerSequence = cms.Sequence(
-    process.patTrigger *
-    process.muonTriggerMatchHLTMuons *
-    process.patTriggerEvent
-    )
-
   #-------------------------------------------------
   # Electrons
   # Implemented as in https://indico.cern.ch/getFile.py/access?contribId=1&resId=0&materialId=slides&confId=208765
@@ -296,7 +270,6 @@ def SingleTopStep1(
 
   process.load('PhysicsTools.PatAlgos.triggerLayer1.triggerProducer_cfi')
   process.load('PhysicsTools.PatAlgos.triggerLayer1.triggerEventProducer_cfi')
-  #  process.patTriggerEvent.patTriggerMatches  = cms.VInputTag( "muonTriggerMatchHLTMuons", "electronTriggerMatchHLTElectrons" )     
 
   process.patTriggerSequence = cms.Sequence(
     process.patTrigger *
