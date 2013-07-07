@@ -1,8 +1,8 @@
 from plots.common import cross_sections
 
-dataFiles_ele = ["../MVA2/step3_final/ele/iso/nominal/SingleMu.root.root","../MVA2/step3_final/ele/iso/nominal/SingleEle.root"]
+dataFiles_ele = ["../step3_final/ele/iso/nominal/SingleMu.root.root","../step3_final/ele/iso/nominal/SingleEle.root"]
 
-dataFiles_mu = ["../MVA2/step3_final/mu/iso/nominal/SingleMu.root.root","../MVA2/step3_final/mu/iso/nominal/SingleEle.root"]
+dataFiles_mu = ["../step3_final/mu/iso/nominal/SingleMu.root.root","../step3_final/mu/iso/nominal/SingleEle.root"]
 
 mcFiles = {
 	"T_t" : "iso/nominal/T_t.root",

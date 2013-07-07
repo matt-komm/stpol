@@ -60,7 +60,7 @@ w={}
 
 def getDataset(name,filename):
     """ Function will read in the dataset tree, calculate weights and return relevant data """
-    f[name] = TFile("../MVA2/step3_latest/"+sample+"/"+filename)
+    f[name] = TFile("../step3_latest/"+sample+"/"+filename)
     t[name] = f[name].Get("trees/Events")
     nh = f[name].Get("trees/count_hist")
     norg = nh.GetBinContent(1)
