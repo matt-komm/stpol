@@ -2,8 +2,6 @@
 import ROOT
 from plots.common import cross_sections
 
-ROOT.gROOT.Reset()
-
 files = {}
 hists = {}
 trees = {}
@@ -16,7 +14,7 @@ backgrounds = ["T_t_ToLeptons", "Tbar_t_ToLeptons", "T_s", "Tbar_s", "T_tW", "Tb
 
 
 for back in backgrounds:
-	files[back] = ROOT.TFile("../../out_step3_test4/mu/iso/nominal/"+back+".root")
+	files[back] = ROOT.TFile("./step3_latest/mu/iso/nominal/"+back+".root")
 	trees[back] = files[back].Get("trees/Events")
 	count_uncut = files[back].Get("trees/count_hist").GetBinContent(1)
 	count_cut = trees[back].GetEntries()
@@ -32,7 +30,7 @@ for back in backgrounds:
 	hstack.Add(hists[back])
 	legend.AddEntry(hists[back],back)
 
-files["SingleMu"] = ROOT.TFile("../../out_step3_test4/mu/iso/nominal/"+"SingleMu"+".root")
+files["SingleMu"] = ROOT.TFile("./step3_latest/mu/iso/nominal/"+"SingleMu"+".root")
 trees["SingleMu"] = files["SingleMu"].Get("trees/Events")
 hists["SingleMu"] = ROOT.TH1F("SingleMu", "SingleMu", 100, -1, 1.8)
 trees["SingleMu"].Draw("cos_theta >> SingleMu", "1")
