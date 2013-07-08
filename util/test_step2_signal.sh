@@ -1,11 +1,11 @@
 #!/bin/bash
 echo "Running step2 test on signal"
-IN=$STPOL_DIR/filelists/step1/mc/latest/T_t.txt
+IN=file:$STPOL_DIR/testing/step1/signal/out_step1_numEvent1000_noSkim_noSlim.root
 OFDIR=$STPOL_DIR/testing/step2/signal
 rm -Rf $OFDIR
 mkdir $OFDIR
 
-time cmsRun $STPOL_DIR/runconfs/step2/step2.py doDebug=True inputFiles_load=$IN isMC=True channel=signal subChannel=T_t outputFile=$OFDIR/out.root maxEvents=10000 &> $OFDIR/log.txt
+time cmsRun $STPOL_DIR/runconfs/step2/step2.py doDebug=False inputFiles=file:$IN isMC=True subChannel=T_t outputFile=$OFDIR/out.root &> $OFDIR/log.txt
 EX=$?
 echo "Exit code:"$EX 
 if [ "$EX" -ne 0 ]
