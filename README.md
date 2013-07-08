@@ -152,10 +152,10 @@ and can be compiled by either setting up *CMSSW_5_3_8* using (make sure you have
 
 and compiling the code, or moving the code and *BuildFile.xml* to the relevant place in *CMSSW_5_3_7_patch4*.
 You should try to take the loop as an example and try to implement your own analysis code based on that. 
-The step3 code is steered using the python config file *runconfs/step3_eventLoop_cfg.py* where you can turn on/off basic cuts:
+The step3 code is steered using the python config file *runconfs/step3_eventloop_base_nocuts.py* where you can turn on/off basic cuts:
 
 1. lepton
-2. M_T(W)
+2. M_T(W)/MET
 3. nJets
 4. nTags
 5. top mass window
@@ -166,10 +166,28 @@ it may make more sense to create a new class for these, which can be turned on/o
 You should strive to use as strict cuts as is possible for your analysis and as few variables as is possible, in order to not
 be in the same situation as earlier, when running over the full step2 trees.
 
-For local running, the python config expects the input files over stdin:
+For local running, the python config expects the list of input file names over stdin:
 
 >cat fileList_Step2/T_t.txt | CMSSW_5_3_8/bin/slc5_amd64_gcc462/Step3_EventLoop runconfs/step3_eventLoop_cfg.py
 
 For batch running, the scripts in *analysis_step3* may be useful, in particular
 
->analysis_step3/run_step3_eventloop.sh input_files.txt /path/to/output_directory
+>analysis_step3/run_step3_eventloop.sh list_of_input_files.txt /path/to/output_directory conf.py cmdline args
+to simply run the code and
+>analysis_step3/slurm_sub_step3.sh list_of_input_files.txt /path/to/output_directory conf.py cmdline args
+to submit many jobs based on splitting the list of files.
+
+##Analyzing step3 output
+You can use
+>analysis_step3/check_step3_output.sh
+to list the number of expected tasks(number of split tasks), started tasks, successful tasks and the tasks with an error.
+
+##Resubmitting failed step3 tasks
+You can resubmit failed step3 jobs by going to the relevant output directory, deleting the offending .root and .out files and calling either
+>eval `cat job`
+to resubmit the whole job (all split files) or
+>eval `cat task_x?????`
+to resubmit a particular task. Make sure you have not changed the config files in the mean time.
+
+A convenient script to resubmit the task is
+>analysis_step3/resubmit_failed_task.sh /path/to/slurm.out
