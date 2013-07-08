@@ -1,3 +1,4 @@
+raise Exception("FIXME: rewrite to import base_nocuts and work from there")
 #Compile with
 #$ scram b -f SingleTopPolarization/Analysis
 #Output will be in $CMSSW_DIR/bin/
@@ -138,7 +139,7 @@ process.jetCuts = cms.PSet(
     lightJetPtSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Pt"),
     lightJetRmsSrc = cms.InputTag("lowestBTagJetNTupleProducer", "rms"),
     lightJetDeltaRSrc = cms.InputTag("lowestBTagJetNTupleProducer", "deltaR"),
-    
+
 )
 
 process.bTagCuts = cms.PSet(
@@ -193,7 +194,7 @@ process.HLT = cms.PSet(
            "HLT_IsoMu24_eta2p1_v12",
            "HLT_IsoMu24_eta2p1_v11",
            "HLT_Mu24_eta2p1_v3"
-       ]),      
+       ]),
        cutOnHLT = cms.string("HLT_IsoMu24_eta2p1_v12"),
        doCutOnHLT = cms.bool(False)
 )
@@ -231,5 +232,5 @@ process.genParticles = cms.PSet(
     trueLJetTaggedCountSrc = cms.InputTag("btaggedTrueLJetCount"),
     trueCosThetaSrc = cms.InputTag("cosThetaProducerTrueAll", "cosThetaLightJet"),
     trueLeptonPdgIdSrc = cms.InputTag("genParticleSelector", "trueLeptonPdgId"),
-	requireGenMuon  = cms.bool(False)    
+	requireGenMuon  = cms.bool(False)
 )

@@ -1,5 +1,5 @@
 import FWCore.ParameterSet.Config as cms
-from runconfs.step3_eventloop_base_nocuts import *
+from base_nocuts import *
 
 process.fwliteInput.maxEvents = cms.int32(-1)
 

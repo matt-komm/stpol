@@ -1,3 +1,4 @@
+raise Exception("FIXME: rewrite to import base_nocuts and work from there")
 #Compile with
 #$ scram b -f SingleTopPolarization/Analysis
 #Output will be in $CMSSW_DIR/bin/
@@ -63,8 +64,8 @@ process.muonCuts = cms.PSet(
     isoCut  = cms.double(0.12),
     muonPtSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "Pt"),
     muonRelIsoSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "relIso"),
-    muonCountSrc  = cms.InputTag("muonCount"), 
-    eleCountSrc  = cms.InputTag("electronCount"),   
+    muonCountSrc  = cms.InputTag("muonCount"),
+    eleCountSrc  = cms.InputTag("electronCount"),
     doVetoLeptonCut = cms.bool(True),
     vetoMuCountSrc = cms.InputTag("looseVetoMuCount"),
     vetoEleCountSrc = cms.InputTag("looseVetoEleCount"),
@@ -102,7 +103,7 @@ process.jetCuts = cms.PSet(
     bJetPtSrc = cms.InputTag("highestBTagJetNTupleProducer", "Pt"),
 
 	lightJetDeltaRSrc = cms.InputTag("lowestBTagJetNTupleProducer", "deltaR")
-    
+
 )
 
 process.bTagCuts = cms.PSet(
@@ -136,7 +137,7 @@ process.weights = cms.PSet(
 )
 
 process.mtMuCuts = cms.PSet(
-    mtMuSrc = cms.InputTag("muAndMETMT"),    
+    mtMuSrc = cms.InputTag("muAndMETMT"),
     metSrc = cms.InputTag("patMETNTupleProducer", "Pt"),
     doMTCut = cms.bool(True),
     minVal = cms.double(50)
@@ -152,7 +153,7 @@ process.HLT = cms.PSet(
            "HLT_IsoMu24_eta2p1_v13",
            "HLT_IsoMu24_eta2p1_v12",
            "HLT_IsoMu24_eta2p1_v11"
-       ]),      
+       ]),
        cutOnHLT = cms.string("HLT_IsoMu24_eta2p1_v12"),
        doCutOnHLT = cms.bool(False)
 )

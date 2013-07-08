@@ -2,7 +2,7 @@
 #You can also import this file to avoid copying all the necessary parameters by doing
 #from runconfs.step3_eventLoop_cfg import *
 #NOTE!!!!
-#Don't change the cut behaviour in this file without notice. It's imported by other files and sets reasonable defaults. See the old file step3_eventLoop_cfg.py for an example on how to override stuff.
+#Don't change the cut behaviour in this file without notice. It's imported by other files and sets reasonable defaults.
 
 import FWCore.ParameterSet.Config as cms
 import sys
