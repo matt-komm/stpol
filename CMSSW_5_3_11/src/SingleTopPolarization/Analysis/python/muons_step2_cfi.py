@@ -41,8 +41,30 @@ def MuonSetup(process, conf = None):
     looseVetoMuonCut += " && userFloat('{0}') < {1}".format(conf.Muons.relIsoType, conf.Muons.looseVetoRelIsoCut)
     looseVetoMuonCut += " && !(%s)" % goodSignalMuonCut #Remove 'good signal muons from the veto collection'
 
+    #---------------Trigger matching-------------------------
+    process.muonTriggerMatchHLTMuons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
+                                                      # matcher input collections
+                                                      , src     = cms.InputTag( 'muonsWithIso' )
+                                                      , matched = cms.InputTag( 'patTrigger' )
+                                                      # selections of trigger objects
+                                                      , matchedCuts = cms.string( 'type( "TriggerMuon" ) && path( "HLT_IsoMu24_eta2p1_v*" )' )
+                                                      # selection of matches
+                                                      , maxDPtRel   = cms.double( 0.5 ) # no effect here
+                                                      , maxDeltaR   = cms.double( 0.5 )
+                                                      , maxDeltaEta = cms.double( 0.2 ) # no effect here
+                                                      # definition of matcher output
+                                                      , resolveAmbiguities    = cms.bool( True )
+                                                      , resolveByMatchQuality = cms.bool( True )
+                                                      )
+
+    process.muonsWithIsoWithTriggerMatch = cms.EDProducer("PATTriggerMatchMuonEmbedder",
+                                                         src     = cms.InputTag( "muonsWithIso" ),
+                                                         matches = cms.VInputTag( "muonTriggerMatchHLTMuons" )
+                                                         )
+    #--------------------------------------------------------
+
     process.goodSignalMuons = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag("muonsWithIso"), cut=cms.string(goodSignalMuonCut)
+      src=cms.InputTag("muonsWithIsoWithTriggerMatch"), cut=cms.string(goodSignalMuonCut)
     )
 
     process.looseVetoMuons = cms.EDFilter("CandViewSelector",
@@ -124,6 +146,10 @@ def MuonPath(process, conf):
         process.muIsoSequence *
         process.eleIsoSequence *
 
+        #Add triggerMatching
+        process.muonTriggerMatchHLTMuons *
+        process.muonsWithIsoWithTriggerMatch *
+        
         #Select one isolated muon and veto additional loose muon/electron
         process.goodSignalMuons *
         process.muonCount *
