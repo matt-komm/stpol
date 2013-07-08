@@ -2,8 +2,8 @@ import os
 import re
 import logging
 import argparse
-from common.global_tags import global_tags
-from common.lumi_files import lumi_files
+from SingleTopPolarization.Analysis.common.global_tags import global_tags
+from SingleTopPolarization.Analysis.common.lumi_files import lumi_files
 
 template_path = "/".join((os.environ["STPOL_DIR"], "crabs", "templates"))
 
