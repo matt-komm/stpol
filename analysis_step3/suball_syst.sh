@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "$0: $@"
 
-CONFSCRIPT="$STPOL_DIR/runconfs/step3_eventLoop_syst_cfg.py $1"
+CONFSCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3_eventLoop_syst_cfg.py $1"
 
 OFDIR=`readlink -f $2`
 INFILES="${*:3}"

@@ -9,5 +9,5 @@ if [ -d "$OFDIR" ]; then
 fi
 mkdir "$OFDIR"
 echo "Calling ""$CMSSW_BASE"/bin/"$SCRAM_ARCH"/Step3_EventLoop
-head -n5 "$STPOL_DIR"/filelists/step2/latest/iso/nominal/mc/TTJets_MassiveBinDECAY.txt |  "$CMSSW_BASE"/bin/"$SCRAM_ARCH"/Step3_EventLoop "$STPOL_DIR"/runconfs/step3_eventloop_test.py --doControlVars --isMC --outputFile="$OFDIR"/out.root --cutString="mu_pt>50 && abs(eta_lj)>2.5" &> "$OFDIR"/log_step3.txt
+find testing/step2/ttbar -name "*.root" |  "$CMSSW_BASE"/bin/"$SCRAM_ARCH"/Step3_EventLoop "$CMSSW_BASE""/src/SingleTopPolariation/Analysis/runconfs/step3/test.py" --doControlVars --isMC --outputFile="$OFDIR"/out.root --cutString="mu_pt>50 && abs(eta_lj)>2.5" &> "$OFDIR"/log_step3.txt
 tail -n10 "$OFDIR"/log_step3.txt

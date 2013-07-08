@@ -1,6 +1,4 @@
 #Note - this is a generic example file. Rather than changing it, make your own based on it, using the cuts you need.
-#You can also import this file to avoid copying all the necessary parameters by doing
-#from runconfs.step3_eventLoop_cfg import *
 #NOTE!!!!
 #Don't change the cut behaviour in this file without notice. It's imported by other files and sets reasonable defaults.
 
@@ -155,6 +153,7 @@ process.muonCuts = cms.PSet(
     muonStationsSrc = cms.InputTag("goodSignalMuonsNTupleProducer", "numberOfMatchedStations"),
     muonLayersSrc = cms.InputTag("goodSignalMuonsNTupleProducer", "trackhitPatterntrackerLayersWithMeasurement"),
     muonMotherPdgIdSrc = cms.InputTag("goodSignalMuonsNTupleProducer", "motherGenPdgId"),
+    muonTriggerMatchSrc = cms.InputTag("goodSignalMuonsNTupleProducer", "triggerMatch"),
     muonDecayTreeSrc = cms.InputTag("decayTreeProducerMu"),
 )
 
@@ -172,6 +171,7 @@ process.eleCuts = cms.PSet(
     electronPtSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "Pt"),
     electronChargeSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "Charge"),
     electronMotherPdgIdSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "motherGenPdgId"),
+    electronTriggerMatchSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "triggerMatch"),
 
     doVetoLeptonCut = cms.bool(False),
     vetoMuCountSrc = cms.InputTag("looseVetoMuCount"),

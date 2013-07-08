@@ -1,5 +1,5 @@
 import FWCore.ParameterSet.Config as cms
-from base_nocuts import *
+from SingleTopPolarization.Analysis.runconfs.step3.base_nocuts import *
 process.fwliteInput.maxEvents = cms.int32(50000)
 
 process.muonCuts.requireOneMuon = False

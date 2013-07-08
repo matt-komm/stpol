@@ -5,7 +5,7 @@ OFDIR=$STPOL_DIR/testing/step2/data
 rm -Rf $OFDIR
 mkdir -p $OFDIR
 
-time cmsRun $STPOL_DIR/runconfs/step2/step2.py doDebug=True inputFiles=file:$IN isMC=False outputFile=$OFDIR/out.root maxEvents=10000 &> $OFDIR/log.txt
+time cmsRun $CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step2/step2.py doDebug=True inputFiles=file:$IN isMC=False outputFile=$OFDIR/out.root maxEvents=10000 &> $OFDIR/log.txt
 EX=$?
 echo "Exit code:"$EX 
 if [ "$EX" -ne 0 ]
