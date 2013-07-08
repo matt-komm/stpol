@@ -1,6 +1,4 @@
 #!/bin/bash
-
-#IN=`find $STPOL_DIR/testing_step1 -name "out*.root"`
 IN=$STPOL_DIR/testing/step1/ttbar/out_step1_numEvent100_Skim.root
 OFDIR="$STPOL_DIR"/testing/step2/ttbar
 
