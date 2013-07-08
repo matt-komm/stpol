@@ -13,7 +13,7 @@ import argparse
 Represents a lumi file.
 """
 class Lumi:
-    lumiBase8TeV = "https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions12/8TeV/"
+    lumiBase8TeV = "https://cms-ser1vice-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions12/8TeV/"
 
     def __init__(self, name, url, base=lumiBase8TeV):
         self.name = name
@@ -66,6 +66,7 @@ class DS(object):
         self.name = name
         self.ds = ds
         self.cmdline = kwargs.get("cmdline", "")
+        self.systematic = ""
 
     def parseTemplate(self, template, tag):
         out = template
@@ -74,6 +75,7 @@ class DS(object):
         out = out.replace("DATASET", self.ds)
         out = out.replace("WORKDIR", workdir)
         out = out.replace("CMDLINEARGS", self.cmdline)
+        out = out.replace("SYSTEMATIC", self.systematic)
         return out
 
     def __str__(self):
@@ -319,7 +321,7 @@ step1_MC_systematic_out = [
     , DS_S2MC("TToBTauNu_anomWtb-0100_t-channel", "/TToBTauNu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "T_t", cmdline="compHep=True")
     , DS_S2MC("TToBTauNu_anomWtb-unphys_t-channel", "/TToBTauNu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "T_t", cmdline="compHep=True")    
     , DS_S2MC("TToLeptons_t-channel_mass166_5", "/TToLeptons_t-channel_mass166_5_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "T_t")
-    , DS_S2MC("TToLeptons_t-channel_mass178_5", "/TToLeptons_t-channel_mass178_5_8TeV-powheg-tauola/jpata-stpol_step1_05_20_a2437d6e0ca7eba657ba43c9c2371fff8f88e5ba-d6f3c092e0af235d8b18254ddb07959c/USER", "T_t")
+    , DS_S2MC("TToLeptons_t-channel_mass178_5", "/TToLeptons_t-channel_mass178_5_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "T_t")
     , DS_S2MC("TToLeptons_t-channel_scaledown", "/TToLeptons_t-channel_scaledown_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "T_t")
     , DS_S2MC("TToLeptons_t-channel_scaleup", "/TToLeptons_t-channel_scaleup_8TeV-powheg-tauola/atiko-stpol_step1_07_03_03f922b29250c1029a3e3d514e0e204c04f92ae7-9585d719c5138b4fd2ced467d11c6eca/USER", "T_t")
     , DS_S2MC("WJetsToLNu_matchingdown", "/WJetsToLNu_matchingdown_8TeV-madgraph-tauola/jpata-stpol_step1_05_20_a2437d6e0ca7eba657ba43c9c2371fff8f88e5ba-d6f3c092e0af235d8b18254ddb07959c/USER", "WJets")
@@ -580,7 +582,7 @@ if __name__=="__main__":
                         help="output directory for files")
     parser.add_argument("-d", "--data", type=str, default="", required=True,
                         help="name of the list of datasets to parse", choices=possible_ds.keys())
-    parser.add_argument("-s", "--systematic", type=str, default="", required=False,
+    parser.add_argument("-s", "--systematic", type=str, default="nominal", required=False,
                         help="name of systematic uncertainty investigated")
     args = parser.parse_args()
     print args
@@ -603,7 +605,8 @@ if __name__=="__main__":
         of = open(ofn, "w")
         if isinstance(ds, DS_S2MC):
             if len(systematic)>0 and systematic in ["SYST", "Presel", "EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
-                ds.cmdline += "%s" % systematic            
+                ds.systematic += "%s" % systematic
+                print ds.cmdline
             elif len(systematic)>0:
                 ds.cmdline += "systematic=%s" % systematic
             cfg = ds.parseTemplate(template, tag, ds.name)
