@@ -1,6 +1,13 @@
 #CVS crud
 *CVS*
 
+CMSSW_*
+!CMSSW_*/src/**
+CMSSW_*/**/__init__.py
+
+testing*
+log*
+
 # Compiled Object files
 *.slo
 *.lo
