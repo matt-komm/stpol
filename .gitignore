@@ -1,9 +1,9 @@
 #CVS crud
 *CVS*
 
-CMSSW_*
-!CMSSW_*/src/**
-CMSSW_*/**/__init__.py
+CMSSW_*/*
+!CMSSW_*/src/SingleTopPolarization
+CMSSW_*/SingleTopPolarization/*/python/__init__.py
 
 testing*
 log*
