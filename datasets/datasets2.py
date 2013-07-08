@@ -72,7 +72,13 @@ def is_signal(sample_name):
     return sample_name in ["T_t_ToLeptons", "Tbar_t_ToLeptons", "T_t", "Tbar_t"]
 
 def is_skimmable(sample_name):
-    return not is_signal(sample_name) and not sample_name in ["TTJets_FullLept2", "TTJets_SemiLept2", "WJets_sherpa"] and not sample_name.startswith("TToB")
+    return  (
+                not is_signal(sample_name) and
+                not sample_name in ["TTJets_FullLept2", "TTJets_SemiLept2", "WJets_sherpa"] and
+                not sample_name.startswith("TToB") and
+                not sample_name.startswith("T_t_") and
+                not sample_name.startswith("Tbar_t_")
+            )
 
 def skip_comments(fi):
     for line in fi:
