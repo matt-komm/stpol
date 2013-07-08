@@ -29,6 +29,7 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "EgammaAnalysis/ElectronTools/interface/EcalIsolationCorrector.h"
 
 #include <DataFormats/PatCandidates/interface/Electron.h>
 #include <FWCore/Utilities/interface/InputTag.h>
@@ -55,18 +56,23 @@ class CorrectedEcalIsoElectronProducer : public edm::EDProducer {
     virtual void beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
     virtual void endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
     const edm::InputTag src;
+    const bool isMC;
+    EcalIsolationCorrector* ecalIsoCorr;
 };
 
 CorrectedEcalIsoElectronProducer::CorrectedEcalIsoElectronProducer(const edm::ParameterSet& iConfig)
 : src(iConfig.getParameter<edm::InputTag>("src"))
+, isMC(iConfig.getParameter<bool>("isMC"))
 {
    produces<std::vector<pat::Electron>>();
+
+   ecalIsoCorr = new EcalIsolationCorrector(true);
 }
 
 
 CorrectedEcalIsoElectronProducer::~CorrectedEcalIsoElectronProducer()
 {
- 
+    delete ecalIsoCorr; 
 
 }
 
@@ -80,7 +86,7 @@ CorrectedEcalIsoElectronProducer::produce(edm::Event& iEvent, const edm::EventSe
     std::vector<pat::Electron> out;
     for(auto& ele : *eles) {
         reco::GsfElectron::IsolationVariables isos = reco::GsfElectron::IsolationVariables(ele.dr03IsolationVariables());
-        isos.ecalRecHitSumEt = 0.0; //FIXME
+        isos.ecalRecHitSumEt = ecalIsoCorr->correctForHLTDefinition(ele, !isMC, iEvent.id().run());
         LogDebug("electron corrector") <<
             "Corrected ecal iso from " << ele.dr03IsolationVariables() << " to " << isos.ecalRecHitSumEt;
         pat::Electron corrEle(ele);

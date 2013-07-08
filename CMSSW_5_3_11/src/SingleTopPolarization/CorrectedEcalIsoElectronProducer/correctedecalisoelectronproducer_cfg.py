@@ -21,7 +21,8 @@ process.MessageLogger = cms.Service("MessageLogger",
 
 process.electronsWithCorrectedEcalIso = cms.EDProducer(
     'CorrectedEcalIsoElectronProducer',
-    src=cms.InputTag("electronsWithID")
+    src=cms.InputTag("electronsWithID"),
+    isMC=cms.bool(True)
 )
 
 process.eleAnalyzer = cms.EDAnalyzer(

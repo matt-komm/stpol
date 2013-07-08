@@ -55,11 +55,11 @@ def MuonSetup(process, conf = None):
         minNumber=cms.uint32(1),
         maxNumber=cms.uint32(1),
     )
-    process.singleIsoMu = cms.EDFilter("CandViewSelector", src=cms.InputTag("goodSignalMuons"), cut=cms.string(""))
-
-    process.muonCount = cms.EDProducer(
-        "CollectionSizeProducer<reco::Candidate>",
-        src = cms.InputTag("goodSignalMuons")
+    process.zeroIsoEle = cms.EDFilter(
+        "PATCandViewCountFilter",
+        src=cms.InputTag("goodSignalElectrons"),
+        minNumber=cms.uint32(0),
+        maxNumber=cms.uint32(0),
     )
 
     #####################
@@ -118,35 +118,19 @@ def MuonPath(process, conf):
     ))
 
     process.muPath = cms.Path(
-
         process.muPathPreCount *
-
-        process.muIsoSequence *
-        process.eleIsoSequence *
-
         #Select one isolated muon and veto additional loose muon/electron
-        process.goodSignalMuons *
-        process.muonCount *
-        process.looseVetoMuons *
-        process.looseVetoElectrons *
         process.oneIsoMu *
-        process.singleIsoMu *
 
-        #process.looseMuVetoMu *
-        #process.looseEleVetoMu *
-
+        process.zeroIsoEle *
         #Do general jet cleaning, PU-jet cleaning and select 2 good jets
         process.jetSequence *
         process.nJets *
-
         #Select mu and MET invariant transverse mass OR the MET
         process.metMuSequence *
-
         process.mBTags *
-
         #Reconstruct the neutrino, the top quark and calculate the cosTheta* variable
         process.topRecoSequenceMu
-#        process.efficiencyAnalyzerMu
     )
 
     #Only do the parton identification in the signal channel
@@ -177,7 +161,7 @@ def MuonPath(process, conf):
     if conf.isMC:
       #Add muon scale factors
       process.muPath.insert(
-            process.muPath.index(process.singleIsoMu)+1,
+            process.muPath.index(process.oneIsoMu)+1,
             process.muonWeightsProducer
         )
 
@@ -187,13 +171,6 @@ def MuonPath(process, conf):
             src=cms.untracked.InputTag("singleIsoMu")
         )
         process.muPath.insert(
-            process.muPath.index(process.singleIsoMu)+1,
+            process.muPath.index(process.oneIsoMu)+1,
             process.decayTreeProducerMu
         )
-
-
-    #Count number of events passing the selection filters
-    #eventCounting.countAfter(process, process.muPath,
-    #    [
-    #    ]
-    #)
