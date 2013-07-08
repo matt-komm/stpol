@@ -108,7 +108,7 @@ class Config(C):
         relIsoCutRangeAntiIsolatedRegion = [0.2, 0.9]
         looseVetoRelIsoCut = 0.2
         source = "muonsWithID"
-        #source = "shiftedMuonsWithIDenDown"
+        triggerPath = "HLT_IsoMu24_eta2p1_v*"
 
     class Electrons(Leptons):
         pt = "ecalDrivenMomentum.Pt()"
@@ -118,6 +118,7 @@ class Config(C):
         looseVetoRelIsoCut = 0.15
         transverseMassType = "MET"
         source = "electronsWithID"
+        triggerPath = "HLT_Ele27_WP80_v*"
 
     Electrons.relIsoType = Leptons.RelativeIsolation.rhoCorrRelIso
     Muons.relIsoType = Leptons.RelativeIsolation.deltaBetaCorrRelIso

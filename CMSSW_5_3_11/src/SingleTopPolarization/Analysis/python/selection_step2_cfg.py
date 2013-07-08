@@ -312,6 +312,7 @@ def SingleTopStep2():
                 ["db", "dB"],
                 ["dz", "userFloat('dz')"],
                 ["numberOfMatchedStations", "numberOfMatchedStations"],
+                ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : 0.0".format(Config.Muons.triggerPath)],
             ]
       )
     )
@@ -332,6 +333,7 @@ def SingleTopStep2():
                     ["superClustereta", "superCluster.eta"],
                     ["passConversionVeto", "passConversionVeto()"],
                     ["gsfTracktrackerExpectedHitsInnernumberOfHits", "userInt('gsfTrack_trackerExpectedHitsInner_numberOfHits')"],
+                    ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : 0.0".format(Config.Electrons.triggerPath)],
                     ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
                     ["motherGenPdgId", "? genParticlesSize() > 0 ? genParticle(0).mother(0).pdgId() : 0"],
                 ]
@@ -509,6 +511,8 @@ def SingleTopStep2():
                 #'keep *_untaggedJets_*_*',
             )
         )
+        if Config.doDebug:
+            process.out.outputCommands.append("keep *")
         process.outpath = cms.EndPath(process.out)
         process.out.SelectEvents.SelectEvents.append("elePath")
         process.out.SelectEvents.SelectEvents.append("muPath")

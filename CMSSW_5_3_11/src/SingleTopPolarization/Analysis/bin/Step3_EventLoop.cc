@@ -99,6 +99,7 @@ public:
     edm::InputTag muonITrackHitsSrc;
     edm::InputTag muonLayersSrc;
     edm::InputTag muonStationsSrc;
+    edm::InputTag muonTriggerMatchSrc;
     
     edm::InputTag muonDecayTreeSrc;
     
@@ -109,6 +110,7 @@ public:
         
 	    branch_vars.vars_int["mu_charge"] = BranchVars::def_val_int;
 	    branch_vars.vars_int["mu_mother_id"] = BranchVars::def_val_int;
+	    branch_vars.vars_int["mu_trigger_match"] = BranchVars::def_val_int;
         
         branch_vars.vars_int["n_muons"] = BranchVars::def_val;
         branch_vars.vars_int["n_eles"] = BranchVars::def_val;
@@ -143,6 +145,7 @@ public:
         
 	    muonDecayTreeSrc = pars.getParameter<edm::InputTag>("muonDecayTreeSrc");
 	    muonChargeSrc = pars.getParameter<edm::InputTag>("muonChargeSrc");
+	    muonTriggerMatchSrc = pars.getParameter<edm::InputTag>("muonTriggerMatchSrc");
         
         if(doControlVars) {
             muonDbSrc = pars.getParameter<edm::InputTag>("muonDbSrc");
@@ -172,8 +175,9 @@ public:
         branch_vars.vars_float["mu_eta"] = get_collection_n<float>(event, muonEtaSrc, 0);
         branch_vars.vars_float["mu_iso"] = get_collection_n<float>(event, muonRelIsoSrc, 0);
 	    branch_vars.vars_int["mu_charge"] = (int)get_collection_n<float>(event, muonChargeSrc, 0);
+	    branch_vars.vars_int["mu_trigger_match"] = (int)get_collection_n<float>(event, muonTriggerMatchSrc, 0);
         
-        std::string decay_tree = get_collection<std::string>(event, muonDecayTreeSrc, default_str);
+        const std::string decay_tree = get_collection<std::string>(event, muonDecayTreeSrc, default_str);
         if(decay_tree.size()>0) {
             branch_vars.vars_int["mu_mother_id"] = get_parent(decay_tree, 13);
         }
@@ -219,6 +223,7 @@ public:
     edm::InputTag electronMotherPdgIdSrc;
     edm::InputTag electronChargeSrc;
     edm::InputTag electronDecayTreeSrc;
+    edm::InputTag electronTriggerMatchSrc;
     
     virtual void initialize_branches() {
         branch_vars.vars_int["n_muons"] = BranchVars::def_val_int;
@@ -228,6 +233,7 @@ public:
         branch_vars.vars_float["el_pt"] = BranchVars::def_val;
         branch_vars.vars_int["el_mother_id"] = BranchVars::def_val_int;
         branch_vars.vars_int["el_charge"] = BranchVars::def_val_int;
+        branch_vars.vars_int["el_trigger_match"] = BranchVars::def_val_int;
     }
     
     ElectronCuts(const edm::ParameterSet& pars, BranchVars& _branch_vars) :
@@ -247,6 +253,7 @@ public:
         electronMotherPdgIdSrc = pars.getParameter<edm::InputTag>("electronMotherPdgIdSrc");
         electronChargeSrc = pars.getParameter<edm::InputTag>("electronChargeSrc");
         electronDecayTreeSrc = pars.getParameter<edm::InputTag>("electronDecayTreeSrc");
+        electronTriggerMatchSrc = pars.getParameter<edm::InputTag>("electronTriggerMatchSrc");
     }
     
     bool process(const edm::EventBase& event) {
@@ -263,6 +270,7 @@ public:
         branch_vars.vars_float["el_mva"] = get_collection_n<float>(event, electronMvaSrc, 0);
         branch_vars.vars_float["el_pt"] = get_collection_n<float>(event, electronPtSrc, 0);
         branch_vars.vars_int["el_charge"] = (int)get_collection_n<float>(event, electronChargeSrc, 0);
+        branch_vars.vars_int["el_trigger_match"] = (int)get_collection_n<float>(event, electronTriggerMatchSrc, 0);
         
         std::string decay_tree = get_collection<std::string>(event, electronDecayTreeSrc, default_str);
         if(decay_tree.size()>0) {
