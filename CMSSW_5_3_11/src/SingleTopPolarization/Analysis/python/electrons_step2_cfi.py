@@ -105,13 +105,34 @@ def ElectronSetup(process, conf):
     print "goodSignalElectronCut={0}".format(goodSignalElectronCut)
     print "looseVetoElectronCut={0}".format(looseVetoElectronCut)
 
+    #---------------Trigger matching-------------------------
+    process.electronTriggerMatchHLTElectrons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
+                                                          # matcher input collections
+                                                          , src     = cms.InputTag( 'elesWithIso' )
+                                                          , matched = cms.InputTag( 'patTrigger' )
+                                                          # selections of trigger objects
+                                                          , matchedCuts = cms.string( 'type( "TriggerElectron" ) && path( "HLT_Ele27_WP80_v*" )' )
+                                                          # selection of matches
+                                                          , maxDPtRel   = cms.double( 0.5 ) # no effect here
+                                                          , maxDeltaR   = cms.double( 0.5 )
+                                                          , maxDeltaEta = cms.double( 0.2 ) # no effect here
+                                                          # definition of matcher output
+                                                          , resolveAmbiguities    = cms.bool( True )
+                                                          , resolveByMatchQuality = cms.bool( True )
+                                                          )
+    
+    process.elesWithIsoWithTriggerMatch = cms.EDProducer("PATTriggerMatchElectronEmbedder",
+                                                          src     = cms.InputTag( "elesWithIso" ),
+                                                          matches = cms.VInputTag( "electronTriggerMatchHLTElectrons" )
+                                                          )
+    #-------------------------------------------------------
 
     #process.correctedIsoElectrons = cms.EDProducer(
     #    "CorrectedElectronEcalIsoProducer",
     #    src=cms.InputTag("elesWithIso")
     #)
     process.goodSignalElectrons = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag("elesWithIso"), cut=cms.string(goodSignalElectronCut)
+      src=cms.InputTag("elesWithIsoWithTriggerMatch"), cut=cms.string(goodSignalElectronCut)
     )
 
     process.looseVetoElectrons = cms.EDFilter("CandViewSelector",
@@ -220,6 +241,10 @@ def ElectronPath(process, conf):
 
         process.muIsoSequence *
         process.eleIsoSequence *
+
+        #Add triggerMatching
+        process.electronTriggerMatchHLTElectrons *
+        process.elesWithIsoWithTriggerMatch *
 
         process.goodSignalElectrons *
         process.electronCount *
