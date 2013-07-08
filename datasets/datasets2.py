@@ -20,12 +20,16 @@ step2_mc_files = [
     "/mc/Apr19_qcd",
 ]
 
+step2_mc_syst_files = [
+    "/mc_syst/Apr19"
+]
+
 step2_data_files = [
     "/data/May20"
 ]
 
 class Dataset:
-    def __init__(self, name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file):
+    def __init__(self, name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file, do_comphep):
         self.name = name
         self.ds = ds
         self.step = step
@@ -34,8 +38,9 @@ class Dataset:
         self.template_fn = template_fn
         self.global_tag = global_tag
         self.lumi_file = lumi_file
+        self.do_comphep = do_comphep
 
-    def parseTemplate(self, tag, cmdline):
+    def parseTemplate(self, tag, cmdline, subdir):
         out = open(self.template_fn).read()
         workdir = "WD_{0}".format(self.name)
         out = out.replace("STPOL_DIR", os.environ["STPOL_DIR"])
@@ -50,12 +55,15 @@ class Dataset:
                 cmdline += " doSkimming=True"
             else:
                 cmdline += " doSkimming=False"
-        cmdline = cmdline.strip()
-        out = out.replace("CMDLINEARGS", cmdline)
         if self.step=="step2":
             out = out.replace("SUBCHAN", self.name)
+            out = out.replace("OUTDIR", subdir)
+            if self.do_comphep:
+                cmdline += " compHep=True"
         if self.lumi_file:
             out = out.replace("LUMIFILE", self.lumi_file)
+        cmdline = cmdline.strip()
+        out = out.replace("CMDLINEARGS", cmdline)
         return out
 
     def __str__(self):
@@ -79,6 +87,9 @@ def is_skimmable(sample_name):
                 not sample_name.startswith("T_t_") and
                 not sample_name.startswith("Tbar_t_")
             )
+
+def is_comphep(sample_name):
+    return "comphep" in sample_name
 
 def skip_comments(fi):
     for line in fi:
@@ -135,8 +146,9 @@ def parse_file(fn):
         template_fn = get_template(step, is_mc(name), is_local)
         global_tag = get_global_tag(name, fn)
         lumi_file = get_lumi_file(name, fn) if not is_mc(name) else None
+        do_comphep = is_comphep(name)
 
-        datasets.append(Dataset(name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file))
+        datasets.append(Dataset(name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file, do_comphep))
     return datasets
 
 def make_cfgs(fn, tag, cmdline, subdir=None):
@@ -152,7 +164,7 @@ def make_cfgs(fn, tag, cmdline, subdir=None):
     for d in datasets:
         ofn = outdir + "/crab_%s.cfg" % d.name
         of = open(ofn, "w")
-        of.write(d.parseTemplate(tag, cmdline))
+        of.write(d.parseTemplate(tag, cmdline, subdir))
         logging.debug("Wrote %s" % ofn)
     return
 
@@ -193,14 +205,14 @@ if __name__=="__main__":
         systs = ["nominal"]
         if "step2_syst" in args.steps:
             logging.info("Writing step2 systematic files")
-            systs += ["ResUp", "ResDown"]
+            systs += ["EnUp", "EnDown", "ResUp", "ResDown", "UnclusteredEnUp", "UnclusteredEnDown"]
 
         #MC
         for fn in step2_mc_files:
             for syst in systs:
                 cmdline_args = ""
                 if not syst=="nominal":
-                    cmdline_args += syst
+                    cmdline_args += "systematic="+syst
                 make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso/%s" % syst)
                 make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso/%s" % syst)
 
@@ -209,3 +221,10 @@ if __name__=="__main__":
             cmdline_args = ""
             make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso")
             make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso")
+
+        #Other systematics
+        if "step2_syst" in args.steps:
+            for fn in step2_mc_syst_files:
+                cmdline_args = ""
+                make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso/SYST")
+                make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso/SYST")
