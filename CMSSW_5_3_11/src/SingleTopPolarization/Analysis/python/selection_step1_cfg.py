@@ -147,11 +147,11 @@ def SingleTopStep1(
   process.muonSequence = cms.Sequence()
   if options.isMC:
     process.muonSequence += process.muonMatchAll
-    process.muonSequence += (
-      process.patMuonsAll *
-      process.selectedPatMuonsAll *
-      process.muonsWithIDAll
-      )
+  process.muonSequence += (
+    process.patMuonsAll *
+    process.selectedPatMuonsAll *
+    process.muonsWithIDAll
+  )
 
   #-------------------------------------------------
   # Electrons
@@ -231,8 +231,8 @@ def SingleTopStep1(
                                                     , resolveAmbiguities    = cms.bool( True )
                                                     , resolveByMatchQuality = cms.bool( True )
                                                     )
-  
-  process.muonTriggerMatchHLTMuonsAll = process.muonTriggerMatchHLTMuons.clone(src = cms.InputTag("muonsWithIDAll") ) 
+
+  process.muonTriggerMatchHLTMuonsAll = process.muonTriggerMatchHLTMuons.clone(src = cms.InputTag("muonsWithIDAll") )
 
   process.muonsWithIDWithTriggerMatch = cms.EDProducer("PATTriggerMatchMuonEmbedder",
                                                        src     = cms.InputTag( "muonsWithID" ),
@@ -241,7 +241,7 @@ def SingleTopStep1(
   process.muonsWithIDWithTriggerMatchAll = process.muonsWithIDWithTriggerMatch.clone(
     src = cms.InputTag("muonsWithIDAll"),
     matches = cms.VInputTag("muonTriggerMatchHLTMuonsAll")
-    )
+  )
 
   process.electronTriggerMatchHLTElectrons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
                                                     # matcher input collections
@@ -266,7 +266,7 @@ def SingleTopStep1(
   process.electronsWithIDWithTriggerMatchAll = process.electronsWithIDWithTriggerMatch.clone(
     src = cms.InputTag("electronsWithIDAll"),
     matches = cms.VInputTag("electronTriggerMatchHLTElectronsAll")
-    )
+  )
 
   process.load('PhysicsTools.PatAlgos.triggerLayer1.triggerProducer_cfi')
   process.load('PhysicsTools.PatAlgos.triggerLayer1.triggerEventProducer_cfi')
@@ -282,7 +282,7 @@ def SingleTopStep1(
     process.muonsWithIDWithTriggerMatchAll *
     process.electronsWithIDWithTriggerMatch *
     process.electronsWithIDWithTriggerMatchAll
-    )
+  )
 
   #-------------------------------------------------
   # Jets
@@ -361,7 +361,9 @@ def SingleTopStep1(
           'keep *_muonClones__*',
 
           # Electrons
-          'keep patElectrons_*__*',
+          'keep patElectrons_electronsWithID__*',
+          'keep patElectrons_electronsWithIDAll__*',
+          'keep patElectrons_electronsWithIDTriggerMatch__*',
           'keep *_electronClones__*',
 
           # METs
