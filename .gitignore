@@ -32,11 +32,20 @@ trees
 crabs/step*
 
 #related to documentation
-AN
-pres
+AN*
 
+pres
 #vim temps
 *.un~
 *~
 
+*.hdf5
 
+misc/*
+rootpy
+root_numpy
+local
+data
+theta
+
+stpol.xcodeproj/xcuserdata
