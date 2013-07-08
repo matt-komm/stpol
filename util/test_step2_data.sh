@@ -1,11 +1,11 @@
 #!/bin/bash
 echo "Running step2 test on data"
-IN=`head -n1 $STPOL_DIR/filelists/step1/data/latest/SingleMu.txt`
+IN=$STPOL_DIR/testing/step1/data/out_step1_numEvent100_Skim.root
 OFDIR=$STPOL_DIR/testing/step2/data
 rm -Rf $OFDIR
 mkdir -p $OFDIR
 
-time cmsRun $STPOL_DIR/runconfs/step2_newCmdLine_cfg.py doDebug=True inputFiles=$IN isMC=False outputFile=$OFDIR/out.root maxEvents=10000 &> $OFDIR/log.txt
+time cmsRun $STPOL_DIR/runconfs/step2_newCmdLine_cfg.py doDebug=True inputFiles=file:$IN isMC=False outputFile=$OFDIR/out.root maxEvents=10000 &> $OFDIR/log.txt
 EX=$?
 echo "Exit code:"$EX 
 if [ "$EX" -ne 0 ]
