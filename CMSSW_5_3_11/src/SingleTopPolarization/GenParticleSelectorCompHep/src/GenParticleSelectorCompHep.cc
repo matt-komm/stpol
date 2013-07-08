@@ -183,17 +183,17 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
       double vx = p.vx(), vy = p.vy(), vz = p.vz();
       int charge = p.charge();
       int n = p.numberOfDaughters();
-      if((id == 13 || id == -13) && st ==3){
+      if((abs(id) == 13 || abs(id) == 11 || abs(id) == 15) && st ==3){
          cout << "P: " <<id << " " << st << endl;
          mom = (GenParticle*)p.mother(0);  //particle has 2 mothers with the same daughters, just select the first one
          for(size_t mi = 0; mi < mom->numberOfDaughters(); ++ mi){
                dau = (GenParticle*)mom->daughter(mi);
                if(dau->status()==3){
-                  if(abs(dau->pdgId())==13){
+                  if(abs(dau->pdgId())==13 || abs(dau->pdgId())==11 || abs(dau->pdgId())==15){
                      has_mu = true;
                      lepton = const_cast<reco::GenParticle*>(dau);                     
                   }
-                  else if(abs(dau->pdgId())==14){
+                  else if(abs(dau->pdgId())==14 || abs(dau->pdgId())==12 || abs(dau->pdgId())==16){
                      has_nu = true;
                      neutrino = const_cast<reco::GenParticle*>(dau);
                   }
