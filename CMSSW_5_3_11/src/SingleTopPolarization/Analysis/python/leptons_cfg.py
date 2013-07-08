@@ -37,7 +37,7 @@ def LeptonSetup(process, conf):
     #---------------Trigger matching-------------------------
     process.electronTriggerMatchHLTElectrons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
                                                           # matcher input collections
-                                                          , src     = cms.InputTag( 'elesWithIso' )
+                                                          , src     = cms.InputTag( 'electronsWithCorrectedEcalIso' )
                                                           , matched = cms.InputTag( 'patTrigger' )
                                                           # selections of trigger objects
                                                           , matchedCuts = cms.string('type("TriggerElectron") && path("%s" )' % conf.Electrons.triggerPath)
@@ -54,14 +54,14 @@ def LeptonSetup(process, conf):
                                                           src     = cms.InputTag( "electronsWithCorrectedEcalIso" ),
                                                           matches = cms.VInputTag( "electronTriggerMatchHLTElectrons" )
                                                           )
-    process.electronBeforeSelectionSequence += process.electronsWithTriggerMatch
+    process.electronBeforeSelectionSequence += process.electronTriggerMatchHLTElectrons*process.electronsWithTriggerMatch
 
     process.muonTriggerMatchHLTMuons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
                                                       # matcher input collections
                                                       , src     = cms.InputTag( 'muonsWithIso' )
                                                       , matched = cms.InputTag( 'patTrigger' )
                                                       # selections of trigger objects
-                                                      , matchedCuts = cms.string('type( "TriggerMuon" ) && path( "%s" )' % conf.Muons.triggerPath)
+                                                      , matchedCuts = cms.string('type("TriggerMuon") && path("%s")' % conf.Muons.triggerPath)
                                                       # selection of matches
                                                       , maxDPtRel   = cms.double( 0.5 ) # no effect here
                                                       , maxDeltaR   = cms.double( 0.5 )
@@ -75,7 +75,7 @@ def LeptonSetup(process, conf):
                                                          src     = cms.InputTag("muonsWithIso"),
                                                          matches = cms.VInputTag( "muonTriggerMatchHLTMuons" )
                                                          )
-    process.muonBeforeSelectionSequence += process.muonsWithTriggerMatch
+    process.muonBeforeSelectionSequence += process.muonTriggerMatchHLTMuons * process.muonsWithTriggerMatch
     #-------------------------------------------------------
 
     process.looseVetoMuCount = cms.EDProducer(

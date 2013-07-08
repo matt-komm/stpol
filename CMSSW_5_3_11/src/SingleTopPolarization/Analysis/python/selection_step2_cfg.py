@@ -312,7 +312,7 @@ def SingleTopStep2():
                 ["db", "dB"],
                 ["dz", "userFloat('dz')"],
                 ["numberOfMatchedStations", "numberOfMatchedStations"],
-                ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size() > 0 ? triggerObjectMatchesByPath('{0}') : -1.0".format(Config.Muons.triggerPath)],
+                ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : 0.0".format(Config.Muons.triggerPath)],
             ]
       )
     )
@@ -333,7 +333,7 @@ def SingleTopStep2():
                     ["superClustereta", "superCluster.eta"],
                     ["passConversionVeto", "passConversionVeto()"],
                     ["gsfTracktrackerExpectedHitsInnernumberOfHits", "userInt('gsfTrack_trackerExpectedHitsInner_numberOfHits')"],
-                    ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size() > 0 ? triggerObjectMatchesByPath('{0}') : -1.0".format(Config.Electrons.triggerPath)],
+                    ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : 0.0".format(Config.Electrons.triggerPath)],
                     ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
                     ["motherGenPdgId", "? genParticlesSize() > 0 ? genParticle(0).mother(0).pdgId() : 0"],
                 ]
