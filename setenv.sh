@@ -24,6 +24,7 @@ PYTHONPATH=$PYTHONPATH:$STPOL_DIR/theta/utils2/
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/scratch/mario/boost_1_53_0/lib
 
+#set the CMSSW environment only on hep.kbfi
 cd ${SCRIPT_DIR}/$CMSSW_DIR
 source /cvmfs/cms.cern.ch/cmsset_default.sh
 eval `scramv1 runtime -sh`
