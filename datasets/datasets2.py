@@ -49,8 +49,8 @@ class Dataset:
             if self.do_skimming:
                 cmdline += " doSkimming=True"
             else:
-                cmdline += " doskimming=False"
-
+                cmdline += " doSkimming=False"
+        cmdline = cmdline.strip()
         out = out.replace("CMDLINEARGS", cmdline)
         if self.step=="step2":
             out = out.replace("SUBCHAN", self.name)
