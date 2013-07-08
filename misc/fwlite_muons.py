@@ -20,7 +20,7 @@ patMuH1 = Handle('std::vector<pat::Muon>')
 patMuL1 = ("muonsWithID")
 
 patMuH2 = Handle('std::vector<pat::Muon>')
-patMuL2 = ("muonsWithIDAll")
+patMuL2 = ("muonsWithTriggerMatch")
 
 recoMuH = Handle('std::vector<reco::Muon>')
 recoMuL = ("muons")
