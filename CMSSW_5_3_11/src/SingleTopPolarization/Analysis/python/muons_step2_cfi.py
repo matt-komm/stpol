@@ -41,30 +41,9 @@ def MuonSetup(process, conf = None):
     looseVetoMuonCut += " && userFloat('{0}') < {1}".format(conf.Muons.relIsoType, conf.Muons.looseVetoRelIsoCut)
     looseVetoMuonCut += " && !(%s)" % goodSignalMuonCut #Remove 'good signal muons from the veto collection'
 
-    #---------------Trigger matching-------------------------
-    process.muonTriggerMatchHLTMuons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
-                                                      # matcher input collections
-                                                      , src     = cms.InputTag( 'muonsWithIso' )
-                                                      , matched = cms.InputTag( 'patTrigger' )
-                                                      # selections of trigger objects
-                                                      , matchedCuts = cms.string( 'type( "TriggerMuon" ) && path( "HLT_IsoMu24_eta2p1_v*" )' )
-                                                      # selection of matches
-                                                      , maxDPtRel   = cms.double( 0.5 ) # no effect here
-                                                      , maxDeltaR   = cms.double( 0.5 )
-                                                      , maxDeltaEta = cms.double( 0.2 ) # no effect here
-                                                      # definition of matcher output
-                                                      , resolveAmbiguities    = cms.bool( True )
-                                                      , resolveByMatchQuality = cms.bool( True )
-                                                      )
-
-    process.muonsWithIsoWithTriggerMatch = cms.EDProducer("PATTriggerMatchMuonEmbedder",
-                                                         src     = cms.InputTag( "muonsWithIso" ),
-                                                         matches = cms.VInputTag( "muonTriggerMatchHLTMuons" )
-                                                         )
-    #--------------------------------------------------------
 
     process.goodSignalMuons = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag("muonsWithIsoWithTriggerMatch"), cut=cms.string(goodSignalMuonCut)
+      src=cms.InputTag("muonsWithTriggerMatch"), cut=cms.string(goodSignalMuonCut)
     )
 
     process.looseVetoMuons = cms.EDFilter("CandViewSelector",
@@ -77,11 +56,11 @@ def MuonSetup(process, conf = None):
         minNumber=cms.uint32(1),
         maxNumber=cms.uint32(1),
     )
-    process.singleIsoMu = cms.EDFilter("CandViewSelector", src=cms.InputTag("goodSignalMuons"), cut=cms.string(""))
-
-    process.muonCount = cms.EDProducer(
-        "CollectionSizeProducer<reco::Candidate>",
-        src = cms.InputTag("goodSignalMuons")
+    process.zeroIsoEle = cms.EDFilter(
+        "PATCandViewCountFilter",
+        src=cms.InputTag("goodSignalElectrons"),
+        minNumber=cms.uint32(0),
+        maxNumber=cms.uint32(0),
     )
 
     #####################
@@ -140,39 +119,20 @@ def MuonPath(process, conf):
     ))
 
     process.muPath = cms.Path(
-
         process.muPathPreCount *
 
-        process.muIsoSequence *
-        process.eleIsoSequence *
-
-        #Add triggerMatching
-        process.muonTriggerMatchHLTMuons *
-        process.muonsWithIsoWithTriggerMatch *
-        
         #Select one isolated muon and veto additional loose muon/electron
-        process.goodSignalMuons *
-        process.muonCount *
-        process.looseVetoMuons *
-        process.looseVetoElectrons *
         process.oneIsoMu *
-        process.singleIsoMu *
 
-        #process.looseMuVetoMu *
-        #process.looseEleVetoMu *
-
+        process.zeroIsoEle *
         #Do general jet cleaning, PU-jet cleaning and select 2 good jets
         process.jetSequence *
         process.nJets *
-
         #Select mu and MET invariant transverse mass OR the MET
         process.metMuSequence *
-
         process.mBTags *
-
         #Reconstruct the neutrino, the top quark and calculate the cosTheta* variable
         process.topRecoSequenceMu
-#        process.efficiencyAnalyzerMu
     )
 
     #Only do the parton identification in the signal channel
@@ -203,7 +163,7 @@ def MuonPath(process, conf):
     if conf.isMC:
       #Add muon scale factors
       process.muPath.insert(
-            process.muPath.index(process.singleIsoMu)+1,
+            process.muPath.index(process.oneIsoMu)+1,
             process.muonWeightsProducer
         )
 
@@ -213,13 +173,6 @@ def MuonPath(process, conf):
             src=cms.untracked.InputTag("singleIsoMu")
         )
         process.muPath.insert(
-            process.muPath.index(process.singleIsoMu)+1,
+            process.muPath.index(process.oneIsoMu)+1,
             process.decayTreeProducerMu
         )
-
-
-    #Count number of events passing the selection filters
-    #eventCounting.countAfter(process, process.muPath,
-    #    [
-    #    ]
-    #)

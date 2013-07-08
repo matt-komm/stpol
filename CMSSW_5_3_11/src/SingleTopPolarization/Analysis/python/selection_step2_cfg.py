@@ -176,32 +176,6 @@ def SingleTopStep2():
     # Leptons
     #-------------------------------------------------
 
-    #Embed the corrected isolations to the leptons
-    #process.muonClones = cms.EDProducer("MuonShallowCloneProducer",
-    #    src = cms.InputTag(Config.Muons.source)
-    #)
-
-    if Config.Muons.reverseIsoCut:
-        Config.Muons.source = "muonsWithIDAll"
-
-    process.muonsWithIso = cms.EDProducer(
-      'MuonIsolationProducer',
-      leptonSrc = cms.InputTag(Config.Muons.source),
-      rhoSrc = cms.InputTag("kt6PFJets", "rho"),
-      dR = cms.double(0.4)
-    )
-    process.muIsoSequence = cms.Sequence(process.muonsWithIso)
-
-    if Config.Electrons.reverseIsoCut:
-        Config.Electrons.source = "electronsWithIDAll"
-
-    process.elesWithIso = cms.EDProducer(
-      'ElectronIsolationProducer',
-      leptonSrc = cms.InputTag(Config.Electrons.source),
-      rhoSrc = cms.InputTag("kt6PFJets", "rho"),
-      dR = cms.double(0.3)
-    )
-    process.eleIsoSequence = cms.Sequence(process.elesWithIso)
 
     from SingleTopPolarization.Analysis.muons_step2_cfi import MuonSetup
     MuonSetup(process, Config)
@@ -217,15 +191,6 @@ def SingleTopStep2():
     process.looseVetoEleCount = cms.EDProducer(
         "CollectionSizeProducer<reco::Candidate>",
         src = cms.InputTag("looseVetoElectrons")
-    )
-
-
-    #Combine the found electron/muon to a single collection
-    process.goodSignalLeptons = cms.EDProducer(
-         'CandRefCombiner',
-         sources=cms.untracked.vstring(["singleIsoMu", "singleIsoEle"]),
-             maxOut=cms.untracked.uint32(1),
-             minOut=cms.untracked.uint32(1)
     )
 
     process.decayTreeProducerMu = cms.EDProducer(
@@ -450,29 +415,12 @@ def SingleTopStep2():
     # Paths
     #-----------------------------------------------
 
-    #NOTE: HLT now done at step3
-    #from SingleTopPolarization.Analysis.hlt_step2_cfi import HLTSetup
-    #HLTSetup(process, Config)
+    from SingleTopPolarization.Analysis.leptons_cfg import LeptonSetup
+    LeptonSetup(process, Config)
 
     if Config.doDebug:
         from SingleTopPolarization.Analysis.debugAnalyzers_step2_cfi import DebugAnalyzerSetup
         DebugAnalyzerSetup(process)
-
-    process.looseVetoMuCount = cms.EDProducer(
-        "CollectionSizeProducer<reco::Candidate>",
-        src = cms.InputTag("looseVetoMuons")
-    )
-
-    process.looseVetoElectronCount = cms.EDProducer(
-        "CollectionSizeProducer<reco::Candidate>",
-        src = cms.InputTag("looseVetoElectrons")
-    )
-
-    process.leptonCommonSequence = cms.Sequence(
-        process.goodSignalLeptons *
-        process.looseVetoMuCount *
-        process.looseVetoEleCount
-    )
 
     if Config.isMC and options.doGenParticlePath:
         if Config.isCompHep:
@@ -489,18 +437,11 @@ def SingleTopStep2():
 
     from SingleTopPolarization.Analysis.muons_step2_cfi import MuonPath
     MuonPath(process, Config)
-    process.muPath.insert(process.muPath.index(process.singleIsoMu)+1, process.goodSignalLeptons)
-    process.muPath.insert(process.muPath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
-    process.muPath.insert(process.muPath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
-    if Config.isMC:
-        process.muPath += process.weightSequence
 
     from SingleTopPolarization.Analysis.electrons_step2_cfi import ElectronPath
     ElectronPath(process, Config)
-    process.elePath.insert(process.elePath.index(process.singleIsoEle)+1, process.goodSignalLeptons)
-    process.elePath.insert(process.elePath.index(process.looseVetoMuons)+1, process.looseVetoMuCount)
-    process.elePath.insert(process.elePath.index(process.looseVetoElectrons)+1, process.looseVetoEleCount)
     if Config.isMC:
+        process.muPath += process.weightSequence
         process.elePath += process.weightSequence
 
     process.eventIDProducer = cms.EDProducer('EventIDProducer'

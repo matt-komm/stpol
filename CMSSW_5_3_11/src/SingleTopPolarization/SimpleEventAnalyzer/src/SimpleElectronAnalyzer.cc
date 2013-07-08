@@ -116,7 +116,8 @@ SimpleElectronAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
     " rhoCorrRelIso: " << obj.userFloat("rhoCorrRelIso") <<
     " deltaBetaCorrRelIso: " << obj.userFloat("deltaBetaCorrRelIso") <<
     " dxy: " << obj.userFloat("dxy") <<
-    " gsfTrack_trackerExpectedHitsInner_numberOfHits: " << obj.userFloat("gsfTrack_trackerExpectedHitsInner_numberOfHits");
+    " gsfTrack_trackerExpectedHitsInner_numberOfHits: " << obj.userFloat("gsfTrack_trackerExpectedHitsInner_numberOfHits") <<
+    " dr03EcalRecHitSumEt: " << obj.dr03EcalRecHitSumEt();
     i++;   
    }
  }

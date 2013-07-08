@@ -74,26 +74,24 @@ def ElectronSetup(process, conf):
     goodSignalElectronCut = clean_whitespace(goodSignalElectronCut)
 
     looseVetoElectronCut = "%s > 20.0" % conf.Electrons.pt
-    looseVetoElectronCut += " && (abs(eta) < 2.5)"
-    #FIXME: what is this based on? Most likely historical. Currently fix to 0.0 for clarity in sync
-    #looseVetoElectronCut += " && (electronID('mvaTrigV0') > %f)" % 0.0
+    looseVetoElectronCut += " && (abs(superCluster().eta()) < 2.5)"
 
     #Veto cut based ID: https://twiki.cern.ch/twiki/bin/view/CMS/EgammaCutBasedIdentification
-    cutBasedLooseID = "\
+    cutBasedLooseID = " && \
         (abs(superCluster().eta()) < 1.479 && (\
             abs(deltaEtaSuperClusterTrackAtVtx()) < 0.007 && \
             abs(deltaPhiSuperClusterTrackAtVtx()) < 0.8 && \
             sigmaIetaIeta() < 0.01 && \
             hadronicOverEm() < 0.15 && \
             userFloat('dxy') < 0.04 && \
-            userFloat('dz') < 0.2 && \
+            userFloat('dz') < 0.2 \
         )) || (\
-        abs(superCLuster().eta())>1.479 && abs(superCLuster().eta())<2.5 && (\
+        abs(superCluster().eta())>1.479 && abs(superCluster().eta())<2.5 && (\
             abs(deltaEtaSuperClusterTrackAtVtx()) < 0.01 && \
             abs(deltaPhiSuperClusterTrackAtVtx()) < 0.7 && \
             sigmaIetaIeta() < 0.03 && \
             userFloat('dxy') < 0.04 && \
-            userFloat('dz') < 0.2 && \
+            userFloat('dz') < 0.2 \
         ))"
     looseVetoElectronCut += cutBasedLooseID
     looseVetoElectronCut += " && (userFloat('{0}') < {1})".format(conf.Electrons.relIsoType, conf.Electrons.looseVetoRelIsoCut)
@@ -105,40 +103,13 @@ def ElectronSetup(process, conf):
     print "goodSignalElectronCut={0}".format(goodSignalElectronCut)
     print "looseVetoElectronCut={0}".format(looseVetoElectronCut)
 
-    #---------------Trigger matching-------------------------
-    process.electronTriggerMatchHLTElectrons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
-                                                          # matcher input collections
-                                                          , src     = cms.InputTag( 'elesWithIso' )
-                                                          , matched = cms.InputTag( 'patTrigger' )
-                                                          # selections of trigger objects
-                                                          , matchedCuts = cms.string( 'type( "TriggerElectron" ) && path( "HLT_Ele27_WP80_v*" )' )
-                                                          # selection of matches
-                                                          , maxDPtRel   = cms.double( 0.5 ) # no effect here
-                                                          , maxDeltaR   = cms.double( 0.5 )
-                                                          , maxDeltaEta = cms.double( 0.2 ) # no effect here
-                                                          # definition of matcher output
-                                                          , resolveAmbiguities    = cms.bool( True )
-                                                          , resolveByMatchQuality = cms.bool( True )
-                                                          )
-    
-    process.elesWithIsoWithTriggerMatch = cms.EDProducer("PATTriggerMatchElectronEmbedder",
-                                                          src     = cms.InputTag( "elesWithIso" ),
-                                                          matches = cms.VInputTag( "electronTriggerMatchHLTElectrons" )
-                                                          )
-    #-------------------------------------------------------
-
-    #process.correctedIsoElectrons = cms.EDProducer(
-    #    "CorrectedElectronEcalIsoProducer",
-    #    src=cms.InputTag("elesWithIso")
-    #)
     process.goodSignalElectrons = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag("elesWithIsoWithTriggerMatch"), cut=cms.string(goodSignalElectronCut)
+      src=cms.InputTag("electronsWithTriggerMatch"), cut=cms.string(goodSignalElectronCut)
     )
 
     process.looseVetoElectrons = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag("elesWithIso"),
-      #cut=cms.string(looseVetoElectronCut)
-      cut=cms.string("")
+      src=cms.InputTag("electronsWithCorrectedEcalIso"),
+      cut=cms.string(looseVetoElectronCut)
     )
 
     process.oneIsoEle = cms.EDFilter(
@@ -147,28 +118,14 @@ def ElectronSetup(process, conf):
         minNumber=cms.uint32(1),
         maxNumber=cms.uint32(1),
     )
-
-    #Make a new named collection that contains the ONLY isolated(or anti-isolated) electron
-    process.singleIsoEle = cms.EDFilter("CandViewSelector", src=cms.InputTag("goodSignalElectrons"), cut=cms.string(""))
-
-    process.electronCount = cms.EDProducer(
-        "CollectionSizeProducer<reco::Candidate>",
-        src = cms.InputTag("goodSignalElectrons")
-    )
-
-    #If loose veto electrons don't have any overlap with signal electrons, there must be none
-    process.looseEleVetoEle = cms.EDFilter(
+#Must throw away multilepton events in order to have unambiguity in reconstruction
+    process.noIsoMu = cms.EDFilter(
         "PATCandViewCountFilter",
-        src=cms.InputTag("looseVetoElectrons"),
+        src=cms.InputTag("goodSignalMuons"),
         minNumber=cms.uint32(0),
         maxNumber=cms.uint32(0),
     )
-    process.looseMuVetoEle = cms.EDFilter(
-        "PATCandViewCountFilter",
-        src=cms.InputTag("looseVetoMuons"),
-        minNumber=cms.uint32(0),
-        maxNumber=cms.uint32(0),
-    )
+
 
     # Scale factors #
     process.electronWeightsProducer = cms.EDProducer("ElectronEfficiencyProducer",
@@ -214,11 +171,7 @@ def ElectronSetup(process, conf):
     )
 
     if conf.doDebug:
-        process.oneIsoEleIDs = cms.EDAnalyzer('EventIDAnalyzer', name=cms.untracked.string("IDoneIsoEle"))
-        process.eleVetoIDs = cms.EDAnalyzer('EventIDAnalyzer', name=cms.untracked.string("IDeleVeto"))
-        process.metIDS = cms.EDAnalyzer('EventIDAnalyzer', name=cms.untracked.string("MET"))
-        process.NJetIDs = cms.EDAnalyzer('EventIDAnalyzer', name=cms.untracked.string("NJet"))
-        process.electronAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("elesWithIso"))
+        process.electronAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("electronsWithIso"))
         process.electronVetoAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("looseVetoElectrons"))
         process.metAnalyzer = cms.EDAnalyzer('SimpleMETAnalyzer', interestingCollections=cms.untracked.VInputTag(conf.metSource))
 
@@ -236,63 +189,23 @@ def ElectronPath(process, conf):
     ))
 
     process.elePath = cms.Path(
-
         process.elePathPreCount *
 
-        process.muIsoSequence *
-        process.eleIsoSequence *
-
-        #Add triggerMatching
-        process.electronTriggerMatchHLTElectrons *
-        process.elesWithIsoWithTriggerMatch *
-
-        process.goodSignalElectrons *
-        process.electronCount *
-        process.looseVetoElectrons *
         process.oneIsoEle *
-        process.singleIsoEle *
-
-        process.looseEleVetoEle *
-        process.looseVetoMuons *
-        process.looseMuVetoEle *
-
+        process.noIsoMu *
         process.jetSequence *
         process.nJets *
-
         process.metEleSequence *
-        process.goodSignalLeptons *
-
         process.mBTags *
-
         process.topRecoSequenceEle
-#        process.efficiencyAnalyzerEle
     )
 
     #Insert debugging modules for printout
     if conf.doDebug:
-        process.elePath.insert(
-            process.elePath.index(process.oneIsoEle)+1,
-            process.oneIsoEleIDs
-        )
+
         process.elePath.insert(
             process.elePath.index(process.oneIsoEle),
             process.electronAnalyzer
-        )
-        process.elePath.insert(
-            process.elePath.index(process.looseEleVetoEle),
-            process.electronVetoAnalyzer
-        )
-        process.elePath.insert(
-            process.elePath.index(process.looseEleVetoEle)+1,
-            process.eleVetoIDs
-        )
-        process.elePath.insert(
-            process.elePath.index(process.metEleSequence)+1,
-            process.metIDS
-        )
-        process.elePath.insert(
-            process.elePath.index(process.nJets)+1,
-            process.NJetIDs
         )
         process.elePath.insert(
             process.elePath.index(process.metEleSequence),
@@ -301,7 +214,7 @@ def ElectronPath(process, conf):
 
     if conf.isMC:
         process.elePath.insert(
-            process.elePath.index(process.singleIsoEle)+1,
+            process.elePath.index(process.oneIsoEle)+1,
             process.electronWeightsProducer
             )
 
@@ -312,7 +225,7 @@ def ElectronPath(process, conf):
             src=cms.untracked.InputTag("singleIsoEle")
         )
         process.elePath.insert(
-            process.elePath.index(process.singleIsoEle)+1,
+            process.elePath.index(process.oneIsoEle)+1,
             process.decayTreeProducerEle
         )
 
