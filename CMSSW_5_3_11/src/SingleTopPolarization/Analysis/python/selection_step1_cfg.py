@@ -457,19 +457,20 @@ def SingleTopStep1(
       connect = cms.untracked.string("frontier://FrontierPrep/CMS_COND_BTAU"))
     )
 
-    process.load('RecoMET.METFilters.ecalLaserCorrFilter_cfi')
-    process.ecalLaserCorrFilter.taggingMode=True
+    #Filters added by a separate method
+    #process.load('RecoMET.METFilters.ecalLaserCorrFilter_cfi')
+    #process.ecalLaserCorrFilter.taggingMode=True
 
     # https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiTopRefEventSel#Cleaning_Filters
-    process.scrapingFilter = cms.EDFilter("FilterOutScraping"
-      , applyfilter = cms.untracked.bool(True)
-      , debugOn = cms.untracked.bool(False)
-      , numtrack = cms.untracked.uint32(10)
-      , thresh = cms.untracked.double(0.25)
-    )
+    #process.scrapingFilter = cms.EDFilter("FilterOutScraping"
+    #  , applyfilter = cms.untracked.bool(True)
+    #  , debugOn = cms.untracked.bool(False)
+    #  , numtrack = cms.untracked.uint32(10)
+    #  , thresh = cms.untracked.double(0.25)
+    #)
 
-    process.singleTopSequence += process.scrapingFilter
-    process.singleTopSequence += process.ecalLaserCorrFilter
+    #process.singleTopSequence += process.scrapingFilter
+    #process.singleTopSequence += process.ecalLaserCorrFilter
 
   if options.doSkimming:
     process.out.fileName.setValue(process.out.fileName.value().replace(".root", "_Skim.root"))
