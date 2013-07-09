@@ -205,26 +205,26 @@ def get(node, name, f):
         return f(item.nodeValue)
 
 
-reports = glob.glob(sys.argv[1])
+reports = sys.argv[1:]
+print "reports=",reports
 reports = sorted(reports)
 
-if len(reports)==1:
+t_tot = Task()
+for r in reports:
     t = Task()
-    t.updateJobs(reports[0])
-    t.printStats()
+    t.updateJobs(r)
+
+    js = JobStats(t)
+    of = open(r.replace("RReport.xml", "files.txt"), "w")
     for job in t.jobs:
         if job.lfn:
-            print job.lfn
-elif len(reports)>1:
-    t_tot = Task()
-    for r in reports:
-        t = Task()
-        t.updateJobs(r)
-        js = JobStats(t)
-        print js.summary()
-        t_tot += t
-    tot_stats = JobStats(t_tot)
-    tot_stats.name = "total"
-    print tot_stats.summary()
-    print "---"
-    print str(tot_stats)
+            of.write(job.lfn + "\n")
+    of.close()
+
+    print js.summary()
+    t_tot += t
+tot_stats = JobStats(t_tot)
+tot_stats.name = "total"
+print tot_stats.summary()
+print "---"
+print str(tot_stats)
