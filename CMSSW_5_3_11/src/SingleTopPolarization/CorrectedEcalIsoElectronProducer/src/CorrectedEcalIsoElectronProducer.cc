@@ -2,13 +2,13 @@
 //
 // Package:    CorrectedEcalIsoElectronProducer
 // Class:      CorrectedEcalIsoElectronProducer
-// 
+//
 /**\class CorrectedEcalIsoElectronProducer CorrectedEcalIsoElectronProducer.cc SingleTopPolarization/CorrectedEcalIsoElectronProducer/src/CorrectedEcalIsoElectronProducer.cc
 
- Description: [one line class summary]
+ Description: Creates a collection of pat::Electrons with the corrected ECAL-isolation.
 
  Implementation:
-     [Notes on implementation]
+     Implemented as in https://twiki.cern.ch/twiki/bin/viewauth/CMS/EcalIsolationCorrection2012Data
 */
 //
 // Original Author:  Joosep Pata
@@ -39,108 +39,112 @@
 // class declaration
 //
 
-class CorrectedEcalIsoElectronProducer : public edm::EDProducer {
-   public:
-      explicit CorrectedEcalIsoElectronProducer(const edm::ParameterSet&);
-      ~CorrectedEcalIsoElectronProducer();
+class CorrectedEcalIsoElectronProducer : public edm::EDProducer
+{
+public:
+    explicit CorrectedEcalIsoElectronProducer(const edm::ParameterSet &);
+    ~CorrectedEcalIsoElectronProducer();
 
-      static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
+    static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
 
-   private:
+private:
     virtual void beginJob() ;
-    virtual void produce(edm::Event&, const edm::EventSetup&);
+    virtual void produce(edm::Event &, const edm::EventSetup &);
     virtual void endJob() ;
-    
-    virtual void beginRun(edm::Run&, edm::EventSetup const&);
-    virtual void endRun(edm::Run&, edm::EventSetup const&);
-    virtual void beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
-    virtual void endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
+
+    virtual void beginRun(edm::Run &, edm::EventSetup const &);
+    virtual void endRun(edm::Run &, edm::EventSetup const &);
+    virtual void beginLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup const &);
+    virtual void endLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup const &);
     const edm::InputTag src;
     const bool isMC;
-    EcalIsolationCorrector* ecalIsoCorr;
+    EcalIsolationCorrector *ecalIsoCorr;
 };
 
-CorrectedEcalIsoElectronProducer::CorrectedEcalIsoElectronProducer(const edm::ParameterSet& iConfig)
-: src(iConfig.getParameter<edm::InputTag>("src"))
-, isMC(iConfig.getParameter<bool>("isMC"))
+CorrectedEcalIsoElectronProducer::CorrectedEcalIsoElectronProducer(const edm::ParameterSet &iConfig)
+    : src(iConfig.getParameter<edm::InputTag>("src"))
+    , isMC(iConfig.getParameter<bool>("isMC"))
 {
-   produces<std::vector<pat::Electron>>();
+    produces<std::vector<pat::Electron>>();
 
-   ecalIsoCorr = new EcalIsolationCorrector(true);
+    ecalIsoCorr = new EcalIsolationCorrector(true);
 }
 
 
 CorrectedEcalIsoElectronProducer::~CorrectedEcalIsoElectronProducer()
 {
-    delete ecalIsoCorr; 
+    delete ecalIsoCorr;
 
 }
 
 void
-CorrectedEcalIsoElectronProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
+CorrectedEcalIsoElectronProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
 {
     using namespace edm;
     Handle<View<pat::Electron>> eles;
     iEvent.getByLabel(src, eles);
-    
+
     std::vector<pat::Electron> out;
-    for(auto& ele : *eles) {
+    for (auto & ele : *eles)
+    {
         reco::GsfElectron::IsolationVariables isos = reco::GsfElectron::IsolationVariables(ele.dr03IsolationVariables());
         isos.ecalRecHitSumEt = ecalIsoCorr->correctForHLTDefinition(ele, !isMC, iEvent.id().run());
         LogDebug("electron corrector") <<
-            "Corrected ecal iso from " << ele.dr03IsolationVariables() << " to " << isos.ecalRecHitSumEt;
+                                       "Corrected ecal iso from " << ele.dr03IsolationVariables() << " to " << isos.ecalRecHitSumEt;
         pat::Electron corrEle(ele);
         corrEle.setDr03Isolation(isos);
         out.push_back(corrEle);
     }
     std::auto_ptr<std::vector<pat::Electron>> pOut(new std::vector<pat::Electron>(out));
     iEvent.put(pOut);
- 
+
 }
 
 // ------------ method called once each job just before starting event loop  ------------
-void 
+void
 CorrectedEcalIsoElectronProducer::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-void 
-CorrectedEcalIsoElectronProducer::endJob() {
+void
+CorrectedEcalIsoElectronProducer::endJob()
+{
 }
 
 // ------------ method called when starting to processes a run  ------------
-void 
-CorrectedEcalIsoElectronProducer::beginRun(edm::Run&, edm::EventSetup const&)
+void
+CorrectedEcalIsoElectronProducer::beginRun(edm::Run &, edm::EventSetup const &)
 {
 }
 
 // ------------ method called when ending the processing of a run  ------------
-void 
-CorrectedEcalIsoElectronProducer::endRun(edm::Run&, edm::EventSetup const&)
+void
+CorrectedEcalIsoElectronProducer::endRun(edm::Run &, edm::EventSetup const &)
 {
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
-void 
-CorrectedEcalIsoElectronProducer::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
+void
+CorrectedEcalIsoElectronProducer::beginLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup const &)
 {
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
-void 
-CorrectedEcalIsoElectronProducer::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
+void
+CorrectedEcalIsoElectronProducer::endLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup const &)
 {
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-CorrectedEcalIsoElectronProducer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
-  //The following says we do not know what parameters are allowed so do no validation
-  // Please change this to state exactly what you do use, even if it is no parameters
-  edm::ParameterSetDescription desc;
-  desc.setUnknown();
-  descriptions.addDefault(desc);
+CorrectedEcalIsoElectronProducer::fillDescriptions(edm::ConfigurationDescriptions &descriptions)
+{
+    //The following says we do not know what parameters are allowed so do no validation
+    // Please change this to state exactly what you do use, even if it is no parameters
+    edm::ParameterSetDescription desc;
+    desc.setUnknown();
+    descriptions.addDefault(desc);
 }
 
 //define this as a plug-in
