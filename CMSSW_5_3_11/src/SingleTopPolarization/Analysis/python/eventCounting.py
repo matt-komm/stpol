@@ -12,7 +12,7 @@ def countInSequence(process, path):
 	setattr(process, preCountName, cms.EDProducer("EventCountProducer"))
 	setattr(process, postCountName, cms.EDProducer("EventCountProducer"))
 	path.insert(0, getattr(process, preCountName))
-	path.insert(-1, getattr(process, postCountName))
+	path += getattr(process, postCountName)
 
 """
 Counts the number of events after the specified processes with a path-unique counter

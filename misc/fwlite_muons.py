@@ -2,12 +2,10 @@ import ROOT
 from DataFormats.FWLite import Events, Handle, Lumis
 import time
 import numpy
+import sys
 
 file_list = [
-#"sync/inclusive/step1_noSkim.root"
-#"sync/pickevents.root"
-"sync/inclusive/step1_noSkim.root"
-#"/hdfs/cms/store/mc/Summer12_DR53X/T_t-channel_TuneZ2star_8TeV-powheg-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/0059C6F3-7CDC-E111-B4CB-001A92811726.root"
+    sys.argv[1]
 ]
 
 events = Events(
@@ -28,24 +26,29 @@ recoMuH = Handle('std::vector<reco::Muon>')
 recoMuL = ("muons")
 
 def analyze_pat_muon(handle, label):
-   event.getByLabel(label, handle)
-   if handle.isValid():
-       muons = handle.product()
-       nMu = 0
-       for mu in muons:
-           print label,nMu
-           print "pt =",mu.pt()," eta =", mu.eta(), " pfIso05 =",mu.pfIsolationR04()
-           try:
-               print "globaltrack hits =", mu.userFloat("globalTrack_hitPattern_numberOfValidMuonHits"), mu.globalTrack().hitPattern().numberOfValidMuonHits()
-           except:
-               print "invalid track"
-           print "dz =",mu.userFloat("dz")
-           a=mu.chargedHadronIso()
-           b=mu.pfIsolationR04().sumChargedHadronPt
-           print "chHad pt =",a,b
-           if abs(a-b)>0.0001:
-               print "Error: isolations differ"
-           nMu += 1
+    event.getByLabel(label, handle)
+    if handle.isValid():
+        muons = handle.product()
+        nMu = 0
+        for mu in muons:
+            print label,nMu
+            print "pt =",mu.pt()," eta =", mu.eta(), " pfIso05 =",mu.pfIsolationR04()
+            try:
+                print "globaltrack hits =", mu.userFloat("globalTrack_hitPattern_numberOfValidMuonHits"), mu.globalTrack().hitPattern().numberOfValidMuonHits()
+            except:
+                print "invalid track"
+            print "dz =",mu.userFloat("dz")
+            a=mu.chargedHadronIso()
+            b=mu.pfIsolationR04().sumChargedHadronPt
+            print "chHad pt =",a,b
+            if abs(a-b)>0.0001:
+                print "Error: isolations differ"
+            trigs = mu.triggerObjectMatches()
+            print trigs, trigs.size()
+            if trigs.size()>0:
+                for trig in trigs:
+                    print "Trigger match=", trig.path("HLT_IsoMu24_eta2p1_v*")
+            nMu += 1
 
 
 def analyze_reco_muon(handle, label):

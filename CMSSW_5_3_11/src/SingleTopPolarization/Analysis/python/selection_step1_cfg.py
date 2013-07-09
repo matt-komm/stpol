@@ -145,7 +145,6 @@ def SingleTopStep1(
     muonSrc = cms.InputTag("selectedPatMuonsAll")
   )
   process.muonSequence = cms.Sequence()
-
   if options.isMC:
     process.muonSequence += process.muonMatchAll
   process.muonSequence += (
@@ -214,6 +213,19 @@ def SingleTopStep1(
     process.selectedPatElectronsAll *
     process.electronsWithIDAll
   )
+
+  #---------------------------------------------
+  # Trigger matching
+  #---------------------------------------------
+
+  process.load('PhysicsTools.PatAlgos.triggerLayer1.triggerProducer_cfi')
+  process.load('PhysicsTools.PatAlgos.triggerLayer1.triggerEventProducer_cfi')
+
+  process.patTriggerSequence = cms.Sequence(
+    process.patTrigger *
+    process.patTriggerEvent
+  )
+
   #-------------------------------------------------
   # Jets
   # MET corrections as https://twiki.cern.ch/twiki/bin/view/CMSPublic/WorkBookMetAnalysis#Type_I_0_with_PAT
@@ -271,6 +283,10 @@ def SingleTopStep1(
           #'keep recoVertexs_offlinePrimaryVertices__*', #keep the offline PV-s
           'keep recoVertexs_goodOfflinePrimaryVertices__*', #keep the offline PV-s
 
+          # Trigger
+          'keep *_patTrigger_*_*',
+          'keep *_patTriggerEvent_*_*',
+
           # Jets
           'keep patJets_*__*',
           'keep double_*_rho_*', #For rho-corr rel iso
@@ -286,7 +302,8 @@ def SingleTopStep1(
           'keep *_muonClones__*',
 
           # Electrons
-          'keep patElectrons_*__*',
+          'keep patElectrons_electronsWithID__*',
+          'keep patElectrons_electronsWithIDAll__*',
           'keep *_electronClones__*',
 
           # METs
@@ -357,6 +374,7 @@ def SingleTopStep1(
   process.singleTopSequence += process.stpolMetUncertaintySequence
   process.singleTopSequence += process.muonSequence
   process.singleTopSequence += process.electronSequence
+  process.singleTopSequence += process.patTriggerSequence
 
   if options.isMC:
     #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagJetProbabilityCalibration?redirectedfrom=CMS.SWGuideBTagJetProbabilityCalibration#Calibration_in_53x_Data_and_MC
@@ -379,19 +397,20 @@ def SingleTopStep1(
       connect = cms.untracked.string("frontier://FrontierPrep/CMS_COND_BTAU"))
     )
 
-    process.load('RecoMET.METFilters.ecalLaserCorrFilter_cfi')
-    process.ecalLaserCorrFilter.taggingMode=True
+    #Filters added by a separate method
+    #process.load('RecoMET.METFilters.ecalLaserCorrFilter_cfi')
+    #process.ecalLaserCorrFilter.taggingMode=True
 
     # https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiTopRefEventSel#Cleaning_Filters
-    process.scrapingFilter = cms.EDFilter("FilterOutScraping"
-      , applyfilter = cms.untracked.bool(True)
-      , debugOn = cms.untracked.bool(False)
-      , numtrack = cms.untracked.uint32(10)
-      , thresh = cms.untracked.double(0.25)
-    )
+    #process.scrapingFilter = cms.EDFilter("FilterOutScraping"
+    #  , applyfilter = cms.untracked.bool(True)
+    #  , debugOn = cms.untracked.bool(False)
+    #  , numtrack = cms.untracked.uint32(10)
+    #  , thresh = cms.untracked.double(0.25)
+    #)
 
-    process.singleTopSequence += process.scrapingFilter
-    process.singleTopSequence += process.ecalLaserCorrFilter
+    #process.singleTopSequence += process.scrapingFilter
+    #process.singleTopSequence += process.ecalLaserCorrFilter
 
   if options.doSkimming:
     process.out.fileName.setValue(process.out.fileName.value().replace(".root", "_Skim.root"))
