@@ -26,7 +26,7 @@ if __name__=="__main__":
     #tdrstyle.tdrstyle()
 
     datadirs = dict()
-    
+
     #This symlink is present in the repo for *.hep.kbfi.ee, if running on other machines, you must make it yourself by doing
     #ln -s /path/to/step3/out $STPOL_DIR/step3_latest
     #isolated files are by default in $STPOL_DIR/step3_latest/mu/iso/nominal/*.root
@@ -37,20 +37,20 @@ if __name__=="__main__":
     #Load all the samples in the isolated directory
     samples = Sample.fromDirectory(datadirs["iso"], out_type="dict")
     samples["SingleMu_aiso"] = Sample.fromFile(datadirs["antiiso"] + "/SingleMu.root")
-    
+
     hists_mc = dict()
     hist_data = None
-    
+
     #Define the variable, cut, weight and lumi
     var = "cos_theta"
     cut_name = "2j1t"
     cut_str = str(Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.one_muon*Cuts.mt_mu*Cuts.top_mass_sig*Cuts.eta_lj)
     weight_str = "1.0"
-    lumi = 20000 #FIXME: take from the step2 output luminosity.txt
-    
+    lumi = 20000 #FIXME: take from the step2 output filelists/step2/latest/iso/nominal/luminosity.txt
+
     #nbins, min, max
     plot_range= [20, -1, 1]
-    
+
     for name, sample in samples.items():
         if sample.isMC:
             hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
@@ -68,7 +68,7 @@ if __name__=="__main__":
 
     #Combine the subsamples to physical processes
     merged_hists = merge_hists(hists_mc, merge_cmds).values()
-    
+
     #Some printout
     for h in merged_hists + [hist_data]:
         print h.GetName(), h.GetTitle(), h.Integral()
