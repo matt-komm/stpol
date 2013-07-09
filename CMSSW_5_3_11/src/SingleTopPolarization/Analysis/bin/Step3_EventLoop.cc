@@ -1112,6 +1112,9 @@ int main(int argc, char* argv[])
     dir.cd();
     TTree* cut_tree = out_tree->CopyTree(cut_str.c_str());
     cut_tree->SetName("Events_selected");
+
+    TNamed* pdesc = new TNamed("process_desc", builder.processDesc().dump().c_str());
+    pdesc->Write();
     //cut_tree->Write();
 
     return 0;
