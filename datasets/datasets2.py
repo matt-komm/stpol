@@ -12,7 +12,8 @@ EMAIL = os.environ["USER"] + "@kbfi.ee"
 step1_files = [
     "/data/22Jan_ReReco_Runs2012ABCD",
     "/mc/nominal_Summer12_DR53X",
-    "/mc/systematic_Summer12_DR53X"
+    "/mc/systematic_Summer12_DR53X",
+    "/mc/wjets_FSIM_systematic_Summer12"
 ]
 
 step2_mc_files = [
