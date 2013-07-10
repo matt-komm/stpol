@@ -85,6 +85,11 @@ def SingleTopStep2():
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.string,
                   "A string Run{A,B,C,D} to specify the data period")
+        options.register ('doSync', False,
+            VarParsing.multiplicity.singleton,
+            VarParsing.varType.bool,
+            "Are you performing the sync exercise?"
+        )
 
         options.parseArguments()
 
@@ -102,7 +107,12 @@ def SingleTopStep2():
         Config.isSherpa = options.sherpa
         Config.systematic = options.systematic
         Config.dataRun = options.dataRun
-        print "Systematic! ",Config.systematic
+        Config.doSync = options.doSync
+
+        Config.Jets.doPUClean = Config.Jets.doPUClean and not Config.doSync
+        Config.doDebug = Config.doDebug or Config.doSync
+
+        print "Systematic: ",Config.systematic
 
     if Config.isMC:
         logging.info("Changing jet source from %s to smearedPatJetsWithOwnRef" % Config.Jets.source)
