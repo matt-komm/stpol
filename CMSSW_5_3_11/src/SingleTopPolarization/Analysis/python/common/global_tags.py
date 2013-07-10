@@ -11,7 +11,8 @@ gt_data = "FT_53_V21_AN4::All"
 #step1
 global_tags["mc"]["nominal_Summer12_DR53X"] = gt_mc
 global_tags["mc"]["systematic_Summer12_DR53X"] = gt_mc
-global_tags["mc"]["wjets_FSIM_systematic_Summer12"] = gt_mc
+global_tags["mc"]["wjets_FSIM_Summer12"] = gt_mc
+
 global_tags["data"]["22Jan_ReReco_Runs2012ABCD"] = gt_data
 
 #step2
