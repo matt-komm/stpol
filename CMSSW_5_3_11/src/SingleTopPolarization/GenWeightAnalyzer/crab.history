@@ -1,0 +1,5 @@
+130710_175107: /home/joosep/crab/CRAB_2_8_6/python/crab.py -create
+130711_100639: /home/joosep/crab/CRAB_2_8_6/python/crab.py -c Wjets_sherpa_weight -submit 500z
+130711_100806: /home/joosep/crab/CRAB_2_8_6/python/crab.py -c Wjets_sherpa_weight -submit 500
+130711_101217: /home/joosep/crab/CRAB_2_8_6/python/crab.py -c Wjets_sherpa_weight -submit 500
+130711_101442: /home/joosep/crab/CRAB_2_8_6/python/crab.py -c Wjets_sherpa_weight -submit 500
