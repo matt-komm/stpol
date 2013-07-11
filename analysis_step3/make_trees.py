@@ -19,6 +19,10 @@ if __name__=="__main__":
     parser.add_argument("--cutStringSelected", type=str,
         default="1.0", required=False,
         help="The additional cutstring for which to create an Events_selected TTree.")
+    parser.add_argument("--applyCutsToSignal", type=bool,
+        default=False, required=False,
+        help="Should the processing cuts be applied on the signal samples?"
+    )
     cmdline_args = parser.parse_args()
 
     fldir = "filelists/step2/latest"
@@ -29,7 +33,6 @@ if __name__=="__main__":
 
     signal_samples = ["T_t", "Tbar_t", "T_t_ToLeptons", "Tbar_t_ToLeptons"]
     data_samples = ["SingleMu", "SingleEle"]
-    cutstr = cmdline_args.cutStringProcessed + ' --cutString="%s"' % cmdline_args.cutStringSelected
     if not cmdline_args.ofdir:
         cmdline_args.ofdir = "out_step3_%s_%s" % (os.getlogin(), datetime.datetime.now().strftime("%d_%m_%H_%M"))
 
@@ -47,9 +50,13 @@ if __name__=="__main__":
                     if isMC:
                         args += " --doControlVars --isMC"
 
-                    #Signal sample must be processed unskimmed
-                    if not isSignal:
-                        args += " " + cutstr
+                    #Always apply the selection cuts
+                    args += ' --cutString="%s"' % cmdline_args.cutStringSelected.strip().replace(" ","")
+
+                    #Apply the processing cuts
+                    if not isSignal or (isSignal and cmdline_args.applyCutsToSignal):
+                        args += " " + cmdline_args.cutStringProcessed
+
                     ofpath = "/".join([cmdline_args.ofdir, lep, iso, syst])
 
                     try:

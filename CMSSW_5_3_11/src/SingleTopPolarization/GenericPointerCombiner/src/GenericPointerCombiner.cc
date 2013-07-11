@@ -62,6 +62,7 @@ class GenericPointerCombiner : public edm::EDProducer {
       const std::vector<std::string> collections;
       const uint minOut;
       const uint maxOut;
+      const bool logErrors;
       // ----------member data ---------------------------
 };
 
@@ -80,8 +81,9 @@ class GenericPointerCombiner : public edm::EDProducer {
 template <class inClass, class outClass>
 GenericPointerCombiner<inClass, outClass>::GenericPointerCombiner(const edm::ParameterSet& iConfig)
 : collections(iConfig.getUntrackedParameter<std::vector<std::string> >("sources"))
-, minOut(iConfig.getUntrackedParameter<uint>("minOut"))
-, maxOut(iConfig.getUntrackedParameter<uint>("maxOut"))
+, minOut(iConfig.getParameter<uint>("minOut"))
+, maxOut(iConfig.getParameter<uint>("maxOut"))
+, logErrors(iConfig.getParameter<bool>("logErrors"))
 {
    produces<edm::OwnVector<outClass> >();  
 }
@@ -125,12 +127,14 @@ GenericPointerCombiner<inClass, outClass>::produce(edm::Event& iEvent, const edm
       LogDebug("produce()") << "Collection " << c << " does not exist in event";
     }
    }
+   if (logErrors) {
    if((uint)(pOut->size()) < minOut) {
     LogError("produce()") << "Output collection has too few items: " << pOut->size() << "<" << minOut;
 
    }
    else if( (uint)(pOut->size()) > maxOut) {
     LogError("produce()") << "Output collection has too many items: " << pOut->size() << ">" << maxOut;
+   }
    }
    else {
     iEvent.put(pOut);

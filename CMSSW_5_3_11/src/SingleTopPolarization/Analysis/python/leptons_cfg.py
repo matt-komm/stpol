@@ -106,8 +106,9 @@ def LeptonSetup(process, conf):
     process.goodSignalLeptons = cms.EDProducer(
          'CandRefCombiner',
          sources=cms.untracked.vstring(["singleIsoMu", "singleIsoEle"]),
-             maxOut=cms.untracked.uint32(1),
-             minOut=cms.untracked.uint32(1)
+             maxOut=cms.uint32(1),
+             minOut=cms.uint32(1),
+             logErrors=cms.bool(False)
     )
 
     process.leptonPath = cms.Path(
