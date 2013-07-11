@@ -1,5 +1,6 @@
 WJets_lo_nnlo_scale_factor = 37509/30400.0
 
+WJets_sherpa_weight_factor = 34821360.0/96770560.0
 xs = {
 
 	#Cross-sections from AN2012-273-v7, page 4
@@ -23,6 +24,9 @@ xs = {
 	, "W2Jets_exclusive": 1750.0 * WJets_lo_nnlo_scale_factor
 	, "W3Jets_exclusive": 519.0 * WJets_lo_nnlo_scale_factor
 	, "W4Jets_exclusive": 214.0 * WJets_lo_nnlo_scale_factor
+    
+    #http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa
+    ,"WJets_sherpa_nominal": 30503.0 * WJets_lo_nnlo_scale_factor / WJets_sherpa_weight_factor
 
 	#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=*GJets_HT-*_8TeV-madgraph*
 	, "GJets1": 960.5 #200To400
