@@ -41,6 +41,14 @@ vartypes = {
 	"run_id" : "I"
 }
 
+def writeTObject(name, obj, directory):
+	pString = pickle.dumps(obj)
+	directory.WriteTObject(ROOT.TObjString(pString), name)
+	
+def readTObject(name, directory):
+	tObj = directory.Get(name)
+	pString = tObj.String().Data()
+	return pickle.loads(pString)
 
 class MVA_meta:
 	varlist = []
