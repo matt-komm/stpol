@@ -28,17 +28,6 @@ T get_collection(const edm::EventBase& evt, edm::InputTag src, T retval) {
     return *coll;
 }
 
-//Shorthand for getting a value of type T from the event, where the original container is vector<T>
-template <typename T>
-float get_collection_n(const edm::EventBase& evt, edm::InputTag src, unsigned int n) {
-    edm::Handle<std::vector<T>> coll;
-    evt.getByLabel(src, coll);
-    if(!(coll.isValid()) || n >= coll->size()) {
-        return TMath::QuietNaN();
-    }
-    return (float)(coll->at(n));
-}
-
 class BranchVars {
 public:
     std::map<std::string, int> vars_int;
@@ -50,6 +39,17 @@ public:
     static const int def_val_int;
     
 };
+
+//Shorthand for getting a value of type T from the event, where the original container is vector<T>
+template <typename T>
+T get_collection_n(const edm::EventBase& evt, edm::InputTag src, unsigned int n=0) {
+    edm::Handle<std::vector<T>> coll;
+    evt.getByLabel(src, coll);
+    if(!(coll.isValid()) || n >= coll->size()) {
+        return BranchVars::def_val;
+    }
+    return (T)(coll->at(n));
+}
 
 //Base class for all work that is done inside the loop
 class CutsBase {
