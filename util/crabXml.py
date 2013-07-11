@@ -93,7 +93,12 @@ class Task:
 
         getOutputTime = get(running_job, "getOutputTime", str)
         wrapperReturnCode = get(running_job, "wrapperReturnCode", int)
-        applicationReturnCode = get(running_job, "applicationReturnCode", int)
+
+        try:
+            applicationReturnCode = get(running_job, "applicationReturnCode", int)
+        except ValueError:
+            applicationReturnCode = -1
+
         lfn = get(running_job, "lfn", str)
         if lfn:
             lfn = lfn[2:-2]

@@ -14,8 +14,7 @@ then
 fi
 
 cd $WD
-source setenv.sh CMSSW_5_3_8
-#scontrol checkpoint create $SLURM_JOBID.0 ImageDir=/home/joosep/slurmckpt
+source setenv.sh
 for i in `seq 1 5`;
         do
                 echo "checking for /hdfs, try "$i

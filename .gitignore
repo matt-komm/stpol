@@ -4,6 +4,8 @@
 testing*
 log*
 
+CMSSW_5_3_11/src/SingleTopPolarization/*/python/__init__.py
+
 # Compiled Object files
 *.slo
 *.lo

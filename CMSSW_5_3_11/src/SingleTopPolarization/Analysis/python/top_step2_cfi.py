@@ -7,8 +7,9 @@ def TopRecoSetup(process, leptonSource="goodSignalLeptons", bTagSource="highestB
 	process.recoNu = cms.EDProducer(
 		 'CandRefCombiner',
 		 sources=cms.untracked.vstring(["recoNuProducerMu", "recoNuProducerEle"]),
-			 maxOut=cms.untracked.uint32(1),
-			 minOut=cms.untracked.uint32(1)
+			 maxOut=cms.uint32(1),
+			 minOut=cms.uint32(1),
+             logErrors=cms.bool(False)
 	)
 
 	process.recoTop = cms.EDProducer('SimpleCompositeCandProducer',

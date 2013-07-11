@@ -1,6 +1,9 @@
 #!/bin/bash
 echo "step1 sync"
 echo "Inclusive sample"
-time cmsRun $CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step1_newCmdLine_cfg.py doSkimming=False doDebug=False inputFiles_load=$STPOL_DIR/sync/inclusive/files.txt outputFile=$STPOL_DIR/sync/inclusive/step1.root &> $STPOL_DIR/sync/inclusive/log_step1.txt &
+CFG=$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step1/step1.py
+OPTS="doSkimming=False doDebug=False"
+SYNC_DIR=$STPOL_DIR/sync
+time cmsRun $CFG $OPTS inputFiles_load=$STPOL_DIR/sync/inclusive/files.txt outputFile=$SYNC_DIR/inclusive/step1.root &> $SYNC_DIR/inclusive/log_step1.txt &
 echo "Exclusive sample"
-time cmsRun $CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step1_newCmdLine_cfg.py doSkimming=False doDebug=False  inputFiles_load=$STPOL_DIR/sync/exclusive/files.txt outputFile=$STPOL_DIR/sync/exclusive/step1.root &> $STPOL_DIR/sync/exclusive/log_step1.txt &
+time cmsRun $CFG $OPTS inputFiles_load=$STPOL_DIR/sync/exclusive/files.txt outputFile=$SYNC_DIR/exclusive/step1.root &> $SYNC_DIR/exclusive/log_step1.txt &

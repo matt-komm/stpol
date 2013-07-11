@@ -139,7 +139,7 @@ process.muonCuts = cms.PSet(
     muonCountSrc  = cms.InputTag("muonCount"),
     eleCountSrc  = cms.InputTag("electronCount"),
 
-    doVetoLeptonCut = cms.bool(True),
+    doVetoLeptonCut = cms.bool(options.doLepton and options.lepton=="mu"),
     vetoMuCountSrc = cms.InputTag("looseVetoMuCount"),
     vetoEleCountSrc = cms.InputTag("looseVetoEleCount"),
 
@@ -173,7 +173,7 @@ process.eleCuts = cms.PSet(
     electronMotherPdgIdSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "motherGenPdgId"),
     electronTriggerMatchSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "triggerMatch"),
 
-    doVetoLeptonCut = cms.bool(True),
+    doVetoLeptonCut = cms.bool(options.doLepton and options.lepton=="ele"),
     vetoMuCountSrc = cms.InputTag("looseVetoMuCount"),
     vetoEleCountSrc = cms.InputTag("looseVetoEleCount"),
     electronDecayTreeSrc = cms.InputTag("decayTreeProducerEle"),
