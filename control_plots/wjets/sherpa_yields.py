@@ -31,17 +31,17 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
     p2.SetTicks(1, 1);
     p2.SetGrid();
     p2.SetFillStyle(0);
-    
+
     p2.Draw()
     p2.cd()
-    
+
     hist_data.SetName("merged_data")
     hist_mc.SetName("merged_mc")
     hist_mc.Add(hist_data, -1.0)
     hist_mc.Divide(hist_data)
-    
+
     hist_ratio = hist_mc
-    
+
     hist_ratio.SetStats(False)
     hist_ratio.SetMarkerStyle(23)
     hist_ratio.SetTitle("ratio (exp.-meas.)/meas.")
@@ -52,17 +52,17 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
     yAxis = hist_ratio.GetYaxis()
     hist_ratio.SetMarkerStyle(20)
     yAxis.CenterTitle()
-    
+
     xAxis.SetLabelSize(0.08)
     xAxis.SetTitleSize(0.15)
     xAxis.SetTitleOffset(0.5)
     yAxis.SetLabelSize(0.08)
-    
+
     #xAxis.SetTickLength(xAxis->GetTickLength() * (1. - 2. * margin - bottomSpacing) / bottomSpacing);
     #xAxis.SetNdivisions(histStack.GetXaxis().GetNdivisions());
     yAxis.SetNdivisions(405)
     hist_ratio.Draw("p0e1")
-    
+
     return p2, hist_ratio
 
 def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples):
@@ -106,14 +106,14 @@ def plot(canv, name, hists_merged, **kwargs):
     x_title = kwargs.pop("x_label", "")
 
     stacks = plot_hists_stacked(canv, hists, **kwargs)
-    stacks["data"].GetXaxis().SetLabelOffset(999.)
-    stacks["data"].GetXaxis().SetTitleOffset(999.)
+    stacks["mc"].GetXaxis().SetLabelOffset(999.)
+    stacks["mc"].GetXaxis().SetTitleOffset(999.)
     r = plot_data_mc_ratio(
         canv,
         get_stack_total_hist(stacks["data"]),
         get_stack_total_hist(stacks["mc"])
     )
-    
+
     r[1].GetXaxis().SetTitle(x_title)
     canv.cd()
     leg = legend(hists["data"] + hists["mc"], pos="top-left", styles=["p", "f"], **kwargs)
@@ -122,17 +122,17 @@ def plot(canv, name, hists_merged, **kwargs):
 
 if __name__=="__main__":
     tdrstyle()
-    
+
     samples = load_samples(os.environ["STPOL_DIR"])
     hists = draw_data_mc(
         "cos_theta", [20, -1, 1],
         str(Cuts.final(2,0)),
         "pu_weight*muon_IDWeight*muon_TriggerWeight*muon_IsoWeight*b_weight_nominal", 19739, samples
     )
-    
+
     out_dir = os.environ["STPOL_DIR"] + "/out/plots/wjets"
     mkdir_p(out_dir)
-    
+
     hjoined = dict(filter_hists(hists, "mc/iso/(.*)"), **filter_hists(hists, "data/iso/(SingleMu)"))
     merges = dict()
     merges["default"] = merge_cmds.copy()
@@ -142,7 +142,7 @@ if __name__=="__main__":
     hists_merged2 = merge_hists(hjoined, merges["sherpa"])
 
     kwargs = {"x_label": "cos #theta", "nudge_x": -0.05}
-    #A = plot("madgraph (exclusive) 2J0T", hists_merged1, **kwargs)
+
     canv = ROOT.TCanvas("c1", "sherpa (inclusive) 2J0T")
     x = plot(canv, "sherpa (inclusive) 2J0T", hists_merged2, **kwargs)
     canv.SaveAs(out_dir + "/sherpa_2J0T.png")
@@ -150,5 +150,5 @@ if __name__=="__main__":
     canv = ROOT.TCanvas("c2", "madgraph (exclusive) 2J0T")
     x = plot(canv, "madgraph (exclusive) 2J0T", hists_merged1, **kwargs)
     canv.SaveAs(out_dir + "/madgraph_2J0T.png")
-    
-    
+
+
