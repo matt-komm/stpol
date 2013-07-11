@@ -154,13 +154,14 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, **kwargs):
 
     logging.info("Drawing sherpa plot")
     canv = ROOT.TCanvas("c1", "c1")
-    plot(canv, "sherpa_%s" % var["var"], hists_merged2, out_dir, **kwargs)
+    suffix = "__%s__%s" % (var["var"], cut_name)
+    plot(canv, "sherpa"+suffix, hists_merged2, out_dir, **kwargs)
 
     logging.info("Drawing madgraph plot")
     canv = ROOT.TCanvas("c2", "c2")
-    plot(canv, "madgraph_%s" % var["var"], hists_merged1, out_dir, **kwargs)
+    plot(canv, "madgraph"+suffix, hists_merged1, out_dir, **kwargs)
 
-    root_fname = out_dir + "/hists__%s.root" % (var["var"])
+    root_fname = out_dir + "/hists__%s.root"%suffix
     logging.info("Saving to ROOT file: %s" % root_fname)
 
     ofi = ROOT.TFile(root_fname, "RECREATE")
@@ -174,7 +175,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, **kwargs):
         h.SetName(n)
         #h.Write()
     madgraph_dir.cd()
-    for h in hists_merged2.items():
+    for n, h in hists_merged2.items():
         h.SetDirectory(madgraph_dir)
         h.SetName(n)
         #h.Write()
@@ -184,6 +185,8 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, **kwargs):
 if __name__=="__main__":
     logging.basicConfig(level=logging.INFO)
     tdrstyle()
+    ROOT.gStyle.SetOptTitle(True)
+
 
     samples = load_samples(os.environ["STPOL_DIR"])
    
@@ -192,8 +195,20 @@ if __name__=="__main__":
 
     costheta = {"var":"cos_theta", "varname":"cos #theta", "range":[20,-1,1]}
     mtop = {"var":"top_mass", "varname":"M_{bl#nu}", "range":[20, 130, 220]}
+    mu_pt = {"var":"mu_pt", "varname":"p_{t,#mu}", "range":[20, 30, 220]}
+    lj_pt = {"var":"pt_lj", "varname":"p_{t,q}", "range":[20, 30, 150]}
+    bj_pt = {"var":"pt_bj", "varname":"p_{t,b}", "range":[20, 30, 150]}
     eta_pos = {"var":"eta_lj", "varname":"#eta_{lq}", "range":[20, 2.5, 5.0]}
     eta_neg = {"var":"eta_lj", "varname":"#eta_{lq}", "range":[20, -5.0, -2.5]}
+
+    plot_sherpa_vs_madgraph(mu_pt, "2J0T", str(Cuts.final(2,0)), samples, out_dir, legend_pos="top-right")
+    plot_sherpa_vs_madgraph(mu_pt, "2J1T", str(Cuts.final(2,1)), samples, out_dir, legend_pos="top-right")
+
+    plot_sherpa_vs_madgraph(lj_pt, "2J0T", str(Cuts.final(2,0)), samples, out_dir, legend_pos="top-right")
+    plot_sherpa_vs_madgraph(lj_pt, "2J1T", str(Cuts.final(2,1)), samples, out_dir, legend_pos="top-right")
+
+    plot_sherpa_vs_madgraph(bj_pt, "2J0T", str(Cuts.final(2,0)), samples, out_dir, legend_pos="top-right")
+    plot_sherpa_vs_madgraph(bj_pt, "2J1T", str(Cuts.final(2,1)), samples, out_dir, legend_pos="top-right")
 
     plot_sherpa_vs_madgraph(costheta, "2J0T", str(Cuts.final(2,0)), samples, out_dir, legend_pos="top-right")
     plot_sherpa_vs_madgraph(costheta, "2J1T", str(Cuts.final(2,1)), samples, out_dir, legend_pos="top-right")
