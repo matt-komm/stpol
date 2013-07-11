@@ -4,13 +4,14 @@ from plots.common.sample_style import Styling
 from plots.common.utils import merge_cmds, merge_hists, mkdir_p, get_stack_total_hist
 from plots.common.odict import OrderedDict
 from plots.common.stack_plot import plot_hists_stacked
-from plots.common.cuts import Cuts
+from plots.common.cuts import Cuts, Cut
 from plots.common.cross_sections import xs as cross_sections
 from plots.common.legend import legend
 from plots.common.tdrstyle import tdrstyle
 
 import os
 import re
+import logging
 
 def filter_hists(hists, pat):
     out = dict()
@@ -90,7 +91,7 @@ def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples):
             hists["data/antiiso/%s" % sample.name] = hist_qcd
     return hists
 
-def plot(canv, name, hists_merged, **kwargs):
+def plot(canv, name, hists_merged, out_dir, **kwargs):
     canv.cd()
     p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
     p1.Draw()
@@ -105,9 +106,12 @@ def plot(canv, name, hists_merged, **kwargs):
 
     x_title = kwargs.pop("x_label", "")
 
+    logging.debug("Drawing stack")
     stacks = plot_hists_stacked(canv, hists, **kwargs)
     stacks["mc"].GetXaxis().SetLabelOffset(999.)
     stacks["mc"].GetXaxis().SetTitleOffset(999.)
+
+    logging.debug("Drawing ratio")
     r = plot_data_mc_ratio(
         canv,
         get_stack_total_hist(stacks["data"]),
@@ -116,39 +120,81 @@ def plot(canv, name, hists_merged, **kwargs):
 
     r[1].GetXaxis().SetTitle(x_title)
     canv.cd()
+
+    logging.debug("Drawing legend")
     leg = legend(hists["data"] + hists["mc"], pos="top-left", styles=["p", "f"], **kwargs)
 
-    return r, stacks, leg
+    canv.SaveAs(out_dir + "/%s.png" % name)
+    canv.Close() #Must close canvas to prevent hang in ROOT upon GC
+    #del canv, stacks, r
+    logging.debug("Returning from plot()")
+    return
 
-if __name__=="__main__":
-    tdrstyle()
 
-    samples = load_samples(os.environ["STPOL_DIR"])
+def plot_sherpa_vs_madgraph(var_name, plot_range, cut_name, cut_str, samples, out_dir):
+    out_dir = out_dir + "/" + cut_name
+    mkdir_p(out_dir)
+
+    logging.info("Drawing histograms for variable=%s, cut=%s" % (var_name, cut_name))
     hists = draw_data_mc(
-        "cos_theta", [20, -1, 1],
-        str(Cuts.final(2,0)),
+        var_name, plot_range,
+        cut_str,
         "pu_weight*muon_IDWeight*muon_TriggerWeight*muon_IsoWeight*b_weight_nominal", 19739, samples
     )
 
-    out_dir = os.environ["STPOL_DIR"] + "/out/plots/wjets"
-    mkdir_p(out_dir)
-
     hjoined = dict(filter_hists(hists, "mc/iso/(.*)"), **filter_hists(hists, "data/iso/(SingleMu)"))
     merges = dict()
-    merges["default"] = merge_cmds.copy()
+    merges["madgraph"] = merge_cmds.copy()
     merges["sherpa"] = merge_cmds.copy()
     merges["sherpa"]["WJets"] = ["WJets_sherpa_nominal"]
-    hists_merged1 = merge_hists(hjoined, merges["default"])
+    hists_merged1 = merge_hists(hjoined, merges["madgraph"])
     hists_merged2 = merge_hists(hjoined, merges["sherpa"])
 
     kwargs = {"x_label": "cos #theta", "nudge_x": -0.05}
 
-    canv = ROOT.TCanvas("c1", "sherpa (inclusive) 2J0T")
-    x = plot(canv, "sherpa (inclusive) 2J0T", hists_merged2, **kwargs)
-    canv.SaveAs(out_dir + "/sherpa_2J0T.png")
+    logging.info("Drawing sherpa plot")
+    canv = ROOT.TCanvas("c1", "c1")
+    plot(canv, "sherpa_%s" % cut_name, hists_merged2, out_dir, **kwargs)
 
-    canv = ROOT.TCanvas("c2", "madgraph (exclusive) 2J0T")
-    x = plot(canv, "madgraph (exclusive) 2J0T", hists_merged1, **kwargs)
-    canv.SaveAs(out_dir + "/madgraph_2J0T.png")
+    logging.info("Drawing madgraph plot")
+    canv = ROOT.TCanvas("c2", "c2")
+    plot(canv, "madgraph_%s" % cut_name, hists_merged1, out_dir, **kwargs)
 
+    # root_fname = out_dir + "/hists__%s.root" % (var_name)
+    # logging.info("Saving to ROOT file: %s" % root_fname)
 
+    # ofi = ROOT.TFile(root_fname, "RECREATE")
+    # ofi.cd()
+    # madgraph_dir = ofi.mkdir("madgraph")
+    # sherpa_dir = ofi.mkdir("sherpa")
+
+    # sherpa_dir.cd()
+    # for h in hists_merged1.values():
+    #     h.SetDirectory(sherpa_dir)
+    #     #h.Write()
+    # madgraph_dir.cd()
+    # for h in hists_merged2.values():
+    #     h.SetDirectory(madgraph_dir)
+    #     #h.Write()
+    # ofi.Write()
+    # ofi.Close()
+
+if __name__=="__main__":
+    logging.basicConfig(level=logging.DEBUG)
+    tdrstyle()
+
+    samples = load_samples(os.environ["STPOL_DIR"])
+   
+    out_dir = os.environ["STPOL_DIR"] + "/out/plots/wjets"
+    mkdir_p(out_dir)
+    plot_sherpa_vs_madgraph("cos_theta", [20, -1, 1], "2J0T", str(Cuts.final(2,0)), samples, out_dir)
+    plot_sherpa_vs_madgraph("cos_theta", [20, -1, 1], "2J1T", str(Cuts.final(2,1)), samples, out_dir)
+
+    plot_sherpa_vs_madgraph("top_mass", [20, 130, 220], "2J0T", str(Cuts.final(2,0)), samples, out_dir)
+    plot_sherpa_vs_madgraph("top_mass", [20, 130, 220], "2J1T", str(Cuts.final(2,1)), samples, out_dir)
+
+    plot_sherpa_vs_madgraph("eta_lj", [20, 2.5, 5.0], "2J0T__eta_pos", str(Cuts.final(2,0)*Cut("eta_lj>0.0")), samples, out_dir)
+    plot_sherpa_vs_madgraph("eta_lj", [20, 2.5, 5.0], "2J1T__eta_pos", str(Cuts.final(2,1)*Cut("eta_lj>0.0")), samples, out_dir)
+
+    plot_sherpa_vs_madgraph("eta_lj", [20, -5.0, -2.5], "2J0T__eta_neg", str(Cuts.final(2,0)*Cut("eta_lj<0.0")), samples, out_dir)
+    plot_sherpa_vs_madgraph("eta_lj", [20, -5.0, -2.5], "2J1T__eta_neg", str(Cuts.final(2,1)*Cut("eta_lj<0.0")), samples, out_dir)

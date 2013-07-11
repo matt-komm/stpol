@@ -27,8 +27,10 @@ if __name__=="__main__":
 
     fldir = "filelists/step2/latest"
 
-    leptons = ["mu", "ele"]
-    isos = ["iso", "antiiso"]
+    #leptons = ["mu", "ele"]
+    #isos = ["iso", "antiiso"]
+    leptons = ["mu"]
+    isos = ["iso"]
     systs = ["nominal"]
 
     signal_samples = ["T_t", "Tbar_t", "T_t_ToLeptons", "Tbar_t_ToLeptons"]
@@ -68,5 +70,8 @@ if __name__=="__main__":
                     print cmd
                     check_call(cmd, shell=True)
 
-
-
+    ofpath = "/".join([cmdline_args.ofdir, lep, iso, "wjets_sherpa"])
+    args = "--lepton=mu --doControlVars --isMC"
+    fi = "filelists/step2/WJets_sherpa_06_10/*.txt"
+    cmd = " ".join(["$STPOL_DIR/analysis_step3/suball.sh", "'"+args+"'", ofpath, fi])
+    check_call(cmd, shell=True)
