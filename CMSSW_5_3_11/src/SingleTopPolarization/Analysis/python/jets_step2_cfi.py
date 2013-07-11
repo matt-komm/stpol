@@ -29,6 +29,8 @@ def JetSetup(process, conf):
 
     bTagCutStr = 'bDiscriminator("%s") >= %f' % (conf.Jets.bTagDiscriminant, conf.Jets.BTagWorkingPointVal())
 
+    if conf.doSync:
+        conf.Jets.source = "patJetsWithOwnRef"
     process.deltaRJets = cms.EDProducer("DeltaRProducer",
         leptonSrc=cms.InputTag("goodSignalLeptons"),
         jetSrc=cms.InputTag("noPUJets" if conf.Jets.doPUClean else conf.Jets.source)

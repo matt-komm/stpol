@@ -45,6 +45,8 @@ class Config(C):
     #Which systematic to use
     systematic = None
 
+    doSync = False
+
     #A string to specify the dta period (RunA, RunB, RunC, RunD)
     dataRun = None
 
