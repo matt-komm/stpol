@@ -97,7 +97,8 @@ class MVA_meta:
 
 class MVA_trainer:
 	
-	def __init__(self):
+	def __init__(self, jobname="jobname"):
+		self.jobname = jobname
 		self.signals = []
 		self.backgrounds = []
 		self.variables = []
@@ -106,8 +107,8 @@ class MVA_trainer:
 		self.channel = "mu"
 		self.files = {}
 		self.trees = {}
-		self.tempfile = ROOT.TFile("lastMVA.root", "RECREATE")
-		self.factory = ROOT.TMVA.Factory("tpol", self.tempfile)
+		self.tempfile = ROOT.TFile("%s-TMVA.root"%jobname, "RECREATE")
+		self.factory = ROOT.TMVA.Factory(jobname, self.tempfile)
 	
 	def set_channel(self, ch):
 		if ch != "mu" and ch != "ele":
@@ -162,11 +163,11 @@ class MVA_trainer:
 		for meth in self.methods:
 			meta = MVA_meta()
 			meta.varlist = self.variables
-			xmlfile = open("weights/tpol_"+meth+".weights.xml")
+			xmlfile = open("weights/%s_"%self.jobname+meth+".weights.xml")
 			meta.xmlstring = xmlfile.read()
 			meta.method_tag = meth
 			meta.cutstring = self.cutstring
-			pklfile = open("weights/tpol_"+meth+".pkl", "wb")
+			pklfile = open("weights/%s_"%self.jobname+meth+".pkl", "wb")
 			pickle.dump(meta, pklfile)
 			pklfile.close()
 		self.tempfile.Close()
