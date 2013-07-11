@@ -36,6 +36,8 @@ if __name__=="__main__":
     if not cmdline_args.ofdir:
         cmdline_args.ofdir = "out_step3_%s_%s" % (os.getlogin(), datetime.datetime.now().strftime("%d_%m_%H_%M"))
 
+    cmdline_args.cutStringSelected = cmdline_args.cutStringSelected.strip().replace(" ","")
+
     for iso in isos:
         for syst in systs:
             path = "/".join([fldir, iso, syst, "*"])
@@ -51,7 +53,7 @@ if __name__=="__main__":
                         args += " --doControlVars --isMC"
 
                     #Always apply the selection cuts
-                    args += ' --cutString="%s"' % cmdline_args.cutStringSelected.strip().replace(" ","")
+                    args += ' --cutString="%s"' % cmdline_args.cutStringSelected
 
                     #Apply the processing cuts
                     if not isSignal or (isSignal and cmdline_args.applyCutsToSignal):
@@ -67,6 +69,3 @@ if __name__=="__main__":
                     cmd = " ".join(["$STPOL_DIR/analysis_step3/suball.sh", "'"+args+"'", ofpath, fi])
                     print cmd
                     check_call(cmd, shell=True)
-
-
-
