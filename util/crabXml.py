@@ -10,6 +10,7 @@ import scipy.stats
 import scipy.stats.mstats
 import pdb
 import math
+import re
 
 class TimeStats:
     def __init__(self, minimum, maximum, mean, quantiles):
@@ -93,11 +94,10 @@ class Task:
 
         getOutputTime = get(running_job, "getOutputTime", str)
         wrapperReturnCode = get(running_job, "wrapperReturnCode", int)
-
         try:
             applicationReturnCode = get(running_job, "applicationReturnCode", int)
-        except ValueError:
-            applicationReturnCode = -1
+        except:
+            applicationReturnCode = None
 
         lfn = get(running_job, "lfn", str)
         if lfn:
@@ -220,7 +220,11 @@ for r in reports:
     t.updateJobs(r)
 
     js = JobStats(t)
-    of = open(r.replace("RReport.xml", "files.txt"), "w")
+    match = re.match("(.*)/WD_(.*)/share/RReport.xml", r)
+    if not match:
+        raise ValueError("Couldn't understand pattern: %s" % r)
+    filelist_path = match.group(1) + "/" + match.group(2) + ".files.txt"
+    of = open(filelist_path, "w")
     for job in t.jobs:
         if job.lfn:
             of.write(job.lfn + "\n")
