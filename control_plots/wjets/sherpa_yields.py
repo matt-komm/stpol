@@ -122,7 +122,7 @@ def plot(canv, name, hists_merged, out_dir, **kwargs):
     canv.cd()
 
     logging.debug("Drawing legend")
-    leg = legend(hists["data"] + hists["mc"], pos="top-left", styles=["p", "f"], **kwargs)
+    leg = legend(hists["data"] + hists["mc"], styles=["p", "f"], **kwargs)
 
     canv.SaveAs(out_dir + "/%s.png" % name)
     canv.Close() #Must close canvas to prevent hang in ROOT upon GC
@@ -131,13 +131,13 @@ def plot(canv, name, hists_merged, out_dir, **kwargs):
     return
 
 
-def plot_sherpa_vs_madgraph(var_name, plot_range, cut_name, cut_str, samples, out_dir):
+def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, **kwargs):
     out_dir = out_dir + "/" + cut_name
     mkdir_p(out_dir)
 
-    logging.info("Drawing histograms for variable=%s, cut=%s" % (var_name, cut_name))
+    logging.info("Drawing histograms for variable=%s, cut=%s" % (var["var"], cut_name))
     hists = draw_data_mc(
-        var_name, plot_range,
+        var["var"], var["range"],
         cut_str,
         "pu_weight*muon_IDWeight*muon_TriggerWeight*muon_IsoWeight*b_weight_nominal", 19739, samples
     )
@@ -150,51 +150,59 @@ def plot_sherpa_vs_madgraph(var_name, plot_range, cut_name, cut_str, samples, ou
     hists_merged1 = merge_hists(hjoined, merges["madgraph"])
     hists_merged2 = merge_hists(hjoined, merges["sherpa"])
 
-    kwargs = {"x_label": "cos #theta", "nudge_x": -0.05}
+    kwargs = dict({"x_label": var["varname"]}, **kwargs)
 
     logging.info("Drawing sherpa plot")
     canv = ROOT.TCanvas("c1", "c1")
-    plot(canv, "sherpa_%s" % cut_name, hists_merged2, out_dir, **kwargs)
+    plot(canv, "sherpa_%s" % var["var"], hists_merged2, out_dir, **kwargs)
 
     logging.info("Drawing madgraph plot")
     canv = ROOT.TCanvas("c2", "c2")
-    plot(canv, "madgraph_%s" % cut_name, hists_merged1, out_dir, **kwargs)
+    plot(canv, "madgraph_%s" % var["var"], hists_merged1, out_dir, **kwargs)
 
-    # root_fname = out_dir + "/hists__%s.root" % (var_name)
-    # logging.info("Saving to ROOT file: %s" % root_fname)
+    root_fname = out_dir + "/hists__%s.root" % (var["var"])
+    logging.info("Saving to ROOT file: %s" % root_fname)
 
-    # ofi = ROOT.TFile(root_fname, "RECREATE")
-    # ofi.cd()
-    # madgraph_dir = ofi.mkdir("madgraph")
-    # sherpa_dir = ofi.mkdir("sherpa")
+    ofi = ROOT.TFile(root_fname, "RECREATE")
+    ofi.cd()
+    madgraph_dir = ofi.mkdir("madgraph")
+    sherpa_dir = ofi.mkdir("sherpa")
 
-    # sherpa_dir.cd()
-    # for h in hists_merged1.values():
-    #     h.SetDirectory(sherpa_dir)
-    #     #h.Write()
-    # madgraph_dir.cd()
-    # for h in hists_merged2.values():
-    #     h.SetDirectory(madgraph_dir)
-    #     #h.Write()
-    # ofi.Write()
-    # ofi.Close()
+    sherpa_dir.cd()
+    for n, h in hists_merged1.items():
+        h.SetDirectory(sherpa_dir)
+        h.SetName(n)
+        #h.Write()
+    madgraph_dir.cd()
+    for h in hists_merged2.items():
+        h.SetDirectory(madgraph_dir)
+        h.SetName(n)
+        #h.Write()
+    ofi.Write()
+    ofi.Close()
 
 if __name__=="__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     tdrstyle()
 
     samples = load_samples(os.environ["STPOL_DIR"])
    
     out_dir = os.environ["STPOL_DIR"] + "/out/plots/wjets"
     mkdir_p(out_dir)
-    plot_sherpa_vs_madgraph("cos_theta", [20, -1, 1], "2J0T", str(Cuts.final(2,0)), samples, out_dir)
-    plot_sherpa_vs_madgraph("cos_theta", [20, -1, 1], "2J1T", str(Cuts.final(2,1)), samples, out_dir)
 
-    plot_sherpa_vs_madgraph("top_mass", [20, 130, 220], "2J0T", str(Cuts.final(2,0)), samples, out_dir)
-    plot_sherpa_vs_madgraph("top_mass", [20, 130, 220], "2J1T", str(Cuts.final(2,1)), samples, out_dir)
+    costheta = {"var":"cos_theta", "varname":"cos #theta", "range":[20,-1,1]}
+    mtop = {"var":"top_mass", "varname":"M_{bl#nu}", "range":[20, 130, 220]}
+    eta_pos = {"var":"eta_lj", "varname":"#eta_{lq}", "range":[20, 2.5, 5.0]}
+    eta_neg = {"var":"eta_lj", "varname":"#eta_{lq}", "range":[20, -5.0, -2.5]}
 
-    plot_sherpa_vs_madgraph("eta_lj", [20, 2.5, 5.0], "2J0T__eta_pos", str(Cuts.final(2,0)*Cut("eta_lj>0.0")), samples, out_dir)
-    plot_sherpa_vs_madgraph("eta_lj", [20, 2.5, 5.0], "2J1T__eta_pos", str(Cuts.final(2,1)*Cut("eta_lj>0.0")), samples, out_dir)
+    plot_sherpa_vs_madgraph(costheta, "2J0T", str(Cuts.final(2,0)), samples, out_dir, legend_pos="top-right")
+    plot_sherpa_vs_madgraph(costheta, "2J1T", str(Cuts.final(2,1)), samples, out_dir, legend_pos="top-right")
 
-    plot_sherpa_vs_madgraph("eta_lj", [20, -5.0, -2.5], "2J0T__eta_neg", str(Cuts.final(2,0)*Cut("eta_lj<0.0")), samples, out_dir)
-    plot_sherpa_vs_madgraph("eta_lj", [20, -5.0, -2.5], "2J1T__eta_neg", str(Cuts.final(2,1)*Cut("eta_lj<0.0")), samples, out_dir)
+    plot_sherpa_vs_madgraph(mtop, "2J0T", str(Cuts.final(2,0)), samples, out_dir, legend_pos="top-right")
+    plot_sherpa_vs_madgraph(mtop, "2J1T", str(Cuts.final(2,1)), samples, out_dir, legend_pos="top-right")
+
+    plot_sherpa_vs_madgraph(eta_pos, "2J0T__eta_pos", str(Cuts.final(2,0)*Cut("eta_lj>0.0")), samples, out_dir, legend_pos="top-right")
+    plot_sherpa_vs_madgraph(eta_pos, "2J1T__eta_pos", str(Cuts.final(2,1)*Cut("eta_lj>0.0")), samples, out_dir, legend_pos="top-right")
+
+    plot_sherpa_vs_madgraph(eta_neg, "2J0T__eta_neg", str(Cuts.final(2,0)*Cut("eta_lj<0.0")), samples, out_dir, legend_pos="top-left")
+    plot_sherpa_vs_madgraph(eta_neg, "2J1T__eta_neg", str(Cuts.final(2,1)*Cut("eta_lj<0.0")), samples, out_dir, legend_pos="top-left")
