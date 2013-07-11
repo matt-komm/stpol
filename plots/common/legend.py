@@ -1,6 +1,6 @@
 
 import ROOT
-def legend(hists, pos="top-right", **kwargs):
+def legend(hists, **kwargs):
     """
         ***Mandatory arguments:
         hists - list of TH1* type objects
@@ -39,6 +39,8 @@ def legend(hists, pos="top-right", **kwargs):
 
     #Names of the processes as displayed on a legend
     names = kwargs.get("names")
+
+    pos = kwargs.get("legend_pos", "top-right")
     
     #The relative size of the text in the legend
     text_size = kwargs.get("text_size", 0.03)
@@ -70,7 +72,7 @@ def legend(hists, pos="top-right", **kwargs):
     #[bottom_left_x, bottom_left_y, top_right_x, top_right_y]
     #FIXME: fine-tune and make your own
     if pos=="top-right":
-        leg_coords = [-1+nudge_x, -1, 0.93, 0.91]
+        leg_coords = [-1, -1, 0.93, 0.91]
     if pos=="top-left":
         leg_coords = [-1, -1, 0.45, 0.91]
 
