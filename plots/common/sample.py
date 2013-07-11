@@ -15,7 +15,6 @@ class Sample:
         self.file_name = file_name
         self.tree_name = tree_name
         self.logger = logging.getLogger(str(self))
-        print "Debug: tree_name="+tree_name
         try:
             self.tfile = ROOT.TFile(file_name)
             if not self.tfile:
@@ -26,8 +25,6 @@ class Sample:
             self.tree = self.tfile.Get("trees/"+tree_name)
         except Exception as e:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.file_name, self.tfile))
-        self.tfile.cd("trees")
-        print "Debug:",self.tfile.ls()
 
         if not self.tree:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
