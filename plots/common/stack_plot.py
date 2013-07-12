@@ -84,6 +84,7 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
         first = False
     if do_log_y:
         canv.SetLogy()
+    canv.Update()
     return stacks
 
 
@@ -152,3 +153,4 @@ if __name__=="__main__":
         styles=["p", "f"],
         width=0.2
     )
+    canv.Update()
