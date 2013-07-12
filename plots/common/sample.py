@@ -10,6 +10,10 @@ class HistogramException(Exception):
 class TObjectOpenException(Exception):
     pass
 class Sample:
+    def __del__(self):
+        self.logger.debug("Closing sample %s" % self.name)
+        self.tfile.Close()
+
     def __init__(self, name, file_name):
         self.name = name
         self.file_name = file_name
