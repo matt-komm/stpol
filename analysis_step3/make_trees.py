@@ -10,8 +10,10 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(
         description='Runs step3 trees on the cluster'
     )
-    parser.add_argument("-o", "--ofdir", type=str, default=None, required=False,
-                        help="the output directory for the step3 trees")
+    parser.add_argument(
+        "-o", "--ofdir", type=str, default=None, required=False,
+        help="the output directory for the step3 trees"
+    )
     parser.add_argument("--cutStringProcessed", type=str,
         default="--doNJets --nJ=2,3 --doHLT --doLepton", required=False,
         help="Specify the cutstring for the step3 config, which will reduce the amount of events processed. For options, see step3_eventloop_base_nocuts_cfg.py"
@@ -38,6 +40,8 @@ if __name__=="__main__":
     if not cmdline_args.ofdir:
         cmdline_args.ofdir = "out_step3_%s_%s" % (os.getlogin(), datetime.datetime.now().strftime("%d_%m_%H_%M"))
 
+    cmdline_args.cutStringSelected = cmdline_args.cutStringSelected.strip().replace(" ","")
+
     for iso in isos:
         for syst in systs:
             path = "/".join([fldir, iso, syst, "*"])
@@ -53,7 +57,7 @@ if __name__=="__main__":
                         args += " --doControlVars --isMC"
 
                     #Always apply the selection cuts
-                    args += ' --cutString="%s"' % cmdline_args.cutStringSelected.strip().replace(" ","")
+                    args += ' --cutString="%s"' % cmdline_args.cutStringSelected
 
                     #Apply the processing cuts
                     if not isSignal or (isSignal and cmdline_args.applyCutsToSignal):

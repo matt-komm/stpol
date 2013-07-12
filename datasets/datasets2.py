@@ -14,7 +14,7 @@ step1_files = [
     "/data/22Jan_ReReco_Runs2012ABCD",
     "/mc/nominal_Summer12_DR53X",
     "/mc/systematic_Summer12_DR53X",
-    "/mc/wjets_FSIM_systematic_Summer12"
+    "/mc/wjets_FSIM_Summer12"
 ]
 
 #Input files for step2 (USER)
@@ -34,6 +34,9 @@ step2_mc_syst_files = [
 step2_data_files = [
     "/data/May20"
 ]
+
+def is_fastsim(name):
+    return "FSIM" in name
 
 class Dataset:
     def __init__(self, name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file, do_comphep):
@@ -62,6 +65,9 @@ class Dataset:
                 cmdline += " doSkimming=True"
             else:
                 cmdline += " doSkimming=False"
+
+            if is_fastsim(self.name):
+                cmdline += " runOnFastSim=True"
         if self.step=="step2":
             out = out.replace("SUBCHAN", self.name)
             out = out.replace("OUTDIR", subdir)
@@ -137,6 +143,7 @@ def parse_file(fn):
     step = get_step(fn)
 
     for line in skip_comments(open(fn)):
+        line = re.sub(" +", " ", line)
         line=line.strip()
         if line.startswith("#"):
             continue

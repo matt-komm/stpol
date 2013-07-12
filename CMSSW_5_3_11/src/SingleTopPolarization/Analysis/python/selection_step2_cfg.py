@@ -154,7 +154,7 @@ def SingleTopStep2():
         process.MessageLogger.cerr.threshold = cms.untracked.string("INFO")
         logging.basicConfig(level=logging.DEBUG)
 
-    process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(-1))
+    process.maxEvents = cms.untracked.PSet(input=cms.untracked.int32(options.maxEvents))
 
     process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
 
