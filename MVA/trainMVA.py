@@ -13,7 +13,7 @@ sample = "ele"
 step3 = "out_step3_mario_11_07_13_42"
 datadirs={}
 datadirs["iso"] = "/".join((os.environ["STPOL_DIR"], step3, sample ,"iso", "nominal"))
-fn_data = "SingleEle.root"
+
 flist=sum(merge_cmds.values(),[])
 
 # Read in the file list from the output directory
@@ -58,20 +58,15 @@ prt='el'
 if sample=='mu': prt='mu'
 
 # Let's define what variables we want to use for signal discrimination
-#factory.AddVariable("met",'D')
 factory.AddVariable("top_mass",'D')
 factory.AddVariable("eta_lj",'D')
 factory.AddVariable("C",'D')
-#factory.AddVariable("D",'D')
-#factory.AddVariable("aplanarity",'D')
-#factory.AddVariable("sphericity",'D')
-#factory.AddVariable("sphericity_withNu",'D')
-#factory.AddVariable("eta_bj",'D')
-#factory.AddVariable(prt+"_pt",'D')
+factory.AddVariable("met",'D')
+factory.AddVariable("bdiscr_bj",'D')
+factory.AddVariable("bdiscr_lj",'D')
+factory.AddVariable(prt+"_pt",'D')
 factory.AddVariable(prt+"_charge",'I')
-#factory.AddVariable("pt_bj",'D')
-#factory.AddVariable("pt_lj",'D')
-#factory.AddVariable("mt_mu",'D')
+factory.AddVariable("pt_bj",'D')
 factory.AddSpectator("cos_theta",'D')
 
 # Now let's add signal and background trees with proper weights
@@ -94,11 +89,10 @@ factory.PrepareTrainingAndTestTree(TCut(),TCut(),
                "V")
 
 # Now let's book an MVA method
-#factory.BookMethod(TMVA.Types.kBDT,
-#                   "BDT",
-#                   "BoostType=AdaBoost:"\
-#                   "NTrees=50:"\
-#                   "nCuts=-1")
+factory.BookMethod(TMVA.Types.kBDT,
+                   "BDT",
+                   "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.1:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"\
+                   )
 
 #factory.BookMethod( TMVA.Types.kMLP,
 #                   "MLP",
@@ -108,32 +102,32 @@ factory.PrepareTrainingAndTestTree(TCut(),TCut(),
 #                   "TrainingMethod=BFGS")
 
 # We use categorized BDT
-cat=factory.BookMethod(TMVA.Types.kCategory,
-                    "Category",
+cat4=factory.BookMethod(TMVA.Types.kCategory,
+                    "cat4",
                     "")
 
-cat.AddMethod(TCut("abs(eta_lj)<2.5 & cos_theta < 0"),
-              "top_mass:eta_lj:"+prt+"_charge:C",
+cat4.AddMethod(TCut("abs(eta_lj)<2.5 & cos_theta < 0"),
+              "top_mass:eta_lj:C:met:bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
               TMVA.Types.kBDT,
-              "Category_BDT_lowEta_lowCTH",
+              "Category4_BDT_lowEta_lowCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
 
-cat.AddMethod(TCut("abs(eta_lj)<2.5 & cos_theta >= 0"),
-              "top_mass:eta_lj:"+prt+"_charge:C",
+cat4.AddMethod(TCut("abs(eta_lj)<2.5 & cos_theta >= 0"),
+              "top_mass:eta_lj:C:met:bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
               TMVA.Types.kBDT,
-              "Category_BDT_lowEta_highCTH",
+              "Category4_BDT_lowEta_highCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
 
-cat.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta < 0"),
-              "top_mass:eta_lj:"+prt+"_charge:C",
+cat4.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta < 0"),
+              "top_mass:eta_lj:C:met:bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
               TMVA.Types.kBDT,
-              "Category_BDT_highEta_lowCTH",
+              "Category4_BDT_highEta_lowCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
 
-cat.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta >= 0"),
-              "top_mass:eta_lj:"+prt+"_charge:C",
+cat4.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta >= 0"),
+              "top_mass:eta_lj:C:met:bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
               TMVA.Types.kBDT,
-              "Category_BDT_highEta_highCTH",
+              "Category4_BDT_highEta_highCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
 
 factory.TrainAllMethods()
