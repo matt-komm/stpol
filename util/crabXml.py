@@ -105,11 +105,10 @@ class Task:
             wrapperReturnCode = get(running_job, "wrapperReturnCode", int)
         except ValueError:
             wrapperReturnCode = -1
-
         try:
             applicationReturnCode = get(running_job, "applicationReturnCode", int)
-        except ValueError:
-            applicationReturnCode = -1
+        except:
+            applicationReturnCode = None
 
         lfn = get(running_job, "lfn", str)
         if lfn:

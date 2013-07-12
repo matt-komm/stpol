@@ -6,9 +6,9 @@ import os
 
 #Here the latter items will become topmost in stacks
 merge_cmds = dict()
-#merge_cmds["data"] = ["SingleMu"]
+merge_cmds["data"] = ["SingleMu"]
 merge_cmds["diboson"] = ["WW", "WZ", "ZZ"]
-merge_cmds["W(#rightarrow l #nu) + jets"] = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
+merge_cmds["WJets"] = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
 merge_cmds["DY-jets"] = ["DYJets"]
 merge_cmds["t#bar{t} (#rightarrow lq, ll)"] = ["TTJets_FullLept", "TTJets_SemiLept"]
 #merge_cmds["t#bar{t}"] = ["TTJets_MassiveBinDECAY"]
@@ -101,3 +101,11 @@ def mkdir_p(d):
     except Exception as e:
         logging.debug(str(e))
     return
+
+def get_stack_total_hist(thstack):
+    hists = [h for h in thstack.GetHists()]
+    hnew = hists[0].Clone(thstack.GetName())
+    for h in hists[1:]:
+        hnew.Add(h)
+    return hnew
+

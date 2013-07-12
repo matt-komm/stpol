@@ -146,14 +146,14 @@ class Sample:
         return sample
 
     @staticmethod
-    def fromDirectory(directory, out_type="list"):
+    def fromDirectory(directory, out_type="list", prefix=""):
         import glob
         file_names = glob.glob(directory + "/*.root")
         logging.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
         if out_type=="list":
             samples = [Sample.fromFile(file_name) for file_name in file_names]
         elif out_type=="dict":
-            samples = dict((file_name.split("/")[-1].split(".")[0], Sample.fromFile(file_name)) for file_name in file_names)
+            samples = dict((prefix+file_name.split("/")[-1].split(".")[0], Sample.fromFile(file_name)) for file_name in file_names)
         else:
             raise ValueError("out_type must be 'list' or 'dict'")
         return samples
@@ -163,3 +163,17 @@ class Sample:
 
     def __str__(self):
         return self.__repr__()
+
+def load_samples(basedir=None):
+    if not basedir:
+        basedir = os.environ["STPOL_DIR"]
+    datadirs = dict()
+    datadirs["iso"] = "/".join((basedir, "step3_latest", "mu" ,"iso", "nominal"))
+    #Use the anti-isolated data for QCD $STPOL_DIR/step3_latest/mu/antiiso/nominal/SingleMu.root
+    datadirs["antiiso"] = "/".join((basedir, "step3_latest", "mu" ,"antiiso", "nominal"))
+
+    #Load all the samples in the isolated directory
+    samples = Sample.fromDirectory(datadirs["iso"], out_type="dict", prefix="iso/")
+    samples["antiiso/SingleMu"] = Sample.fromFile(datadirs["antiiso"] + "/SingleMu.root")
+
+    return samples

@@ -2,10 +2,10 @@ import ROOT
 from plots.common.sample_style import Styling
 #Need to import ordereddict from python 2.7
 try:
-    from collections import OrderedDict as dict
+    from collections import OrderedDict
 except ImportError:
-        from odict import OrderedDict as dict
-
+    from odict import OrderedDict
+import logging
 
 def plot_hists_stacked(canv, hist_groups, **kwargs):
     """
@@ -32,7 +32,7 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     method until you print the TCanvas, otherwise the stack references are destroyed.
     """
 
-    stacks = dict()
+    stacks = OrderedDict()
 
     draw_styles = kwargs.get("draw_styles", {"data": "E1"})
 
@@ -62,6 +62,7 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     #Now draw really
     first = True
     for name, stack in stacks.items():
+        logging.debug("Drawing stack %s" % name)
         if name in draw_styles.keys():
             drawcmd = draw_styles[name]
         else:
@@ -90,6 +91,7 @@ if __name__=="__main__":
     import ROOT
     import random
     import tdrstyle
+    logging.basicConfig(level=logging.DEBUG)
     tdrstyle.tdrstyle()
 
     #Make some test data histograms
@@ -127,8 +129,6 @@ if __name__=="__main__":
 
     #Create the canvas
     canv = ROOT.TCanvas("c", "c")
-    canv.SetWindowSize(500, 500)
-    canv.SetCanvasSize(600, 600)
 
     #!!!!LOOK HERE!!!!!
     #----

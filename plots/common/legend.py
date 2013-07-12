@@ -43,6 +43,8 @@ def legend(hists, pos="top-right", **kwargs):
     #The relative size of the text in the legend
     text_size = kwargs.get("text_size", 0.03)
     
+    nudge_x = kwargs.get("nudge_x", 0.0)
+
     #If you have long names you should make the width larger
     width = kwargs.get("width", 0.21)
     
@@ -68,7 +70,7 @@ def legend(hists, pos="top-right", **kwargs):
     #[bottom_left_x, bottom_left_y, top_right_x, top_right_y]
     #FIXME: fine-tune and make your own
     if pos=="top-right":
-        leg_coords = [-1, -1, 0.93, 0.91]
+        leg_coords = [-1+nudge_x, -1, 0.93, 0.91]
     if pos=="top-left":
         leg_coords = [-1, -1, 0.45, 0.91]
 
@@ -77,6 +79,9 @@ def legend(hists, pos="top-right", **kwargs):
         leg_coords[0] = leg_coords[2] - width
     if leg_coords[1]==-1:
         leg_coords[1] = leg_coords[3] - height
+
+    leg_coords[0] += nudge_x
+    leg_coords[2] += nudge_x
 
     #Expand the array using the wildcard
     leg = ROOT.TLegend(*leg_coords)

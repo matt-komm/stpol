@@ -21,6 +21,7 @@ class Cuts:
     pt_jet = Cut("pt_lj > 40")*Cut("pt_bj > 40")
     top_mass_sig = Cut("top_mass > 130 && top_mass < 220")
     one_muon = Cut("n_muons==1 && n_eles==0")
+    one_electron = Cut("n_muons==0 && n_eles==1")
     lepton_veto = Cut("n_veto_mu==0 && n_veto_ele==0")
     no_cut = Cut("1")
 
@@ -32,8 +33,15 @@ class Cuts:
         return Cut("n_tags == %d" % int(n))
 
     @staticmethod
-    def final(n, m):
-        return Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.n_tags(m)*Cuts.eta_lj*Cuts.top_mass_sig
+    def final(n, m, lepton="mu"):
+        if lepton=="mu":
+            cut = Cuts.one_muon*Cuts.lepton_veto
+        elif lepton=="ele":
+            cut = Cuts.one_eletron*Cuts.lepton_veto
+        else:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+
+        return cut*Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.n_tags(m)*Cuts.eta_lj*Cuts.top_mass_sig
 
 #Cuts.final = lambda n,m: Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.n_tags(m)*Cuts.eta_lj*Cuts.top_mass_sig
 Cuts.mu = Cuts.one_muon*Cuts.lepton_veto
