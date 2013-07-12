@@ -12,6 +12,7 @@ def plot_hists(hists, name="canv", **kwargs):
     do_log_y = kwargs["do_log_y"] if "do_log_y" in kwargs.keys() else False
     min_bin = kwargs.get("min_bin", 0)
     max_bin_mult = kwargs.get("max_bin_mult", 1.5)
+    title = kwargs.get("title", "")
     styles = kwargs.get("styles", {})
 
     max_bin = get_max_bin([hist for hist in hists])
@@ -25,6 +26,8 @@ def plot_hists(hists, name="canv", **kwargs):
     hists[0].SetStats(False)
     hists[0].SetMaximum(max_bin_mult*max_bin)
     hists[0].SetMinimum(min_bin)
+    if len(title)>0:
+        hists[0].SetTitle(title)
     hists[0].GetXaxis().SetTitle(x_label)
     hists[0].GetYaxis().SetTitle(y_label)
 
