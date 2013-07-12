@@ -5,8 +5,7 @@ from plots.common import cuts
 import array
 import random
 
-rootfilepath = "step3_latest/"
-
+rootfilepath = __file__.rsplit("/", 1)[0] + "/step3_latest/"
 
 vartypes = {
 	"bdiscr_bj" : "F",
@@ -165,7 +164,7 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 			if backgrounds[ch] == None:
 				backgrounds[ch] = default_ratio
 	
-		
+	
 	ofile = ROOT.TFile(ofname, "RECREATE")
 	ofile.mkdir("train/signal")
 	ofile.mkdir("train/background")
@@ -179,6 +178,7 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 		ifname = rootfilepath + lept + "/iso/nominal/" + ch + ".root"
 		ifile = ROOT.TFile(ifname)
 		meta["initial_events"][ch] = ifile.Get("trees/count_hist").GetBinContent(1)
+		ifile.cd()
 		tree = ifile.Get("trees/Events").CopyTree(cutstring)
 		
 		tr = array.array('i', [0])
@@ -207,9 +207,6 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 	
 	ofile.Close()
 	
-	
-if __name__ == "__main__":
-	prepare_files(["T_t_ToLeptons", "Tbar_t_ToLeptons"], ["WJets_inclusive"])
 
 
 
