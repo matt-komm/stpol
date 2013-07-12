@@ -1,84 +1,54 @@
 # Import necessary libraries and data
+import os
 from ROOT import *
 from copy import copy
-from plots.common.cross_sections import xs
-from file_names import dataFiles_ele, dataFiles_mu, mcFiles, dataLumi_ele, dataLumi_mu
+from plots.common.sample import Sample
+from plots.common.utils import merge_cmds
 from plots.common.colors import sample_colors_same
 
 # Choose between electron / muon channel fitting
-#sample = "mu"
-#fn_data = sample+"/SingleMu.root"
+lumi=19734
 sample = "ele"
-fn_data = sample+"/SingleEle.root"
+#sample = "mu"
+step3 = "out_step3_mario_11_07_13_42"
+datadirs={}
+datadirs["iso"] = "/".join((os.environ["STPOL_DIR"], step3, sample ,"iso", "nominal"))
+fn_data = "SingleEle.root"
+flist=sum(merge_cmds.values(),[])
 
-# Cut string by what to reduce events
-cutstring='n_eles == 1 & n_jets == 2 & n_tags == 1 & n_muons == 0 & el_mva > 0.9 & el_pt > 30 & deltaR_bj > 0.3 & deltaR_lj > 0.3'
-cut = TCut(cutstring)
-
-# not used cutstring part:
-#cutstring_other="met > 45 & top_mass > 130 & top_mass < 220"
-
-# Select used luminosity
-lumi=dataLumi_ele['Ele']
-if sample == "mu": lumi=dataLumi_mu['Mu']
-
-# Which weights we use?
-usePU = true
-useB = true
-useLepTrig = true
-useLepID = true
-useLepIso = false
+# Read in the file list from the output directory
+samples = {}
+for f in flist:
+    samples[f] = Sample.fromFile(datadirs["iso"]+'/'+f+'.root', tree_name="Events_MVA")
 
 # To compute accurate weight we need to load from the tree also the weights in question
-weightString = ""
-if usePU:
-    weightString += "pu_weight*"
-
-if useB:
-    weightString += "b_weight_nominal*"
-
-if useLepTrig:
-    cs = "electron_triggerWeight"
-    if sample == "mu":
-        cs="muon_triggerWeight"
-    weightString += cs+"*"
-
-if useLepID:
-    cs = "electron_IDWeight"
-    if sample == "mu":
-        cs="muon_IDWeight"
-    weightString += cs+"*"
-
-if useLepIso and sample == "mu":
-    weightString += "muon_IsoWeight*"
-
-weightString = weightString[:-1]
-
+weightString = "SF_total"
 t={}
 f={}
 w={}
 
-def getDataset(name,filename):
-    """ Function will read in the dataset tree, calculate weights and return relevant data """
-    f[name] = TFile(sample+"/"+filename)
-    t[name] = f[name].Get("trees/Events")
-    nh = f[name].Get("trees/count_hist")
-    norg = nh.GetBinContent(1)
-    w[name] = xs[name]*lumi / norg
-
-
-for key in mcFiles:
+for key in flist:#samples.keys():
     #for key in klist:
+    if key == 'T_t' or key == 'Tbar_t':
+        continue
     if sample == "mu" and (key[-5:] == "BCtoE" or key[-10:] == "EMEnriched") or key[0:5] == "GJets":
         continue
     if sample == "ele" and key == "QCDMu":
         continue
-    getDataset(key,mcFiles[key])
+    if key[0:6] == "Single":
+        if sample == "ele" and key[6:] == "Mu":
+            continue
+        if sample == "mu" and key[6:] == "Ele":
+            continue
+    w[key]=1.
+    t[key]=samples[key].getTree()
+    if samples[key].isMC: 
+        w[key]=samples[key].lumiScaleFactor(lumi)
 
 signal=['T_t_ToLeptons','Tbar_t_ToLeptons']
 
 # Create output file
-outf = TFile('TMVA.root','RECREATE')
+outf = TFile('TMVA'+sample+'.root','RECREATE')
 
 # Initialize TMVA factory
 factory=TMVA.Factory("stop_"+sample,outf,"Transformations=I;N;D")
@@ -88,30 +58,30 @@ prt='el'
 if sample=='mu': prt='mu'
 
 # Let's define what variables we want to use for signal discrimination
-factory.AddVariable("met",'D')
+#factory.AddVariable("met",'D')
 factory.AddVariable("top_mass",'D')
 factory.AddVariable("eta_lj",'D')
+factory.AddVariable("C",'D')
+#factory.AddVariable("D",'D')
+#factory.AddVariable("aplanarity",'D')
+#factory.AddVariable("sphericity",'D')
+#factory.AddVariable("sphericity_withNu",'D')
 #factory.AddVariable("eta_bj",'D')
 #factory.AddVariable(prt+"_pt",'D')
-#factory.AddVariable(prt+"_charge",'D')
+factory.AddVariable(prt+"_charge",'I')
 #factory.AddVariable("pt_bj",'D')
 #factory.AddVariable("pt_lj",'D')
-
-print "Skimming now"
-# Skim the trees
-st={}
-for k in t.keys():
-    print "Skimming:",k
-    st[k]=t[k].CopyTree(cutstring)
+#factory.AddVariable("mt_mu",'D')
+factory.AddSpectator("cos_theta",'D')
 
 # Now let's add signal and background trees with proper weights
-for k in st.keys():
+for k in t.keys():
     print "Adding trees to MVA:",k
-    if st[k].GetEntries():
+    if t[k].GetEntries():
         if k in signal:
-            factory.AddSignalTree(st[k],w[k])
+            factory.AddSignalTree(t[k],w[k])
         else:
-            factory.AddBackgroundTree(st[k],w[k])
+            factory.AddBackgroundTree(t[k],w[k])
 
 # Define what is used as per-event weight
 factory.SetWeightExpression(weightString)
@@ -119,23 +89,52 @@ factory.SetWeightExpression(weightString)
 # Prepare training and testing
 factory.PrepareTrainingAndTestTree(TCut(),TCut(),
                "NormMode=None:"\
-               "NTrain_Signal=1000:"\
-               "NTrain_Background=5000:"\
+               "NTrain_Signal=20000:"\
+               "NTrain_Background=100000:"\
                "V")
 
 # Now let's book an MVA method
-factory.BookMethod(TMVA.Types.kBDT,
-                   "BDT",
-                   "BoostType=AdaBoost:"\
-                   "NTrees=50:"\
-                   "nCuts=-1")
+#factory.BookMethod(TMVA.Types.kBDT,
+#                   "BDT",
+#                   "BoostType=AdaBoost:"\
+#                   "NTrees=50:"\
+#                   "nCuts=-1")
 
-factory.BookMethod( TMVA.Types.kMLP,
-                   "MLP",
-                   "!H:!V:"\
-                   "VarTransform=N:"\
-                   "HiddenLayers=10:"\
-                   "TrainingMethod=BFGS")
+#factory.BookMethod( TMVA.Types.kMLP,
+#                   "MLP",
+#                   "!H:!V:"\
+#                   "VarTransform=N:"\
+#                   "HiddenLayers=20:"\
+#                   "TrainingMethod=BFGS")
+
+# We use categorized BDT
+cat=factory.BookMethod(TMVA.Types.kCategory,
+                    "Category",
+                    "")
+
+cat.AddMethod(TCut("abs(eta_lj)<2.5 & cos_theta < 0"),
+              "top_mass:eta_lj:"+prt+"_charge:C",
+              TMVA.Types.kBDT,
+              "Category_BDT_lowEta_lowCTH",
+              "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
+
+cat.AddMethod(TCut("abs(eta_lj)<2.5 & cos_theta >= 0"),
+              "top_mass:eta_lj:"+prt+"_charge:C",
+              TMVA.Types.kBDT,
+              "Category_BDT_lowEta_highCTH",
+              "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
+
+cat.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta < 0"),
+              "top_mass:eta_lj:"+prt+"_charge:C",
+              TMVA.Types.kBDT,
+              "Category_BDT_highEta_lowCTH",
+              "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
+
+cat.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta >= 0"),
+              "top_mass:eta_lj:"+prt+"_charge:C",
+              TMVA.Types.kBDT,
+              "Category_BDT_highEta_highCTH",
+              "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
 
 factory.TrainAllMethods()
 factory.TestAllMethods()
