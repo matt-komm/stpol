@@ -259,7 +259,7 @@ def SingleTopStep1(
        tauCollection="", # "" means emtpy, None means cleanPatTaus
        jetCollection=cms.InputTag("patJetsWithOwnRef"),
        jetCorrLabel="L3Absolute" if options.isMC else "L2L3Residual",
-       doSmearJets=options.isMC,
+       doSmearJets=options.isMC, #Note: switch this to False for the sync!
        jetCorrPayloadName="AK5PFchs",
        addToPatDefaultSequence=False
   )

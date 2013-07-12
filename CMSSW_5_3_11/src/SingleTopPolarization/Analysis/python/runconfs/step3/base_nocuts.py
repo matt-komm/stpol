@@ -135,11 +135,13 @@ process.muonCuts = cms.PSet(
 
     muonPtSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "Pt"),
     muonEtaSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "Eta"),
+    muonPhiSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "Phi"),
+
     muonRelIsoSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "relIso"),
     muonCountSrc  = cms.InputTag("muonCount"),
     eleCountSrc  = cms.InputTag("electronCount"),
 
-    doVetoLeptonCut = cms.bool(False),
+    doVetoLeptonCut = cms.bool(options.doLepton and options.lepton=="mu"),
     vetoMuCountSrc = cms.InputTag("looseVetoMuCount"),
     vetoEleCountSrc = cms.InputTag("looseVetoEleCount"),
 
@@ -168,12 +170,16 @@ process.eleCuts = cms.PSet(
     muonCountSrc = cms.InputTag("muonCount"),
     electronRelIsoSrc = cms.InputTag("goodSignalElectronsNTupleProducer","relIso"),
     electronMvaSrc = cms.InputTag("goodSignalElectronsNTupleProducer","mvaID"),
+
     electronPtSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "Pt"),
+    electronEtaSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "Eta"),
+    electronPhiSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "Phi"),
+
     electronChargeSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "Charge"),
     electronMotherPdgIdSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "motherGenPdgId"),
     electronTriggerMatchSrc = cms.InputTag("goodSignalElectronsNTupleProducer", "triggerMatch"),
 
-    doVetoLeptonCut = cms.bool(False),
+    doVetoLeptonCut = cms.bool(options.doLepton and options.lepton=="ele"),
     vetoMuCountSrc = cms.InputTag("looseVetoMuCount"),
     vetoEleCountSrc = cms.InputTag("looseVetoEleCount"),
     electronDecayTreeSrc = cms.InputTag("decayTreeProducerEle"),
@@ -196,9 +202,11 @@ process.jetCuts = cms.PSet(
     goodJetsPtSrc = cms.InputTag("goodJetsNTupleProducer", "Pt"),
     goodJetsEtaSrc = cms.InputTag("goodJetsNTupleProducer", "Eta"),
 
-    lightJetEtaSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Eta"),
-    lightJetBdiscrSrc = cms.InputTag("lowestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
     lightJetPtSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Pt"),
+    lightJetEtaSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Eta"),
+    lightJetPhiSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Phi"),
+
+    lightJetBdiscrSrc = cms.InputTag("lowestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
     lightJetRmsSrc = cms.InputTag("lowestBTagJetNTupleProducer", "rms"),
     lightJetDeltaRSrc = cms.InputTag("lowestBTagJetNTupleProducer", "deltaR"),
 )
@@ -211,9 +219,11 @@ process.bTagCuts = cms.PSet(
     nTagsMin = cms.int32(options.nTMin),
     nTagsMax = cms.int32(options.nTMax),
 
-    bJetEtaSrc = cms.InputTag("highestBTagJetNTupleProducer", "Eta"),
-    bJetBdiscrSrc = cms.InputTag("highestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
     bJetPtSrc = cms.InputTag("highestBTagJetNTupleProducer", "Pt"),
+    bJetEtaSrc = cms.InputTag("highestBTagJetNTupleProducer", "Eta"),
+    bJetPhiSrc = cms.InputTag("highestBTagJetNTupleProducer", "Phi"),
+
+    bJetBdiscrSrc = cms.InputTag("highestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
     bJetDeltaRSrc = cms.InputTag("highestBTagJetNTupleProducer", "deltaR")
 )
 
@@ -262,6 +272,7 @@ process.weights = cms.PSet(
 process.metCuts = cms.PSet(
     mtMuSrc = cms.InputTag("muAndMETMT"),
     metSrc = cms.InputTag("patMETNTupleProducer", "Pt"),
+    metPhiSrc = cms.InputTag("patMETNTupleProducer", "Phi"),
     doMTCut = cms.bool( options.doMtw ),
     doMETCut = cms.bool( options.doMet ),
     minValMtw = cms.double(50),
@@ -355,6 +366,10 @@ process.genParticles = cms.PSet(
     trueLJetTaggedCountSrc = cms.InputTag("btaggedTrueLJetCount"),
     trueCosThetaSrc = cms.InputTag("cosThetaProducerTrueAll", "cosThetaLightJet"),
     trueLeptonPdgIdSrc = cms.InputTag("genParticleSelector", "trueLeptonPdgId"),
+
+    lightJetFlavourSrc = cms.InputTag("lowestBTagJetNTupleProducer", "partonFlavour"),
+    bJetFlavourSrc = cms.InputTag("highestBTagJetNTupleProducer", "partonFlavour"),
+
     wJetsClassificationSrc = cms.InputTag("flavourAnalyzer", "simpleClass"),
     requireGenMuon  = cms.bool(False)
 )

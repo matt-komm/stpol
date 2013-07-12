@@ -10,6 +10,7 @@ import scipy.stats
 import scipy.stats.mstats
 import pdb
 import math
+import re
 
 class TimeStats:
     def __init__(self, minimum, maximum, mean, quantiles):
@@ -75,6 +76,13 @@ class Task:
         self.prev_jobs = []
         self.jobs = []
         self.name = ""
+        self.fname = ""
+
+    def isCompleted(self):
+        for job in self.jobs:
+            if not job.isCompleted():
+                return False
+        return True
 
     def __add__(self, other):
         new_task = Task()
@@ -92,8 +100,15 @@ class Task:
         submissionTime = get(running_job, u'submissionTime', str)
 
         getOutputTime = get(running_job, "getOutputTime", str)
-        wrapperReturnCode = get(running_job, "wrapperReturnCode", int)
-        applicationReturnCode = get(running_job, "applicationReturnCode", int)
+        try:
+            wrapperReturnCode = get(running_job, "wrapperReturnCode", int)
+        except ValueError:
+            wrapperReturnCode = -1
+        try:
+            applicationReturnCode = get(running_job, "applicationReturnCode", int)
+        except:
+            applicationReturnCode = None
+
         lfn = get(running_job, "lfn", str)
         if lfn:
             lfn = lfn[2:-2]
@@ -102,7 +117,14 @@ class Task:
 
 
     def updateJobs(self, fname):
-        dom = parse(fname)
+        try:
+            dom = parse(fname)
+        except Exception as e:
+            print "Failed to parse xml %s" % fname
+            print e
+            return
+        self.fname = fname
+
         jobs_a = dom.getElementsByTagName("Job")
         jobs_b = dom.getElementsByTagName("RunningJob")
         if len(jobs_a)==0 or len(jobs_b) == 0 or len(jobs_a) != len(jobs_b):
@@ -205,26 +227,36 @@ def get(node, name, f):
         return f(item.nodeValue)
 
 
-reports = glob.glob(sys.argv[1])
+reports = sys.argv[1:]
+print "reports=",reports
 reports = sorted(reports)
 
-if len(reports)==1:
+t_tot = Task()
+completed = []
+for r in reports:
     t = Task()
-    t.updateJobs(reports[0])
-    t.printStats()
+    t.updateJobs(r)
+
+    js = JobStats(t)
+    match = re.match("(.*)/WD_(.*)/share/RReport.xml", r)
+    if not match:
+        raise ValueError("Couldn't understand pattern: %s" % r)
+    filelist_path = match.group(1) + "/" + match.group(2) + ".files.txt"
+    of = open(filelist_path, "w")
     for job in t.jobs:
         if job.lfn:
-            print job.lfn
-elif len(reports)>1:
-    t_tot = Task()
-    for r in reports:
-        t = Task()
-        t.updateJobs(r)
-        js = JobStats(t)
-        print js.summary()
-        t_tot += t
-    tot_stats = JobStats(t_tot)
-    tot_stats.name = "total"
-    print tot_stats.summary()
-    print "---"
-    print str(tot_stats)
+            of.write(job.lfn + "\n")
+    of.close()
+    if t.isCompleted():
+        completed.append(t)
+    print js.summary()
+    t_tot += t
+tot_stats = JobStats(t_tot)
+tot_stats.name = "total"
+print tot_stats.summary()
+print "--- total ---"
+print str(tot_stats)
+
+print "--- Completed ---"
+for t in completed:
+    print "/".join(t.fname.split("/")[:-2])

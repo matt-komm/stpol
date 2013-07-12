@@ -19,6 +19,7 @@ sample_colors_separate = {
     'W2Jets_exclusive': ROOT.kGreen+2,
     'W3Jets_exclusive': ROOT.kGreen+3,
     'W4Jets_exclusive': ROOT.kGreen+4,
+    'WJets_sherpa_nominal': ROOT.kGreen+5,
 
     'diboson': ROOT.kBlue,
     'WW': ROOT.kBlue,

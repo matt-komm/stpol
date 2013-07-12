@@ -9,24 +9,34 @@ template_path = "/".join((os.environ["STPOL_DIR"], "crabs", "templates"))
 
 EMAIL = os.environ["USER"] + "@kbfi.ee"
 
+#INput files for step1 (AODSIM/DATA)
 step1_files = [
     "/data/22Jan_ReReco_Runs2012ABCD",
     "/mc/nominal_Summer12_DR53X",
-    "/mc/systematic_Summer12_DR53X"
+    "/mc/systematic_Summer12_DR53X",
+    "/mc/wjets_FSIM_Summer12"
 ]
 
+#Input files for step2 (USER)
 step2_mc_files = [
-    "/mc/Apr19",
-    "/mc/Apr19_qcd",
+    "/mc/Apr19", #Signal+bkg
 ]
 
+step2_mc_files_qcd = [
+    "/mc/Apr19_qcd", #QCD samples
+]
+
+#Systematic input files for step2 (that don't need to be variated)
 step2_mc_syst_files = [
-    "/mc_syst/Apr19"
+    "/mc_syst/Apr19",
 ]
 
 step2_data_files = [
     "/data/May20"
 ]
+
+def is_fastsim(name):
+    return "FSIM" in name
 
 class Dataset:
     def __init__(self, name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file, do_comphep):
@@ -55,6 +65,9 @@ class Dataset:
                 cmdline += " doSkimming=True"
             else:
                 cmdline += " doSkimming=False"
+
+            if is_fastsim(self.name):
+                cmdline += " runOnFastSim=True"
         if self.step=="step2":
             out = out.replace("SUBCHAN", self.name)
             out = out.replace("OUTDIR", subdir)
@@ -130,6 +143,7 @@ def parse_file(fn):
     step = get_step(fn)
 
     for line in skip_comments(open(fn)):
+        line = re.sub(" +", " ", line)
         line=line.strip()
         if line.startswith("#"):
             continue
@@ -215,6 +229,12 @@ if __name__=="__main__":
                     cmdline_args += "systematic="+syst
                 make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso/%s" % syst)
                 make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso/%s" % syst)
+        #Don't variate QCD files
+        for fn in step2_mc_files_qcd:
+            cmdline_args = ""
+            syst="nominal"
+            make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso/%s" % syst)
+            make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso/%s" % syst)
 
         #DATA
         for fn in step2_data_files:

@@ -36,12 +36,12 @@ def cutflow(basename, channel):
     if channel=="mu":
         cut = Cuts.hlt_isomu
         vals.append(tree.GetEntries(str(cut)))
-        cut = cut * Cut("n_muons==1")
+        cut = cut * Cut("n_muons==1&&n_eles==0")
         vals.append(tree.GetEntries(str(cut)))
     elif channel=="ele":
         cut = Cuts.hlt_isoele
         vals.append(tree.GetEntries(str(cut)))
-        cut = cut * Cut("n_eles==1")
+        cut = cut * Cut("n_eles==1&&n_muons==0")
         vals.append(tree.GetEntries(str(cut)))
 
     cut = cut * Cut("n_veto_mu==0")
@@ -74,7 +74,7 @@ def cutflow(basename, channel):
 if __name__=="__main__":
     cutflow("exclusive", "mu")
     cutflow("inclusive", "mu")
-    
+
     print "exclusive"
     compare("exclusive/mu/events_2J.txt", "matthias_events/sync_muon_exlusive_2jets.txt")
     compare("exclusive/mu/events_METMTW.txt", "matthias_events/sync_muon_exlusive_mtw.txt")
@@ -85,4 +85,7 @@ if __name__=="__main__":
     compare("inclusive/mu/events_METMTW.txt", "matthias_events/sync_muon_inclusive_mtw.txt")
     compare("inclusive/mu/events_1T.txt", "matthias_events/sync_muon_inclusive_1btag.txt")
 
-    
+    cutflow("exclusive", "ele")
+    cutflow("inclusive", "ele")
+
+
