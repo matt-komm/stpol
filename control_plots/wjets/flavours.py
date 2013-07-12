@@ -13,6 +13,7 @@ from plots.common.sample_style import Styling, ColorStyleGen
 from plots.common.legend import legend
 from plots.common.tdrstyle import tdrstyle
 from plots.common.utils import merge_hists, mkdir_p
+from collections import OrderedDict
 import argparse
 import pdb
 import math
@@ -25,44 +26,68 @@ def get_hf_frac(name, cut):
 	logging.info("Getting fractions for %s" % name)
 	samp = Sample.fromFile(datadirs["iso"] + "/" + name)
 	logging.info("cut=%s" % str(cut))
-	arr = tree2rec(samp.tree, ["gen_flavour_bj", "gen_flavour_lj"], selection=str(cut))
+	arr = tree2rec(samp.tree, ["gen_flavour_bj", "gen_flavour_lj", "pu_weight"], selection=str(cut))
 	print len(arr)
-	counts = dict()
-	counts["WXX"] = len(arr)
+	counts = OrderedDict()
+	
 	#pdb.set_trace()
 	#logging.info("array dimensions = ")
-	b1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 5
-	b2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 5
-	
-	c1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 4
-	c2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 4
+	# b1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 5
+	# b2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 5
 
-	g1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 21
-	g2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 21
-	
-	l1 = (numpy.abs(arr[:]["gen_flavour_bj"]) == 1) + (numpy.abs(arr[:]["gen_flavour_bj"]) == 2) + (numpy.abs(arr[:]["gen_flavour_bj"]) == 3)
-	l2 = (numpy.abs(arr[:]["gen_flavour_lj"]) == 1) + (numpy.abs(arr[:]["gen_flavour_lj"]) == 2) + (numpy.abs(arr[:]["gen_flavour_lj"]) == 3)
+	# c1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 4
+	# c2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 4
 
-	counts["Wbb"] = numpy.sum(b1*b2)
-	counts["Wgg"] = numpy.sum(g1*g2)
-	counts["WgX"] = numpy.sum(g1 + g2)
-	counts["WbX"] = numpy.sum(b1 + b2)
-	counts["WcX"] = numpy.sum(c1 + c2)
-	counts["WlX"] = numpy.sum(l1 + l2)
+	# g1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 21
+	# g2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 21
+
+	# l1 = (numpy.abs(arr[:]["gen_flavour_bj"]) == 1) + (numpy.abs(arr[:]["gen_flavour_bj"]) == 2) + (numpy.abs(arr[:]["gen_flavour_bj"]) == 3)
+	# l2 = (numpy.abs(arr[:]["gen_flavour_lj"]) == 1) + (numpy.abs(arr[:]["gen_flavour_lj"]) == 2) + (numpy.abs(arr[:]["gen_flavour_lj"]) == 3)
+
+	# counts["Wbb"] = numpy.sum(b1*b2)
+	# counts["Wgg"] = numpy.sum(g1*g2)
+	# counts["WgX"] = numpy.sum(g1 + g2)
+	# counts["WbX"] = numpy.sum(b1 + b2)
+	# counts["WcX"] = numpy.sum(c1 + c2)
+	# counts["WlX"] = numpy.sum(l1 + l2)
+
+	counts["Wbb"] = 0.0
+	counts["Wgg"] = 0.0
+	counts["Wcc"] = 0.0
+	counts["WbX"] = 0.0
+	counts["WgX"] = 0.0
+	counts["WcX"] = 0.0
+	counts["WXX"] = len(arr)
+
+	for r in numpy.nditer(arr):
+		flavours = [abs(r["gen_flavour_bj"]), abs(r["gen_flavour_lj"])]
+		x = r["pu_weight"]
+		if flavours == [5,5]:
+			counts["Wbb"] += x
+		elif flavours == [21,21]:
+			counts["Wgg"] += x
+		elif flavours == [4,4]:
+			counts["Wcc"] += x
+		elif 5 in flavours:
+			counts["WbX"] += x
+		elif 21 in flavours:
+			counts["WgX"] += x
+		elif 4 in flavours:
+			counts["WcX"] += x
 	logging.info("counts = %s" % str(counts))
 	return counts
 
 def make_histos(cut_name, cut, samples, out_dir):
 	samp_out_dir = "/".join((out_dir, cut_name))
 	mkdir_p(samp_out_dir)
-	count_list = ["Wbb", "Wgg", "WbX", "WgX", "WcX", "WlX", "WXX"]
 
 	for s in samples:
 		fi = ROOT.TFile(samp_out_dir + "/WJets_flavour_fracs__%s" % s, "RECREATE")
+		counts = get_hf_frac(s, cut)
+		count_list = counts.keys()
 		fi.cd()
 		hi = ROOT.TH1I("flavour_counts", "Flavour counts", len(count_list), 0, len(count_list)-1)
-		counts = get_hf_frac(s, cut)
-		
+
 		i = 1
 		for count in count_list:
 			hi.SetBinContent(i, counts[count])
@@ -77,7 +102,9 @@ def make_histos(cut_name, cut, samples, out_dir):
 		samp = Sample.fromFile(datadirs["iso"] + "/" + s)
 		if samp.isMC:
 			hi.Scale(samp.lumiScaleFactor(20000))
-		fi.Write()
+		fi.cd()
+		hi.SetDirectory(fi)
+		hi.Write()
 		logging.info("Wrote file %s" % fi.GetPath())
 		fi.Close()
 	return
@@ -90,7 +117,7 @@ if __name__=="__main__":
 
 
 	out_dir = "/".join((os.environ["STPOL_DIR"], "out", "plots", "wjets", "flavour"))
-	doHists = False
+	doHists = True
 	doPlots = True
 	if doHists:
 		samps = [
@@ -101,10 +128,10 @@ if __name__=="__main__":
 			#"T_t_ToLeptons.root",
 			#"SingleMu.root"
 		]
-		make_histos("2J0T", Cuts.final(2, 0), samps, out_dir)
-		make_histos("2J1T", Cuts.final(2, 1), samps, out_dir)
+		make_histos("2J", Cuts.one_muon*Cuts.lepton_veto*Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(2)*Cuts.eta_lj*Cuts.top_mass_sig, samps, out_dir)
+		#make_histos("2J1T", Cuts.final(2, 1), samps, out_dir)
 	if doPlots:
-		cut_name = "2J1T"
+		cut_name = "2J"
 		fnames = glob.glob(out_dir + "/%s/WJets_flavour_fracs__*.root" % cut_name)
 		files = {}
 		hists = {}
