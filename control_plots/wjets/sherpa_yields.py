@@ -161,7 +161,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, **kwargs):
     canv = ROOT.TCanvas("c2", "c2")
     plot(canv, "madgraph"+suffix, hists_merged1, out_dir, **kwargs)
 
-    root_fname = out_dir + "/hists__%s.root"%suffix
+    root_fname = out_dir + "/hists%s.root"%suffix
     logging.info("Saving to ROOT file: %s" % root_fname)
 
     ofi = ROOT.TFile(root_fname, "RECREATE")
