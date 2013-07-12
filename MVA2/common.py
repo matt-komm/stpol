@@ -1,4 +1,4 @@
-import pickle
+import pickle, shutil, os
 import ROOT
 from plots.common import cross_sections
 from plots.common import cuts
@@ -61,61 +61,72 @@ class MVA_meta:
 
 
 class MVA_trainer:
+	treetypes = {
+		'train/signal': ('Signal', ROOT.TMVA.Types.kTraining),
+		'train/background': ('Background', ROOT.TMVA.Types.kTraining),
+		'test/signal': ('Signal', ROOT.TMVA.Types.kTesting),
+		'test/background': ('Background', ROOT.TMVA.Types.kTesting)
+	}
 	
-	def __init__(self, jobname="jobname"):
+	def __init__(self, fName, ofName=None, jobname="jobname"):
+		"""Class that us used to set up and run a MVA trainer.
+		
+		fName is the input file. If ofName = False, the input file
+		is "updated". Otherwise the data is copied to a new file called
+		ofName and "updated" there. If ofName is None (the default), then
+		the output file will be called <jobname>_<fName>.root
+		
+		"""
 		self.jobname = jobname
-		self.signals = []
-		self.backgrounds = []
+		
+		if ofName == False:
+			ofName = fName
+		else:
+			if not ofName:
+				ofName_dir  = os.path.dirname(fName)
+				ofName_base = '{}_{}'.format(jobname,os.path.basename(fName))
+				ofName = os.path.join(ofName_dir, ofName_base)
+			print 'Copy from `{}` to `{}`'.format(fName, ofName)
+			shutil.copyfile(fName, ofName)
+		self.tfName = ofName
+		print 'Output file name:', ofName
+		
 		self.variables = []
 		self.methods = []
-		self.cutstring = str(cuts.Cuts.rms_lj*cuts.Cuts.mt_mu*cuts.Cuts.n_jets(2)*cuts.Cuts.n_tags(1))
-		self.channel = "mu"
-		self.files = {}
-		self.trees = {}
-		self.tempfile = ROOT.TFile("%s-TMVA.root"%jobname, "RECREATE")
-		self.factory = ROOT.TMVA.Factory(jobname, self.tempfile)
-	
-	def set_channel(self, ch):
-		if ch != "mu" and ch != "ele":
-			print "MVA_trainer: Invalid channel: " + ch + ", please use \"ele\" or \"mu\"."
-		else:
-			channel = ch
-	
-	def add_signal(self, sg):
-		if not sg in self.signals:
-			self.signals.append(sg)
-	
-	def add_background(self, bg):
-		if not bg in self.backgrounds:
-			self.backgrounds.append(bg)
-	
+		
+		self.tfile = ROOT.TFile(self.tfName, "UPDATE")
+		self.metadata = readTObject('meta', self.tfile)
+		
+		self.factory = ROOT.TMVA.Factory(jobname, self.tfile)
+		
+		self._prepare()
+
 	def add_variable(self, var):
 		if not var in self.variables:
 			self.variables.append(var)
-	
-	def set_cutstring(self, cutstring):
-		self.cutstring = cutstring
+			self.factory.AddVariable(var, vartypes[var])
 	
 	def get_factory(self):
 		return self.factory
 	
-	def prepare(self):	
-		for sg in self.signals:
-			self.files[sg] = ROOT.TFile(rootfilepath + self.channel + "/iso/nominal/" + sg + ".root")
-			tree = self.files[sg].Get("trees/Events")
-			self.trees[sg] = tree.CopyTree(self.cutstring)
-			count_uncut = self.files[sg].Get("trees/count_hist").GetBinContent(1)
-			weight = cross_sections.xs[sg]*cross_sections.lumi_iso[self.channel]/count_uncut
-			self.factory.AddSignalTree(self.trees[sg], weight)
-		for bg in self.backgrounds:
-			self.files[bg] = ROOT.TFile(rootfilepath + self.channel + "/iso/nominal/" + bg + ".root")
-			tree = self.files[bg].Get("trees/Events")
-			self.trees[bg] = tree.CopyTree(self.cutstring)
-			count_uncut = self.files[bg].Get("trees/count_hist").GetBinContent(1)
-			weight = cross_sections.xs[bg]*cross_sections.lumi_iso[self.channel]/count_uncut
-			self.factory.AddBackgroundTree(self.trees[bg], weight)
-		for var in self.variables:
-			self.factory.AddVariable(var, vartypes[var])
+	def _prepare(self):
+		initEvs = self.metadata['initial_events']
+		channel = self.metadata['lept']
+		
+		# Load trees
+		for (typekey,(kSigBg,kTrainTest)) in self.treetypes.items():
+			keylist = self.tfile.Get(typekey).GetListOfKeys()
+			print typekey, kSigBg, kTrainTest
+			for key in keylist:
+				sName = key.GetName()
+				sTree = key.ReadObj()
+				sScaleFactor = getSCF(channel, sName, initEvs[sName])
+				# TODO: multiply scf with fraction of train/total
+				print ' > ', sName, sScaleFactor
+				self.factory.AddTree(sTree, kSigBg, sScaleFactor, ROOT.TCut(''), kTrainTest)
+
+		#for var in self.variables:
+		#	self.factory.AddVariable(var, vartypes[var])
 		return self.factory
 	
 	def book_method(self, method_type, tag, options):
@@ -124,18 +135,82 @@ class MVA_trainer:
 		self.methods.append(tag)
 		self.factory.BookMethod(method_type, tag, options)
 	
-	def pack_and_finish(self):
+	def evaluate(self):
+		print
+		print '=== Start MVA evaluation ==='
+		print
+		
+		print 'Calling `TMVA::Factory::TestAllMethods()`'
+		self.factory.TestAllMethods()
+		print 'Calling `TMVA::Factory::EvaluateAllMethods()`'
+		self.factory.EvaluateAllMethods()
+		
+		# Evaluate all MVAs for all trees
+		print
+		print 'Evaluate custom trees. Creating reader.'
+		reader = ROOT.TMVA.Reader()
+		
+		print 'Adding variables...'
+		varvalues = {}
+		for var in self.variables:
+			print ' > Var:',var, vartypes[var].lower()
+			#varvalues[var] = array.array(vartypes[var].lower(), [0])
+			varvalues[var] = array.array('f', [0])
+			reader.AddVariable(var, varvalues[var])
+		
+		print 'Booking methods...'
+		for mva in self.methods:
+			wName = 'weights/{0}_{1}.weights.xml'.format(self.jobname,mva)
+			print ' > Method:', mva, wName
+			reader.BookMVA(mva, wName)
+		
+		print
+		print 'Modifying trees...'
+		for typekey in self.treetypes:
+			keylist = [key.GetName() for key in self.tfile.Get(typekey).GetListOfKeys()]
+			print 'Subcategory:', typekey, keylist
+			for sName in keylist:
+				treepath = '{0}/{1}'.format(typekey, sName)
+				sTree = self.tfile.Get(treepath)
+				nentries = sTree.GetEntries()
+				print ' > Key: ', sName, sTree, nentries
+				
+				for var in self.variables:
+					print ' > > Set branch variable address:', var
+					sTree.SetBranchAddress(var,varvalues[var])
+				
+				mva_branches = {}
+				discr = array.array('f', [0])
+				for mva in self.methods:
+					branchName = 'mva_{0}'.format(mva)
+					print ' > > New branch:', mva, branchName
+					mva_branches[mva] = sTree.Branch(branchName, discr, branchName+'/F')
+				
+				print ' > Filling..'
+				for n in range(nentries):
+					sTree.GetEntry(n)
+					for mva in self.methods:
+						discr[0] = reader.EvaluateMVA(mva)
+						mva_branches[mva].Fill()
+				self.tfile.cd(typekey)
+				sTree.Write(sName, ROOT.TObject.kOverwrite)
+	
+	def pack(self):
+		mvadir = self.tfile.mkdir('MVAs')
 		for meth in self.methods:
 			meta = MVA_meta()
 			meta.varlist = self.variables
 			xmlfile = open("weights/%s_"%self.jobname+meth+".weights.xml")
 			meta.xmlstring = xmlfile.read()
 			meta.method_tag = meth
-			meta.cutstring = self.cutstring
+			meta.cutstring = self.metadata['cutstring']
 			pklfile = open("weights/%s_"%self.jobname+meth+".pkl", "wb")
 			pickle.dump(meta, pklfile)
 			pklfile.close()
-		self.tempfile.Close()
+			writeTObject(meth, meta, mvadir)
+	
+	def finish(self):
+		self.tfile.Close()
 
 def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = str(cuts.Cuts.rms_lj*cuts.Cuts.mt_mu*cuts.Cuts.n_jets(2)*cuts.Cuts.n_tags(1)), default_ratio = 0.5, lept = "mu"):
 	if not isinstance(signals, dict):
