@@ -69,7 +69,6 @@
 		A73D462316A83E0A00703EF6 /* pickEvents_cfg.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = pickEvents_cfg.py; sourceTree = "<group>"; };
 		A7500F9416A9A7F100279454 /* calcLumis.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = calcLumis.sh; sourceTree = "<group>"; };
 		A75B7481178D9143002B8279 /* sherpa_yields.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = sherpa_yields.py; sourceTree = "<group>"; };
-		A75B7482178D9235002B8279 /* file_names.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = file_names.py; sourceTree = "<group>"; };
 		A75B7483178D99D1002B8279 /* odict.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = odict.py; sourceTree = "<group>"; };
 		A76785821730059200C77D80 /* single_plot.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = single_plot.py; sourceTree = "<group>"; };
 		A767858317312C4D00C77D80 /* qcd_plot.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; path = qcd_plot.py; sourceTree = "<group>"; };
@@ -394,7 +393,6 @@
 				A76785871733E45B00C77D80 /* sample_style.py */,
 				A76785881733EB2E00C77D80 /* pretty_names.py */,
 				A76785891734068C00C77D80 /* utils.py */,
-				A75B7482178D9235002B8279 /* file_names.py */,
 			);
 			path = common;
 			sourceTree = "<group>";
