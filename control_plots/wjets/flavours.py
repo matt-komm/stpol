@@ -51,7 +51,7 @@ def get_hf_frac(name, cut):
 	# counts["WcX"] = numpy.sum(c1 + c2)
 	# counts["WlX"] = numpy.sum(l1 + l2)
 
-	counts["Wbb"] = 0.0
+	#counts["Wbb"] = 0.0
 	counts["Wgg"] = 0.0
 	counts["Wcc"] = 0.0
 	counts["WbX"] = 0.0
@@ -61,10 +61,10 @@ def get_hf_frac(name, cut):
 
 	for r in numpy.nditer(arr):
 		flavours = [abs(r["gen_flavour_bj"]), abs(r["gen_flavour_lj"])]
-		x = r["pu_weight"]
-		if flavours == [5,5]:
-			counts["Wbb"] += x
-		elif flavours == [21,21]:
+		x = 1.0#r["pu_weight"]
+		#if flavours == [5,5]:
+		#	counts["Wbb"] += x
+		if flavours == [21,21]:
 			counts["Wgg"] += x
 		elif flavours == [4,4]:
 			counts["Wcc"] += x
@@ -110,7 +110,7 @@ def make_histos(cut_name, cut, samples, out_dir):
 	return
 
 if __name__=="__main__":
-	logging.basicConfig(level=logging.INFO)
+	logging.basicConfig(level=logging.DEBUG)
 	tdrstyle()
 	ROOT.gStyle.SetOptTitle(1)
 	#ROOT.gStyle.SetTitle
@@ -145,7 +145,7 @@ if __name__=="__main__":
 			Styling.mc_style(hi, sn)
 			hists[sn] = hi
 
-		merges = dict()
+		merges = OrderedDict()
 		merges["WJets inc. MG"] = ["WJets_inclusive"]
 		merges["WJets exc, MG"] =  ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
 		merges["WJets inc. SHRP"] =  ["WJets_sherpa_nominal"]
@@ -158,13 +158,20 @@ if __name__=="__main__":
 		ColorStyleGen.style_hists(hists)
 		for h in hists:
 			h.SetFillColor(ROOT.kWhite)
+			h.Scale(10000.0/h.Integral())
 		c = plot_hists(hists, x_label="flavour(j,j)", y_label="", draw_cmd="HIST E1")
 		leg = legend(hists, styles=len(hists)*["f"], nudge_x=-0.1)
 		hists[0].SetTitle("Jet flavour fraction (a.u.) in %s" % cut_name)
 		#hists[0].SetFillColor(ROOT.kGreen+2)
-		hists[0].SetMinimum(10.0)
-		hists[0].SetMaximum(10**7)
+		hists[0].SetMinimum(1)
+		hists[0].SetMaximum(10**5)
 		#hists[0].SetLineColor(ROOT.kGreen+2)
 		c.SetLogy()
-		c.SaveAs("flavour_%s.png" % cut_name)
-			
+		c.SaveAs(out_dir + "/flavour_%s.png" % cut_name)
+
+		for i in range(1,hists[0].GetNbinsX()+1):
+			sh = hists[2]
+			mg = hists[1]
+			x = mg.GetBinContent(i) / sh.GetBinContent(i)
+			err = math.sqrt(math.pow(mg.GetBinError(i)/mg.GetBinContent(i), 2) + math.pow(sh.GetBinError(i)/sh.GetBinContent(i), 2))*x
+			print "weights[%s] = %f; //error=%f" % (hists[1].GetXaxis().GetBinLabel(i), x, err)
