@@ -245,7 +245,7 @@ for r in reports:
     filelist_path = match.group(1) + "/" + match.group(2) + ".files.txt"
     of = open(filelist_path, "w")
     for job in t.jobs:
-        if job.lfn:
+        if job.isCompleted() and job.lfn:
             of.write(job.lfn + "\n")
     of.close()
     if t.isCompleted():

@@ -80,7 +80,7 @@ class GenericPointerCombiner : public edm::EDProducer {
 //
 template <class inClass, class outClass>
 GenericPointerCombiner<inClass, outClass>::GenericPointerCombiner(const edm::ParameterSet& iConfig)
-: collections(iConfig.getUntrackedParameter<std::vector<std::string> >("sources"))
+: collections(iConfig.getParameter<std::vector<std::string> >("sources"))
 , minOut(iConfig.getParameter<uint>("minOut"))
 , maxOut(iConfig.getParameter<uint>("maxOut"))
 , logErrors(iConfig.getParameter<bool>("logErrors"))
