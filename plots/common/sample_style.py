@@ -29,7 +29,7 @@ class ColorStyleGen:
     style_index = 0
 
     colors = [ROOT.kRed, ROOT.kBlue, ROOT.kGreen, ROOT.kMagenta, ROOT.kYellow, ROOT.kBlack, ROOT.kCyan, ROOT.kOrange]
-    styles = [1001]#, 3005, 3006]
+    styles = [1,2,3,4]#, 3005, 3006]
 
     def __init__(self):
         self.colstyles = itertools.product(self.styles, self.colors)
@@ -39,9 +39,10 @@ class ColorStyleGen:
 
     def style_next(self, hist):
         (style, color) = self.next()
-        hist.SetFillColor(ROOT.kWhite)
+        hist.SetFillColor(0)
         hist.SetLineColor(color)
         hist.SetMarkerStyle(0)
+        hist.SetFillStyle(0)
         hist.SetLineStyle(style)
 
     def reset(self):
