@@ -22,7 +22,7 @@ class Styling:
     def data_style(hist):
         hist.SetMarkerStyle(20)
         hist.SetMarkerColor(ROOT.kBlack)
-        hist.SetFillStyle(4001)
+        hist.SetFillStyle(0)
 
 class ColorStyleGen:
     col_index = 0

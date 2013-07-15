@@ -9,13 +9,31 @@ class HistogramException(Exception):
     pass
 class TObjectOpenException(Exception):
     pass
+
+
+def get_process_name(sample_name):
+    if sample_name.startswith("WJets_sherpa_nominal"):
+        return "WJets_sherpa_nominal"
+    else:
+        return sample_name
+
 class Sample:
     def __del__(self):
         self.logger.debug("Closing sample %s" % self.name)
         self.tfile.Close()
 
-    def __init__(self, name, file_name):
+    def __init__(self, name, file_name, process_name=None):
+        """
+            name - The name of this sample. Typically the filename of the .root file containing the TTree
+            file_name - The path to the file that you want to open as a TFile
+            process_name - an optional parameter describing the physical process name. Used for e.g. cross-section retrieval
+        """
+
         self.name = name
+        if not process_name:
+            self.process_name = name
+        else:
+            self.process_name = process_name
         self.file_name = file_name
         self.logger = logging.getLogger(str(self))
 
@@ -61,7 +79,7 @@ class Sample:
         return count_hist.GetBinContent(1)
 
     def lumiScaleFactor(self, lumi):
-        expected_events = sample_xs_map[self.name] * lumi
+        expected_events = sample_xs_map[self.process_name] * lumi
         total_events = self.getTotalEventCount()
         scale_factor = float(expected_events)/float(total_events)
         return scale_factor
@@ -174,10 +192,13 @@ def load_samples(basedir=None):
     datadirs = dict()
     datadirs["iso"] = "/".join((basedir, "step3_latest", "mu" ,"iso", "nominal"))
     #Use the anti-isolated data for QCD $STPOL_DIR/step3_latest/mu/antiiso/nominal/SingleMu.root
-    datadirs["antiiso"] = "/".join((basedir, "step3_latest", "mu" ,"antiiso", "nominal"))
+    # datadirs["antiiso"] = "/".join((basedir, "step3_latest", "mu" ,"antiiso", "nominal"))
 
     #Load all the samples in the isolated directory
     samples = Sample.fromDirectory(datadirs["iso"], out_type="dict", prefix="iso/")
-    samples["antiiso/SingleMu"] = Sample.fromFile(datadirs["antiiso"] + "/SingleMu.root")
+
+    for name, sample in samples.items():
+            sample.process_name = get_process_name(sample.name)
+    # samples["antiiso/SingleMu"] = Sample.fromFile(datadirs["antiiso"] + "/SingleMu.root")
 
     return samples
