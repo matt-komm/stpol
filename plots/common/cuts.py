@@ -45,3 +45,5 @@ class Cuts:
 
 #Cuts.final = lambda n,m: Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.n_tags(m)*Cuts.eta_lj*Cuts.top_mass_sig
 Cuts.mu = Cuts.one_muon*Cuts.lepton_veto
+
+Cuts.eta_fit = Cuts.hlt_isomu*Cuts.mt_mu*Cuts.rms_lj*Cuts.eta_jet

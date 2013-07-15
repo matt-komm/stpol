@@ -10,11 +10,11 @@ class HistogramException(Exception):
 class TObjectOpenException(Exception):
     pass
 class Sample:
-    def __init__(self, name, file_name):
+    def __init__(self, name, file_name, tree_name = "Events"):
         self.name = name
         self.file_name = file_name
+        self.tree_name = tree_name
         self.logger = logging.getLogger(str(self))
-
         try:
             self.tfile = ROOT.TFile(file_name)
             if not self.tfile:
@@ -22,12 +22,12 @@ class Sample:
         except Exception as e:
             raise e
         try:
-            self.tree = self.tfile.Get("trees").Get("Events")
+            self.tree = self.tfile.Get("trees/"+tree_name)
         except Exception as e:
-            raise TObjectOpenException("Could not open tree Events from file %s: %s" % (self.file_name, self.tfile))
+            raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.file_name, self.tfile))
 
         if not self.tree:
-            raise TObjectOpenException("Could not open tree Events from file %s: %s" % (self.tfile.GetName(), self.tree))
+            raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
         self.tree.SetCacheSize(100*1024*1024)
         #self.tree.AddBranchToCache("*", 1)
@@ -46,6 +46,9 @@ class Sample:
         if self.event_count is None:
             self.event_count = self.tree.GetEntries()
         return self.event_count
+
+    def getTree(self):
+        return self.tree
 
     def getBranches(self):
         return [x.GetName() for x in self.tree.GetListOfBranches()]
@@ -140,20 +143,20 @@ class Sample:
         return int(self.tree.GetEntries(cut))
 
     @staticmethod
-    def fromFile(file_name):
+    def fromFile(file_name,tree_name="Events"):
         sample_name = (file_name.split(".root")[0]).split("/")[-1]
-        sample = Sample(sample_name, file_name)
+        sample = Sample(sample_name, file_name, tree_name)
         return sample
 
     @staticmethod
-    def fromDirectory(directory, out_type="list", prefix=""):
+    def fromDirectory(directory, out_type="list", prefix="", tree_name="Events"):
         import glob
         file_names = glob.glob(directory + "/*.root")
         logging.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
         if out_type=="list":
-            samples = [Sample.fromFile(file_name) for file_name in file_names]
+            samples = [Sample.fromFile(file_name, tree_name) for file_name in file_names]
         elif out_type=="dict":
-            samples = dict((prefix+file_name.split("/")[-1].split(".")[0], Sample.fromFile(file_name)) for file_name in file_names)
+            samples = dict((prefix+file_name.split("/")[-1].split(".")[0], Sample.fromFile(file_name, tree_name)) for file_name in file_names)
         else:
             raise ValueError("out_type must be 'list' or 'dict'")
         return samples
