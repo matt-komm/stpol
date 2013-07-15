@@ -46,11 +46,16 @@ WJetsClassification classify(int flavour_a, int flavour_b) {
 int main() {
     std::map<int, float> weights;
     weights[Wgg] = 1.422222; //error=0.101451
+
     weights[Wcc] = 0.165217; //error=0.063260
     weights[WbX] = 0.063391; //error=0.014114
     weights[WgX] = 1.289320; //error=0.044974
     weights[WcX] = 0.574324; //error=0.045911
     weights[WXX] = 1.040555; //error=0.025275
+
+    weights[Wcc] *= 2;
+    weights[WbX] *= 2;
+    weights[WcX] *= 2;
 
     TFile* fi = new TFile("out.root", "UPDATE");
     TTree* events = (TTree*)fi->Get("trees/Events");
