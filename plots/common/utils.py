@@ -45,6 +45,7 @@ def lumi_textbox(lumi, pos="top-left"):
 
 def merge_hists(hists_d, merge_groups):
     out_d = dict()
+    logging.debug("merge_hists: input histograms %s" % str(hists_d))
     for merge_name, items in merge_groups.items():
         logging.debug("Merging %s to %s" % (items, merge_name))
         hist = hists_d[items[0]].Clone()
