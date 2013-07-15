@@ -19,20 +19,23 @@ step1_files = [
 
 #Input files for step2 (USER)
 step2_mc_files = [
-    "/mc/Apr19", #Signal+bkg
+#    "/mc/Apr19", #Signal+bkg
+    "/mc/Jul15",
 ]
 
 step2_mc_files_qcd = [
-    "/mc/Apr19_qcd", #QCD samples
+#    "/mc/Apr19_qcd", #QCD samples
 ]
 
 #Systematic input files for step2 (that don't need to be variated)
 step2_mc_syst_files = [
-    "/mc_syst/Apr19",
+#    "/mc_syst/Apr19",
+    "/mc_syst/Jul15",
 ]
 
 step2_data_files = [
-    "/data/May20"
+#    "/data/May20"
+    "/data/Jul15",
 ]
 
 def is_fastsim(name):
