@@ -68,11 +68,11 @@ class Histogram(Base):
         else:
             logging.warning("Histogram %s integral=0, not scaling." % str(self))
 
-    def normalize_lumi(self, lumi=1.0):
-        expected_events = sample_xs_map[self.sample_name] * lumi
-        total_events = self.sample_entries_total
-        scale_factor = float(expected_events)/float(total_events)
-        self.hist.Scale(scale_factor)
+    # def normalize_lumi(self, lumi=1.0):
+    #     expected_events = sample_xs_map[self.sample_name] * lumi
+    #     total_events = self.sample_entries_total
+    #     scale_factor = float(expected_events)/float(total_events)
+    #     self.hist.Scale(scale_factor)
 
     def update(self, file=None, dir=None):
         self.name = str(self.hist.GetName())
