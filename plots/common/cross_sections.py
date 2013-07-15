@@ -13,7 +13,7 @@ xs = {
 	, "T_tW": 11.1
 	, "Tbar_tW": 11.1
 	, "TTJets_MassiveBinDECAY": 234 #inclusive
-	, "WJets_inclusive": 37509 #30400.0 LO
+    , "WJets_inclusive": 37509 #30400.0 LO
 
 	#FIXME: ttbar branching ratio
 	, "TTJets_SemiLept": (0.676*0.326*2) * 234.0
@@ -27,6 +27,10 @@ xs = {
     
     #http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa
     ,"WJets_sherpa_nominal": 30503.0 * WJets_lo_nnlo_scale_factor / WJets_sherpa_weight_factor
+
+    #http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa
+    ,"WJets_sherpa_nominal": 30503.0 * WJets_lo_nnlo_scale_factor / WJets_sherpa_weight_factor
+
 
 	#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=*GJets_HT-*_8TeV-madgraph*
 	, "GJets1": 960.5 #200To400
@@ -54,6 +58,15 @@ xs = {
 	, "QCD_Pt_250_350_BCtoE": 4250.0*0.0243
 	, "QCD_Pt_350_BCtoE": 811.0*0.0295
 }
+
+#systematics:
+xs["TTJets_scaleup"] = xs["TTJets_MassiveBinDECAY"]
+xs["TTJets_scaledown"] = xs["TTJets_MassiveBinDECAY"]
+xs["TTJets_matchingup"] = xs["TTJets_MassiveBinDECAY"]
+xs["TTJets_matchingdown"] = xs["TTJets_MassiveBinDECAY"]	
+xs["TTJets_mass166_5"] = xs["TTJets_MassiveBinDECAY"]
+xs["TTJets_mass166_5"] = xs["TTJets_MassiveBinDECAY"]
+
 
 lumi_iso = {
     "ele": 19728,

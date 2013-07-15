@@ -33,6 +33,7 @@ class JobStats:
             max_submissions = numpy.max(map(lambda j: j.n_submission, task.jobs))
         else:
             self.quantiles_submissions = None
+            max_submissions = None
 
         needs_resubmit = filter(lambda j: j.needsResubmit(), task.jobs)
         self.jobs_total = len(task.jobs)
@@ -202,8 +203,8 @@ class Job:
         return self.state == "Cleared" and not self.isCompleted()
 
     def totalTime(self):
-        t1 = self.get_output_time if self.get_output_time is not None else time.localtime()
-        if self.submission_time:
+        t1 = self.get_output_time if self.get_output_time else datetime.datetime(time.localtime()[:6])
+        if self.submission_time and t1:
             return t1 - self.submission_time
         else:
             return -1
