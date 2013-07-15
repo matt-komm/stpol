@@ -17,9 +17,10 @@ def get_process_name(sample_name):
     else:
         return sample_name
 
+logger = logging.getLogger("sample.py")
 class Sample:
     def __del__(self):
-        self.logger.debug("Closing sample %s" % self.name)
+        logger.debug("Closing sample %s" % self.name)
         self.tfile.Close()
 
     def __init__(self, name, file_name, process_name=None):
@@ -35,7 +36,7 @@ class Sample:
         else:
             self.process_name = process_name
         self.file_name = file_name
-        self.logger = logging.getLogger(str(self))
+        logger = logging.getLogger(str(self))
 
         try:
             self.tfile = ROOT.TFile(file_name)
@@ -57,12 +58,12 @@ class Sample:
         self.event_count = None
         self.event_count = self.getEventCount()
         if self.event_count<=0:
-            self.logger.warning("Sample was empty: %s" % self.name)
+            logger.warning("Sample was empty: %s" % self.name)
             #raise Exception("Sample event count was <= 0: %s" % self.name)
 
         self.isMC = not self.file_name.split("/")[-1].startswith("Single")
 
-        self.logger.debug("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
+        logger.debug("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
 
     def getEventCount(self):
         if self.event_count is None:
@@ -119,10 +120,10 @@ class Sample:
         else:
             cutweight_cmd = "(" + cut_str + ")"
 
-        self.logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
+        logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
 
         n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff")
-        self.logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
+        logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
         if n_entries<0:
             raise HistogramException("Could not draw histogram: %s" % self.name)
@@ -154,7 +155,7 @@ class Sample:
             raise Exception("Could not get column %s: N=%d" % (col, N))
         buf = self.tree.GetV1()
         arr = ROOT.TArrayD(N, buf)
-        self.logger.debug("Column retrieved, copying to numpy array")
+        logger.debug("Column retrieved, copying to numpy array")
         out = numpy.copy(numpy.frombuffer(arr.GetArray(), count=arr.GetSize()))
         return out
 
