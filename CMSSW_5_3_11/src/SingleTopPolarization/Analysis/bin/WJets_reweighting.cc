@@ -57,17 +57,22 @@ int main() {
 
     int gen_flavour_bj = -1;
     int gen_flavour_lj = -1;
+    
     events->SetBranchStatus("*", 0);
     events->SetBranchStatus("gen_flavour_bj", 1);
     events->SetBranchStatus("gen_flavour_lj", 1);
     events->SetBranchAddress("gen_flavour_bj", &gen_flavour_bj);
     events->SetBranchAddress("gen_flavour_lj", &gen_flavour_lj);
+    
     float wjets_flavour_weight = 1.0;
     int cls = -1;
+    
     TBranch* weight_branch = events->Branch("wjets_flavour_weight", &wjets_flavour_weight, "wjets_flavour_weight/F"); 
     events->SetBranchStatus("wjets_flavour_weight", 1);
+    
     TBranch* cls_branch = events->Branch("wjets_flavour_classification", &cls, "wjets_flavour_classification/I"); 
     events->SetBranchStatus("wjets_flavour_classification", 1);
+    
     int Nbytes = 0;
     for (int n=0; n<events->GetEntries(); n++) {
         events->GetEntry(n);
@@ -82,7 +87,7 @@ int main() {
         Nbytes += nbytes;
     }
     events->SetBranchStatus("*", 1);
-    fi->cd();
+    fi->cd("trees");
     events->Write("", TObject::kOverwrite);
     fi->Close();
     std::cout << "Wrote " << Nbytes << " bytes" << std::endl;
