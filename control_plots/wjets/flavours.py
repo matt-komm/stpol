@@ -25,33 +25,12 @@ datadirs["iso"] = "/".join((basedir, "out_step3_joosep_11_07_19_44", "mu" ,"iso"
 def get_hf_frac(name, cut):
 	logging.info("Getting fractions for %s" % name)
 	samp = Sample.fromFile(datadirs["iso"] + "/" + name)
-	logging.info("cut=%s" % str(cut))
-	arr = tree2rec(samp.tree, ["gen_flavour_bj", "gen_flavour_lj", "pu_weight"], selection=str(cut))
-	print len(arr)
+	logging.debug("cut=%s" % str(cut))
+
+	isRew = name=="WJets_sherpa_nominal_reweighted.root"
+	arr = tree2rec(samp.tree, ["gen_flavour_bj", "gen_flavour_lj", "pu_weight"] + ([] if not isRew else ["wjets_flavour_weight"]), selection=str(cut))
 	counts = OrderedDict()
 	
-	#pdb.set_trace()
-	#logging.info("array dimensions = ")
-	# b1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 5
-	# b2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 5
-
-	# c1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 4
-	# c2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 4
-
-	# g1 = numpy.abs(arr[:]["gen_flavour_bj"]) == 21
-	# g2 = numpy.abs(arr[:]["gen_flavour_lj"]) == 21
-
-	# l1 = (numpy.abs(arr[:]["gen_flavour_bj"]) == 1) + (numpy.abs(arr[:]["gen_flavour_bj"]) == 2) + (numpy.abs(arr[:]["gen_flavour_bj"]) == 3)
-	# l2 = (numpy.abs(arr[:]["gen_flavour_lj"]) == 1) + (numpy.abs(arr[:]["gen_flavour_lj"]) == 2) + (numpy.abs(arr[:]["gen_flavour_lj"]) == 3)
-
-	# counts["Wbb"] = numpy.sum(b1*b2)
-	# counts["Wgg"] = numpy.sum(g1*g2)
-	# counts["WgX"] = numpy.sum(g1 + g2)
-	# counts["WbX"] = numpy.sum(b1 + b2)
-	# counts["WcX"] = numpy.sum(c1 + c2)
-	# counts["WlX"] = numpy.sum(l1 + l2)
-
-	#counts["Wbb"] = 0.0
 	counts["Wgg"] = 0.0
 	counts["Wcc"] = 0.0
 	counts["WbX"] = 0.0
@@ -61,7 +40,9 @@ def get_hf_frac(name, cut):
 
 	for r in numpy.nditer(arr):
 		flavours = [abs(r["gen_flavour_bj"]), abs(r["gen_flavour_lj"])]
-		x = 1.0#r["pu_weight"]
+		x = 1.0
+		if isRew:
+			x = r["wjets_flavour_weight"]
 		#if flavours == [5,5]:
 		#	counts["Wbb"] += x
 		if flavours == [21,21]:
@@ -74,7 +55,7 @@ def get_hf_frac(name, cut):
 			counts["WgX"] += x
 		elif 4 in flavours:
 			counts["WcX"] += x
-	logging.info("counts = %s" % str(counts))
+	logging.debug("counts = %s" % str(counts))
 	return counts
 
 def make_histos(cut_name, cut, samples, out_dir):
@@ -101,6 +82,8 @@ def make_histos(cut_name, cut, samples, out_dir):
 
 		samp = Sample.fromFile(datadirs["iso"] + "/" + s)
 		if samp.isMC:
+			if samp.name == "WJets_sherpa_nominal_reweighted":
+				samp.process_name = "WJets_sherpa_nominal"
 			hi.Scale(samp.lumiScaleFactor(20000))
 		fi.cd()
 		hi.SetDirectory(fi)
@@ -110,7 +93,7 @@ def make_histos(cut_name, cut, samples, out_dir):
 	return
 
 if __name__=="__main__":
-	logging.basicConfig(level=logging.DEBUG)
+	logging.basicConfig(level=logging.INFO)
 	tdrstyle()
 	ROOT.gStyle.SetOptTitle(1)
 	#ROOT.gStyle.SetTitle
@@ -121,10 +104,11 @@ if __name__=="__main__":
 	doPlots = True
 	if doHists:
 		samps = [
+			"WJets_sherpa_nominal_reweighted.root",
 			"W1Jets_exclusive.root", "W2Jets_exclusive.root", "W3Jets_exclusive.root", "W4Jets_exclusive.root",
 			"WJets_sherpa_nominal.root",
 			"WJets_inclusive.root",
-			"TTJets_MassiveBinDECAY.root",
+			#"TTJets_MassiveBinDECAY.root",
 			#"T_t_ToLeptons.root",
 			#"SingleMu.root"
 		]
@@ -142,13 +126,17 @@ if __name__=="__main__":
 		for sn, fi in files.items():
 			hi = fi.Get("flavour_counts")
 			hi.SetName(sn)
-			Styling.mc_style(hi, sn)
+			pn = sn
+			if sn=="WJets_sherpa_nominal_reweighted":
+				pn = "WJets_sherpa_nominal"
+			Styling.mc_style(hi, pn)
 			hists[sn] = hi
 
 		merges = OrderedDict()
 		merges["WJets inc. MG"] = ["WJets_inclusive"]
 		merges["WJets exc, MG"] =  ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
 		merges["WJets inc. SHRP"] =  ["WJets_sherpa_nominal"]
+		merges["WJets inc. SHRP (rew)"] =  ["WJets_sherpa_nominal_reweighted"]
 		#merges["TTBar inc. MG"] =  ["TTJets_MassiveBinDECAY"]
 		#merges["t-channel"] =  ["T_t_ToLeptons"]
 		#merges["data"] =  ["TTJets_MassiveBinDECAY"]
