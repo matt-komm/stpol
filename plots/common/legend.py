@@ -46,6 +46,7 @@ def legend(hists, **kwargs):
     text_size = kwargs.get("text_size", 0.03)
     
     nudge_x = kwargs.get("nudge_x", 0.0)
+    nudge_y = kwargs.get("nudge_y", 0.0)
 
     #If you have long names you should make the width larger
     width = kwargs.get("width", 0.21)
@@ -84,6 +85,8 @@ def legend(hists, **kwargs):
 
     leg_coords[0] += nudge_x
     leg_coords[2] += nudge_x
+    leg_coords[1] += nudge_y
+    leg_coords[3] += nudge_y
 
     #Expand the array using the wildcard
     leg = ROOT.TLegend(*leg_coords)
