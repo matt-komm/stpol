@@ -761,6 +761,7 @@ public:
 class METCuts : public CutsBase {
 public:
     edm::InputTag mtMuSrc;
+    edm::InputTag mtElSrc;
     edm::InputTag metSrc;
     edm::InputTag metPhiSrc;
     float minValMtw;
@@ -770,6 +771,7 @@ public:
     
     void initialize_branches() {
         branch_vars.vars_float["mt_mu"] = BranchVars::def_val;
+	branch_vars.vars_float["mt_el"] = BranchVars::def_val;
         branch_vars.vars_float["met"] = BranchVars::def_val;
         branch_vars.vars_float["phi_met"] = BranchVars::def_val;
     }
@@ -779,6 +781,7 @@ public:
     {
         initialize_branches();
         mtMuSrc = pars.getParameter<edm::InputTag>("mtMuSrc");
+	mtElSrc = pars.getParameter<edm::InputTag>("mtElSrc");
         metSrc = pars.getParameter<edm::InputTag>("metSrc");
         metPhiSrc = pars.getParameter<edm::InputTag>("metPhiSrc");
         minValMtw = (float)pars.getParameter<double>("minValMtw");
@@ -791,6 +794,7 @@ public:
         pre_process();
         
         branch_vars.vars_float["mt_mu"] = get_collection<double>(event, mtMuSrc, BranchVars::def_val);
+	branch_vars.vars_float["mt_el"] = get_collection<double>(event, mtElSrc, BranchVars::def_val);
         branch_vars.vars_float["met"] = get_collection_n<float>(event, metSrc);
         branch_vars.vars_float["phi_met"] = get_collection_n<float>(event, metPhiSrc);
         if (doMTCut && branch_vars.vars_float["mt_mu"] < minValMtw) return false;
