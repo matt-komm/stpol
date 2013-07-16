@@ -196,6 +196,9 @@ class MVA_trainer:
 				sTree.Write(sName, ROOT.TObject.kOverwrite)
 	
 	def pack(self):
+		self.metadata['mvas'] = self.methods
+		writeTObject('meta', self.metadata, self.tfile)
+		
 		mvadir = self.tfile.mkdir('MVAs')
 		for meth in self.methods:
 			meta = MVA_meta()
