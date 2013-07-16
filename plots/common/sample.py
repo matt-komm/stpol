@@ -23,15 +23,13 @@ class Sample:
         logger.debug("Closing sample %s" % self.name)
         self.tfile.Close()
 
-    def __init__(self, name, file_name, process_name=None):
+    def __init__(self, name, file_name, tree_name = "Events", process_name=None):
         """
             name - The name of this sample. Typically the filename of the .root file containing the TTree
             file_name - The path to the file that you want to open as a TFile
             process_name - an optional parameter describing the physical process name. Used for e.g. cross-section retrieval
             tree_name - the name of the events TTree to open in the file
         """
-
-    def __init__(self, name, file_name, tree_name = "Events"):
         self.name = name
         if not process_name:
             self.process_name = name

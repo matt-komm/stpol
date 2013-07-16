@@ -265,7 +265,6 @@ def plot(canv, name, hists_merged, out_dir, **kwargs):
     canv.Update()
     canv.SaveAs(out_dir + "/%s.png" % name)
     canv.Close() #Must close canvas to prevent hang in ROOT upon GC
-    #del canv, stacks, r
     logging.debug("Returning from plot()")
     return
 
