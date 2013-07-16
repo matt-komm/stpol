@@ -111,3 +111,22 @@ def get_stack_total_hist(thstack):
         hnew.Add(h)
     return hnew
 
+
+def filter_hists(indict, pat):
+    """
+    Returns the values of the dictionary whose keys match the pattern. The return type is a dictionary, whose keys are the first group of the pattern.
+    Example: filter_hists({"asd/mystuff":1}, ".*/(mystuff)") will return {"mystuff":1}
+    indict - a dictionary
+    pat - a regex pattern that has at least 1 parenthesized group
+    """
+    out = dict()
+    for k,v in indict.items():
+        m = re.match(pat, k)
+        if not m:
+            continue
+        out[m.group(1)] = v
+    return out
+
+def escape(s):
+    return re.sub("[/\(\)\\ \.*+><] #{}", "", s)
+

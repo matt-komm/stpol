@@ -35,3 +35,53 @@ def plot_hists(hists, name="canv", **kwargs):
         canv.SetLogy()
 
     return canv
+
+def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
+    """
+    Puts the data/MC ratio plot on the TCanvas canv. A new TPad is created at the bottom with the specified height.
+    canv - TCanvas
+    hist_data  
+    returns - (pad, histogram) where pad is the new TPad and histogram is the TH1F ratio histogram
+    """
+    canv.cd()
+    p2 = ROOT.TPad("p2", "p2", 0, 0, 1, height)
+    #p2.SetLeftMargin(height / p2.GetWNDC());
+    #p2.SetRightMargin(height / p2.GetWNDC());
+    p2.SetBottomMargin(height);
+    #p2.SetTopMargin(height / 2.0);
+    p2.SetTicks(1, 1);
+    p2.SetGrid();
+    p2.SetFillStyle(0);
+
+    p2.Draw()
+    p2.cd()
+
+    hist_data.SetName("merged_data")
+    hist_mc.SetName("merged_mc")
+    hist_mc.Add(hist_data, -1.0)
+    hist_mc.Divide(hist_data)
+
+    hist_ratio = hist_mc
+
+    hist_ratio.SetStats(False)
+    hist_ratio.SetMarkerStyle(23)
+    hist_ratio.SetTitle("ratio (exp.-meas.)/meas.")
+    hist_ratio.SetTitleSize(0.08)
+    hist_ratio.SetTitleOffset(-1)
+
+    xAxis = hist_ratio.GetXaxis()
+    yAxis = hist_ratio.GetYaxis()
+    hist_ratio.SetMarkerStyle(20)
+    yAxis.CenterTitle()
+
+    xAxis.SetLabelSize(0.08)
+    xAxis.SetTitleSize(0.15)
+    xAxis.SetTitleOffset(0.5)
+    yAxis.SetLabelSize(0.08)
+
+    #xAxis.SetTickLength(xAxis->GetTickLength() * (1. - 2. * margin - bottomSpacing) / bottomSpacing);
+    #xAxis.SetNdivisions(histStack.GetXaxis().GetNdivisions());
+    yAxis.SetNdivisions(405)
+    hist_ratio.Draw("p0e1")
+
+    return p2, hist_ratio

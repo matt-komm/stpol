@@ -125,3 +125,78 @@ class Histogram(Base):
         cut_str = cut if cut is not None else "NOCUT"
         weight_str = weight if weight is not None else "NOWEIGHT"
         return filter_alnum(var + "_" + cut_str + "_" + weight_str)
+
+
+class HistMetaData:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+class HistCollection:
+    """
+    A class that manages saving and loading a collection of histograms to and from the disk.
+    """
+    def __init__(self, hists, metadata, name):
+        self.name = name
+        self.hists = hists
+        self.metadata = metadata
+        logging.debug("Created HistCollection with name %s, hists %s" % (name, str(hists)))
+
+    def get(self, hname):
+        return self.hists[hname], self.metadata[hname]
+
+    def save(self, out_dir):
+        """
+        Saves this HistCollection to files out_dir/hists__{name}.root and out_dir/hists__{name}.pickle.
+        The root file contains the histograms, while the .pickle file contains the histogram metadata.
+        The out_dir is created if it doesn't exist.
+        The TFile will have a directory structure corresponding to the '/'-separated keys of the input dictionary,
+        so hists["A/B/C"] = TH1F("myhist", ...) => TFile.Get("A/B/C/myhist"))
+
+        out_dir - a string indicating the output directory
+        """
+        mkdir_p(out_dir) #recursively create the directory
+        histo_file = escape(out_dir + "/hists__%s.root" % self.name)
+        fi = File(histo_file, "RECREATE")
+        logging.info("Saving histograms to ROOT file %s" % histo_file)
+        for hn, h in self.hists.items():
+            dirn = "/".join(hn.split("/")[:-1])
+            fi.cd()
+            try:
+                d = fi.Get(dirn)
+            except rootpy.io.DoesNotExist:
+                d = rootpy.io.utils.mkdir(dirn, recurse=True)
+            d.cd()
+            h.SetName(hn.split("/")[-1])
+            h.SetDirectory(d)
+            #md.hist_path = h.GetPath()
+
+        mdpath = histo_file.replace(".root", ".pickle")
+        logging.info("Saving metadata to pickle file %s" % mdpath)
+        pickle.dump(self.metadata, open(mdpath, "w"))
+        fi.Write()
+        fi.Close()
+        return
+
+    @staticmethod
+    def load(fname):
+        fi = File(fname)
+        name = re.match(".*/hists__(.*)\.root", fname).group(1)
+        metadata = pickle.load(open(fname.replace(".root", ".pickle")))
+        hists = {}
+        for path, dirs, hnames in fi.walk():
+            if len(hnames)>0:
+                for hn in hnames:
+                    logging.debug("Getting %s" % (path + "/"  + hn))
+                    hname = path + "/" + hn
+                    hists[hname] = fi.Get(hname)
+                    
+                    md = metadata[hname]
+                    process_name = md.sample_process_name
+
+                    if is_mc(hname):
+                        Styling.mc_style(hists[hname], process_name)
+                    else:
+                        Styling.data_style(hists[hname])
+        return HistCollection(hists, metadata, name)
+
