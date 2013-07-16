@@ -271,6 +271,7 @@ process.weights = cms.PSet(
 
 process.metCuts = cms.PSet(
     mtMuSrc = cms.InputTag("muAndMETMT"),
+    mtElSrc = cms.InputTag("eleAndMETMT"),
     metSrc = cms.InputTag("patMETNTupleProducer", "Pt"),
     metPhiSrc = cms.InputTag("patMETNTupleProducer", "Phi"),
     doMTCut = cms.bool( options.doMtw ),
