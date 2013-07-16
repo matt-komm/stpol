@@ -10,7 +10,7 @@ from plots.common.cross_sections import xs as cross_sections
 from plots.common.legend import legend
 from plots.common.tdrstyle import tdrstyle
 from plots.common.hist_plots import plot_hists, plot_data_mc_ratio
-
+from SingleTopPolarization.Analysis import sample_types
 import copy
 import os
 import re
@@ -130,9 +130,6 @@ def plot(canv, name, hists_merged, out_dir, **kwargs):
     logging.debug("Returning from plot()")
     return
 
-def is_mc(path):
-    return path.split("/")[0] == "mc"
-
 def reweigh_sherpa_hists(h_heavy, h_light, syst="nominal"):
 
     #Determined from 2J0T data/madgraph
@@ -168,6 +165,12 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
         )
 
     hist_coll = HistCollection.load(out_dir + "/hists__%s.root" % hname)
+    for hn, hist in hist_coll.hists.items():
+        hn = hn.split("/")[-1]
+        if sample_types.is_mc(hn):
+            Styling.mc_style(hist, hn)
+        else:
+            Styling.data_style(hist)
     hist_coll.hists["mc/iso/WJets_sherpa_nominal_reweighted_hf"].SetFillColor(
         hist_coll.hists["mc/iso/WJets_sherpa_nominal_reweighted_hf"].GetFillColor()+1
         )

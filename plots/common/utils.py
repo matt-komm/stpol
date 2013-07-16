@@ -3,6 +3,7 @@ from odict import OrderedDict as dict
 import string
 import logging
 import os
+import re
 
 #Here the latter items will become topmost in stacks
 merge_cmds = dict()

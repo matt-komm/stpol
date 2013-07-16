@@ -189,6 +189,9 @@ class Sample:
     def __str__(self):
         return self.__repr__()
 
+def is_mc(name):
+    return not "SingleMu" in name
+
 def load_samples(basedir=None):
     if not basedir:
         basedir = os.environ["STPOL_DIR"]

@@ -2,6 +2,9 @@ import ROOT
 from plots.common.utils import filter_alnum
 from cross_sections import xs as sample_xs_map
 import logging
+from rootpy.io.file import File
+import re
+import pickle
 
 try:
     from sqlalchemy.ext.declarative import declarative_base
@@ -193,10 +196,6 @@ class HistCollection:
                     
                     md = metadata[hname]
                     process_name = md.sample_process_name
-
-                    if is_mc(hname):
-                        Styling.mc_style(hists[hname], process_name)
-                    else:
-                        Styling.data_style(hists[hname])
+                    
         return HistCollection(hists, metadata, name)
 
