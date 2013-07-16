@@ -24,7 +24,7 @@ addpkg RecoBTag/SoftLepton      V05-09-11
 addpkg RecoBTau/JetTagComputer  V02-03-02
 addpkg RecoBTag/Configuration   V00-07-05
 addpkg RecoParticleFlow/PFProducer V15-02-06
-
+addpkg RecoLuminosity/LumiDB #For lumicalc
 #For electron MVA https://twiki.cern.ch/twiki/bin/view/CMS/MultivariateElectronIdentification#Recipe_for_5_3_X
 cvs co -r V00-00-09 EgammaAnalysis/ElectronTools
 cvs co -r V09-00-01 RecoEgamma/EgammaTools
