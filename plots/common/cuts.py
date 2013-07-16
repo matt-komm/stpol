@@ -5,6 +5,11 @@ class Cut:
     def __mul__(self, other):
         cut_str = '('+self.cut_str+') && ('+other.cut_str+')'
         return Cut(cut_str)
+
+    def __add__(self, other):
+        cut_str = '('+self.cut_str+') || ('+other.cut_str+')'
+        return Cut(cut_str)
+
     def __repr__(self):
         return "<Cut(%s)>" % '('+self.cut_str+')'
 
@@ -33,7 +38,7 @@ class Cuts:
         return Cut("n_tags == %d" % int(n))
 
     @staticmethod
-    def final(n, m, lepton="mu"):
+    def final_jet(n, lepton="mu"):
         if lepton=="mu":
             cut = Cuts.one_muon*Cuts.lepton_veto
         elif lepton=="ele":
@@ -41,9 +46,44 @@ class Cuts:
         else:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
 
-        return cut*Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.n_tags(m)*Cuts.eta_lj*Cuts.top_mass_sig
+        return cut*Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
+    
+    @staticmethod
+    def final(n, m, lepton="mu"):
+        return Cuts.final_jet(n, lepton)*Cuts.n_tags(m)
 
-#Cuts.final = lambda n,m: Cuts.rms_lj*Cuts.mt_mu*Cuts.n_jets(n)*Cuts.n_tags(m)*Cuts.eta_lj*Cuts.top_mass_sig
+    Wbb = Cut("wjets_flavour_classification == 0")
+    Wcc = Cut("wjets_flavour_classification == 1")
+    WbX = Cut("wjets_flavour_classification == 2")
+    WcX = Cut("wjets_flavour_classification == 3")
+    WgX = Cut("wjets_flavour_classification == 4")
+    Wgg = Cut("wjets_flavour_classification == 5")
+    WXX = Cut("wjets_flavour_classification == 6")
+
+    @staticmethod
+    def Wflavour(s):
+        if s=="W_heavy":
+            return Cuts.Wbb+Cuts.Wcc+Cuts.WbX+Cuts.WcX
+        elif s=="W_light":
+            return Cuts.WgX+Cuts.Wgg+Cuts.WXX
+        else:
+            return ValueError("Did not understand flavour string %s" % s)
+
 Cuts.mu = Cuts.one_muon*Cuts.lepton_veto
-
 Cuts.eta_fit = Cuts.hlt_isomu*Cuts.mt_mu*Cuts.rms_lj*Cuts.eta_jet
+
+class Weights:
+    @staticmethod
+    def total(systematic="nominal"):
+        w = Cut("pu_weight")
+        if systematic=="nominal":
+            w*= Cut("b_weight_nominal")
+        else:
+            raise ValueError("Define b-weight for systematic %s" % systematic)
+        return w
+
+    mu = Cut("muon_IsoWeight")*Cut("muon_IDWeight")*Cut("muon_TriggerWeight")
+
+flavour_scenarios = ["W_heavy", "W_light"]
+
+
