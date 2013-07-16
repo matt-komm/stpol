@@ -45,23 +45,36 @@ def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples, out_dir, c
         if sample.isMC:
             sample_weight_str = weight_str
             hn = "mc/iso/%s" % sample.name
-            #FIXME
-            if "sherpa" in sample.name:
-                logging.debug("Sample %s: enabling gen_weight" % (sample.name))
-                sample_weight_str += "*gen_weight"
 
-            if "sherpa_nominal_reweighted" in sample.name:
-                logging.debug("Sample %s: enabling wjets_flavour_weight" % (sample.name))
-                sample_weight_str += "*wjets_flavour_weight"
+            if "WJets" in sample.name:
+                logging.debug("Sample %s: enabling hf/lf separation" % (sample.name))
+                #sample_weight_str += "*wjets_flavour_weight"
 
-                hist_hf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>0 && wjets_flavour_classification<5)", weight=sample_weight_str, plot_range=plot_range)
-                hist_lf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification==0 || wjets_flavour_classification==5)", weight=sample_weight_str, plot_range=plot_range)
+                hist_hf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>=0 && wjets_flavour_classification<5)", weight=sample_weight_str, plot_range=plot_range)
+                hist_lf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>=5)", weight=sample_weight_str, plot_range=plot_range)
                 metadata[hn + "_hf"] = md
                 metadata[hn + "_lf"] = md
                 hist_hf.hist.Scale(sample.lumiScaleFactor(lumi)) 
                 hist_lf.hist.Scale(sample.lumiScaleFactor(lumi)) 
                 hists[hn + "_hf"] = hist_hf.hist
                 hists[hn + "_lf"] = hist_lf.hist
+            # #FIXME
+            # if "sherpa" in sample.name:
+            #     logging.debug("Sample %s: enabling gen_weight" % (sample.name))
+            #     sample_weight_str += "*gen_weight"
+
+            # if "sherpa_nominal_reweighted" in sample.name:
+            #     logging.debug("Sample %s: enabling wjets_flavour_weight" % (sample.name))
+            #     sample_weight_str += "*wjets_flavour_weight"
+
+            #     hist_hf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>0 && wjets_flavour_classification<5)", weight=sample_weight_str, plot_range=plot_range)
+            #     hist_lf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification==0 || wjets_flavour_classification==5)", weight=sample_weight_str, plot_range=plot_range)
+            #     metadata[hn + "_hf"] = md
+            #     metadata[hn + "_lf"] = md
+            #     hist_hf.hist.Scale(sample.lumiScaleFactor(lumi)) 
+            #     hist_lf.hist.Scale(sample.lumiScaleFactor(lumi)) 
+            #     hists[hn + "_hf"] = hist_hf.hist
+            #     hists[hn + "_lf"] = hist_lf.hist
 
             hist = sample.drawHistogram(var, cut_str, weight=sample_weight_str, plot_range=plot_range)
             hist.hist.Scale(sample.lumiScaleFactor(lumi)) 
@@ -192,20 +205,20 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     #merge_cmds["WJets_lf"] = ["W1Jets_exclusive_lf", "W2Jets_exclusive_lf", "W3Jets_exclusive_lf", "W4Jets_exclusive_lf"]
     
     merge_cmds = plots.common.utils.merge_cmds.copy()
+    merge_cmds.pop("WJets")
     merges["madgraph"] = merge_cmds.copy()
     merges["sherpa"] = merge_cmds.copy()
-    merge_cmds.pop("WJets")
-    merges["sherpa_rew"] = merge_cmds.copy()
     
-    merges["sherpa"]["WJets"] = ["WJets_sherpa_nominal"]
-   #merges["sherpa"]["WJets_lf"] = ["WJets_sherpa_nominal_lf"]
+    
+    merges["sherpa"]["WJets_hf"] = ["WJets_sherpa_nominal_hf"]
+    merges["sherpa"]["WJets_lf"] = ["WJets_sherpa_nominal_lf"]
+    merges["madgraph"]["WJets_hf"] = ["W1Jets_exclusive_hf", "W2Jets_exclusive_hf", "W3Jets_exclusive_hf", "W4Jets_exclusive_hf"]
+    merges["madgraph"]["WJets_lf"] = ["W1Jets_exclusive_lf", "W2Jets_exclusive_lf", "W3Jets_exclusive_lf", "W4Jets_exclusive_lf"]
 
-    merges["sherpa_rew"]["WJets_hf"] = ["WJets_sherpa_nominal_reweighted_hf"]
-    merges["sherpa_rew"]["WJets_lf"] = ["WJets_sherpa_nominal_reweighted_lf"]
     hmerged = {k:merge_hists(hjoined, merges[k]) for k in merges.keys()}
 
 
-    reweigh_sherpa_hists(hmerged["sherpa_rew"]["WJets_hf"], hmerged["sherpa_rew"]["WJets_lf"])
+    reweigh_sherpa_hists(hmerged["madgraph"]["WJets_hf"], hmerged["madgraph"]["WJets_lf"])
     # #Measured in 2J
     # #tot_sherpa = 94423.38#hmerged["sherpa_rew"]["WJets"].Integral()
     # tot_sherpa = 92141.60 #After applying the flavour-based weighting
@@ -233,9 +246,9 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     canv = ROOT.TCanvas("c2", "c2")
     plot(canv, "madgraph"+suffix, hmerged["madgraph"], out_dir, **kwargs)
 
-    logging.info("Drawing sherpa reweighed plot")
-    canv = ROOT.TCanvas("c3", "c3")
-    plot(canv, "sherpa_rew"+suffix, hmerged["sherpa_rew"], out_dir, **kwargs)
+    # logging.info("Drawing sherpa reweighed plot")
+    # canv = ROOT.TCanvas("c3", "c3")
+    # plot(canv, "sherpa_rew"+suffix, hmerged["sherpa_rew"], out_dir, **kwargs)
 
     hmerged_unnorm = copy.deepcopy(hmerged)
     logging.info("Drawing sherpa vs. madgraph shape comparison plots")

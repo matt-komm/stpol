@@ -5,6 +5,7 @@ import logging
 from rootpy.io.file import File
 import re
 import pickle
+from plots.common.utils import mkdir_p, escape
 
 try:
     from sqlalchemy.ext.declarative import declarative_base
@@ -13,7 +14,7 @@ try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
 except Exception as e:
-    logging.error("plots/common/histogram.py: SQLAlchemy needed, please install by running util/install_sqlalchemy.sh")
+    logging.error("plots/common/histogram.py: SQLAlchemy needed, please install by running setup/install-pylibs.sh")
     raise e
 
 class Histogram(Base):
@@ -196,6 +197,6 @@ class HistCollection:
                     
                     md = metadata[hname]
                     process_name = md.sample_process_name
-                    
+
         return HistCollection(hists, metadata, name)
 
