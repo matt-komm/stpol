@@ -50,8 +50,8 @@ def readTObject(name, directory):
 	pString = tObj.String().Data()
 	return pickle.loads(pString)
 
-def getSCF(channel, sample, eventcount):
-	return cross_sections.xs[sample]*cross_sections.lumi_iso[channel]/eventcount
+def getSCF(channel, sample, eventcount, fraction=1.0):
+	return (cross_sections.xs[sample]*cross_sections.lumi_iso[channel])/(fraction*eventcount)
 
 class MVA_meta:
 	varlist = []
