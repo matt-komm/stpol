@@ -180,6 +180,7 @@ def SingleTopStep1(
   process.patPF2PATSequence.replace(process.patElectrons, process.mvaID * process.patElectrons)
   process.selectedPatElectrons.cut = "pt>20 && abs(eta)<3.0"
   process.pfIsolatedElectrons.isolationCut = 0.2
+  process.pfIsolatedElectrons.doDeltaBetaCorrection = True
 
   process.electronsWithID = cms.EDProducer(
     'ElectronIDProducer',
