@@ -41,9 +41,9 @@ vartypes = {
 	"run_id" : "I"
 }
 
-def writeTObject(name, obj, directory):
+def writeTObject(name, obj, directory, overwrite=True):
 	pString = pickle.dumps(obj)
-	directory.WriteTObject(ROOT.TObjString(pString), name)
+	directory.WriteTObject(ROOT.TObjString(pString), name, 'Overwrite' if overwrite else '')
 	
 def readTObject(name, directory):
 	tObj = directory.Get(name)
