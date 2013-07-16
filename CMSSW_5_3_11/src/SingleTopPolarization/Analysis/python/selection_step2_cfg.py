@@ -313,6 +313,7 @@ def SingleTopStep2():
                 ["dz", "userFloat('dz')"],
                 ["numberOfMatchedStations", "numberOfMatchedStations"],
                 ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : 0.0".format(Config.Muons.triggerPath)],
+#                ["triggerMatch2", "triggerObjectMatchesEmbedded.size()"],
             ]
       )
     )
@@ -339,6 +340,24 @@ def SingleTopStep2():
                 ]
       )
     )
+    
+    process.looseVetoElectronsNTupleProducer = cms.EDProducer(
+        "CandViewNtpProducer2",
+        src = cms.InputTag("looseVetoElectrons"),
+        lazyParser = cms.untracked.bool(True),
+        prefix = cms.untracked.string(""),
+        #eventInfo = cms.untracked.bool(True),
+        variables = ntupleCollection(
+            [ 
+                ["Pt", "%s" % Config.Electrons.pt],
+                ["Eta", "eta"],
+                ["relIso", "userFloat('%s')" % Config.Electrons.relIsoType],
+                ["looseID", "userFloat('looseID')"],
+                ["mvaID", "electronID('mvaTrigV0')"],
+                ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
+                ]
+            )
+        )
     process.goodJetsNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag("goodJets"),
@@ -394,7 +413,8 @@ def SingleTopStep2():
         process.lowestBTagJetNTupleProducer *
         process.highestBTagJetNTupleProducer *
         process.goodSignalMuonsNTupleProducer *
-        process.goodSignalElectronsNTupleProducer
+        process.goodSignalElectronsNTupleProducer *
+        process.looseVetoElectronsNTupleProducer
     )
     #-----------------------------------------------
     # Flavour analyzer
@@ -475,11 +495,12 @@ def SingleTopStep2():
                 'keep floats_patMETNTupleProducer_*_STPOLSEL2',
                 'keep floats_recoTopNTupleProducer_*_STPOLSEL2',
                 'keep floats_recoNuNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueTopNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueNuNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueLeptonNTupleProducer_*_STPOLSEL2',
+                #'keep floats_trueTopNTupleProducer_*_STPOLSEL2',
+                #'keep floats_trueNuNTupleProducer_*_STPOLSEL2',
+                #'keep floats_trueLeptonNTupleProducer_*_STPOLSEL2',
                 'keep floats_goodSignalMuonsNTupleProducer_*_STPOLSEL2',
                 'keep floats_goodSignalElectronsNTupleProducer_*_STPOLSEL2',
+                'keep floats_looseVetoElectronsNTupleProducer_*_STPOLSEL2',
                 'keep floats_goodJetsNTupleProducer_*_STPOLSEL2',
                 'keep floats_lowestBTagJetNTupleProducer_*_STPOLSEL2',
                 'keep floats_highestBTagJetNTupleProducer_*_STPOLSEL2',
@@ -488,20 +509,21 @@ def SingleTopStep2():
                 'keep double_*_*_STPOLSEL2',
                 'keep float_*_*_STPOLSEL2',
                 'keep double_cosTheta_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueAll_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueTop_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueLepton_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueJet_*_STPOLSEL2',
+                #'keep double_cosThetaProducerTrueAll_*_STPOLSEL2',
+                #'keep double_cosThetaProducerTrueTop_*_STPOLSEL2',
+                #'keep double_cosThetaProducerTrueLepton_*_STPOLSEL2',
+                #'keep double_cosThetaProducerTrueJet_*_STPOLSEL2',
                 'keep *_bTagWeightProducerNJMT_*_STPOLSEL2',
                 'keep int_*__STPOLSEL2',
                 'keep int_*_*_STPOLSEL2',
                 'keep int_*_*_*',
                 'keep String_*_*_*', #the decay trees
-                'keep *_pdfInfo1_*_STPOLSEL2',
-                'keep *_pdfInfo2_*_STPOLSEL2',
-                'keep *_pdfInfo3_*_STPOLSEL2',
-                'keep *_pdfInfo4_*_STPOLSEL2',
-                'keep *_pdfInfo5_*_STPOLSEL2',
+                #'keep *_pdfInfo1_*_STPOLSEL2',
+                #'keep *_pdfInfo2_*_STPOLSEL2',
+                #'keep *_pdfInfo3_*_STPOLSEL2',
+                #'keep *_pdfInfo4_*_STPOLSEL2',
+                #'keep *_pdfInfo5_*_STPOLSEL2',
+                
                 #'keep *',
                 #'keep *_recoTop_*_*',
                 #'keep *_goodSignalMuons_*_*',

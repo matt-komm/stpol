@@ -75,25 +75,7 @@ def ElectronSetup(process, conf):
 
     looseVetoElectronCut = "%s > 20.0" % conf.Electrons.pt
     looseVetoElectronCut += " && (abs(superCluster().eta()) < 2.5)"
-
-    #Veto cut based ID: https://twiki.cern.ch/twiki/bin/view/CMS/EgammaCutBasedIdentification
-    cutBasedLooseID = " && \
-        ((abs(superCluster().eta()) < 1.479 && (\
-            abs(deltaEtaSuperClusterTrackAtVtx()) < 0.007 && \
-            abs(deltaPhiSuperClusterTrackAtVtx()) < 0.8 && \
-            sigmaIetaIeta() < 0.01 && \
-            hadronicOverEm() < 0.15 && \
-            userFloat('dxy') < 0.04 && \
-            userFloat('dz') < 0.2 \
-        )) || (\
-        abs(superCluster().eta())>1.479 && abs(superCluster().eta())<2.5 && (\
-            abs(deltaEtaSuperClusterTrackAtVtx()) < 0.01 && \
-            abs(deltaPhiSuperClusterTrackAtVtx()) < 0.7 && \
-            sigmaIetaIeta() < 0.03 && \
-            userFloat('dxy') < 0.04 && \
-            userFloat('dz') < 0.2 \
-        )))"
-    looseVetoElectronCut += cutBasedLooseID
+    looseVetoElectronCut += " && ( userFloat('looseID') > 0 || electronID('mvaTrigV0') > 0.0 )" # optimize the cut in step3
     looseVetoElectronCut += " && (userFloat('{0}') < {1})".format(conf.Electrons.relIsoType, conf.Electrons.looseVetoRelIsoCut)
     looseVetoElectronCut = clean_whitespace(looseVetoElectronCut)
 

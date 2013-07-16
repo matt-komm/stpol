@@ -26,10 +26,18 @@ def LeptonSetup(process, conf):
       rhoSrc = cms.InputTag("kt6PFJets", "rho"),
       dR = cms.double(0.3)
     )
+
     process.electronBeforeSelectionSequence += process.electronsWithIso
+
+    process.electronsWithLooseID = cms.EDProducer(
+        'ElectronLooseIDProducer',
+        src = cms.InputTag("electronsWithIso")
+        )
+    process.electronBeforeSelectionSequence += process.electronsWithLooseID
+
     process.electronsWithCorrectedEcalIso = cms.EDProducer(
         'CorrectedEcalIsoElectronProducer',
-        src=cms.InputTag("electronsWithIso"),
+        src=cms.InputTag("electronsWithLooseID"),
         isMC=cms.bool(conf.isMC)
     )
     process.electronBeforeSelectionSequence += process.electronsWithCorrectedEcalIso
