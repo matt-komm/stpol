@@ -249,7 +249,7 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 	ofile.mkdir("test/signal")
 	ofile.mkdir("test/background")
 	
-	meta = {"lept": lept, "initial_events": {}, "cutstring": cutstring}
+	meta = {"lept": lept, "initial_events": {}, "fractions": {}, "cutstring": cutstring}
 	
 	
 	for ch in signals.keys() + backgrounds.keys():
@@ -266,6 +266,7 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 		
 		
 		ratio = signals[ch] if ch in signals else backgrounds[ch]
+		meta["fractions"][ch] = ratio
 		
 		for n in range(nentries):
 			tree.GetEntry(n)
