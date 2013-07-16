@@ -59,7 +59,7 @@ class GenWeightAnalyzer : public edm::EDAnalyzer {
 GenWeightAnalyzer::GenWeightAnalyzer(const edm::ParameterSet& iConfig)
 : genWeightSrc(edm::InputTag("generator"))
 {
-    hist_weight = fs->make<TH1F>("gen_weight" , "gen_weight", 500,  0.0, 1000.0);
+    hist_weight = fs->make<TH1F>("gen_weight" , "gen_weight", 500,  0, 2.0);
 }
 
 
