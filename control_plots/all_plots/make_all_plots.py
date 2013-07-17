@@ -12,7 +12,7 @@ import plots
 from plots.common.stack_plot import plot_hists_stacked
 from plots.common.odict import OrderedDict
 from plots.common.sample import Sample
-from plots.common.cuts import Cuts
+from plots.common.cuts import Cuts,Cut
 from plots.common.legend import *
 from plots.common.sample_style import Styling
 import plots.common.pretty_names as pretty_names
@@ -59,7 +59,11 @@ hists_mc = dict()
 hist_data = None
 
 #Define the variable, cut, weight and lumi
-for pd in plot_defs.keys():
+keylist=plot_defs.keys()
+if len(sys.argv) == 3:
+    keylist=[sys.argv[2]]
+
+for pd in keylist:
     if not plot_defs[pd]['enabled']:
         continue
     var = plot_defs[pd]['var']
@@ -87,13 +91,18 @@ for pd in plot_defs.keys():
             Styling.data_style(hist_data)
 
         elif name == "data_aiso" and plot_defs[pd]['estQcd']:
-            hist_qcd = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range).hist
-            hist_qcd.Scale(0.5)
+            cv='mu_iso'
+            if proc == 'ele':
+                cv='el_reliso'
+            qcd_cut = cut*Cut(cv+'>0.3 & '+cv+'<0.5')
+            hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range).hist
+            #hist_qcd.Scale(0.4)
             hists_mc['QCD'] = hist_qcd
+            hists_mc['QCD'].SetTitle('QCD')
             Styling.mc_style(hists_mc['QCD'], 'QCD')
 
     #Combine the subsamples to physical processes
-    merged_hists = merge_hists(hists_mc, merge_cmds).values()
+    merged_hists = [hist_qcd]+merge_hists(hists_mc, merge_cmds).values()
     leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
     #Some printout
@@ -103,7 +112,7 @@ for pd in plot_defs.keys():
     canv = ROOT.TCanvas()
 
     stacks_d = OrderedDict()
-    stacks_d["mc"] = merged_hists+[hist_qcd]
+    stacks_d["mc"] = merged_hists #+[hist_qcd]
     stacks_d["data"] = [hist_data]
     #xlab = 'cos #theta'
     #ylab = 'N / 0.1'
