@@ -83,6 +83,17 @@ class Weights:
             raise ValueError("Define b-weight for systematic %s" % systematic)
         return w
 
+    @staticmethod
+    def wjets_madgraph_weight(systematic="nominal"):
+        if systematic=="nominal":
+            return Cut("wjets_mg_flavour_weight")
+        elif systematic=="wjets_up":
+            return Cut("wjets_mg_flavour_weight_up")
+        elif systematic=="wjets_down":
+            return Cut("wjets_mg_flavour_weight_down")
+        else:
+            raise ValueError("Unrecognized systematic=%s" % systematic) 
+ 
     mu = Cut("muon_IsoWeight")*Cut("muon_IDWeight")*Cut("muon_TriggerWeight")
 
 flavour_scenarios = ["W_heavy", "W_light"]
