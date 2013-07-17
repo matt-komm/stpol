@@ -69,11 +69,11 @@ xs["TTJets_mass166_5"] = xs["TTJets_MassiveBinDECAY"]
 
 
 lumi_iso = {
-    "ele": 19728,
-    "mu": 19739
+    "ele": 6144,
+    "mu": 6398
     }
 
 lumi_antiiso = {
-    "ele": 19728,
-    "mu": 19739
+    "ele": 6144,
+    "mu": 6398
     }
