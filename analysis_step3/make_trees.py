@@ -16,7 +16,7 @@ if __name__=="__main__":
         help="the output directory for the step3 trees"
     )
     parser.add_argument("--cutStringProcessed", type=str,
-        default="--doNJets --nJ=2,3 --doHLT --doLepton", required=False,
+        default="--doNJets --nJ=2,3 --doHLT --doLepton --doEventShape", required=False,
         help="Specify the cutstring for the step3 config, which will reduce the amount of events processed. For options, see step3_eventloop_base_nocuts_cfg.py"
     )
     parser.add_argument("--cutStringSelected", type=str,
