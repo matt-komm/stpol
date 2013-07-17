@@ -147,11 +147,17 @@ class HistCollection:
     """
     A class that manages saving and loading a collection of histograms to and from the disk.
     """
-    def __init__(self, hists, metadata, name):
+    def __init__(self, hists, metadata, name, fi=None):
         self.name = name
         self.hists = hists
         self.metadata = metadata
+        self.fi = fi
         logger.debug("Created HistCollection with name %s, hists %s" % (name, str(hists)))
+
+    def __del__(self):
+        if self.fi:
+            logger.debug("Closing file %s of HistCollection" % self.fi.GetPath())
+            self.fi.Close()
 
     def get(self, hname):
         return self.hists[hname], self.metadata[hname]
@@ -167,8 +173,10 @@ class HistCollection:
         out_dir - a string indicating the output directory
         """
         mkdir_p(out_dir) #recursively create the directory
-        histo_file = escape(out_dir + "/%s.root" % self.name)
+        histo_file = out_dir + "/%s.root" % escape(self.name)
         fi = File(histo_file, "RECREATE")
+        if not fi:
+            raise Exception("Couldn't open file for writing")
         logger.info("Saving histograms to ROOT file %s" % histo_file)
         for hn, h in self.hists.items():
             dirn = "/".join(hn.split("/")[:-1])
@@ -206,6 +214,5 @@ class HistCollection:
                     hists[hname] = fi.Get(hname)
                     
                     md = metadata[hname]
-
-        return HistCollection(hists, metadata, name)
+        return HistCollection(hists, metadata, name, fi)
 
