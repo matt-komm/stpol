@@ -2,7 +2,6 @@ import ROOT
 ROOT.gROOT.SetBatch(True)
 from plots.common.sample import Sample, load_samples, get_process_name
 from plots.common.sample_style import Styling, ColorStyleGen
-import plots.common.utils
 from plots.common.utils import merge_hists, mkdir_p, get_stack_total_hist
 from plots.common.odict import OrderedDict
 from plots.common.stack_plot import plot_hists_stacked
@@ -12,6 +11,7 @@ from plots.common.legend import legend
 from plots.common.tdrstyle import tdrstyle
 from plots.common.hist_plots import plot_hists, plot_data_mc_ratio
 from SingleTopPolarization.Analysis import sample_types
+import plots.common.utils
 import copy
 import os
 import re
@@ -20,19 +20,13 @@ logger = logging.getLogger("sherpa_yields")
 import pickle
 import math
 import shutil
-import rootpy
-import rootpy.io
-import rootpy.io.utils
-from rootpy.io.file import File
 import sys
 from plots.common.histogram import HistCollection, HistMetaData
 from plots.common.utils import escape, filter_hists
 import rootpy
 import rootpy.io
-import rootpy.io.utils
 from rootpy.io.file import File
 import numpy
-import root_numpy
 
 costheta = {"var":"cos_theta", "varname":"cos #theta", "range":[20,-1,1]}
 mtop = {"var":"top_mass", "varname":"M_{bl#nu}", "range":[20, 130, 220]}
@@ -61,7 +55,6 @@ def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples, out_dir, c
             weight_strs += [("unweighted", sample_weight_str)]
 
             if reweigh and re.match("W[0-9]Jets_exclusive", sample.name):
-                sample.tree.RemoveFriend(sample.tfile.Get("trees/WJets_weights"))
                 sample.tree.AddFriend("trees/WJets_weights", sample.file_name)
                 logger.debug("WJets madgraph sample, enabling flavour weight")
                 avg_weight = sample.drawHistogram( str(Weights.wjets_madgraph_weight(systematic)), cut_str, weight_str=weight_str, plot_range=[100, 0, 2]).hist.GetMean()
@@ -84,13 +77,13 @@ def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples, out_dir, c
                     hist_lf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>=4)", weight=w, plot_range=plot_range)
                     metadata[hn + "_hf" + suffix] = md
                     metadata[hn + "_lf" + suffix] = md
-                    hist_hf.hist.Scale(sample.lumiScaleFactor(lumi)) 
-                    hist_lf.hist.Scale(sample.lumiScaleFactor(lumi)) 
+                    hist_hf.hist.Scale(sample.lumiScaleFactor(lumi))
+                    hist_lf.hist.Scale(sample.lumiScaleFactor(lumi))
                     hists[hn + "_hf" + suffix] = hist_hf.hist
                     hists[hn + "_lf" + suffix] = hist_lf.hist
 
             hist = sample.drawHistogram(var, cut_str, weight=sample_weight_str, plot_range=plot_range)
-            hist.hist.Scale(sample.lumiScaleFactor(lumi)) 
+            hist.hist.Scale(sample.lumiScaleFactor(lumi))
             hist = hist.hist
         elif name == "iso/SingleMu":
             hist = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range).hist
@@ -183,7 +176,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
         logger.info("Output directory %s exists, removing" % out_dir)
         shutil.rmtree(out_dir)
     mkdir_p(out_dir)
-    
+
     logger.info("Using output directory %s" % out_dir)
 
     hname = escape(var["var"])
@@ -224,19 +217,19 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
 
     #Combine data and mc hists to one dict
     hjoined = dict(
-        filter_hists(hist_coll.hists, "mc/iso/(.*)"), 
+        filter_hists(hist_coll.hists, "mc/iso/(.*)"),
         **filter_hists(hist_coll.hists, "data/iso/(SingleMu)")
     )
 
     merges = dict()
-    
+
     merge_cmds = plots.common.utils.merge_cmds.copy()
     merge_cmds.pop("WJets")
     merges["madgraph/unweighted"] = merge_cmds.copy()
     merges["madgraph/weighted"] = merge_cmds.copy()
     merges["sherpa"] = merge_cmds.copy()
-    
-    
+
+
     merges["sherpa"]["WJets_hf"] = ["WJets_sherpa_nominal_hf_unweighted"]
     merges["sherpa"]["WJets_lf"] = ["WJets_sherpa_nominal_lf_unweighted"]
     merges["madgraph/unweighted"]["WJets_hf"] = ["W[0-9]Jets_exclusive_hf_unweighted"]
@@ -244,7 +237,9 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     merges["madgraph/weighted"]["WJets_hf"] = ["W[0-9]Jets_exclusive_hf_weighted"]
     merges["madgraph/weighted"]["WJets_lf"] = ["W[0-9]Jets_exclusive_lf_weighted"]
 
-    hmerged = {k:merge_hists(hjoined, merges[k]) for k in merges.keys()}
+    hmerged = dict()
+    for k in merges.keys():
+        hmerged[k] = merge_hists(hjoined, merges[k])
 
     logger.info("Drawing madgraph unweighted plot")
     canv = ROOT.TCanvas("c2", "c2")
@@ -391,9 +386,9 @@ def plot_ratios(cut_name, cut, samples, out_dir, recreate):
         coll.save(out_dir)
     else:
         coll = HistCollection.load(out_dir + "/hists__costheta_flavour_ratios.root")
-    
+
     hists = coll.hists.values()
-    
+
     merges = {}
     for sc in flavour_scenarios:
         merges["WJets/madgraph/%s" % sc] = ["W.*Jets_exclusive__%s" % sc]
