@@ -2,7 +2,17 @@ import ROOT
 from plots.common.utils import filter_alnum
 from cross_sections import xs as sample_xs_map
 import logging
+from rootpy.io.file import File
+import re
+import pickle
+from plots.common.utils import mkdir_p, escape
+logger = logging.getLogger("histogram")
 
+try:
+    import rootpy
+except Exception as e:
+    logger.error("rootpy needed: install rootpy using setup/install-pylibs.sh")
+    raise e
 try:
     from sqlalchemy.ext.declarative import declarative_base
     Base = declarative_base()
@@ -10,8 +20,9 @@ try:
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
 except Exception as e:
-    logging.error("plots/common/histogram.py: SQLAlchemy needed, please install by running util/install_sqlalchemy.sh")
+    logger.error("SQLAlchemy needed: please install by running setup/install-pylibs.sh")
     raise e
+
 
 class Histogram(Base):
     __tablename__ = "histograms"
@@ -66,13 +77,13 @@ class Histogram(Base):
             self.hist.Scale(target/self.hist.Integral())
             self.is_normalized = True
         else:
-            logging.warning("Histogram %s integral=0, not scaling." % str(self))
+            logger.warning("Histogram %s integral=0, not scaling." % str(self))
 
-    def normalize_lumi(self, lumi=1.0):
-        expected_events = sample_xs_map[self.sample_name] * lumi
-        total_events = self.sample_entries_total
-        scale_factor = float(expected_events)/float(total_events)
-        self.hist.Scale(scale_factor)
+    # def normalize_lumi(self, lumi=1.0):
+    #     expected_events = sample_xs_map[self.sample_name] * lumi
+    #     total_events = self.sample_entries_total
+    #     scale_factor = float(expected_events)/float(total_events)
+    #     self.hist.Scale(scale_factor)
 
     def update(self, file=None, dir=None):
         self.name = str(self.hist.GetName())
@@ -125,3 +136,76 @@ class Histogram(Base):
         cut_str = cut if cut is not None else "NOCUT"
         weight_str = weight if weight is not None else "NOWEIGHT"
         return filter_alnum(var + "_" + cut_str + "_" + weight_str)
+
+
+class HistMetaData:
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+
+class HistCollection:
+    """
+    A class that manages saving and loading a collection of histograms to and from the disk.
+    """
+    def __init__(self, hists, metadata, name):
+        self.name = name
+        self.hists = hists
+        self.metadata = metadata
+        logger.debug("Created HistCollection with name %s, hists %s" % (name, str(hists)))
+
+    def get(self, hname):
+        return self.hists[hname], self.metadata[hname]
+
+    def save(self, out_dir):
+        """
+        Saves this HistCollection to files out_dir/hists__{name}.root and out_dir/hists__{name}.pickle.
+        The root file contains the histograms, while the .pickle file contains the histogram metadata.
+        The out_dir is created if it doesn't exist.
+        The TFile will have a directory structure corresponding to the '/'-separated keys of the input dictionary,
+        so hists["A/B/C"] = TH1F("myhist", ...) => TFile.Get("A/B/C/myhist"))
+
+        out_dir - a string indicating the output directory
+        """
+        mkdir_p(out_dir) #recursively create the directory
+        histo_file = escape(out_dir + "/%s.root" % self.name)
+        fi = File(histo_file, "RECREATE")
+        logger.info("Saving histograms to ROOT file %s" % histo_file)
+        for hn, h in self.hists.items():
+            dirn = "/".join(hn.split("/")[:-1])
+            fi.cd()
+            try:
+                d = fi.Get(dirn)
+            except rootpy.io.DoesNotExist:
+                d = rootpy.io.utils.mkdir(dirn, recurse=True)
+            d.cd()
+            h.SetName(hn.split("/")[-1])
+            h.SetDirectory(d)
+            #md.hist_path = h.GetPath()
+
+        mdpath = histo_file.replace(".root", ".pickle")
+        logger.info("Saving metadata to pickle file %s" % mdpath)
+        pickle.dump(self.metadata, open(mdpath, "w"))
+        fi.Write()
+        fi.Close()
+        return
+
+    @staticmethod
+    def load(fname):
+        fi = File(fname)
+        name = re.match(".*/(.*)\.root", fname).group(1)
+        metadata = pickle.load(open(fname.replace(".root", ".pickle")))
+        hists = {}
+        for path, dirs, hnames in fi.walk():
+            if len(hnames)>0:
+                for hn in hnames:
+                    logger.debug("Getting %s" % (path + "/"  + hn))
+                    if path:
+                        hname = path + "/" + hn
+                    else:
+                        hname = hn
+                    hists[hname] = fi.Get(hname)
+                    
+                    md = metadata[hname]
+
+        return HistCollection(hists, metadata, name)
+

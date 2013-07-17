@@ -205,6 +205,7 @@ process.jetCuts = cms.PSet(
     lightJetPtSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Pt"),
     lightJetEtaSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Eta"),
     lightJetPhiSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Phi"),
+    lightJetPUMVASrc = cms.InputTag("lowestBTagJetNTupleProducer", "puMva"),
 
     lightJetBdiscrSrc = cms.InputTag("lowestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
     lightJetRmsSrc = cms.InputTag("lowestBTagJetNTupleProducer", "rms"),
@@ -222,6 +223,7 @@ process.bTagCuts = cms.PSet(
     bJetPtSrc = cms.InputTag("highestBTagJetNTupleProducer", "Pt"),
     bJetEtaSrc = cms.InputTag("highestBTagJetNTupleProducer", "Eta"),
     bJetPhiSrc = cms.InputTag("highestBTagJetNTupleProducer", "Phi"),
+    bJetPUMVASrc = cms.InputTag("highestBTagJetNTupleProducer", "puMva"),
 
     bJetBdiscrSrc = cms.InputTag("highestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
     bJetDeltaRSrc = cms.InputTag("highestBTagJetNTupleProducer", "deltaR")
@@ -271,6 +273,7 @@ process.weights = cms.PSet(
 
 process.metCuts = cms.PSet(
     mtMuSrc = cms.InputTag("muAndMETMT"),
+    mtElSrc = cms.InputTag("eleAndMETMT"),
     metSrc = cms.InputTag("patMETNTupleProducer", "Pt"),
     metPhiSrc = cms.InputTag("patMETNTupleProducer", "Phi"),
     doMTCut = cms.bool( options.doMtw ),

@@ -31,7 +31,7 @@ PYTHONPATH=$PYTHONPATH:$STPOL_DIR/theta/utils2/
 
 #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/scratch/mario/boost_1_53_0/lib
 
-if [[ "`hostname`" == *hep.kbfi.ee ]]
+if [[ "`hostname`" == *hep.kbfi.ee ]] || [[ "`hostname`" == comp* ]]
 then
     echo "Detected that we're on hep.kbfi.ee, sourcing CMS-specific stuff"
     cd ${SCRIPT_DIR}/$CMSSW_DIR

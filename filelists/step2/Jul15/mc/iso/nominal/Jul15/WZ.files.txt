@@ -1,0 +1,17 @@
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_1_1_hAk.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_2_1_qMF.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_3_1_mWm.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_4_1_jsa.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_5_1_yqm.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_6_2_HpM.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_7_1_bAX.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_8_1_YST.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_9_1_nA9.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_10_2_J27.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_11_1_wjH.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_12_1_Oxo.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_13_1_ryw.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_14_1_Nln.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_15_1_Oqk.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_16_2_twI.root
+/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_17_1_CxM.root

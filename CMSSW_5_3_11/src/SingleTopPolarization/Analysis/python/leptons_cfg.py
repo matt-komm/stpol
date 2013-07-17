@@ -1,10 +1,12 @@
 import FWCore.ParameterSet.Config as cms
+import logging
 
+logger = logging.getLogger("Leptons")
 def LeptonSetup(process, conf):
     process.muonBeforeSelectionSequence = cms.Sequence()
 
     if conf.Muons.reverseIsoCut:
-        logging.info("Using reversed isolation definition for muons, changing muon source from %s to 'muonsWithIDAll'")
+        logger.info("Using reversed isolation definition for muons, changing muon source from %s to 'muonsWithIDAll'")
         conf.Muons.source = "muonsWithIDAll"
 
     process.muonsWithIso = cms.EDProducer(
@@ -16,7 +18,7 @@ def LeptonSetup(process, conf):
     process.muonBeforeSelectionSequence += process.muonsWithIso
 
     if conf.Electrons.reverseIsoCut:
-        logging.info("Using reversed isolation definition for electrons, changing electron source from %s to 'electronsWithIDAll'")
+        logger.info("Using reversed isolation definition for electrons, changing electron source from %s to 'electronsWithIDAll'")
         conf.Electrons.source = "electronsWithIDAll"
 
     process.electronBeforeSelectionSequence = cms.Sequence()
@@ -113,10 +115,10 @@ def LeptonSetup(process, conf):
     #Combine the found electron/muon to a single collection
     process.goodSignalLeptons = cms.EDProducer(
          'CandRefCombiner',
-         sources=cms.untracked.vstring(["singleIsoMu", "singleIsoEle"]),
-             maxOut=cms.uint32(1),
-             minOut=cms.uint32(1),
-             logErrors=cms.bool(False)
+         sources=cms.vstring(["singleIsoMu", "singleIsoEle"]),
+         maxOut=cms.uint32(1),
+         minOut=cms.uint32(1),
+         logErrors=cms.bool(False)
     )
 
     process.leptonPath = cms.Path(

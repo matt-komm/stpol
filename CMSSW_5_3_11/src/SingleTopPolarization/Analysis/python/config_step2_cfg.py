@@ -20,7 +20,8 @@ class Config(C):
     #A string that gives the MC sample you are running on
     subChannel = None
 
-    metSource = "patMETs"
+#    metSource = "patMETs"
+    metSource = "patType1CorrectedPFMet"
 
     globalTagMC = "START53_V20::All"
 
