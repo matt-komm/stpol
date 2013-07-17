@@ -1,4 +1,5 @@
 import ROOT
+ROOT.gROOT.SetBatch(True)
 from plots.common.sample import Sample, load_samples, get_process_name
 from plots.common.sample_style import Styling, ColorStyleGen
 import plots.common.utils
@@ -30,6 +31,8 @@ import rootpy
 import rootpy.io
 import rootpy.io.utils
 from rootpy.io.file import File
+import numpy
+import root_numpy
 
 costheta = {"var":"cos_theta", "varname":"cos #theta", "range":[20,-1,1]}
 mtop = {"var":"top_mass", "varname":"M_{bl#nu}", "range":[20, 130, 220]}
@@ -41,7 +44,8 @@ eta_neg = {"var":"eta_lj", "varname":"#eta_{lq}", "range":[20, -5.0, -2.5]}
 aeta_lj = {"var":"abs(eta_lj)", "varname":"|#eta_{lq}|", "range":[20, 0, 5]}
 aeta_lj_2_5 = {"var":"abs(eta_lj)", "varname":"|#eta_{lq}|", "range":[20, 2.5, 5]}
 LUMI_TOTAL = 19739
-def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples, out_dir, collection_name=None):
+
+def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples, out_dir, collection_name=None, systematic="nominal", reweigh=True):
     hists = dict()
     metadata = dict()
     for name, sample in samples.items():
@@ -53,19 +57,37 @@ def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples, out_dir, c
 
         if sample.isMC:
             sample_weight_str = weight_str
+            weight_strs = []
+            weight_strs += [("unweighted", sample_weight_str)]
+
+            if reweigh and re.match("W[0-9]Jets_exclusive", sample.name):
+                sample.tree.RemoveFriend(sample.tfile.Get("trees/WJets_weights"))
+                sample.tree.AddFriend("trees/WJets_weights", sample.file_name)
+                logger.debug("WJets madgraph sample, enabling flavour weight")
+                avg_weight = sample.drawHistogram( str(Weights.wjets_madgraph_weight(systematic)), cut_str, weight_str=weight_str, plot_range=[100, 0, 2]).hist.GetMean()
+                #avg_weight = 1.0
+                md.average_weight = avg_weight
+                logger.debug("average weight = %.2f" % avg_weight)
+                reweighted_sample_weight_str = weight_str + "*" + str(Weights.wjets_madgraph_weight(systematic))# + "*" + (str(1.0/avg_weight))
+                logger.debug("weight=%s" % reweighted_sample_weight_str)
+                weight_strs += [("weighted", reweighted_sample_weight_str)]
+
             hn = "mc/iso/%s" % sample.name
 
             if sample_types.is_wjets(sample.name):
                 logger.debug("Sample %s: enabling hf/lf separation" % (sample.name))
 
-                hist_hf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>=0 && wjets_flavour_classification<5)", weight=sample_weight_str, plot_range=plot_range)
-                hist_lf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>=5)", weight=sample_weight_str, plot_range=plot_range)
-                metadata[hn + "_hf"] = md
-                metadata[hn + "_lf"] = md
-                hist_hf.hist.Scale(sample.lumiScaleFactor(lumi)) 
-                hist_lf.hist.Scale(sample.lumiScaleFactor(lumi)) 
-                hists[hn + "_hf"] = hist_hf.hist
-                hists[hn + "_lf"] = hist_lf.hist
+                for wn, w in weight_strs:
+                    logger.info("Weight strategy %s, weights str=%s" % (wn, w))
+                    suffix = "_%s" % wn
+                    hist_hf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>=0 && wjets_flavour_classification<4)", weight=w, plot_range=plot_range)
+                    hist_lf = sample.drawHistogram(var, cut_str+"&&(wjets_flavour_classification>=4)", weight=w, plot_range=plot_range)
+                    metadata[hn + "_hf" + suffix] = md
+                    metadata[hn + "_lf" + suffix] = md
+                    hist_hf.hist.Scale(sample.lumiScaleFactor(lumi)) 
+                    hist_lf.hist.Scale(sample.lumiScaleFactor(lumi)) 
+                    hists[hn + "_hf" + suffix] = hist_hf.hist
+                    hists[hn + "_lf" + suffix] = hist_lf.hist
 
             hist = sample.drawHistogram(var, cut_str, weight=sample_weight_str, plot_range=plot_range)
             hist.hist.Scale(sample.lumiScaleFactor(lumi)) 
@@ -88,6 +110,7 @@ def draw_data_mc(var, plot_range, cut_str, weight_str, lumi, samples, out_dir, c
     hc = HistCollection(hists, metadata, collection_name)
     hc.save(out_dir)
     sys.stdout.write("\n")
+    logger.info("Saved histogram collection to %s/%s.root" % (out_dir, collection_name))
 
     return hc
 
@@ -170,7 +193,8 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
             var["var"], var["range"],
             cut_str,
             "pu_weight*muon_IDWeight*muon_TriggerWeight*muon_IsoWeight*b_weight_nominal", LUMI_TOTAL, samples, out_dir,
-            collection_name=hname
+            collection_name=hname,
+            systematic=kwargs.get("systematic", "nominal")
         )
 
 
@@ -189,7 +213,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
                 Styling.data_style(hist)
         except KeyError as e:
             logger.warning("Couldn't style histogram %s" % hn)
-        match = re.match("(.*)_([hl]f)", hn)
+        match = re.match("(.*)_([hl]f)_.*", hn)
         if match:
             logger.debug("Matched flavour split histogram %s" % hn)
             Styling.mc_style(hist, match.group(1))
@@ -207,20 +231,29 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     merges = dict()
     
     merge_cmds = plots.common.utils.merge_cmds.copy()
-    merges["madgraph_unsplit"] = merge_cmds.copy()
     merge_cmds.pop("WJets")
-    merges["madgraph"] = merge_cmds.copy()
+    merges["madgraph/unweighted"] = merge_cmds.copy()
+    merges["madgraph/weighted"] = merge_cmds.copy()
     merges["sherpa"] = merge_cmds.copy()
     
     
-    merges["sherpa"]["WJets_hf"] = ["WJets_sherpa_nominal_hf"]
-    merges["sherpa"]["WJets_lf"] = ["WJets_sherpa_nominal_lf"]
-    merges["madgraph"]["WJets_hf"] = ["W[0-9]Jets_exclusive_hf"]
-    merges["madgraph"]["WJets_lf"] = ["W[0-9]Jets_exclusive_lf"]
+    merges["sherpa"]["WJets_hf"] = ["WJets_sherpa_nominal_hf_unweighted"]
+    merges["sherpa"]["WJets_lf"] = ["WJets_sherpa_nominal_lf_unweighted"]
+    merges["madgraph/unweighted"]["WJets_hf"] = ["W[0-9]Jets_exclusive_hf_unweighted"]
+    merges["madgraph/unweighted"]["WJets_lf"] = ["W[0-9]Jets_exclusive_lf_unweighted"]
+    merges["madgraph/weighted"]["WJets_hf"] = ["W[0-9]Jets_exclusive_hf_weighted"]
+    merges["madgraph/weighted"]["WJets_lf"] = ["W[0-9]Jets_exclusive_lf_weighted"]
 
     hmerged = {k:merge_hists(hjoined, merges[k]) for k in merges.keys()}
 
-    reweigh_madgraph_hists(hmerged["madgraph"]["WJets_hf"], hmerged["madgraph"]["WJets_lf"])
+    logger.info("Drawing madgraph unweighted plot")
+    canv = ROOT.TCanvas("c2", "c2")
+    suffix = "__%s__%s" % (var["var"], cut_name)
+    suffix = escape(suffix)
+
+    plot(canv, "madgraph_unweighted"+suffix, hmerged["madgraph/unweighted"], out_dir, **kwargs)
+
+    #reweigh_madgraph_hists(hmerged["madgraph"]["WJets_hf"], hmerged["madgraph"]["WJets_lf"])
 
     kwargs = dict({"x_label": var["varname"]}, **kwargs)
 
@@ -228,52 +261,115 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
         logger.debug("Group %s" % k)
         for hn, h in v.items():
             logger.debug("Sample %s = %.2f" % (hn, h.Integral()))
+        logger.debug("data=%.2f" % v["data"].Integral())
+        logger.debug("MC=%.2f" % sum([h.Integral() for k, h in v.items() if k!="data"]))
 
     hists_flavours_merged = dict()
-    hists_flavours_merged["madgraph"] = merge_hists(hmerged["madgraph"], {"WJets": ["WJets_hf", "WJets_lf"]})
+    hists_flavours_merged["madgraph/weighted"] = merge_hists(hmerged["madgraph/weighted"], {"WJets": ["WJets_hf", "WJets_lf"]})
+    hists_flavours_merged["madgraph/unweighted"] = merge_hists(hmerged["madgraph/unweighted"], {"WJets": ["WJets_hf", "WJets_lf"]})
     hists_flavours_merged["sherpa"] = merge_hists(hmerged["sherpa"], {"WJets": ["WJets_hf", "WJets_lf"]})
 
     logger.info("Drawing sherpa plot")
     canv = ROOT.TCanvas("c1", "c1")
-    suffix = "__%s__%s" % (var["var"], cut_name)
     plot(canv, "sherpa"+suffix, hmerged["sherpa"], out_dir, **kwargs)
 
     logger.info("Drawing madgraph plot")
     canv = ROOT.TCanvas("c2", "c2")
-    plot(canv, "madgraph"+suffix, hmerged["madgraph"], out_dir, **kwargs)
+    plot(canv, "madgraph"+suffix, hmerged["madgraph/weighted"], out_dir, **kwargs)
 
-    total_madgraph = copy.deepcopy(hmerged["madgraph_unsplit"])
+    total_madgraph = copy.deepcopy(hmerged["madgraph/unweighted"])
     logger.info("Drawing sherpa vs. madgraph shape comparison plots")
 
-    histsnames = [
-        ("data", hmerged["madgraph"]["data"]),
-        ("madgraph", hists_flavours_merged["madgraph"]["WJets"]),
+    hists = [
+        ("data", hmerged["madgraph/unweighted"]["data"]),
+        ("madgraph unw", hists_flavours_merged["madgraph/unweighted"]["WJets"]),
+        ("madgraph rew", hists_flavours_merged["madgraph/weighted"]["WJets"]),
+    ]
+    hists = copy.deepcopy(hists)
+    for hn, h in hists:
+        h.SetTitle(hn)
+        h.Scale(1.0/h.Integral())
+    hists = [h[1] for h in hists]
+    ColorStyleGen.style_hists(hists)
+    canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
+    leg = legend(hists, styles=["f", "f"], **kwargs)
+    canv.SaveAs(out_dir + "/weighted_%s.png" % hname)
+    canv.Close()
+
+    hists = [
+        ("madgraph unw hf", hmerged["madgraph/unweighted"]["WJets_hf"]),
+        ("madgraph rew hf", hmerged["madgraph/weighted"]["WJets_hf"]),
+    ]
+    hists = copy.deepcopy(hists)
+    for hn, h in hists:
+        h.SetTitle(hn)
+        h.Scale(1.0/h.Integral())
+    hists = [h[1] for h in hists]
+    ColorStyleGen.style_hists(hists)
+    canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
+    leg = legend(hists, styles=["f", "f"], **kwargs)
+    canv.SaveAs(out_dir + "/weighted_flavour_hf_%s.png" % hname)
+    canv.Close()
+
+    hists = [
+        ("madgraph unw lf", hmerged["madgraph/unweighted"]["WJets_lf"]),
+        ("madgraph rew lf", hmerged["madgraph/weighted"]["WJets_lf"]),
+    ]
+    hists = copy.deepcopy(hists)
+    for hn, h in hists:
+        h.SetTitle(hn)
+        h.Scale(1.0/h.Integral())
+    hists = [h[1] for h in hists]
+    ColorStyleGen.style_hists(hists)
+    canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
+    leg = legend(hists, styles=["f", "f"], **kwargs)
+    canv.SaveAs(out_dir + "/weighted_flavour_lf_%s.png" % hname)
+    canv.Close()
+
+    hists = [
+        ("data", hmerged["madgraph/unweighted"]["data"]),
+        ("madgraph unw", hists_flavours_merged["madgraph/unweighted"]["WJets"]),
+        ("madgraph rew", hists_flavours_merged["madgraph/weighted"]["WJets"]),
         ("sherpa unw", hists_flavours_merged["sherpa"]["WJets"]),
     ]
-    hists = [h[1] for h in histsnames]
-    ColorStyleGen.style_hists(hists)
-    for hn, h in histsnames:
+    hists = copy.deepcopy(hists)
+    for hn, h in hists:
         h.Scale(1.0/h.Integral())
         h.SetTitle(hn)
+    hists = [h[1] for h in hists]
+    ColorStyleGen.style_hists(hists)
 
-    chi2_1 = hmerged["madgraph"]["data"].Chi2Test(hists_flavours_merged["madgraph"]["WJets"], "WW CHI2/NDF")
-    chi2_2 = hmerged["madgraph"]["data"].Chi2Test(hists_flavours_merged["sherpa"]["WJets"], "WW CHI2/NDF")
-    hists_flavours_merged["madgraph"]["WJets"].SetTitle(hists_flavours_merged["madgraph"]["WJets"].GetTitle() + " #chi^{2}/ndf = %.2f" % chi2_1)
-    hists_flavours_merged["sherpa"]["WJets"].SetTitle(hists_flavours_merged["sherpa"]["WJets"].GetTitle() + " #chi^{2}/ndf = %.2f" % chi2_2)
-
-    canv = plot_hists(hists, x_label=var["varname"])
+    canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
     leg = legend(hists, styles=["f", "f"], **kwargs)
     hists[0].SetTitle("")
     canv.Update()
     canv.SaveAs(out_dir + "/shapes_%s.png" % hname)
     canv.Close()
 
-    return total_madgraph
+    hists = [
+        ("sherpa hf", hmerged["sherpa"]["WJets_hf"]),
+        ("madgraph unw hf", hmerged["madgraph/unweighted"]["WJets_hf"]),
+        ("madgraph rew hf", hmerged["madgraph/weighted"]["WJets_hf"]),
+    ]
+    hists = copy.deepcopy(hists)
+    for hn, h in hists:
+        h.SetTitle(hn)
+        h.Scale(1.0/h.Integral())
+    hists = [h[1] for h in hists]
+    ColorStyleGen.style_hists(hists)
+    canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
+    leg = legend(hists, styles=["f", "f"], **kwargs)
+    hists[0].SetTitle("madgraph sherpa rew hf")
+    canv.SaveAs(out_dir + "/shapes_hf_%s.png" % hname)
+    canv.Close()
+
+    return total_madgraph, hist_coll
 
 def plot_ratios(cut_name, cut, samples, out_dir, recreate):
     out_dir += "/" + cut_name
+    mkdir_p(out_dir)
     if recreate:
-        samples_WJets = filter(lambda x: sample_types.is_wjets(x.name), samples)
+        samples_WJets = filter(lambda x: sample_types.is_wjets(x.name), samples.values())
         logger.debug("Using samples %s" % str(samples_WJets))
 
         hists = {}
@@ -319,8 +415,15 @@ def plot_ratios(cut_name, cut, samples, out_dir, recreate):
         canv.Update()
         canv.SaveAs(out_dir + "/flavours__%s.png" % sc)
 
+    md_merged = dict()
+    for hn, h in merged.items():
+        md_merged[hn] = HistMetaData(sample_names = merges[hn])
+    hc_merged = HistCollection(merged, md_merged, "hists__costheta_flavours_merged")
+    hc_merged.save(out_dir)
+    logger.info("Saved merged histogram collection")
+
 if __name__=="__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.ERROR)
     tdrstyle()
     logger.setLevel(level=logging.DEBUG)
     logging.getLogger("utils").setLevel(logging.DEBUG)
@@ -335,6 +438,10 @@ if __name__=="__main__":
 
     if args.recreate:
         samples = load_samples(os.environ["STPOL_DIR"])
+        for s in samples.values():
+            if sample_types.is_wjets(s.name):
+                s.tree.AddFriend("trees/WJets_weights", s.tfile)
+
     else:
         samples = {}
 
@@ -343,13 +450,27 @@ if __name__=="__main__":
         out_dir += "/" + args.tag
     mkdir_p(out_dir)
 
-    plot_ratios("2J", Cuts.final_jet(2), samples, out_dir, args.recreate)
+    #plot_ratios("2J", Cuts.final_jet(2), samples, out_dir, args.recreate)
 
-    hists_2J0T = plot_sherpa_vs_madgraph(
+    hists_2J0T, coll1 = plot_sherpa_vs_madgraph(
         costheta, "2J0T",
         str(Cuts.mu*Cuts.final(2,0)),
         samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0
     )
-    sf_Wlight = hists_2J0T["data"].Integral() / hists_2J0T["WJets"].Integral()
-    print "sf_Wlight = %.8f" % sf_Wlight
-    print "err_sf_Wlight = %.8f" % abs((1-sf_Wlight))
+
+    sf_Wlight = hists_2J0T["data"].Integral() / (
+        sum([h.Integral() for k, h in hists_2J0T.items() if k!="data"])
+    )
+    del coll1
+
+    for syst in ["nominal", "wjets_up", "wjets_down"]:
+        plot_sherpa_vs_madgraph(
+            costheta, "2J0T",
+            str(Cuts.mu*Cuts.final(2,0)),
+            samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+        )
+        plot_sherpa_vs_madgraph(
+            costheta, "2J1T",
+            str(Cuts.mu*Cuts.final(2,1)),
+            samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+        )
