@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('mva', help = 'output .root of mva trainer')
 parser.add_argument('trees', nargs = '*', help = 'list of input root files')
 parser.add_argument('-o', '--odir', default='.', help = 'output dir')
-parser.add_argument('-s', '--suf', default='wmva', help = 'filename suffix')
+parser.add_argument('-s', '--suf', default=None, help = 'filename suffix')
 args = parser.parse_args()
 
 mva_tfile = ROOT.TFile(args.mva, 'READ')
@@ -23,7 +23,8 @@ discr = array.array('f', [0])
 if not os.path.isdir(args.odir): os.mkdir(args.odir)
 
 for inpfn in args.trees:
-	outfn = os.path.join(args.odir, inpfn.split('/')[-1].replace('.root', '_'+args.suf+'.root'))
+	outfn = os.path.join(args.odir, inpfn.split('/')[-1])
+	if args.suf: outfn = outfn.replace('.root', '_'+args.suf+'.root')
 	shutil.copyfile(inpfn, outfn)
 	outf = ROOT.TFile(outfn, 'UPDATE')
 	outf.cd('trees')
