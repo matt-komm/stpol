@@ -204,8 +204,8 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
         logging.error("Couldn't open the histogram collection: %s. Try running with --recreate" % str(e))
         sys.exit(1)
 
-    for hn, hist in hist_coll.hists.items():
-        hn = hn.split("/")[-1]
+    for hn_, hist in hist_coll.hists.items():
+        hn = hn_.split("/")[-1]
         try:
             if sample_types.is_mc(hn):
                 Styling.mc_style(hist, hn)
@@ -219,6 +219,8 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
             Styling.mc_style(hist, match.group(1))
             if match.group(2)=="hf":
                 hist.SetFillColor(hist.GetFillColor()+1)
+        if hasattr(hist_coll.metadata[hn_], "average_weight") and re.match(".*_weighted", hn_):
+            hist.Scale(1.0/hist_coll.metadata[hn_].average_weight)
 
     logger.debug("Loaded hists: %s" % str(hist_coll.hists))
 
@@ -287,7 +289,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     ]
     hists = copy.deepcopy(hists)
     for hn, h in hists:
-        h.SetTitle(hn)
+        h.SetTitle(hn + " %.2f" % h.Integral())
         h.Scale(1.0/h.Integral())
     hists = [h[1] for h in hists]
     ColorStyleGen.style_hists(hists)
@@ -297,12 +299,13 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     canv.Close()
 
     hists = [
+        ("sherpa hf", hmerged["sherpa"]["WJets_hf"]),
         ("madgraph unw hf", hmerged["madgraph/unweighted"]["WJets_hf"]),
         ("madgraph rew hf", hmerged["madgraph/weighted"]["WJets_hf"]),
     ]
     hists = copy.deepcopy(hists)
     for hn, h in hists:
-        h.SetTitle(hn)
+        h.SetTitle(hn + " %.2f" % h.Integral())
         h.Scale(1.0/h.Integral())
     hists = [h[1] for h in hists]
     ColorStyleGen.style_hists(hists)
@@ -312,12 +315,13 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     canv.Close()
 
     hists = [
+        ("sherpa lf", hmerged["sherpa"]["WJets_lf"]),
         ("madgraph unw lf", hmerged["madgraph/unweighted"]["WJets_lf"]),
         ("madgraph rew lf", hmerged["madgraph/weighted"]["WJets_lf"]),
     ]
     hists = copy.deepcopy(hists)
     for hn, h in hists:
-        h.SetTitle(hn)
+        h.SetTitle(hn + " %.2f" % h.Integral())
         h.Scale(1.0/h.Integral())
     hists = [h[1] for h in hists]
     ColorStyleGen.style_hists(hists)
@@ -334,11 +338,10 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     ]
     hists = copy.deepcopy(hists)
     for hn, h in hists:
+        h.SetTitle(hn + " %.2f" % h.Integral())
         h.Scale(1.0/h.Integral())
-        h.SetTitle(hn)
     hists = [h[1] for h in hists]
     ColorStyleGen.style_hists(hists)
-
     canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
     leg = legend(hists, styles=["f", "f"], **kwargs)
     hists[0].SetTitle("")
@@ -346,22 +349,22 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut_str, samples, out_dir, recreate=F
     canv.SaveAs(out_dir + "/shapes_%s.png" % hname)
     canv.Close()
 
-    hists = [
-        ("sherpa hf", hmerged["sherpa"]["WJets_hf"]),
-        ("madgraph unw hf", hmerged["madgraph/unweighted"]["WJets_hf"]),
-        ("madgraph rew hf", hmerged["madgraph/weighted"]["WJets_hf"]),
-    ]
-    hists = copy.deepcopy(hists)
-    for hn, h in hists:
-        h.SetTitle(hn)
-        h.Scale(1.0/h.Integral())
-    hists = [h[1] for h in hists]
-    ColorStyleGen.style_hists(hists)
-    canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
-    leg = legend(hists, styles=["f", "f"], **kwargs)
-    hists[0].SetTitle("madgraph sherpa rew hf")
-    canv.SaveAs(out_dir + "/shapes_hf_%s.png" % hname)
-    canv.Close()
+    # hists = [
+    #     ("sherpa hf", hmerged["sherpa"]["WJets_hf"]),
+    #     ("madgraph unw hf", hmerged["madgraph/unweighted"]["WJets_hf"]),
+    #     ("madgraph rew hf", hmerged["madgraph/weighted"]["WJets_hf"]),
+    # ]
+    # hists = copy.deepcopy(hists)
+    # for hn, h in hists:
+    #     h.SetTitle(hn + " %.2f" % h.Integral())
+    #     h.Scale(1.0/h.Integral())
+    # hists = [h[1] for h in hists]
+    # ColorStyleGen.style_hists(hists)
+    # canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
+    # leg = legend(hists, styles=["f", "f"], **kwargs)
+    # hists[0].SetTitle("madgraph sherpa rew hf")
+    # canv.SaveAs(out_dir + "/shapes_hf_%s.png" % hname)
+    # canv.Close()
 
     return total_madgraph, hist_coll
 
@@ -375,7 +378,7 @@ def plot_ratios(cut_name, cut, samples, out_dir, recreate):
         hists = {}
         metadata = {}
         for sample in samples_WJets:
-            logger.debug("Drawing histogram from %s" % sample.name)
+            logger.info("Drawing histogram from %s" % sample.name)
             for sc in flavour_scenarios:
                 logger.debug("Flavor scenario %s" % sc)
                 hist = sample.drawHistogram(costheta["var"], str(cut*Cuts.Wflavour(sc)), weight=str(Weights.total()), plot_range=costheta["range"]).hist
@@ -389,9 +392,9 @@ def plot_ratios(cut_name, cut, samples, out_dir, recreate):
                 metadata[hname] = HistMetaData(sample_name=sample.name, flavour_scenario=sc)
         coll = HistCollection(hists, metadata, "hists__costheta_flavour_ratios")
         coll.save(out_dir)
-    else:
-        coll = HistCollection.load(out_dir + "/hists__costheta_flavour_ratios.root")
+    coll = HistCollection.load(out_dir + "/hists__costheta_flavour_ratios.root")
     
+    logger.debug(str(coll.hists))
     hists = coll.hists.values()
     
     merges = {}
@@ -450,27 +453,35 @@ if __name__=="__main__":
         out_dir += "/" + args.tag
     mkdir_p(out_dir)
 
-    #plot_ratios("2J", Cuts.final_jet(2), samples, out_dir, args.recreate)
+    plot_ratios("2J0T", Cuts.final(2,0), samples, out_dir, args.recreate)
+    plot_ratios("2J1T", Cuts.final(2,1), samples, out_dir, args.recreate)
+    plot_ratios("2J", Cuts.final_jet(2), samples, out_dir, args.recreate)
 
-    hists_2J0T, coll1 = plot_sherpa_vs_madgraph(
-        costheta, "2J0T",
-        str(Cuts.mu*Cuts.final(2,0)),
-        samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0
+    plot_sherpa_vs_madgraph(
+        costheta, "2J",
+        str(Cuts.mu*Cuts.final_jet(2)),
+        samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
     )
 
-    sf_Wlight = hists_2J0T["data"].Integral() / (
-        sum([h.Integral() for k, h in hists_2J0T.items() if k!="data"])
-    )
-    del coll1
+    # hists_2J0T, coll1 = plot_sherpa_vs_madgraph(
+    #     costheta, "2J0T",
+    #     str(Cuts.mu*Cuts.final(2,0)),
+    #     samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0
+    # )
 
-    for syst in ["nominal", "wjets_up", "wjets_down"]:
+    # sf_Wlight = hists_2J0T["data"].Integral() / (
+    #     sum([h.Integral() for k, h in hists_2J0T.items() if k!="data"])
+    # )
+    # del coll1
+
+    for syst in []:#["nominal", "wjets_up", "wjets_down"]:
         plot_sherpa_vs_madgraph(
-            costheta, "2J0T",
+            costheta, "2J0T/%s"%syst,
             str(Cuts.mu*Cuts.final(2,0)),
             samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
         )
         plot_sherpa_vs_madgraph(
-            costheta, "2J1T",
+            costheta, "2J1T/%s"%syst,
             str(Cuts.mu*Cuts.final(2,1)),
             samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
         )
