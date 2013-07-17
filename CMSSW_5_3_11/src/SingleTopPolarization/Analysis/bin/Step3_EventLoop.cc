@@ -623,7 +623,6 @@ public:
         doWeights = pars.getParameter<bool>("doWeights");
         doWeightSys = pars.getParameter<bool>("doWeightSys");
 
-	std::cout<<"doWeights = "<<doWeights<<", doWeightSys = "<<doWeightSys<<std::endl;
         initialize_branches();
         
         bWeightNominalSrc = pars.getParameter<edm::InputTag>("bWeightNominalSrc");
