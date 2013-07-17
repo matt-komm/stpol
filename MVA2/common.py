@@ -46,7 +46,8 @@ class samples:
 
 	WJets   = ['W1Jets_exclusive', 'W2Jets_exclusive', 'W3Jets_exclusive', 'W4Jets_exclusive']
 
-	top     = ['TTJets_FullLept', 'TTJets_MassiveBinDECAY', 'TTJets_SemiLept', 'T_s', 'Tbar_s', 'T_tW', 'Tbar_tW']
+	ttbar   = ['TTJets_FullLept', 'TTJets_SemiLept'] # TTJets_MassiveBinDECAY ?
+	top     = ttbar + ['T_s', 'Tbar_s', 'T_tW', 'Tbar_tW']
 	diboson = ['WW', 'WZ', 'ZZ']
 	GJets   = ['GJets1','GJets2']
 	other   = ['DYJets'] + GJets + diboson + top
