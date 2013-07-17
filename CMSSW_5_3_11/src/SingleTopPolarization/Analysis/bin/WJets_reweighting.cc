@@ -11,10 +11,10 @@ enum WJetsClassification {
     Wbb,
     Wcc,
     WbX,
-    WgX,
     WcX,
 
     //W+light
+    WgX,
     Wgg,
     WXX,
 };

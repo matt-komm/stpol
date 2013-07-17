@@ -17,6 +17,7 @@ merge_cmds["tW-channel"] = ["T_tW", "Tbar_tW"]
 merge_cmds["s-channel"] = ["T_s", "Tbar_s"]
 merge_cmds["t-channel"] = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]
 
+logger = logging.getLogger("utils")
 def lumi_textbox(lumi, pos="top-left"):
     """
     This method creates and draws the "CMS Preliminary" luminosity box,
@@ -49,8 +50,17 @@ def merge_hists(hists_d, merge_groups):
     logging.debug("merge_hists: input histograms %s" % str(hists_d))
     for merge_name, items in merge_groups.items():
         logging.debug("Merging %s to %s" % (items, merge_name))
-        hist = hists_d[items[0]].Clone()
-        for item in items[1:]:
+
+        matching_keys = []
+        for item in items:
+            t = filter(lambda x: re.match(item + "$", x), hists_d.keys())
+            matching_keys += t
+            logger.debug("Matched %s to %s" % (str(t), item))
+        if len(matching_keys)==0:
+            continue
+        logger.debug("Merging matched %s" % str(matching_keys))
+        hist = hists_d[matching_keys[0]].Clone()
+        for item in matching_keys[1:]:
             hist.Add(hists_d[item])
 
         out_d[merge_name] = hist
