@@ -124,7 +124,7 @@ class Sample:
 
         logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
 
-        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff")
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
         logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
         if n_entries<0:
