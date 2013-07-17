@@ -372,6 +372,7 @@ public:
     edm::InputTag lightJetPtSrc;
     edm::InputTag lightJetEtaSrc;
     edm::InputTag lightJetPhiSrc;
+    edm::InputTag lightJetPUMVASrc;
     
     edm::InputTag lightJetBdiscrSrc;
     edm::InputTag lightJetRmsSrc;
@@ -381,6 +382,7 @@ public:
         branch_vars.vars_float["pt_lj"] = BranchVars::def_val;
         branch_vars.vars_float["eta_lj"] = BranchVars::def_val;
         branch_vars.vars_float["phi_lj"] = BranchVars::def_val;
+        branch_vars.vars_float["pu_lj"] = BranchVars::def_val;
 
         branch_vars.vars_float["bdiscr_lj"] = BranchVars::def_val;
         branch_vars.vars_float["rms_lj"] = BranchVars::def_val;
@@ -408,6 +410,7 @@ public:
         goodJetsEtaSrc = pars.getParameter<edm::InputTag>("goodJetsEtaSrc");
 
         lightJetPhiSrc = pars.getParameter<edm::InputTag>("lightJetPhiSrc");
+        lightJetPUMVASrc = pars.getParameter<edm::InputTag>("lightJetPUMVASrc");
         lightJetEtaSrc = pars.getParameter<edm::InputTag>("lightJetEtaSrc");
         lightJetBdiscrSrc = pars.getParameter<edm::InputTag>("lightJetBdiscrSrc");
         lightJetPtSrc = pars.getParameter<edm::InputTag>("lightJetPtSrc");
@@ -421,6 +424,7 @@ public:
         branch_vars.vars_float["pt_lj"] = get_collection_n<float>(event, lightJetPtSrc);
         branch_vars.vars_float["eta_lj"] = get_collection_n<float>(event, lightJetEtaSrc);
         branch_vars.vars_float["phi_lj"] = get_collection_n<float>(event, lightJetPhiSrc);
+        branch_vars.vars_float["pu_lj"] = get_collection_n<float>(event, lightJetPUMVASrc);
 
         branch_vars.vars_float["bdiscr_lj"] = get_collection_n<float>(event, lightJetBdiscrSrc);
         branch_vars.vars_float["rms_lj"] = get_collection_n<float>(event, lightJetRmsSrc);
@@ -449,6 +453,7 @@ public:
     edm::InputTag bJetPtSrc;
     edm::InputTag bJetEtaSrc;
     edm::InputTag bJetPhiSrc;
+    edm::InputTag bJetPUMVASrc;
 
     edm::InputTag bJetBdiscrSrc;
     edm::InputTag bTagJetsCountSrc;
@@ -458,6 +463,7 @@ public:
         branch_vars.vars_float["pt_bj"] = BranchVars::def_val;
         branch_vars.vars_float["eta_bj"] = BranchVars::def_val;
         branch_vars.vars_float["phi_bj"] = BranchVars::def_val;
+        branch_vars.vars_float["pu_bj"] = BranchVars::def_val;
 
         branch_vars.vars_float["bdiscr_bj"] = BranchVars::def_val;
         branch_vars.vars_int["n_tags"] = BranchVars::def_val_int;
@@ -475,6 +481,7 @@ public:
         bJetPtSrc = pars.getParameter<edm::InputTag>("bJetPtSrc");
         bJetEtaSrc = pars.getParameter<edm::InputTag>("bJetEtaSrc");
         bJetPhiSrc = pars.getParameter<edm::InputTag>("bJetPhiSrc");
+        bJetPUMVASrc = pars.getParameter<edm::InputTag>("bJetPUMVASrc");
         
         bJetBdiscrSrc = pars.getParameter<edm::InputTag>("bJetBdiscrSrc");
         bTagJetsCountSrc = pars.getParameter<edm::InputTag>("bTagJetsCountSrc");
@@ -487,6 +494,7 @@ public:
         branch_vars.vars_float["pt_bj"] = get_collection_n<float>(event, bJetPtSrc);
         branch_vars.vars_float["eta_bj"] = get_collection_n<float>(event, bJetEtaSrc);
         branch_vars.vars_float["phi_bj"] = get_collection_n<float>(event, bJetPhiSrc);
+        branch_vars.vars_float["pu_bj"] = get_collection_n<float>(event, bJetPUMVASrc);
 
         branch_vars.vars_float["bdiscr_bj"] = get_collection_n<float>(event, bJetBdiscrSrc);
         branch_vars.vars_int["n_tags"] = get_collection<int>(event, bTagJetsCountSrc, -1);
@@ -769,7 +777,7 @@ public:
     
     void initialize_branches() {
         branch_vars.vars_float["mt_mu"] = BranchVars::def_val;
-	branch_vars.vars_float["mt_el"] = BranchVars::def_val;
+        branch_vars.vars_float["mt_el"] = BranchVars::def_val;
         branch_vars.vars_float["met"] = BranchVars::def_val;
         branch_vars.vars_float["phi_met"] = BranchVars::def_val;
     }
@@ -792,7 +800,7 @@ public:
         pre_process();
         
         branch_vars.vars_float["mt_mu"] = get_collection<double>(event, mtMuSrc, BranchVars::def_val);
-	branch_vars.vars_float["mt_el"] = get_collection<double>(event, mtElSrc, BranchVars::def_val);
+        branch_vars.vars_float["mt_el"] = get_collection<double>(event, mtElSrc, BranchVars::def_val);
         branch_vars.vars_float["met"] = get_collection_n<float>(event, metSrc);
         branch_vars.vars_float["phi_met"] = get_collection_n<float>(event, metPhiSrc);
         if (doMTCut && branch_vars.vars_float["mt_mu"] < minValMtw) return false;
