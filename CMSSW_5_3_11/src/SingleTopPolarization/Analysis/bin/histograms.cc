@@ -16,9 +16,13 @@ void get_branch(const char* name, T* address, TTree* tree) {
     tree->AddBranchToCache(name);
 }
 
-std::vector<int> N_jets({2,3});
-std::vector<int> N_tags({0,1,2});
-
+std::vector<int> N_jets;
+N_jets.push_back(2);
+N_jets.push_back(3);
+std::vector<int> N_tags;
+N_tags.push_back(0);
+N_tags.push_back(1);
+N_tags.push_back(2);
 std::string hist_name(int n_jets, int n_tags) {
     std::istringstream ss;
     ss << "__NJets_" << n_jets;
