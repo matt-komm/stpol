@@ -61,7 +61,7 @@ def get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGro
     return (get_yield(var, cuts.name, cutMT, mtMinValue, fit, dataGroup), fit)
 
 
-def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/step3_latest/", do_systematics=False):
+def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/step3_new/", do_systematics=False):
 #    do_systematics = True
 #
 #    if channel == "ele":
@@ -116,7 +116,7 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     if channel == "ele":
         dataLumiIso = lumi_iso["ele"]
-        dataLumiAntiIso = lumi_antiso["ele"]
+        dataLumiAntiIso = lumi_antiiso["ele"]
 
     lumis = DataLumiStorage(dataLumiIso, dataLumiAntiIso)
 
@@ -170,6 +170,8 @@ if __name__=="__main__":
 
     cuts_final = FitConfig( "final_selection", trigger="1.0")
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
+    cuts_mva = FitConfig( "mva_selection", trigger="1.0")
+    cuts_mva.setFinalCuts("1")
     cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0")
     cuts_final_without_eta = FitConfig( "final_selection_without_eta_cut", trigger="1.0")
     cuts_final_without_eta.setFinalCuts("top_mass < 220 && top_mass > 130")
@@ -178,6 +180,7 @@ if __name__=="__main__":
     cuts["final"] = cuts_final
     cuts["2j0t"] = cuts_2j0t
     cuts["final_without_eta"] = cuts_final_without_eta
+    cuts["mva"] = cuts_mva
 
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
     try:
