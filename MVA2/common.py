@@ -121,6 +121,7 @@ class MVA_trainer:
 				sName = key.GetName()
 				sTree = key.ReadObj()
 				sScaleFactor = getSCF(channel, sName, initEvs[sName])
+				#sScaleFactor = 1.0/sTree.GetEntries()
 				# TODO: multiply scf with fraction of train/total
 				print ' > ', sName, sScaleFactor
 				self.factory.AddTree(sTree, kSigBg, sScaleFactor, ROOT.TCut(''), kTrainTest)
@@ -259,14 +260,13 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 		ifname = rootfilepath + lept + "/iso/nominal/" + ch + ".root"
 		ifile = ROOT.TFile(ifname)
 		meta["initial_events"][ch] = ifile.Get("trees/count_hist").GetBinContent(1)
-		ifile.cd()
+		ofile.cd()
 		tree = ifile.Get("trees/Events").CopyTree(cutstring)
 		
 		tr = array.array('i', [0])
 		
 		newbranch = tree.Branch("training", tr, "training/I")
 		nentries = tree.GetEntries()
-		
 		
 		ratio = signals[ch] if ch in signals else backgrounds[ch]
 		meta["fractions"][ch] = ratio
