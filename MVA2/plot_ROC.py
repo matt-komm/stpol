@@ -1,6 +1,6 @@
 import ROOT
 
-def plot_ROC(signals, backgrounds, variables, nbins = 100):
+def plot_ROC(signals, backgrounds, variables, nbins = 100, name='noname', title='MVA ROC plot'):
 	"""plots the ROC curve for for the trees in signals vs trees in backgrounds for variables"""
 	
 	# find minimum and maximum values
@@ -58,7 +58,7 @@ def plot_ROC(signals, backgrounds, variables, nbins = 100):
 			graph[var].SetPoint(i, 1.0 - ssg/nsg, sbg/nbg)
 	
 	
-	canvas = ROOT.TCanvas("canv", "ROC curves", 650, 650)
+	canvas = ROOT.TCanvas("canv_"+name, "ROC curves", 650, 650)
 	canvas.SetGrid()
 	canvas.SetTicks()
 	
@@ -76,7 +76,7 @@ def plot_ROC(signals, backgrounds, variables, nbins = 100):
 			graph[var].GetYaxis().SetTitle("background rejection")
 			graph[var].GetXaxis().CenterTitle()
 			graph[var].GetYaxis().CenterTitle()
-			graph[var].SetTitle("comparison of MVAs vs plain eta_lj cut")
+			graph[var].SetTitle(title)
 		else:
 			graph[var].Draw("L SAME")
 			
@@ -89,7 +89,7 @@ def plot_ROC(signals, backgrounds, variables, nbins = 100):
 	
 	img = ROOT.TImage.Create()
 	img.FromPad(canvas)
-	img.WriteImage("ROC_plot.png")
+	img.WriteImage('ROC_'+name+".png")
 	
 	
 
