@@ -581,36 +581,35 @@ public:
     float mu_weight;
     
     void initialize_branches() {
-        if (doWeights) {
-            branch_vars.vars_float["b_weight_nominal"] = 1.0;
-            branch_vars.vars_float["ttbar_weight"] = 1.0;
-            branch_vars.vars_float["pu_weight"] = 1.0;
-            branch_vars.vars_float["gen_weight"] = 1.0;
-            branch_vars.vars_float["muon_IDWeight"] = 1.0;
-            branch_vars.vars_float["muon_IsoWeight"] = 1.0;
-            branch_vars.vars_float["muon_TriggerWeight"] = 1.0;
-            branch_vars.vars_float["electron_IDWeight"] = 1.0;
-            branch_vars.vars_float["electron_triggerWeight"] = 1.0;
-            branch_vars.vars_float["SF_total"] = 1.0;
-        }
-        if( doWeights && doWeightSys ) {
-            branch_vars.vars_float["b_weight_nominal_Lup"] = 1.0;
-            branch_vars.vars_float["b_weight_nominal_Ldown"] = 1.0;
-            branch_vars.vars_float["b_weight_nominal_BCup"] = 1.0;
-            branch_vars.vars_float["b_weight_nominal_BCdown"] = 1.0;
-            
-            branch_vars.vars_float["muon_IDWeight_up"] = 1.0;
-            branch_vars.vars_float["muon_IDWeight_down"] = 1.0;
-            branch_vars.vars_float["muon_IsoWeight_up"] = 1.0;
-            branch_vars.vars_float["muon_IsoWeight_down"] = 1.0;
-            branch_vars.vars_float["muon_TriggerWeight_up"] = 1.0;
-            branch_vars.vars_float["muon_TriggerWeight_down"] = 1.0;
-            
-            branch_vars.vars_float["electron_IDWeight_up"] = 1.0;
-            branch_vars.vars_float["electron_IDWeight_down"] = 1.0;
-            branch_vars.vars_float["electron_triggerWeight_up"] = 1.0;
-            branch_vars.vars_float["electron_triggerWeight_down"] = 1.0;
-        }
+      branch_vars.vars_float["b_weight_nominal"] = 1.0;
+      branch_vars.vars_float["ttbar_weight"] = 1.0;
+      branch_vars.vars_float["pu_weight"] = 1.0;
+      branch_vars.vars_float["gen_weight"] = 1.0;
+      branch_vars.vars_float["muon_IDWeight"] = 1.0;
+      branch_vars.vars_float["muon_IsoWeight"] = 1.0;
+      branch_vars.vars_float["muon_TriggerWeight"] = 1.0;
+      branch_vars.vars_float["electron_IDWeight"] = 1.0;
+      branch_vars.vars_float["electron_triggerWeight"] = 1.0;
+      branch_vars.vars_float["SF_total"] = 1.0;
+
+      if( doWeights && doWeightSys ) {
+	branch_vars.vars_float["b_weight_nominal_Lup"] = 1.0;
+	branch_vars.vars_float["b_weight_nominal_Ldown"] = 1.0;
+	branch_vars.vars_float["b_weight_nominal_BCup"] = 1.0;
+	branch_vars.vars_float["b_weight_nominal_BCdown"] = 1.0;
+        
+	branch_vars.vars_float["muon_IDWeight_up"] = 1.0;
+	branch_vars.vars_float["muon_IDWeight_down"] = 1.0;
+	branch_vars.vars_float["muon_IsoWeight_up"] = 1.0;
+	branch_vars.vars_float["muon_IsoWeight_down"] = 1.0;
+	branch_vars.vars_float["muon_TriggerWeight_up"] = 1.0;
+	branch_vars.vars_float["muon_TriggerWeight_down"] = 1.0;
+        
+	branch_vars.vars_float["electron_IDWeight_up"] = 1.0;
+	branch_vars.vars_float["electron_IDWeight_down"] = 1.0;
+	branch_vars.vars_float["electron_triggerWeight_up"] = 1.0;
+	branch_vars.vars_float["electron_triggerWeight_down"] = 1.0;
+      }
     }
     
     Weights(const edm::ParameterSet& pars, BranchVars& _branch_vars) :
@@ -623,7 +622,8 @@ public:
         }
         doWeights = pars.getParameter<bool>("doWeights");
         doWeightSys = pars.getParameter<bool>("doWeightSys");
-        
+
+	std::cout<<"doWeights = "<<doWeights<<", doWeightSys = "<<doWeightSys<<std::endl;
         initialize_branches();
         
         bWeightNominalSrc = pars.getParameter<edm::InputTag>("bWeightNominalSrc");
@@ -659,8 +659,7 @@ public:
     }
     bool process(const edm::EventBase& event) {
         pre_process();
-        if(doWeights) {
-            
+        if(doWeights) {            
             edm::Handle<GenEventInfoProduct> genEventInfo;
             edm::InputTag genWeightSrc1("generator");
             event.getByLabel(genWeightSrc1, genEventInfo);
@@ -692,6 +691,7 @@ public:
                 branch_vars.vars_float["SF_total"] = branch_vars.vars_float["b_weight_nominal"]*branch_vars.vars_float["pu_weight"]*el_weight;
             }
         }
+	
         if( doWeights && doWeightSys ) {
             branch_vars.vars_float["b_weight_nominal_Lup"] = get_collection<float>(event, bWeightNominalLUpSrc, 0.0);
             branch_vars.vars_float["b_weight_nominal_Ldown"] = get_collection<float>(event, bWeightNominalLDownSrc, 0.0);
@@ -718,8 +718,7 @@ public:
             }
         };
 
-        if(doWeights) {
-            
+        if(doWeights) {    
             not_nan("b_weight_nominal");
             not_nan("pu_weight");
             not_nan("gen_weight");
