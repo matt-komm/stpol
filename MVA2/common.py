@@ -41,6 +41,18 @@ vartypes = {
 	"run_id" : "I"
 }
 
+class samples:
+	signal  = ['T_t_ToLeptons', 'Tbar_t_ToLeptons']
+
+	WJets   = ['W1Jets_exclusive', 'W2Jets_exclusive', 'W3Jets_exclusive', 'W4Jets_exclusive']
+
+	top     = ['TTJets_FullLept', 'TTJets_MassiveBinDECAY', 'TTJets_SemiLept', 'T_s', 'Tbar_s', 'T_tW', 'Tbar_tW']
+	diboson = ['WW', 'WZ', 'ZZ']
+	GJets   = ['GJets1','GJets2']
+	other   = ['DYJets'] + GJets + diboson + top
+
+	QCD     = ['QCDMu', 'QCD_Pt_170_250_BCtoE', 'QCD_Pt_170_250_EMEnriched', 'QCD_Pt_20_30_BCtoE', 'QCD_Pt_20_30_EMEnriched', 'QCD_Pt_250_350_BCtoE', 'QCD_Pt_250_350_EMEnriched', 'QCD_Pt_30_80_BCtoE', 'QCD_Pt_30_80_EMEnriched', 'QCD_Pt_350_BCtoE', 'QCD_Pt_350_EMEnriched', 'QCD_Pt_80_170_BCtoE', 'QCD_Pt_80_170_EMEnriched']
+
 def writeTObject(name, obj, directory, overwrite=True):
 	pString = pickle.dumps(obj)
 	directory.WriteTObject(ROOT.TObjString(pString), name, 'Overwrite' if overwrite else '')
