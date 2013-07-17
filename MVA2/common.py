@@ -301,17 +301,12 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 	
 	ofile.Close()
 	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+class HStack(ROOT.THStack):
+	def __init__(self, name, title):
+		super(HStack,self).__init__(name, title)
+		self.hs = []
+	def Add(self, h):
+		self.hs.append(h)
+		super(HStack,self).Add(h)
+	#def Draw(self, *args):
+	#	super(HStack,self).Draw(*args)
