@@ -19,6 +19,7 @@ from plots.common.sample_style import Styling
 import plots.common.pretty_names as pretty_names
 from plots.common.utils import merge_cmds, merge_hists
 import random
+from array import array
 
 import plots.common.tdrstyle as tdrstyle
 tdrstyle.tdrstyle()
@@ -37,7 +38,7 @@ flist=sum(merge_cmds.values(),[])
 tree='Events'
 from plot_defs import *
 
-mc_sf=1.15
+mc_sf=1.
 lumiele=6144
 lumimu=6398
 lumi = lumiele
@@ -109,9 +110,32 @@ for pd in keylist:
     merged_hists = [hist_qcd]+merge_hists(hists_mc, merge_cmds).values()
     leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
+    #Create the dir if it doesn't exits
+    try:
+        os.mkdir("out_"+proc)
+    except OSError:
+        pass
+
+    yf = open('out_'+proc+'/'+pd+'.yield','w')
+    htot = ROOT.TH1F('htot'+pd,'htot'+pd,plot_range[0],plot_range[1],plot_range[2])
+    htot.Sumw2()
     #Some printout
     for h in merged_hists + [hist_data]:
         print h.GetName(), h.GetTitle(), h.Integral()
+        error = array('d',[0])
+        tot=h.IntegralAndError(0,plot_range[0]+2,error)
+        err=error[0]
+        outtxt='{0}\t{1:.2f} +- {2:.2f}\n'.format(h.GetTitle(),tot,err)
+        yf.write(outtxt)
+        if h.GetTitle() != 'Data':
+            htot.Add(h)
+
+    error = array('d',[0])
+    tot=htot.IntegralAndError(0,plot_range[0]+2,error)
+    err=error[0]
+    outtxt='MC total\t{0:.2f} +- {1:.2f}\n'.format(tot,err)
+    yf.write(outtxt)
+    yf.close()
 
     canv = ROOT.TCanvas()
 
@@ -133,9 +157,4 @@ for pd in keylist:
     leg.Draw()
     canv.Draw()
     
-    #Create the dir if it doesn't exits
-    try:
-        os.mkdir("out_"+proc)
-    except OSError:
-        pass
     canv.SaveAs('out_'+proc+'/'+pd+'.png')
