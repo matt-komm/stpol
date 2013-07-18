@@ -31,7 +31,8 @@ out*
 
 #ROOT files
 *.root
-trees
+!CMSSW_*/src/data/
+/trees
 
 #Logs
 *.log
@@ -59,7 +60,6 @@ misc/*
 rootpy
 root_numpy
 local
-data
 theta
 
 stpol.xcodeproj/xcuserdata
