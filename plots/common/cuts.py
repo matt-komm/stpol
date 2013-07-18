@@ -28,6 +28,7 @@ class Cuts:
     one_muon = Cut("n_muons==1 && n_eles==0")
     one_electron = Cut("n_muons==0 && n_eles==1")
     lepton_veto = Cut("n_veto_mu==0 && n_veto_ele==0")
+    electron_iso = Cut("el_mva > 0.9 & el_reliso < 0.1")
     met = Cut('met > 45')
     no_cut = Cut("1")
 
