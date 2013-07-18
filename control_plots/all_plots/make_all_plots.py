@@ -80,7 +80,7 @@ for pd in keylist:
     weight_str = "SF_total"
 
     plot_range = plot_defs[pd]['range']
-
+    hist_qcd = None
     for name, sample in samples.items():
         print "Starting:",name
         if sample.isMC:
@@ -93,7 +93,7 @@ for pd in keylist:
             hist_data.SetTitle('Data')
             Styling.data_style(hist_data)
 
-        elif name == "data_aiso" and plot_defs[pd]['estQcd']:
+        elif name == "data_aiso" and plot_defs[pd]['estQcd'] and proc == 'ele':
             cv='mu_iso'
             lb=0.3
             if proc == 'ele':
@@ -107,7 +107,10 @@ for pd in keylist:
             Styling.mc_style(hists_mc['QCD'], 'QCD')
 
     #Combine the subsamples to physical processes
-    merged_hists = [hist_qcd]+merge_hists(hists_mc, merge_cmds).values()
+    add=[]
+    if hist_qcd:
+        add=[hist_qcd]
+    merged_hists = add+merge_hists(hists_mc, merge_cmds).values()
     leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
     #Create the dir if it doesn't exits
@@ -148,7 +151,7 @@ for pd in keylist:
     ylab = 'N / '+str((1.*(plot_range[2]-plot_range[1])/plot_range[0]))
     if plot_defs[pd]['gev']:
         ylab+=' GeV'
-    stacks = plot_hists_stacked(canv, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = 1.3, do_log_y = plot_defs[pd]['log'])
+    stacks = plot_hists_stacked(canv, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = 1.5, do_log_y = plot_defs[pd]['log'])
     boxloc = 'top-right'
     if plot_defs[pd]['labloc'] == 'top-right':
         boxloc = 'top-left'
