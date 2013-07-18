@@ -35,13 +35,13 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
         nSamp = 1
         for sample in samples:
             hname = sample.name
-            weight_ = copy.copy(weight)
+            weight_ = copy.deepcopy(weight)
             if sample.isMC:
 
                 #Apply sherpa gen-level weight
                 if "sherpa" in sample.name:
                     logger.debug("WJets sherpa sample, enabling sherpa weights")
-                    weight_ *= Weights.sherpa_weight
+                    weight_ = weight_*Weights.sherpa_weight
 
                 weight_strs = [("weight__nominal", str(weight_))]
 
@@ -62,7 +62,7 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
                     logger.debug("WJets madgraph sample, enabling flavour weight")
                     avg_weight = sample.drawHistogram(
                         str(Weights.wjets_madgraph_shape_weight(systematic)),
-                        str(cut), weight_str=str(weight_), plot_range=[100, 0, 2]
+                        str(cut), weight=str(weight_), plot_range=[100, 0, 2]
                     ).hist.GetMean()
 
                     logger.debug("average weight = %.2f" % avg_weight)
@@ -74,7 +74,7 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
                     for cut_name, cut_str in cut_strs:
                         logger.debug("Drawing with %s, %s" % (weight_str, cut_str))
                         hname_ = weight_name + "/" + cut_name + "/" + hname
-                        hist = sample.drawHistogram(var, cut_str, weight_=weight_str, **kwargs)
+                        hist = sample.drawHistogram(var, cut_str, weight=weight_str, **kwargs)
                         hist.hist.Scale(sample.lumiScaleFactor(lumi))
                         hists[hname_] = hist.hist
                         metadata[hname_] = HistMetaData(
