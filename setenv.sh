@@ -37,6 +37,10 @@ then
     cd ${SCRIPT_DIR}/$CMSSW_DIR
     source /cvmfs/cms.cern.ch/cmsset_default.sh
     eval `scramv1 runtime -sh`
+else
+    echo "Detected that we're not on hep.kbfi.ee, environment may be broken!"
+    echo "Adding CMSSW_5_3_11/python to PYTHONPATH"
+    PYTHONPATH=$PYTHONPATH:$STPOL_DIR/CMSSW_5_3_11/python
 fi
 
 # Return to original directory

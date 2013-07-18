@@ -14,6 +14,7 @@ def plot_hists(hists, name="canv", **kwargs):
     max_bin_mult = kwargs.get("max_bin_mult", 1.5)
     title = kwargs.get("title", "")
     styles = kwargs.get("styles", {})
+    do_chi2 = kwargs.get("do_chi2", False)
 
     max_bin = get_max_bin([hist for hist in hists])
 
@@ -30,6 +31,11 @@ def plot_hists(hists, name="canv", **kwargs):
         hists[0].SetTitle(title)
     hists[0].GetXaxis().SetTitle(x_label)
     hists[0].GetYaxis().SetTitle(y_label)
+
+    if do_chi2:
+        for h in hists[1:]:
+            chi2 = hists[0].Chi2Test(h, "WW CHI2/NDF")
+            h.SetTitle(h.GetTitle() + " #chi^{2}/ndf=%.2f" % chi2)
 
     if do_log_y:
         canv.SetLogy()
