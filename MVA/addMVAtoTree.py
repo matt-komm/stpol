@@ -16,9 +16,6 @@ if len(sys.argv) == 3:
 else:
     flist=sum(merge_cmds.values(),[])
 
-flist.append('SingleEle')
-flist.append('SingleMu')
-
 dir=sys.argv[1]
 print "Using:",dir
 
@@ -27,10 +24,14 @@ sample = 'ele'
 if '/mu/' in dir:
     prt = 'mu'
     sample = 'mu'
+    flist.append('SingleMu')
+else:
+    flist.append('SingleEle')
+
 
 # Create reader and relate variables
 reader = TMVA.Reader()
-varlist = ['top_mass','eta_lj','C','met','bdiscr_bj','bdiscr_lj',prt+'_pt',prt+'_charge','pt_bj']
+varlist = ['top_mass','eta_lj','C','met','mt_'+prt,'bdiscr_bj','bdiscr_lj',prt+'_pt',prt+'_charge','pt_bj']
 speclist = ['cos_theta']
 vars={}
 for v in varlist:

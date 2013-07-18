@@ -7,12 +7,13 @@ from plots.common.utils import merge_cmds
 from plots.common.colors import sample_colors_same
 
 # Choose between electron / muon channel fitting
-lumi=19734
+lumi=6144
 sample = "ele"
 #sample = "mu"
-step3 = "out_step3_mario_11_07_13_42"
+step3 = "step3_mva"
 datadirs={}
 datadirs["iso"] = "/".join((os.environ["STPOL_DIR"], step3, sample ,"iso", "nominal"))
+datadirs["antiiso"] = "/".join((os.environ["STPOL_DIR"], step3, sample ,"antiiso", "nominal"))
 
 flist=sum(merge_cmds.values(),[])
 
@@ -20,6 +21,7 @@ flist=sum(merge_cmds.values(),[])
 samples = {}
 for f in flist:
     samples[f] = Sample.fromFile(datadirs["iso"]+'/'+f+'.root', tree_name="Events_MVA")
+samples['qcd'] = Sample.fromFile(datadirs['antiiso']+'/Single'+sample.title()+'.root', tree_name="Events_MVA")
 
 # To compute accurate weight we need to load from the tree also the weights in question
 weightString = "SF_total"
@@ -27,7 +29,7 @@ t={}
 f={}
 w={}
 
-for key in flist:#samples.keys():
+for key in flist+['qcd']:#samples.keys():
     #for key in klist:
     if key == 'T_t' or key == 'Tbar_t':
         continue
@@ -62,6 +64,7 @@ factory.AddVariable("top_mass",'D')
 factory.AddVariable("eta_lj",'D')
 factory.AddVariable("C",'D')
 factory.AddVariable("met",'D')
+factory.AddVariable("mt_"+prt,'D')
 factory.AddVariable("bdiscr_bj",'D')
 factory.AddVariable("bdiscr_lj",'D')
 factory.AddVariable(prt+"_pt",'D')
@@ -94,38 +97,47 @@ factory.BookMethod(TMVA.Types.kBDT,
                    "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.1:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"\
                    )
 
-#factory.BookMethod( TMVA.Types.kMLP,
-#                   "MLP",
-#                   "!H:!V:"\
-#                   "VarTransform=N:"\
-#                   "HiddenLayers=20:"\
-#                   "TrainingMethod=BFGS")
-
 # We use categorized BDT
+cat2=factory.BookMethod(TMVA.Types.kCategory,
+                    "cat2",
+                    "")
+
+cat2.AddMethod(TCut("cos_theta < 0"),
+              "top_mass:eta_lj:C:met:mt_"+prt+":bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
+              TMVA.Types.kBDT,
+              "Category2_BDT_lowCTH",
+              "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
+
+cat2.AddMethod(TCut("cos_theta >= 0"),
+              "top_mass:eta_lj:C:met:mt_"+prt+":bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
+              TMVA.Types.kBDT,
+              "Category2_BDT_highCTH",
+              "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
+
 cat4=factory.BookMethod(TMVA.Types.kCategory,
                     "cat4",
                     "")
 
 cat4.AddMethod(TCut("abs(eta_lj)<2.5 & cos_theta < 0"),
-              "top_mass:eta_lj:C:met:bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
+              "top_mass:eta_lj:C:met:mt_"+prt+":bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
               TMVA.Types.kBDT,
               "Category4_BDT_lowEta_lowCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
 
 cat4.AddMethod(TCut("abs(eta_lj)<2.5 & cos_theta >= 0"),
-              "top_mass:eta_lj:C:met:bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
+              "top_mass:eta_lj:C:met:mt_"+prt+":bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
               TMVA.Types.kBDT,
               "Category4_BDT_lowEta_highCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
 
 cat4.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta < 0"),
-              "top_mass:eta_lj:C:met:bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
+              "top_mass:eta_lj:C:met:mt_"+prt+":bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
               TMVA.Types.kBDT,
               "Category4_BDT_highEta_lowCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
 
 cat4.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta >= 0"),
-              "top_mass:eta_lj:C:met:bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
+              "top_mass:eta_lj:C:met:mt_"+prt+":bdiscr_bj:bdiscr_lj:pt_bj:"+prt+"_pt:"+prt+"_charge",
               TMVA.Types.kBDT,
               "Category4_BDT_highEta_highCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
