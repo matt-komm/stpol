@@ -20,3 +20,7 @@ global_tags["mc"]["Apr19"] = gt_mc
 global_tags["mc"]["Apr19_qcd"] = gt_mc
 global_tags["data"]["May20"] = gt_data
 
+global_tags["mc"]["Jul15"] = gt_mc
+global_tags["mc"]["Jul15"] = gt_mc
+global_tags["data"]["Jul15"] = gt_data
+

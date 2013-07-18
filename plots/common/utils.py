@@ -3,6 +3,7 @@ from odict import OrderedDict as dict
 import string
 import logging
 import os
+import re
 
 #Here the latter items will become topmost in stacks
 merge_cmds = dict()
@@ -16,6 +17,7 @@ merge_cmds["tW-channel"] = ["T_tW", "Tbar_tW"]
 merge_cmds["s-channel"] = ["T_s", "Tbar_s"]
 merge_cmds["t-channel"] = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]
 
+logger = logging.getLogger("utils")
 def lumi_textbox(lumi, pos="top-left"):
     """
     This method creates and draws the "CMS Preliminary" luminosity box,
@@ -45,13 +47,25 @@ def lumi_textbox(lumi, pos="top-left"):
 
 def merge_hists(hists_d, merge_groups):
     out_d = dict()
+    logging.debug("merge_hists: input histograms %s" % str(hists_d))
     for merge_name, items in merge_groups.items():
-        hist = hists_d[items[0]].Clone()
-        for item in items[1:]:
+        logging.debug("Merging %s to %s" % (items, merge_name))
+
+        matching_keys = []
+        for item in items:
+            t = filter(lambda x: re.match(item + "$", x), hists_d.keys())
+            matching_keys += t
+            logger.debug("Matched %s to %s" % (str(t), item))
+        if len(matching_keys)==0:
+            continue
+        logger.debug("Merging matched %s" % str(matching_keys))
+        hist = hists_d[matching_keys[0]].Clone()
+        for item in matching_keys[1:]:
             hist.Add(hists_d[item])
 
         out_d[merge_name] = hist
-        out_d[merge_name].SetTitle("%s" % merge_name)
+        out_d[merge_name].SetTitle(merge_name)
+        out_d[merge_name].SetName(merge_name)
     return out_d
 
 
@@ -108,4 +122,23 @@ def get_stack_total_hist(thstack):
     for h in hists[1:]:
         hnew.Add(h)
     return hnew
+
+
+def filter_hists(indict, pat):
+    """
+    Returns the values of the dictionary whose keys match the pattern. The return type is a dictionary, whose keys are the first group of the pattern.
+    Example: filter_hists({"asd/mystuff":1}, ".*/(mystuff)") will return {"mystuff":1}
+    indict - a dictionary
+    pat - a regex pattern that has at least 1 parenthesized group
+    """
+    out = dict()
+    for k,v in indict.items():
+        m = re.match(pat, k)
+        if not m:
+            continue
+        out[m.group(1)] = v
+    return out
+
+def escape(s):
+    return re.sub("[\/ \( \) \\ \. \* \+ \> \< \# \{ \}]", "", s)
 

@@ -33,6 +33,7 @@ class JobStats:
             max_submissions = numpy.max(map(lambda j: j.n_submission, task.jobs))
         else:
             self.quantiles_submissions = None
+            max_submissions = None
 
         needs_resubmit = filter(lambda j: j.needsResubmit(), task.jobs)
         self.jobs_total = len(task.jobs)
@@ -72,11 +73,13 @@ class JobStats:
         return s
 
 class Task:
-    def __init__(self):
+    def __init__(self, fname=None):
         self.prev_jobs = []
         self.jobs = []
         self.name = ""
         self.fname = ""
+        if fname:
+            self.updateJobs(fname)
 
     def isCompleted(self):
         for job in self.jobs:
@@ -132,7 +135,7 @@ class Task:
             raise ValueError("No jobs in XML")
         self.prev_jobs = self.jobs
         self.jobs = map(Task.parseJob, zip(jobs_a, jobs_b))
-        self.name = self.jobs[0].name
+        self.name = re.match(".*/WD_(.*)/share/RReport.xml", self.fname).group(1)
 
     @staticmethod
     def timeStats(jobs):
@@ -203,8 +206,8 @@ class Job:
         return self.state == "Cleared" and not self.isCompleted()
 
     def totalTime(self):
-        t1 = self.get_output_time if self.get_output_time is not None else time.localtime()
-        if self.submission_time:
+        t1 = self.get_output_time if self.get_output_time else datetime.datetime(time.localtime()[:6])
+        if self.submission_time and t1:
             return t1 - self.submission_time
         else:
             return -1
@@ -227,37 +230,37 @@ def get(node, name, f):
     else:
         return f(item.nodeValue)
 
+if __name__=="__main__":
+    reports = sys.argv[1:]
+    print "reports=",reports
+    reports = sorted(reports)
 
-reports = sys.argv[1:]
-print "reports=",reports
-reports = sorted(reports)
+    t_tot = Task()
+    completed = []
+    for r in reports:
+        t = Task()
+        t.updateJobs(r)
 
-t_tot = Task()
-completed = []
-for r in reports:
-    t = Task()
-    t.updateJobs(r)
+        js = JobStats(t)
+        match = re.match("(.*)/WD_(.*)/share/RReport.xml", r)
+        if not match:
+            raise ValueError("Couldn't understand pattern: %s" % r)
+        filelist_path = match.group(1) + "/" + match.group(2) + ".files.txt"
+        of = open(filelist_path, "w")
+        for job in t.jobs:
+            if job.isCompleted() and job.lfn:
+                of.write(job.lfn + "\n")
+        of.close()
+        if t.isCompleted():
+            completed.append(t)
+        print js.summary()
+        t_tot += t
+    tot_stats = JobStats(t_tot)
+    tot_stats.name = "total"
+    print tot_stats.summary()
+    print "--- total ---"
+    print str(tot_stats)
 
-    js = JobStats(t)
-    match = re.match("(.*)/WD_(.*)/share/RReport.xml", r)
-    if not match:
-        raise ValueError("Couldn't understand pattern: %s" % r)
-    filelist_path = match.group(1) + "/" + match.group(2) + ".files.txt"
-    of = open(filelist_path, "w")
-    for job in t.jobs:
-        if job.lfn:
-            of.write(job.lfn + "\n")
-    of.close()
-    if t.isCompleted():
-        completed.append(t)
-    print js.summary()
-    t_tot += t
-tot_stats = JobStats(t_tot)
-tot_stats.name = "total"
-print tot_stats.summary()
-print "--- total ---"
-print str(tot_stats)
-
-print "--- Completed ---"
-for t in completed:
-    print "/".join(t.fname.split("/")[:-2])
+    print "--- Completed ---"
+    for t in completed:
+        print "/".join(t.fname.split("/")[:-2])

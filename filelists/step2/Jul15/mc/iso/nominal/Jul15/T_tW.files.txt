@@ -1,0 +1,2 @@
+/store/user/joosep/Jul15_partial/iso/nominal/T_tW/output_1_2_yx2.root
+/store/user/joosep/Jul15_partial/iso/nominal/T_tW/output_2_1_oW5.root

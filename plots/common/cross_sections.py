@@ -4,16 +4,16 @@ WJets_sherpa_weight_factor = 34821360.0/96770560.0
 xs = {
 
 	#Cross-sections from AN2012-273-v7, page 4
-        "T_t": 56.4
+      "T_t": 56.4
 	, "T_t_ToLeptons": 0.326*56.4
 	, "Tbar_t": 30.7
-        , "Tbar_t_ToLeptons": 0.326*30.7
+    , "Tbar_t_ToLeptons": 0.326*30.7
 	, "T_s": 3.79
 	, "Tbar_s": 1.76
 	, "T_tW": 11.1
 	, "Tbar_tW": 11.1
 	, "TTJets_MassiveBinDECAY": 234 #inclusive
-	, "WJets_inclusive": 37509 #30400.0 LO
+    , "WJets_inclusive": 37509 #30400.0 LO
 
 	#FIXME: ttbar branching ratio
 	, "TTJets_SemiLept": (0.676*0.326*2) * 234.0
@@ -55,12 +55,21 @@ xs = {
 	, "QCD_Pt_350_BCtoE": 811.0*0.0295
 }
 
+#systematics:
+xs["TTJets_scaleup"] = xs["TTJets_MassiveBinDECAY"]
+xs["TTJets_scaledown"] = xs["TTJets_MassiveBinDECAY"]
+xs["TTJets_matchingup"] = xs["TTJets_MassiveBinDECAY"]
+xs["TTJets_matchingdown"] = xs["TTJets_MassiveBinDECAY"]	
+xs["TTJets_mass166_5"] = xs["TTJets_MassiveBinDECAY"]
+xs["TTJets_mass166_5"] = xs["TTJets_MassiveBinDECAY"]
+
+
 lumi_iso = {
-    "ele": 19728,
-    "mu": 19739
+    "ele": 6144,
+    "mu": 6398
     }
 
 lumi_antiiso = {
-    "ele": 19728,
-    "mu": 19739
+    "ele": 6144,
+    "mu": 6398
     }

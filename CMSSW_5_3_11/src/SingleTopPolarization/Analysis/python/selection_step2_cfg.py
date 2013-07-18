@@ -219,6 +219,22 @@ def SingleTopStep2():
     from SingleTopPolarization.Analysis.top_step2_cfi import TopRecoSetup
     TopRecoSetup(process)
 
+    process.allEventObjects = cms.EDProducer(
+         'CandRefCombiner',
+         sources=cms.vstring(["goodJets", "goodSignalLeptons", Config.metSource]),
+         maxOut=cms.uint32(9999),
+         minOut=cms.uint32(0),
+         logErrors=cms.bool(False)
+    )
+    process.eventShapeVars = cms.EDProducer(
+        'EventShapeVarsProducer',
+        src = cms.InputTag("allEventObjects")
+    )
+    process.eventShapeSequence = cms.Sequence(
+        process.allEventObjects *
+        process.eventShapeVars
+    )
+
     #-----------------------------------------------
     # Treemaking
     #-----------------------------------------------
@@ -454,13 +470,15 @@ def SingleTopStep2():
         process.muPath += process.weightSequence
         process.elePath += process.weightSequence
 
-    process.eventIDProducer = cms.EDProducer('EventIDProducer'
-    )
+    #process.eventIDProducer = cms.EDProducer('EventIDProducer'
+    #)
     process.treePath = cms.Path(
-        process.eventIDProducer *
         process.treeSequenceNew
     )
 
+    process.eventVarsPath = cms.Path(
+        process.eventShapeSequence
+    )
     if Config.doWJetsFlavour:
         process.treePath += process.flavourAnalyzer
 

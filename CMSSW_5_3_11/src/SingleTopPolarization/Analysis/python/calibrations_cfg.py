@@ -1,5 +1,6 @@
 import logging
 import fnmatch
+import re
 bTaggingEfficiencies = dict()
 
 class BTaggingEfficiency:
@@ -108,11 +109,11 @@ def getEffFiles(channel):
     Returns the filenames to use for a particular process/channel for
     the effiencies of tagging b, c, l jets (in that order)
     """
-    if channel in ["T_t", "Tbar_t"]:
+    if channel in ["T_t", "Tbar_t"] or re.match("T_t_.*", channel) or re.match("Tbar_t_.*", channel) or re.match("TToB.*Nu_.*", channel):
         return fnames["T_t"], fnames["WJets"], fnames["T_t"]
-    elif channel in ["WJets", "W1Jets", "W2Jets", "W3Jets", "W4Jets", "WW", "WZ", "ZZ", "DYJets"] or channel.startswith("GJets") or channel.startswith("QCD"):
+    elif re.match("W[0-9]*Jets_exclusive", channel) or re.match("WJets.*", channel) or channel in ["WW", "WZ", "ZZ", "DYJets"] or channel.startswith("GJets") or channel.startswith("QCD"):
         return fnames["T_t"], fnames["WJets"], fnames["WJets"]
-    elif channel in ["TTbar", "T_tW", "T_s", "Tbar_tW", "Tbar_s"]:
+    elif channel in ["TTbar", "T_tW", "T_s", "Tbar_tW", "Tbar_s"] or channel.startswith("TTJets"):
         return fnames["T_t"], fnames["WJets"], fnames["TTbar"]
     else:
         raise ValueError("Undefined efficiencies for channel: %s" % channel)
