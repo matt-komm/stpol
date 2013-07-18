@@ -37,7 +37,7 @@ enum WJetsClassification2 {
     WJETS2_W_qq,
 };
 
-int classify_1(int cls) {
+WJetsClassification1 classify_1(int cls) {
     if (cls == Wbb || cls==Wcc || cls==WbX || cls==WcX || cls==Wbc) {
         return WJETS1_W_heavy;
     }
@@ -46,7 +46,7 @@ int classify_1(int cls) {
     }
 }
 
-int classify_2(int cls) {
+WJetsClassification2 classify_2(int cls) {
     if (cls == Wbb || cls==Wcc || cls==Wbc) {
         return WJETS2_W_QQ;
     }
@@ -78,7 +78,7 @@ void weight(int cls, float cos_theta, TH1F* hist,
     w_shape_up = 1.0;
     w_shape_down = 1.0;
 
-    int cls_simple = classify_1(cls);
+    WJetsClassification1 cls_simple = classify_1(cls);
 
     int bin = hist->FindBin(cos_theta);
     
@@ -144,18 +144,10 @@ int main(int argc, char* argv[]) {
     const std::string infile(argv[1]);
     std::cout << "Input file is " << infile << std::endl;
 
-    std::map<int, float> weights;
-    weights[Wgg] = 1.422222; //error=0.101451
-
-    weights[Wcc] = 0.165217; //error=0.063260
-    weights[WbX] = 0.063391; //error=0.014114
-    weights[WgX] = 1.289320; //error=0.044974
-    weights[WcX] = 0.574324; //error=0.045911
-    weights[WXX] = 1.040555; //error=0.025275
-
-    weights[Wcc] *= 2;
-    weights[WbX] *= 2;
-    weights[WcX] *= 2;
+    std::map<WJetsClassification2, float> weights;
+    weights[WJETS2_W_QQ] = 0.163661; //error=0.009857 [1]
+    weights[WJETS2_W_Qq] = 0.498646; //error=0.007892 [2]
+    weights[WJETS2_W_qq] = 1.244096; //error=0.012993 [3]
 
     TFile* fi = new TFile(infile.c_str(), "UPDATE");
     fi->cd("trees");
@@ -184,7 +176,9 @@ int main(int argc, char* argv[]) {
     events->SetBranchAddress("n_tags", &n_tags);
     
     //float wjets_flavour_weight = 1.0;
-    int cls0 = -1, cls1=-1, cls2=-1;
+    WJetsClassification0 cls0;
+    WJetsClassification1 cls1;
+    WJetsClassification2 cls2;
 
     std::map<const std::string, float> weights_flat;
     std::map<const std::string, float> weights_shape;
@@ -196,8 +190,12 @@ int main(int argc, char* argv[]) {
     weights_shape["nominal"] = 1.0;
     weights_shape["up"] = 1.0;
     weights_shape["down"] = 1.0;
+
+    float weight_sherpa = 1.0;
+
+    weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa, "wjets_sh_flavour_flat_weight/F"); 
     
-    weight_tree->Branch("wjets_mg_flavour_flat_weight", & weights_flat["nominal"], "wjets_mg_flavour_flat_weight/F"); 
+    weight_tree->Branch("wjets_mg_flavour_flat_weight", &weights_flat["nominal"], "wjets_mg_flavour_flat_weight/F"); 
     weight_tree->Branch("wjets_mg_flavour_flat_weight_up", &weights_flat["up"], "wjets_mg_flavour_flat_weight_up/F"); 
     weight_tree->Branch("wjets_mg_flavour_flat_weight_down", &weights_flat["down"], "wjets_mg_flavour_flat_weight_down/F"); 
     
@@ -205,9 +203,9 @@ int main(int argc, char* argv[]) {
     weight_tree->Branch("wjets_mg_flavour_shape_weight_up", &weights_shape["up"], "wjets_mg_flavour_shape_weight_up/F"); 
     weight_tree->Branch("wjets_mg_flavour_shape_weight_down", &weights_shape["down"], "wjets_mg_flavour_shape_weight_down/F"); 
 
-    TBranch* cls0_branch = weight_tree->Branch("wjets_flavour_classification0", &cls0, "wjets_flavour_classification0/I"); 
-    TBranch* cls1_branch = weight_tree->Branch("wjets_flavour_classification1", &cls1, "wjets_flavour_classification1/I"); 
-    TBranch* cls2_branch = weight_tree->Branch("wjets_flavour_classification2", &cls2, "wjets_flavour_classification2/I"); 
+    weight_tree->Branch("wjets_flavour_classification0", &cls0, "wjets_flavour_classification0/I"); 
+    weight_tree->Branch("wjets_flavour_classification1", &cls1, "wjets_flavour_classification1/I"); 
+    weight_tree->Branch("wjets_flavour_classification2", &cls2, "wjets_flavour_classification2/I"); 
     
     int Nbytes = 0;
 
@@ -217,6 +215,8 @@ int main(int argc, char* argv[]) {
         cls0 = classify(gen_flavour_bj, gen_flavour_lj);
         cls1 = classify_1(cls0);
         cls2 = classify_2(cls0);
+
+        weight_sherpa = weights[cls2];
 
         weight(cls0, cos_theta, ratio_hists[cls2],
             weights_flat["nominal"], weights_flat["up"], weights_flat["down"],
