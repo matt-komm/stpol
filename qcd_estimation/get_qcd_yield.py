@@ -169,15 +169,18 @@ if __name__=="__main__":
 
     cuts_final = FitConfig( "final_selection", trigger="1.0")
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
+    cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0 && n_veto_mu==0 && n_veto_ele==0")
+    cuts_3j1t = FitConfig( "3j1t_selection", trigger="1.0")
+    cuts_3j1t.setBaseCuts("n_jets == 3 && n_tags == 1 && n_veto_mu==0 && n_veto_ele==0")
     cuts_mva = FitConfig( "mva_selection", trigger="1.0")
     cuts_mva.setFinalCuts("1")
-    cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0 && n_veto_mu==0 && n_veto_ele==0")
     cuts_final_without_eta = FitConfig( "final_selection_without_eta_cut", trigger="1.0")
     cuts_final_without_eta.setFinalCuts("top_mass < 220 && top_mass > 130")
 
     cuts = {}
     cuts["final"] = cuts_final
     cuts["2j0t"] = cuts_2j0t
+    cuts["3j1t"] = cuts_3j1t
     cuts["final_without_eta"] = cuts_final_without_eta
     cuts["mva"] = cuts_mva
     
