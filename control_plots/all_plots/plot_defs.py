@@ -12,7 +12,7 @@ plot_defs['cos_th_final']={
     'xlab': 'cos #theta',
     'labloc': 'top-left',
     'commonCut': Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig*Cuts.eta_lj,
-    'elecut': Cuts.one_electron*Cuts.met,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9')*Cuts.met,
     'mucut': Cuts.one_muon*Cuts.mt_mu
 }
 
@@ -27,7 +27,7 @@ plot_defs['cos_th_2j0t']={
     'xlab': 'cos #theta',
     'labloc': 'top-left',
      'commonCut': Cuts.n_jets(2)*Cuts.n_tags(0)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig*Cuts.eta_lj,
-    'elecut': Cuts.one_electron*Cuts.met,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9')*Cuts.met,
     'mucut': Cuts.one_muon*Cuts.mt_mu
 }
 
@@ -42,7 +42,7 @@ plot_defs['cos_th_3j1t']={
     'xlab': 'cos #theta',
     'labloc': 'top-left',
     'commonCut': Cuts.n_jets(3)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig*Cuts.eta_lj,
-    'elecut': Cuts.one_electron*Cuts.met,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9')*Cuts.met,
     'mucut': Cuts.one_muon*Cuts.mt_mu
 }
 
@@ -57,7 +57,7 @@ plot_defs['cos_th_3j2t']={
     'xlab': 'cos #theta',
     'labloc': 'top-left',
     'commonCut': Cuts.n_jets(3)*Cuts.n_tags(2)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig*Cuts.eta_lj,
-    'elecut': Cuts.one_electron*Cuts.met,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9')*Cuts.met,
     'mucut': Cuts.one_muon*Cuts.mt_mu
 }
 
@@ -72,7 +72,7 @@ plot_defs['cos_th_nomet']={
     'xlab': 'cos #theta',
     'labloc': 'top-left',
     'commonCut': Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig*Cuts.eta_lj,
-    'elecut': Cuts.one_electron,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9'),
     'mucut': Cuts.one_muon
 }
 
@@ -87,7 +87,7 @@ plot_defs['met']={
     'xlab': 'E_{T}^{miss} [GeV]',
     'labloc': 'top-right',
     'commonCut': Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig*Cuts.eta_lj,
-    'elecut': Cuts.one_electron,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9'),
     'mucut': Cuts.one_muon
 }
 
@@ -102,7 +102,7 @@ plot_defs['abs_eta_lj']={
     'xlab': '|#eta| of the light jet',
     'labloc': 'top-right',
     'commonCut': Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig,
-    'elecut': Cuts.one_electron*Cuts.met,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9')*Cuts.met,
     'mucut': Cuts.one_muon*Cuts.mt_mu
 }
 
@@ -117,7 +117,7 @@ plot_defs['abs_eta_lj_2j0t']={
     'xlab': '|#eta| of the light jet',
     'labloc': 'top-right',
     'commonCut': Cuts.n_jets(2)*Cuts.n_tags(0)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig,
-    'elecut': Cuts.one_electron*Cuts.met,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9')*Cuts.met,
     'mucut': Cuts.one_muon*Cuts.mt_mu
 }
 
@@ -132,7 +132,7 @@ plot_defs['abs_eta_lj_3j1t']={
     'xlab': '|#eta| of the light jet',
     'labloc': 'top-right',
     'commonCut': Cuts.n_jets(3)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig,
-    'elecut': Cuts.one_electron*Cuts.met,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9')*Cuts.met,
     'mucut': Cuts.one_muon*Cuts.mt_mu
 }
 
@@ -147,7 +147,7 @@ plot_defs['abs_eta_lj_3j2t']={
     'xlab': '|#eta| of the light jet',
     'labloc': 'top-right',
     'commonCut': Cuts.n_jets(3)*Cuts.n_tags(2)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj*Cuts.top_mass_sig,
-    'elecut': Cuts.one_electron*Cuts.met,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9')*Cuts.met,
     'mucut': Cuts.one_muon*Cuts.mt_mu
 }
 
@@ -162,6 +162,6 @@ plot_defs['mva_cat4']={
     'xlab': '4-category BDT',
     'labloc': 'top-right',
     'commonCut': Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.pt_jet*Cuts.rms_lj,
-    'elecut': Cuts.one_electron,
+    'elecut': Cuts.one_electron*Cut('el_mva>0.9'),
     'mucut': Cuts.one_muon
 }
