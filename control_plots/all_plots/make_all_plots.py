@@ -10,6 +10,7 @@ proc = sys.argv[1]
 import ROOT
 import plots
 from plots.common.stack_plot import plot_hists_stacked
+from plots.common.utils import lumi_textbox
 from plots.common.odict import OrderedDict
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts,Cut
@@ -92,9 +93,11 @@ for pd in keylist:
 
         elif name == "data_aiso" and plot_defs[pd]['estQcd']:
             cv='mu_iso'
+            lb=0.3
             if proc == 'ele':
                 cv='el_reliso'
-            qcd_cut = cut*Cut(cv+'>0.3 & '+cv+'<0.5')
+                lb=0.1
+            qcd_cut = cut*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
             hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range).hist
             #hist_qcd.Scale(0.4)
             hists_mc['QCD'] = hist_qcd
@@ -121,6 +124,11 @@ for pd in keylist:
     if plot_defs[pd]['gev']:
         ylab+=' GeV'
     stacks = plot_hists_stacked(canv, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = 1.3, do_log_y = plot_defs[pd]['log'])
+    boxloc = 'top-right'
+    if plot_defs[pd]['labloc'] == 'top-right':
+        boxloc = 'top-left'
+    lbox = lumi_textbox(lumi,"top-left")
+    lbox.Draw()
     leg.Draw()
     canv.Draw()
     
