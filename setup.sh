@@ -1,6 +1,15 @@
 #NOTE: you must source this script, not execute it!
 #mv CMSSW_5_3_4_cand1/SingleTopPolarization ./
 
+# Sanity check
+echo "Do you wish to really run setup?"
+select yn in "Yes" "No"; do
+	case $yn in
+		Yes ) break;;
+		No ) exit;;
+	esac
+done
+
 #Tags for https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATReleaseNotes52X#V08_09_43
 CMSVERSION=CMSSW_5_3_11
 #echo "Stashing current working directory, use 'git stash pop' later to retrieve"

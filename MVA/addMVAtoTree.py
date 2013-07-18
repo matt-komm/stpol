@@ -9,11 +9,15 @@ if len(sys.argv) < 2:
         sys.exit(1)
 
 flist=[]
+del merge_cmds['data']
 
 if len(sys.argv) == 3:
     flist=[sys.argv[2]]
 else:
     flist=sum(merge_cmds.values(),[])
+
+flist.append('SingleEle')
+flist.append('SingleMu')
 
 dir=sys.argv[1]
 print "Using:",dir

@@ -117,7 +117,7 @@ class Histogram(Base):
         hi = self.hist.Clone(self.name + "_plus_" + other.name)
         hi.Add(other.hist)
         return Histogram.make(hi)
-    
+
     @staticmethod
     def sum(histograms):
         if len(histograms)>0:
@@ -187,7 +187,7 @@ class HistCollection:
             try:
                 d = fi.Get(dirn)
             except rootpy.io.DoesNotExist:
-                d = rootpy.io.utils.mkdir(dirn, recurse=True)
+                d = fi.mkdir(dirn, recurse=True)
             d.cd()
             h.SetName(hn.split("/")[-1])
             h.SetDirectory(d)
@@ -216,7 +216,7 @@ class HistCollection:
                         hname = hn
                     logger.debug("Getting %s" % hname)
                     hists[hname] = fi.Get(hname)
-                    
+
                     md = metadata[hname]
         return HistCollection(hists, metadata, name, fi)
 

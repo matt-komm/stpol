@@ -35,6 +35,46 @@ import pdb
 from plot_utils import *
 LUMI_TOTAL = 19739
 
+
+def plot(canv, name, hists_merged, out_dir, **kwargs):
+    canv.cd()
+    p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
+    p1.Draw()
+    p1.SetTicks(1, 1);
+    p1.SetGrid();
+    p1.SetFillStyle(0);
+    p1.cd()
+    kwargs["title"] = name + kwargs.get("title", "")
+    hists = OrderedDict()
+    hists["mc"] = [v for (k,v) in hists_merged.items() if k!="data"]
+    hists["data"] = [hists_merged["data"]]
+
+    x_title = kwargs.pop("x_label", "")
+
+    logger.debug("Drawing stack")
+    stacks = plot_hists_stacked(canv, hists, **kwargs)
+    stacks["mc"].GetXaxis().SetLabelOffset(999.)
+    stacks["mc"].GetXaxis().SetTitleOffset(999.)
+
+    logger.debug("Drawing ratio")
+
+    tot_mc = get_stack_total_hist(stacks["mc"])
+    tot_data = get_stack_total_hist(stacks["data"])
+    r = plot_data_mc_ratio(
+        canv,
+        tot_data,
+        tot_mc
+    )
+
+    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF")
+    ks = tot_data.KolmogorovTest(tot_mc, "")
+    stacks["mc"].SetTitle(stacks["mc"].GetTitle() + "__#chi^{2}/N=%.2f__ks=%.2E" % (chi2, ks))
+    r[1].GetXaxis().SetTitle(x_title)
+    canv.cd()
+
+    logger.debug("Drawing legend")
+    leg = legend(hists["data"] + hists["mc"], styles=["p", "f"], **kwargs)
+
 def get_merge_cmds(pref="weight__nominal/cut__all/"):
     cmds = plots.common.utils.merge_cmds.copy()
     for k, v in cmds.items():
@@ -49,6 +89,9 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
         logger.info("Output directory %s exists, removing" % out_dir)
         shutil.rmtree(out_dir)
     mkdir_p(out_dir)
+
+    logger.info("Using output directory %s" % out_dir)
+
 
     logger.info("Using output directory %s" % out_dir)
 

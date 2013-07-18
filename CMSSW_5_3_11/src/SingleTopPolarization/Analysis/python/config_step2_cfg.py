@@ -61,7 +61,10 @@ class Config(C):
         etaCut = 5.0
 
         doLightJetRMSClean = False
-        doPUClean = False
+
+        #Must be switched OFF for the sync!
+        doPUClean = True
+
         #source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
         source = "patJetsWithOwnRef"
         #source = "selectedPatJetsForMETtype1p2CorrEnDown"
