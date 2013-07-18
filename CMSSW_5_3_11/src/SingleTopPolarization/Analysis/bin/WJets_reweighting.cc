@@ -56,7 +56,7 @@ void weight_1(int cls, float cos_theta, std::map<int, TH1F*>& hists, float& w, f
     TH1F* h = hists[cls_simple];
     int bin = h->FindBin(cos_theta);
     
-    std::cout << "cos_theta=" << cos_theta << " Bin=" << bin << " cls=" << cls << " cls_1=" << cls_simple << " w=" << h->GetBinContent(bin) << std::endl;
+    //std::cout << "cos_theta=" << cos_theta << " Bin=" << bin << " cls=" << cls << " cls_1=" << cls_simple << " w=" << h->GetBinContent(bin) << std::endl;
     if (cls_simple==WJETS1_W_heavy) { //W+heavy
         w *= 1.0;
         w_up *= 2.0;
@@ -76,7 +76,7 @@ void weight_1(int cls, float cos_theta, std::map<int, TH1F*>& hists, float& w, f
     w *= h->GetBinContent(bin);
     w_up *= (h->GetBinContent(bin) + h->GetBinError(bin));
     w_down *= (h->GetBinContent(bin) - h->GetBinError(bin));
-    std::cout << "w=" << w << std::endl;
+    //std::cout << "w=" << w << std::endl;
 
 }
 
