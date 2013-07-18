@@ -35,46 +35,6 @@ import pdb
 from plot_utils import *
 LUMI_TOTAL = 19739
 
-
-def plot(canv, name, hists_merged, out_dir, **kwargs):
-    canv.cd()
-    p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
-    p1.Draw()
-    p1.SetTicks(1, 1);
-    p1.SetGrid();
-    p1.SetFillStyle(0);
-    p1.cd()
-    kwargs["title"] = name + kwargs.get("title", "")
-    hists = OrderedDict()
-    hists["mc"] = [v for (k,v) in hists_merged.items() if k!="data"]
-    hists["data"] = [hists_merged["data"]]
-
-    x_title = kwargs.pop("x_label", "")
-
-    logger.debug("Drawing stack")
-    stacks = plot_hists_stacked(canv, hists, **kwargs)
-    stacks["mc"].GetXaxis().SetLabelOffset(999.)
-    stacks["mc"].GetXaxis().SetTitleOffset(999.)
-
-    logger.debug("Drawing ratio")
-
-    tot_mc = get_stack_total_hist(stacks["mc"])
-    tot_data = get_stack_total_hist(stacks["data"])
-    r = plot_data_mc_ratio(
-        canv,
-        tot_data,
-        tot_mc
-    )
-
-    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF")
-    ks = tot_data.KolmogorovTest(tot_mc, "")
-    stacks["mc"].SetTitle(stacks["mc"].GetTitle() + "__#chi^{2}/N=%.2f__ks=%.2E" % (chi2, ks))
-    r[1].GetXaxis().SetTitle(x_title)
-    canv.cd()
-
-    logger.debug("Drawing legend")
-    leg = legend(hists["data"] + hists["mc"], styles=["p", "f"], **kwargs)
-
 def get_merge_cmds(pref="weight__nominal/cut__all/"):
     cmds = plots.common.utils.merge_cmds.copy()
     for k, v in cmds.items():
@@ -148,8 +108,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     canv = ROOT.TCanvas("c2", "c2")
     suffix = "__%s__%s" % (var["var"], cut_name)
     suffix = escape(suffix)
-
-    plot(canv, "madgraph_unweighted"+suffix, hmerged["madgraph/unweighted"], out_dir, **kwargs)
+    plot(canv, "madgraph_unw"+suffix, hmerged["madgraph/unweighted"], out_dir, **kwargs)
 
     kwargs = dict({"x_label": var["varname"]}, **kwargs)
 
@@ -166,13 +125,17 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     hists_flavours_merged["sherpa/unweighted"] = merge_hists(hmerged["sherpa/unweighted"], {"WJets": ["WJets_hf", "WJets_lf"]})
     hists_flavours_merged["sherpa/weighted"] = merge_hists(hmerged["sherpa/weighted"], {"WJets": ["WJets_hf", "WJets_lf"]})
 
-    logger.info("Drawing sherpa plot")
+    logger.info("Drawing sherpa weighted plot")
     canv = ROOT.TCanvas("c1", "c1")
-    plot(canv, "sherpa"+suffix, hmerged["sherpa"], out_dir, **kwargs)
+    plot(canv, "sherpa_rew"+suffix, hmerged["sherpa/weighted"], out_dir, **kwargs)
+
+    logger.info("Drawing sherpa unweighted plot")
+    canv = ROOT.TCanvas("c1", "c1")
+    plot(canv, "sherpa_unw"+suffix, hmerged["sherpa/unweighted"], out_dir, **kwargs)
 
     logger.info("Drawing madgraph plot")
     canv = ROOT.TCanvas("c2", "c2")
-    plot(canv, "madgraph"+suffix, hmerged["madgraph/weighted"], out_dir, **kwargs)
+    plot(canv, "madgraph_rew"+suffix, hmerged["madgraph/weighted"], out_dir, **kwargs)
 
     total_madgraph = copy.deepcopy(hmerged["madgraph/unweighted"])
     merged_colls = dict()
@@ -282,40 +245,52 @@ def plot_ratios(cut_name, cut, samples, out_dir, recreate, flavour_scenario=flav
     merges = {}
     for sc in flavour_scenario:
         merges["madgraph/%s" % sc] = ["weight__nominal/cut__all/W[1-4]Jets_exclusive/%s" % sc]
-        merges["sherpa/%s" % sc] = ["weight__nominal/cut__all/WJets_sherpa_nominal/%s" % sc]
+        merges["sherpa/unweighted/%s" % sc] = ["weight__nominal/cut__all/WJets_sherpa_nominal/%s" % sc]
+        merges["sherpa/weighted/%s" % sc] = ["weight__sherpa_flavour/cut__all/WJets_sherpa_nominal/%s" % sc]
 
     merged = merge_hists(coll, merges)
     for k, h in merged.items():
         logger.debug("%s = %s" % (k, str([y for y in h.y()])))
     hists_flavour = dict()
     hists_flavour["madgraph"] = ROOT.TH1F("madgraph", "madgraph", len(flavour_scenario), 0, len(flavour_scenario)-1)
-    hists_flavour["sherpa"] = ROOT.TH1F("sherpa", "sherpa", len(flavour_scenario), 0, len(flavour_scenario)-1)
+    hists_flavour["sherpa/unweighted"] = ROOT.TH1F("sherpa_unw", "sherpa unweighted", len(flavour_scenario), 0, len(flavour_scenario)-1)
+    hists_flavour["sherpa/weighted"] = ROOT.TH1F("sherpa_rew", "sherpa weighted", len(flavour_scenario), 0, len(flavour_scenario)-1)
 
     for i, sc in zip(range(1,len(flavour_scenario)+1), flavour_scenario):
-        sh_int, sh_err = calc_int_err(merged["sherpa/%s" % sc])
+        sh1_int, sh1_err = calc_int_err(merged["sherpa/unweighted/%s" % sc])
+        sh2_int, sh2_err = calc_int_err(merged["sherpa/weighted/%s" % sc])
         mg_int, mg_err = calc_int_err(merged["madgraph/%s" % sc])
-        logger.debug("%.2f %.2f" % (sh_int, sh_err))
+        logger.debug("%.2f %.2f" % (sh1_int, sh1_err))
+        logger.debug("%.2f %.2f" % (sh2_int, sh2_err))
         logger.debug("%.2f %.2f" % (mg_int, mg_err))
-        hists_flavour["madgraph"].SetBinContent(i, sh_int)
-        hists_flavour["sherpa"].SetBinContent(i, mg_int)
-        hists_flavour["madgraph"].SetBinError(i, sh_err)
-        hists_flavour["sherpa"].SetBinError(i, mg_err)
-        hists_flavour["madgraph"].GetXaxis().SetBinLabel(i, sc)
+        hists_flavour["madgraph"].SetBinContent(i, mg_int)
+        hists_flavour["madgraph"].SetBinError(i, mg_err)
+        hists_flavour["sherpa/unweighted"].SetBinContent(i, sh1_int)
+        hists_flavour["sherpa/unweighted"].SetBinError(i, sh1_err)
+        hists_flavour["sherpa/weighted"].SetBinContent(i, sh2_int)
+        hists_flavour["sherpa/weighted"].SetBinError(i, sh2_err)
 
-    hists_flavour["sherpa"].Sumw2()
+        hists_flavour["madgraph"].GetXaxis().SetBinLabel(i, sc)
+        hists_flavour["sherpa/unweighted"].GetXaxis().SetBinLabel(i, sc)
+        hists_flavour["sherpa/weighted"].GetXaxis().SetBinLabel(i, sc)
+
+    hists_flavour["sherpa/weighted"].Sumw2()
+    hists_flavour["sherpa/unweighted"].Sumw2()
     hists_flavour["madgraph"].Sumw2()
 
-    hists_flavour["ratio"] = hists_flavour["sherpa"].Clone("ratio")
-    hists_flavour["ratio"].Divide(hists_flavour["madgraph"])
+    hists_flavour["ratio/unweighted"] = hists_flavour["madgraph"].Clone("ratio_unw")
+    hists_flavour["ratio/unweighted"].Divide(hists_flavour["sherpa/unweighted"])
+    hists_flavour["ratio/weighted"] = hists_flavour["madgraph"].Clone("ratio_rew")
+    hists_flavour["ratio/weighted"].Divide(hists_flavour["sherpa/weighted"])
 
     for i, sc in zip(range(1,len(flavour_scenario)+1), flavour_scenario):
-        logger.info("weights[%s] = %.6f; //error=%.6f [%d]" % (sc, hists_flavour["ratio"].GetBinContent(i), hists_flavour["ratio"].GetBinError(i), i))
+        logger.info("weights[%s] = %.6f; //error=%.6f [%d]" % (sc, hists_flavour["ratio/unweighted"].GetBinContent(i), hists_flavour["ratio/unweighted"].GetBinError(i), i))
 
     flavour_ratio_coll = HistCollection(hists_flavour, name="hists__flavour_ratios")
     flavour_ratio_coll.save(out_dir)
 
     for sc in flavour_scenario:
-        hists = [merged["madgraph/%s" % sc], merged["sherpa/%s" % sc]]
+        hists = [merged["madgraph/%s" % sc], merged["sherpa/unweighted/%s" % sc], merged["sherpa/weighted/%s" % sc]]
         for hist in hists:
             norm(hist)
             #hist.SetName(sc)
@@ -331,7 +306,7 @@ def plot_ratios(cut_name, cut, samples, out_dir, recreate, flavour_scenario=flav
     md_merged = dict()
     for sc in flavour_scenario:
         logger.info("Calculating ratio for %s" % sc)
-        hi = merged["sherpa/%s" % sc].Clone("ratio__%s" % sc)
+        hi = merged["sherpa/unweighted/%s" % sc].Clone("ratio__%s" % sc)
         hi.Divide(merged["madgraph/%s" % sc])
         merged[hi.GetName()] = hi
 
@@ -341,12 +316,12 @@ def plot_ratios(cut_name, cut, samples, out_dir, recreate, flavour_scenario=flav
 
 
 if __name__=="__main__":
-    logging.basicConfig(level=logging.ERROR)
+    logging.basicConfig(level=logging.DEBUG)
     tdrstyle()
-    logger.setLevel(level=logging.DEBUG)
-    logging.getLogger("utils").setLevel(logging.INFO)
-    logging.getLogger("histogram").setLevel(logging.DEBUG)
-    logging.getLogger("plot_utils").setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
+    logging.getLogger("utils").setLevel(logging.ERROR)
+    logging.getLogger("histogram").setLevel(logging.INFO)
+    logging.getLogger("plot_utils").setLevel(logging.ERROR)
     ROOT.gStyle.SetOptTitle(True)
 
     import argparse
