@@ -35,15 +35,18 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
         nSamp = 1
         for sample in samples:
             hname = sample.name
-            weight_ = weight
+            weight_ = copy.copy(weight)
             if sample.isMC:
 
                 #Apply sherpa gen-level weight
                 if "sherpa" in sample.name:
                     logger.debug("WJets sherpa sample, enabling sherpa weights")
-                    weight_ *= Weights.sherpa_weight*Weights.sherpa_flavour_weight
+                    weight_ *= Weights.sherpa_weight
 
                 weight_strs = [("weight__nominal", str(weight_))]
+
+                if "sherpa" in sample.name:
+                    weight_strs += [("weight__sherpa_flavour", str(weight_*Weights.sherpa_flavour_weight))]
 
                 cut_strs = [("cut__all", str(cut))]
                 if kwargs.get("flavour_split", False) and sample_types.is_wjets(sample.name):

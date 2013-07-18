@@ -127,11 +127,14 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     merge_cmds.pop("WJets")
     merges["madgraph/unweighted"] = merge_cmds.copy()
     merges["madgraph/weighted"] = merge_cmds.copy()
-    merges["sherpa"] = merge_cmds.copy()
+    merges["sherpa/unweighted"] = merge_cmds.copy()
+    merges["sherpa/weighted"] = merge_cmds.copy()
 
 
-    merges["sherpa"]["WJets_hf"] = ["weight__nominal/cut__flavour__W_H[lH]/WJets_sherpa_nominal"]
-    merges["sherpa"]["WJets_lf"] = ["weight__nominal/cut__flavour__W_ll/WJets_sherpa_nominal"]
+    merges["sherpa/unweighted"]["WJets_hf"] = ["weight__nominal/cut__flavour__W_H[lH]/WJets_sherpa_nominal"]
+    merges["sherpa/unweighted"]["WJets_lf"] = ["weight__nominal/cut__flavour__W_ll/WJets_sherpa_nominal"]
+    merges["sherpa/weighted"]["WJets_hf"] = ["weight__sherpa_flavour/cut__flavour__W_H[lH]/WJets_sherpa_nominal"]
+    merges["sherpa/weighted"]["WJets_lf"] = ["weight__sherpa_flavour/cut__flavour__W_ll/WJets_sherpa_nominal"]
     merges["madgraph/unweighted"]["WJets_hf"] = ["weight__nominal/cut__flavour__W_H[lH]/W[1-4]Jets_exclusive"]
     merges["madgraph/unweighted"]["WJets_lf"] = ["weight__nominal/cut__flavour__W_ll/W[1-4]Jets_exclusive"]
     merges["madgraph/weighted"]["WJets_hf"] = ["weight__reweight_madgraph/cut__flavour__W_H[lH]/W[1-4]Jets_exclusive"]
@@ -160,7 +163,8 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     hists_flavours_merged = dict()
     hists_flavours_merged["madgraph/weighted"] = merge_hists(hmerged["madgraph/weighted"], {"WJets": ["WJets_hf", "WJets_lf"]})
     hists_flavours_merged["madgraph/unweighted"] = merge_hists(hmerged["madgraph/unweighted"], {"WJets": ["WJets_hf", "WJets_lf"]})
-    hists_flavours_merged["sherpa"] = merge_hists(hmerged["sherpa"], {"WJets": ["WJets_hf", "WJets_lf"]})
+    hists_flavours_merged["sherpa/unweighted"] = merge_hists(hmerged["sherpa/unweighted"], {"WJets": ["WJets_hf", "WJets_lf"]})
+    hists_flavours_merged["sherpa/weighted"] = merge_hists(hmerged["sherpa/weighted"], {"WJets": ["WJets_hf", "WJets_lf"]})
 
     logger.info("Drawing sherpa plot")
     canv = ROOT.TCanvas("c1", "c1")
@@ -177,7 +181,8 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     logger.info("Drawing sherpa vs. madgraph shape comparison plots")
 
     hists = [
-        ("sherpa hf", hmerged["sherpa"]["WJets_hf"]),
+        ("sherpa unw hf", hmerged["sherpa/unweighted"]["WJets_hf"]),
+        ("sherpa rew hf", hmerged["sherpa/weighted"]["WJets_hf"]),
         ("madgraph unw hf", hmerged["madgraph/unweighted"]["WJets_hf"]),
         ("madgraph rew hf", hmerged["madgraph/weighted"]["WJets_hf"]),
     ]
@@ -193,7 +198,8 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     canv.Close()
 
     hists = [
-        ("sherpa lf", hmerged["sherpa"]["WJets_lf"]),
+        ("sherpa unw lf", hmerged["sherpa/unweighted"]["WJets_lf"]),
+        ("sherpa rew lf", hmerged["sherpa/weighted"]["WJets_lf"]),
         ("madgraph unw lf", hmerged["madgraph/unweighted"]["WJets_lf"]),
         ("madgraph rew lf", hmerged["madgraph/weighted"]["WJets_lf"]),
     ]
@@ -212,7 +218,8 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
         ("data", hmerged["madgraph/unweighted"]["data"]),
         ("madgraph unw", hists_flavours_merged["madgraph/unweighted"]["WJets"]),
         ("madgraph rew", hists_flavours_merged["madgraph/weighted"]["WJets"]),
-        ("sherpa unw", hists_flavours_merged["sherpa"]["WJets"]),
+        ("sherpa unw", hists_flavours_merged["sherpa/unweighted"]["WJets"]),
+        ("sherpa rew", hists_flavours_merged["sherpa/weighted"]["WJets"]),
     ]
     hists = copy.deepcopy(hists)
     for hn, h in hists:
@@ -400,14 +407,14 @@ if __name__=="__main__":
     # print (A[0]-A[1])
     # print ratio(coll_out["madgraph/weighted"].hists)
 
-    for syst in ["nominal", "wjets_up", "wjets_down"]:
+    for syst in ["nominal"]:#["nominal", "wjets_up", "wjets_down"]:
         plot_sherpa_vs_madgraph(
             costheta, "2J0T/%s"%syst,
             Cuts.mu*Cuts.final(2,0),
             samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
         )
-        plot_sherpa_vs_madgraph(
-            costheta, "2J1T/%s"%syst,
-            Cuts.mu*Cuts.final(2,1),
-            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
-        )
+        # plot_sherpa_vs_madgraph(
+        #     costheta, "2J1T/%s"%syst,
+        #     Cuts.mu*Cuts.final(2,1),
+        #     samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+        # )
