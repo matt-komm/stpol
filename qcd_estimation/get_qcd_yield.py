@@ -48,12 +48,12 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
         return (hQCD.Integral(), hQCD.Integral()*(fit_result.qcd_uncert/fit_result.qcd))
 
 def get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup):
-    (y, fit) = get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup)
+    (y, fit) = get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, mtMinValue, useMCforQCDTemplate, QCDGroup)
     return y
 
 def get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup):
     fit = Fit()
-    make_histos_with_cuts(var, cuts, dataGroup, MCGroups, systematics, lumis, openedFiles, fit, useMCforQCDTemplate, QCDGroup)
+    make_histos_with_cuts(var, cuts, dataGroup, MCGroups, systematics, lumis, openedFiles, fit, mtMinValue, useMCforQCDTemplate, QCDGroup)
     fit_qcd(var, cuts.name, fit)
     dataHisto = dataGroup.getHistogram(var,  "Nominal", "iso", cuts.name)
     fit.var = var
@@ -73,7 +73,7 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
     if channel == "mu":
         var = Variable("mt_mu", 0, 200, 20, "mtwMass", "m_{T }")
     elif channel == "ele":
-        var = Variable("met", 0, 200, 20, "MET", "MET")
+        var = Variable("met", 0, 200, 40, "MET", "MET")
     else:
         raise ValueError("channel must be 'mu' or 'ele': %s" % channel)
     base_path = base_path + channel + "/"
@@ -171,7 +171,7 @@ if __name__=="__main__":
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
     cuts_mva = FitConfig( "mva_selection", trigger="1.0")
     cuts_mva.setFinalCuts("1")
-    cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0")
+    cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0 && n_veto_mu==0 && n_veto_ele==0")
     cuts_final_without_eta = FitConfig( "final_selection_without_eta_cut", trigger="1.0")
     cuts_final_without_eta.setFinalCuts("top_mass < 220 && top_mass > 130")
 
@@ -180,7 +180,7 @@ if __name__=="__main__":
     cuts["2j0t"] = cuts_2j0t
     cuts["final_without_eta"] = cuts_final_without_eta
     cuts["mva"] = cuts_mva
-
+    
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
     try:
         sys.argv.pop(sys.argv.index("get_qcd_yield.py"))

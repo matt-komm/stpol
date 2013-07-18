@@ -88,6 +88,7 @@ class Sample:
         return scale_factor
 
     def drawHistogram(self, var, cut_str, **kwargs):
+        logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
         name = self.name + "_" + Histogram.unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)
