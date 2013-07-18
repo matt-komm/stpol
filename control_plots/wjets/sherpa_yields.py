@@ -55,7 +55,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
 
     logger.info("Using output directory %s" % out_dir)
 
-    coll = data_mc(var["var"], cut_name, cut, Weights.total()*Weights.mu, samples, out_dir, recreate, LUMI_TOTAL, reweight_madgraph=True, flavour_split=True, plot_range=var["range"])
+    coll = data_mc(var["var"], cut_name, cut, Weights.total()*Weights.mu, samples, out_dir, recreate, LUMI_TOTAL, reweight_madgraph=True, flavour_split=True, plot_range=var["range"], **kwargs)
 
     logging.debug(str(coll.hists))
     for hn, hist in coll.hists.items():
