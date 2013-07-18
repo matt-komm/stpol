@@ -8,6 +8,10 @@ CMSSW_5_3_11/src/SingleTopPolarization/*/python/__init__.py
 CMSSW*/.SCRAM
 CMSSW*/config
 CMSSW*/python
+CMSSW*/tmp
+
+bin/*
+*.png
 *.pickle
 out*
 
