@@ -61,7 +61,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     for hn, hist in coll.hists.items():
         sample_name = coll.metadata[hn].sample_name
         process_name = coll.metadata[hn].process_name
-        match = re.match(".*cut__flavour__(.*)/.*", hn)
+        match = re.match(".*/cut__flavour__(W_[Hl][Hl])/.*", hn)
         if match:
             flavour_scenario = match.group(1)
         else:
@@ -76,11 +76,14 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
             logger.warning("Couldn't style histogram %s" % hn)
 
         if flavour_scenario:
-            logger.debug("Matched flavour split histogram %s" % hn)
-            Styling.mc_style(hist, process_name)
-            if flavour_scenario=="W_HH":
+            logger.debug("Matched flavour split histogram %s, %s" % (hn, flavour_scenario))
+            #Styling.mc_style(hist, process_name)
+            if re.match("W_H[lH]", flavour_scenario):
+                logger.debug("Changing colour of %s" % (hn))
                 hist.SetFillColor(hist.GetFillColor()+1)
+                hist.SetLineColor(hist.GetLineColor()+1)
 
+    logger.debug("pre merge: %s" % str([ (hn, coll.hists[hn].GetLineColor()) for hn in coll.hists.keys() if "sherpa" in hn]))
     merges = dict()
 
     merge_cmds = get_merge_cmds()
@@ -102,7 +105,14 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
 
     hmerged = dict()
     for k in merges.keys():
-        hmerged[k] = merge_hists(coll.hists, merges[k])
+        hmerged[k] = merge_hists(copy.deepcopy(coll.hists), merges[k])
+
+    logger.debug("post merge: %s" % str([ (hn, hmerged["sherpa/weighted"][hn].GetLineColor()) for hn in hmerged["sherpa/weighted"].keys()]))
+
+    #w_mg_sh = 1.0416259307303726 #sherpa to madgraph ratio
+    w_mg_sh = 1.0821535639376414
+    hmerged["sherpa/weighted"]["WJets_hf"].Scale(w_mg_sh)
+    hmerged["sherpa/weighted"]["WJets_lf"].Scale(w_mg_sh)
 
     logger.info("Drawing madgraph unweighted plot")
     canv = ROOT.TCanvas("c2", "c2")
@@ -158,6 +168,38 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
     leg = legend(hists, styles=["f", "f"], **kwargs)
     canv.SaveAs(out_dir + "/weighted_flavour_hf_%s.png" % hname)
+    canv.Close()
+
+    hists = [
+        ("data", hmerged["madgraph/unweighted"]["data"]),
+        ("sherpa", hists_flavours_merged["sherpa/unweighted"]["WJets"]),
+        ("madgraph", hists_flavours_merged["madgraph/unweighted"]["WJets"]),
+    ]
+    hists = copy.deepcopy(hists)
+    for hn, h in hists:
+        h.SetTitle(hn + " %.2f" % h.Integral())
+        h.Scale(1.0/h.Integral())
+    hists = [h[1] for h in hists]
+    ColorStyleGen.style_hists(hists)
+    canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
+    leg = legend(hists, styles=["f", "f"], **kwargs)
+    canv.SaveAs(out_dir + "/unweighted_sherpa_mg_%s.png" % hname)
+    canv.Close()
+
+    hists = [
+        ("data", hmerged["madgraph/unweighted"]["data"]),
+        ("sherpa", hists_flavours_merged["sherpa/weighted"]["WJets"]),
+        ("madgraph", hists_flavours_merged["madgraph/weighted"]["WJets"]),
+    ]
+    hists = copy.deepcopy(hists)
+    for hn, h in hists:
+        h.SetTitle(hn + " %.2f" % h.Integral())
+        h.Scale(1.0/h.Integral())
+    hists = [h[1] for h in hists]
+    ColorStyleGen.style_hists(hists)
+    canv = plot_hists(hists, x_label=var["varname"], do_chi2=True)
+    leg = legend(hists, styles=["f", "f"], **kwargs)
+    canv.SaveAs(out_dir + "/weighted_sherpa_mg_%s.png" % hname)
     canv.Close()
 
     hists = [
@@ -316,12 +358,12 @@ def plot_ratios(cut_name, cut, samples, out_dir, recreate, flavour_scenario=flav
 
 
 if __name__=="__main__":
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     tdrstyle()
-    logger.setLevel(logging.INFO)
-    logging.getLogger("utils").setLevel(logging.ERROR)
-    logging.getLogger("histogram").setLevel(logging.INFO)
-    logging.getLogger("plot_utils").setLevel(logging.ERROR)
+    #logger.setLevel(logging.DEBUG)
+    #logging.getLogger("utils").setLevel(logging.ERROR)
+    #logging.getLogger("histogram").setLevel(logging.ERROR)
+    #logging.getLogger("plot_utils").setLevel(logging.ERROR)
     ROOT.gStyle.SetOptTitle(True)
 
     import argparse
@@ -347,13 +389,32 @@ if __name__=="__main__":
 
     # plot_ratios("2J0T", Cuts.final(2,0), samples, out_dir, args.recreate)
     # plot_ratios("2J1T", Cuts.final(2,1), samples, out_dir, args.recreate)
-    #plot_ratios("2J/ratios", Cuts.final_jet(2), samples.values(), out_dir, args.recreate)
+    plot_ratios("2J/ratios", Cuts.final_jet(2), samples.values(), out_dir, args.recreate)
 
-    # plot_sherpa_vs_madgraph(
-    #     costheta, "2J",
-    #     str(Cuts.mu*Cuts.final_jet(2)),
-    #     samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic="nominal"
-    # )
+    colls_in, colls_out = plot_sherpa_vs_madgraph(
+        costheta, "2J",
+        Cuts.mu*Cuts.final_jet(2),
+        samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic="nominal"
+    )
+    hi_mg = colls_out["madgraph/weighted"].hists["WJets_hf"] + colls_out["madgraph/weighted"].hists["WJets_lf"]
+    hi_sh = colls_out["sherpa/unweighted"].hists["WJets_hf"] + colls_out["sherpa/unweighted"].hists["WJets_lf"]
+    hi_sh_w = colls_out["sherpa/weighted"].hists["WJets_hf"] + colls_out["sherpa/weighted"].hists["WJets_lf"]
+
+    hf_mg = colls_out["madgraph/weighted"].hists["WJets_hf"].Integral() / hi_mg.Integral()
+    lf_mg = colls_out["madgraph/weighted"].hists["WJets_lf"].Integral() / hi_mg.Integral()
+
+    hf_sh = colls_out["sherpa/unweighted"].hists["WJets_hf"].Integral() / hi_sh.Integral()
+    lf_sh = colls_out["sherpa/unweighted"].hists["WJets_lf"].Integral() / hi_sh.Integral()
+
+    hf_sh_w = colls_out["sherpa/weighted"].hists["WJets_hf"].Integral() / hi_sh_w.Integral()
+    lf_sh_w = colls_out["sherpa/weighted"].hists["WJets_lf"].Integral() / hi_sh_w.Integral()
+
+    logger.info("mg = %s" % str(calc_int_err(hi_mg)))
+    logger.info("sherpa unw = %s" % str(calc_int_err(hi_sh)))
+    logger.info("sherpa rew = %s" % str(calc_int_err(hi_sh_w)))
+    logger.info("madgraph fracs = %s" % str((hf_mg, lf_mg)))
+    logger.info("sherpa fracs = %s" % str((hf_sh, lf_sh)))
+    logger.info("sherpa weighted fracs = %s" % str((hf_sh_w, lf_sh_w)))
     # plot_sherpa_vs_madgraph(
     #     costheta, "2J",
     #     str(Cuts.mu*Cuts.final_jet(2)),
@@ -382,14 +443,35 @@ if __name__=="__main__":
     # print (A[0]-A[1])
     # print ratio(coll_out["madgraph/weighted"].hists)
 
-    for syst in ["nominal"]:#["nominal", "wjets_up", "wjets_down"]:
+    for syst in ["nominal", "wjets_up", "wjets_down"]:
         plot_sherpa_vs_madgraph(
-            costheta, "2J0T/%s"%syst,
+            costheta, "2J/costheta/%s"%syst,
+            Cuts.mu*Cuts.final_jet(2),
+            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+        )
+        plot_sherpa_vs_madgraph(
+            costheta, "2J0T/costheta/%s"%syst,
             Cuts.mu*Cuts.final(2,0),
             samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
         )
-        # plot_sherpa_vs_madgraph(
-        #     costheta, "2J1T/%s"%syst,
-        #     Cuts.mu*Cuts.final(2,1),
-        #     samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
-        # )
+        plot_sherpa_vs_madgraph(
+            costheta, "2J1T/costheta/%s"%syst,
+            Cuts.mu*Cuts.final(2,1),
+            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+        )
+
+        plot_sherpa_vs_madgraph(
+            aeta_lj_2_5, "2J/aeta/%s"%syst,
+            Cuts.mu*Cuts.final_jet(2),
+            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+        )
+        plot_sherpa_vs_madgraph(
+            aeta_lj_2_5, "2J0T/aeta/%s"%syst,
+            Cuts.mu*Cuts.final(2,0),
+            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+        )
+        plot_sherpa_vs_madgraph(
+            aeta_lj_2_5, "2J1T/aeta/%s"%syst,
+            Cuts.mu*Cuts.final(2,1),
+            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+        )
