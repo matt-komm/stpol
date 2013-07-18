@@ -19,7 +19,7 @@ qcdScale['ele']['nomet']=3.32
 qcdScale['ele']['presel']=4.05
 qcdScale['mu']={}
 qcdScale['mu']['final']=4
-qcdScale['mu']['nomt']=4
+qcdScale['mu']['nomet']=4
 qcdScale['mu']['presel']=4
 
 plot_defs={}
