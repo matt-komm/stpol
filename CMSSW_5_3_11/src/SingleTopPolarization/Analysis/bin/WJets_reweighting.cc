@@ -144,22 +144,43 @@ int main(int argc, char* argv[]) {
     const std::string infile(argv[1]);
     std::cout << "Input file is " << infile << std::endl;
 
-    std::map<WJetsClassification2, float> weights;
-    weights[WJETS2_W_QQ] = 0.163661; //error=0.009857 [1]
-    weights[WJETS2_W_Qq] = 0.498646; //error=0.007892 [2]
-    weights[WJETS2_W_qq] = 1.244096; //error=0.012993 [3]
+    std::map<WJetsClassification0, float> weights;
+    //weights[WJETS2_W_QQ] = 0.163661; //error=0.009857 [1]
+    //weights[WJETS2_W_Qq] = 0.498646; //error=0.007892 [2]
+    //weights[WJETS2_W_qq] = 1.244096; //error=0.012993 [3]
+
+    weights[Wbb] = 0.309315; //error=0.044416 [1]
+    weights[Wcc] = 0.225933; //error=0.017562 [2]
+    weights[Wbc] = 0.047298; //error=0.006804 [3]
+    weights[WbX] = 0.111583; //error=0.005099 [4]
+    weights[WcX] = 0.645442; //error=0.011115 [5]
+    weights[WgX] = 1.385702; //error=0.020337 [6]
+    weights[Wgg] = 1.443654; //error=0.044480 [7]
+    weights[WXX] = 1.011214; //error=0.017198 [8]
 
     TFile* fi = new TFile(infile.c_str(), "UPDATE");
     fi->cd("trees");
     TTree* events = (TTree*)fi->Get("trees/Events");
     TTree* weight_tree = new TTree("WJets_weights", "WJets_weights");
 
-    TFile* hists_fi = new TFile("$STPOL_DIR/CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged.root", "UPDATE");
-    
-    std::map<int, TH1F*> ratio_hists;
-    ratio_hists[WJETS2_W_QQ] = (TH1F*)hists_fi->Get("ratio__W_QQ");
-    ratio_hists[WJETS2_W_Qq] = (TH1F*)hists_fi->Get("ratio__W_Qq");
-    ratio_hists[WJETS2_W_qq] = (TH1F*)hists_fi->Get("ratio__W_qq");
+    TFile* hists_fi0 = new TFile("$STPOL_DIR/CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario0.root", "UPDATE");
+    TFile* hists_fi2 = new TFile("$STPOL_DIR/CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario2.root", "UPDATE");    
+
+    std::map<WJetsClassification2, TH1F*> ratio_hists2;
+    ratio_hists2[WJETS2_W_QQ] = (TH1F*)hists_fi2->Get("ratio__W_QQ");
+    ratio_hists2[WJETS2_W_Qq] = (TH1F*)hists_fi2->Get("ratio__W_Qq");
+    ratio_hists2[WJETS2_W_qq] = (TH1F*)hists_fi2->Get("ratio__W_qq");
+
+    std::map<WJetsClassification0, TH1F*> ratio_hists0;
+    ratio_hists0[Wbb] = (TH1F*)hists_fi0->Get("ratio__Wbb");
+    ratio_hists0[Wcc] = (TH1F*)hists_fi0->Get("ratio__Wcc");
+    ratio_hists0[Wbc] = (TH1F*)hists_fi0->Get("ratio__Wbc");
+    ratio_hists0[WbX] = (TH1F*)hists_fi0->Get("ratio__WbX");
+    ratio_hists0[WcX] = (TH1F*)hists_fi0->Get("ratio__WcX");
+    ratio_hists0[WgX] = (TH1F*)hists_fi0->Get("ratio__WgX");
+    ratio_hists0[Wgg] = (TH1F*)hists_fi0->Get("ratio__Wgg");
+    ratio_hists0[WgX] = (TH1F*)hists_fi0->Get("ratio__WgX");
+    ratio_hists0[WXX] = (TH1F*)hists_fi0->Get("ratio__WXX");
 
     int gen_flavour_bj = -1;
     int gen_flavour_lj = -1;
@@ -191,9 +212,14 @@ int main(int argc, char* argv[]) {
     weights_shape["up"] = 1.0;
     weights_shape["down"] = 1.0;
 
-    float weight_sherpa = 1.0;
+    std::map<const std::string, float> weight_sherpa;
+    weight_sherpa["nominal"] = 1.0;
+    weight_sherpa["up"] = 1.0;
+    weight_sherpa["down"] = 1.0;
 
-    weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa, "wjets_sh_flavour_flat_weight/F"); 
+    weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa["nominal"], "wjets_sh_flavour_flat_weight/F"); 
+    weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa["up"], "wjets_sh_flavour_flat_weight/F"); 
+    weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa["down"], "wjets_sh_flavour_flat_weight/F"); 
     
     weight_tree->Branch("wjets_mg_flavour_flat_weight", &weights_flat["nominal"], "wjets_mg_flavour_flat_weight/F"); 
     weight_tree->Branch("wjets_mg_flavour_flat_weight_up", &weights_flat["up"], "wjets_mg_flavour_flat_weight_up/F"); 
@@ -216,9 +242,9 @@ int main(int argc, char* argv[]) {
         cls1 = classify_1(cls0);
         cls2 = classify_2(cls0);
 
-        weight_sherpa = weights[cls2];
+        weight_sherpa["nominal"] = weights[cls0];
 
-        weight(cls0, cos_theta, ratio_hists[cls2],
+        weight(cls0, cos_theta, ratio_hists0[cls0],
             weights_flat["nominal"], weights_flat["up"], weights_flat["down"],
             weights_shape["nominal"], weights_shape["up"], weights_shape["down"]);
 
@@ -242,7 +268,8 @@ int main(int argc, char* argv[]) {
     fi->Close();
     std::cout << "Wrote " << Nbytes << " bytes" << std::endl;
 
-    hists_fi->Close();
+    hists_fi0->Close();
+    hists_fi2->Close();
     //global.Close();
     return 0;
 }
