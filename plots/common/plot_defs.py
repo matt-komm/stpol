@@ -182,3 +182,61 @@ plot_defs['mva_cat4']={
     'elecut': cutlist['2j1t']*cutlist['presel_ele'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']
 }
+
+plot_defs['mva_cat2']={
+    'enabled': False,
+    'var': 'mva_cat2',
+    'range': [40,-1,1],
+    'iso': True,
+    'estQcd': 'presel',
+    'gev': False,
+    'log': True,
+    'xlab': '2-category BDT',
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele'],
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']
+}
+
+plot_defs['mva_bdt']={
+    'enabled': False,
+    'var': 'mva_BDT',
+    'range': [40,-1,1],
+    'iso': True,
+    'estQcd': 'presel',
+    'gev': False,
+    'log': True,
+    'xlab': 'Uncategorized BDT',
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele'],
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']
+}
+
+plot_defs['cos_th_mva_loose']={
+    'enabled': True,
+    'var': 'cos_theta',
+    'range': [20,-1,1],
+    'iso': True,
+    'estQcd': 'final',
+    'gev': False,
+    'log': False,
+    'xlab': 'cos #theta',
+    'labloc': 'top-left',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.3'),
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>-0.38')
+}
+
+
+plot_defs['cos_th_mva_tight']={
+    'enabled': True,
+    'var': 'cos_theta',
+    'range': [20,-1,1],
+    'iso': True,
+    'estQcd': 'final',
+    'gev': False,
+    'log': False,
+    'xlab': 'cos #theta',
+    'labloc': 'top-left',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.6'),
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>-0.15')
+}
+
