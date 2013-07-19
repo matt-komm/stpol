@@ -7,17 +7,64 @@ import re
 
 from rootpy.plotting.hist import Hist
 
-#Here the latter items will become topmost in stacks
-merge_cmds = dict()
-merge_cmds["data"] = ["SingleMu"]
-merge_cmds["diboson"] = ["WW", "WZ", "ZZ"]
-merge_cmds["WJets"] = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
-merge_cmds["DY-jets"] = ["DYJets"]
-merge_cmds["t#bar{t} (#rightarrow lq, ll)"] = ["TTJets_FullLept", "TTJets_SemiLept"]
-#merge_cmds["t#bar{t}"] = ["TTJets_MassiveBinDECAY"]
-merge_cmds["tW-channel"] = ["T_tW", "Tbar_tW"]
-merge_cmds["s-channel"] = ["T_s", "Tbar_s"]
-merge_cmds["t-channel"] = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]
+class PhysicsProcess:
+    desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tW", "s", "t"]
+    def __init__(self, name, subprocesses, pretty_name=None):
+        self.name = name
+        self.subprocesses = subprocesses
+        if pretty_name:
+            self.pretty_name = pretty_name
+        else:
+            self.pretty_name = name
+
+    @classmethod
+    def get_dict(self, lepton_channel, systematic_channel="nominal"):
+        """
+        Returns the collection of PhysicsProcesses, that contain samples to be merged for the
+        particular lepton channel and systematic scenario.
+        """
+        out_d = dict()
+        if lepton_channel=="mu":
+            out_d["data"] = self.SingleMu
+        elif lepton_channel=="ele":
+            out_d["data"] = self.SingleEle
+        else:
+            raise ValueError("Unrecognized lepton channel: %s" % lepton_channel)
+        out_d["diboson"] = self.diboson
+        out_d["WJets"] = self.WJets_mg_exc
+        out_d["DYJets"] = self.DYJets
+        out_d["TTJets"] = self.TTJets_exc
+        out_d["tWchan"] = self.tWchan
+        out_d["schan"] = self.schan
+        out_d["tchan"] = self.tchan
+        return out_d
+
+    @classmethod
+    def get_merge_dict(self, lepton_channel="mu", **kwargs):
+        """
+        Returns a dictionary with
+        {physic_process: [list, of, subsamples], ...}
+        where all elements are strings.
+        Used for merging.
+        """
+        in_d = self.get_dict(lepton_channel, **kwargs)
+        out_d = dict()
+        for name, process in in_d.items():
+            out_d[name] = process.subprocesses
+        return out_d
+
+PhysicsProcess.SingleMu = PhysicsProcess("SingleMu", ["SingleMu.*"], pretty_name="data")
+PhysicsProcess.SingleEle = PhysicsProcess("SingleEle", ["SingleEle.*"], pretty_name="data")
+PhysicsProcess.diboson = PhysicsProcess("diboson", ["[WZ][WZ]"])
+PhysicsProcess.WJets_mg_exc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"], pretty_name="W(#rightarrow l #nu) + j (mg)")
+#PhysicsProcess.WJets_mg_inc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"], pretty_name="W(#rightarrow l #nu,qq) + j (mg)")
+PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"], pretty_name="DY-jets")
+PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"], pretty_name="t#bar{t} (#rightarrow ll, lq) (mg)")
+PhysicsProcess.tWchan = PhysicsProcess("tW", [".*_tW"], pretty_name="tW-channel")
+PhysicsProcess.schan = PhysicsProcess("s", [".*_s"], pretty_name="s-channel")
+PhysicsProcess.tchan = PhysicsProcess("tchan", [".*_t_ToLeptons"], pretty_name="t-channel")
+
+merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel="mu")
 
 logger = logging.getLogger("utils")
 def lumi_textbox(lumi, pos="top-left"):
@@ -47,7 +94,18 @@ def lumi_textbox(lumi, pos="top-left"):
     text.Draw()
     return text
 
-def merge_hists(hists_d, merge_groups):
+def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
+    """
+    Merges the dictionary of input histograms according to the merge rules, which are specified
+    as a key-value dictionary, where the key is the target and value a list of (regex) expressions
+    to merge under the key.
+    For example, {
+        "WJets": ["W[1-4]Jets_.*"],
+        "tchan": ["T_t_ToLeptons", "Tbar_t_ToLeptons"],
+    } will perform the corresponding merges. The values of the merge dict are the keys of the input histogram dict.
+
+    returns - a dictionary with the merged histograms. Optionally you can specify a list with the desired order of the keys.
+    """
     for v in hists_d.values():
         if not isinstance(v, Hist) and not isinstance(v, ROOT.TH1I) and not isinstance(v, ROOT.TH1F):
             raise ValueError("First argument(hists_d) must be a dict of Histograms, but found %s" % v)
