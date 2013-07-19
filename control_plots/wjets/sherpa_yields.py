@@ -94,14 +94,14 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
     merges["sherpa/weighted"] = merge_cmds.copy()
 
 
-    merges["sherpa/unweighted"]["WJets_hf"] = ["weight__nominal/cut__flavour__W_H[lH]/WJets_sherpa_nominal"]
-    merges["sherpa/unweighted"]["WJets_lf"] = ["weight__nominal/cut__flavour__W_ll/WJets_sherpa_nominal"]
-    merges["sherpa/weighted"]["WJets_hf"] = ["weight__sherpa_flavour/cut__flavour__W_H[lH]/WJets_sherpa_nominal"]
-    merges["sherpa/weighted"]["WJets_lf"] = ["weight__sherpa_flavour/cut__flavour__W_ll/WJets_sherpa_nominal"]
-    merges["madgraph/unweighted"]["WJets_hf"] = ["weight__nominal/cut__flavour__W_H[lH]/W[1-4]Jets_exclusive"]
-    merges["madgraph/unweighted"]["WJets_lf"] = ["weight__nominal/cut__flavour__W_ll/W[1-4]Jets_exclusive"]
-    merges["madgraph/weighted"]["WJets_hf"] = ["weight__reweight_madgraph/cut__flavour__W_H[lH]/W[1-4]Jets_exclusive"]
-    merges["madgraph/weighted"]["WJets_lf"] = ["weight__reweight_madgraph/cut__flavour__W_ll/W[1-4]Jets_exclusive"]
+    merges["sherpa/unweighted"]["WJets_hf"] = ["weight__nominal/cut__flavour__W_heavy/WJets_sherpa_nominal"]
+    merges["sherpa/unweighted"]["WJets_lf"] = ["weight__nominal/cut__flavour__W_light/WJets_sherpa_nominal"]
+    merges["sherpa/weighted"]["WJets_hf"] = ["weight__sherpa_flavour/cut__flavour__W_heavy/WJets_sherpa_nominal"]
+    merges["sherpa/weighted"]["WJets_lf"] = ["weight__sherpa_flavour/cut__flavour__W_light/WJets_sherpa_nominal"]
+    merges["madgraph/unweighted"]["WJets_hf"] = ["weight__nominal/cut__flavour__W_heavy/W[1-4]Jets_exclusive"]
+    merges["madgraph/unweighted"]["WJets_lf"] = ["weight__nominal/cut__flavour__W_light/W[1-4]Jets_exclusive"]
+    merges["madgraph/weighted"]["WJets_hf"] = ["weight__reweight_madgraph/cut__flavour__W_heavy/W[1-4]Jets_exclusive"]
+    merges["madgraph/weighted"]["WJets_lf"] = ["weight__reweight_madgraph/cut__flavour__W_light/W[1-4]Jets_exclusive"]
 
     hmerged = dict()
     for k in merges.keys():
@@ -258,7 +258,7 @@ def plot_sherpa_vs_madgraph(var, cut_name, cut, samples, out_dir, recreate=False
 
     return coll, merged_colls
 
-def plot_ratios(cut_name, cut, samples, out_dir, recreate, flavour_scenario=flavour_scenarios[2]):
+def plot_ratios(cut_name, cut, samples, out_dir, recreate, flavour_scenario=flavour_scenarios[0]):
     out_dir += "/" + cut_name
     mkdir_p(out_dir)
 
@@ -389,13 +389,25 @@ if __name__=="__main__":
 
     # plot_ratios("2J0T", Cuts.final(2,0), samples, out_dir, args.recreate)
     # plot_ratios("2J1T", Cuts.final(2,1), samples, out_dir, args.recreate)
-    plot_ratios("2J/ratios", Cuts.final_jet(2), samples.values(), out_dir, args.recreate)
 
     colls_in, colls_out = plot_sherpa_vs_madgraph(
         costheta, "2J",
         Cuts.mu*Cuts.final_jet(2),
         samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic="nominal"
     )
+
+    coll_in, coll_out = plot_sherpa_vs_madgraph(
+        costheta, "2J0T",
+        Cuts.mu*Cuts.final(2,0),
+        samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0
+    )
+
+    coll_in, coll_out = plot_sherpa_vs_madgraph(
+        costheta, "2J1T",
+        Cuts.mu*Cuts.final(2,1),
+        samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0
+    )
+
     hi_mg = colls_out["madgraph/weighted"].hists["WJets_hf"] + colls_out["madgraph/weighted"].hists["WJets_lf"]
     hi_sh = colls_out["sherpa/unweighted"].hists["WJets_hf"] + colls_out["sherpa/unweighted"].hists["WJets_lf"]
     hi_sh_w = colls_out["sherpa/weighted"].hists["WJets_hf"] + colls_out["sherpa/weighted"].hists["WJets_lf"]
@@ -415,6 +427,11 @@ if __name__=="__main__":
     logger.info("madgraph fracs = %s" % str((hf_mg, lf_mg)))
     logger.info("sherpa fracs = %s" % str((hf_sh, lf_sh)))
     logger.info("sherpa weighted fracs = %s" % str((hf_sh_w, lf_sh_w)))
+
+    plot_ratios("2J/ratios/0", Cuts.final_jet(2), samples.values(), out_dir, args.recreate)
+    plot_ratios("2J/ratios/1", Cuts.final_jet(2), samples.values(), out_dir, args.recreate)
+    #plot_ratios("2J/ratios/0", Cuts.final_jet(2), samples.values(), out_dir, args.recreate)
+
     # plot_sherpa_vs_madgraph(
     #     costheta, "2J",
     #     str(Cuts.mu*Cuts.final_jet(2)),
@@ -426,11 +443,7 @@ if __name__=="__main__":
     #     samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic="nominal"
     # )
 
-    # coll_in, coll_out = plot_sherpa_vs_madgraph(
-    #     costheta, "2J0T",
-    #     str(Cuts.mu*Cuts.final(2,0)),
-    #     samples, out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0
-    # )
+
 
     # def ratio(hists):
     #     tot_data = hists["data"].Integral()
@@ -443,35 +456,35 @@ if __name__=="__main__":
     # print (A[0]-A[1])
     # print ratio(coll_out["madgraph/weighted"].hists)
 
-    for syst in ["nominal", "wjets_up", "wjets_down"]:
-        plot_sherpa_vs_madgraph(
-            costheta, "2J/costheta/%s"%syst,
-            Cuts.mu*Cuts.final_jet(2),
-            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
-        )
-        plot_sherpa_vs_madgraph(
-            costheta, "2J0T/costheta/%s"%syst,
-            Cuts.mu*Cuts.final(2,0),
-            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
-        )
-        plot_sherpa_vs_madgraph(
-            costheta, "2J1T/costheta/%s"%syst,
-            Cuts.mu*Cuts.final(2,1),
-            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
-        )
+    # for syst in ["nominal", "wjets_up", "wjets_down"]:
+    #     plot_sherpa_vs_madgraph(
+    #         costheta, "%s/2J/costheta/"%syst,
+    #         Cuts.mu*Cuts.final_jet(2),
+    #         samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+    #     )
+    #     plot_sherpa_vs_madgraph(
+    #         costheta, "2J0T/costheta/%s"%syst,
+    #         Cuts.mu*Cuts.final(2,0),
+    #         samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+    #     )
+    #     plot_sherpa_vs_madgraph(
+    #         costheta, "2J1T/costheta/%s"%syst,
+    #         Cuts.mu*Cuts.final(2,1),
+    #         samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+    #     )
 
-        plot_sherpa_vs_madgraph(
-            aeta_lj_2_5, "2J/aeta/%s"%syst,
-            Cuts.mu*Cuts.final_jet(2),
-            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
-        )
-        plot_sherpa_vs_madgraph(
-            aeta_lj_2_5, "2J0T/aeta/%s"%syst,
-            Cuts.mu*Cuts.final(2,0),
-            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
-        )
-        plot_sherpa_vs_madgraph(
-            aeta_lj_2_5, "2J1T/aeta/%s"%syst,
-            Cuts.mu*Cuts.final(2,1),
-            samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
-        )
+    #     plot_sherpa_vs_madgraph(
+    #         aeta_lj_2_5, "2J/aeta/%s"%syst,
+    #         Cuts.mu*Cuts.final_jet(2),
+    #         samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+    #     )
+    #     plot_sherpa_vs_madgraph(
+    #         aeta_lj_2_5, "2J0T/aeta/%s"%syst,
+    #         Cuts.mu*Cuts.final(2,0),
+    #         samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+    #     )
+    #     plot_sherpa_vs_madgraph(
+    #         aeta_lj_2_5, "2J1T/aeta/%s"%syst,
+    #         Cuts.mu*Cuts.final(2,1),
+    #         samples.values(), out_dir, recreate=args.recreate, legend_pos="top-left", nudge_x=-0.03, nudge_y=0, systematic=syst
+    #     )
