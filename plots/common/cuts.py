@@ -54,49 +54,73 @@ class Cuts:
     def final(n, m, lepton="mu"):
         return Cuts.final_jet(n, lepton)*Cuts.n_tags(m)
 
-    Wbb = Cut("wjets_flavour_classification == 0")
-    Wcc = Cut("wjets_flavour_classification == 1")
-    WbX = Cut("wjets_flavour_classification == 2")
-    WcX = Cut("wjets_flavour_classification == 3")
-    WgX = Cut("wjets_flavour_classification == 4")
-    Wgg = Cut("wjets_flavour_classification == 5")
-    WXX = Cut("wjets_flavour_classification == 6")
+    Wbb = Cut("wjets_flavour_classification0 == 0")
+    Wcc = Cut("wjets_flavour_classification0 == 1")
+    Wbc = Cut("wjets_flavour_classification0 == 2")
+    WbX = Cut("wjets_flavour_classification0 == 3")
+    WcX = Cut("wjets_flavour_classification0 == 4")
+    WgX = Cut("wjets_flavour_classification0 == 5")
+    Wgg = Cut("wjets_flavour_classification0 == 6")
+    WXX = Cut("wjets_flavour_classification0 == 7")
 
-    @staticmethod
-    def Wflavour(s):
-        if s=="W_heavy":
-            return Cuts.Wbb+Cuts.Wcc+Cuts.WbX+Cuts.WcX
-        elif s=="W_light":
-            return Cuts.WgX+Cuts.Wgg+Cuts.WXX
-        else:
-            return ValueError("Did not understand flavour string %s" % s)
+    W_HH = Cut("wjets_flavour_classification2 == 0")
+    W_Hl = Cut("wjets_flavour_classification2 == 1")
+    W_ll = Cut("wjets_flavour_classification2 == 2")
 
 Cuts.mu = Cuts.one_muon*Cuts.lepton_veto
 Cuts.eta_fit = Cuts.hlt_isomu*Cuts.mt_mu*Cuts.rms_lj*Cuts.eta_jet
 
+class Weight:
+    def __init__(self, weight_str):
+        self.weight_str = weight_str
+
+    def __mul__(self, other):
+        weight_str = '('+self.weight_str+') * ('+other.weight_str+')'
+        return Weight(weight_str)
+
+    def __str__(self):
+        return "(%s)" % self.weight_str
+
 class Weights:
     @staticmethod
     def total(systematic="nominal"):
-        w = Cut("pu_weight")
+        w = Weight("pu_weight")
         if systematic=="nominal":
-            w*= Cut("b_weight_nominal")
+            w*= Weight("b_weight_nominal")
         else:
             raise ValueError("Define b-weight for systematic %s" % systematic)
         return w
 
     @staticmethod
-    def wjets_madgraph_weight(systematic="nominal"):
+    def wjets_madgraph_shape_weight(systematic="nominal"):
         if systematic=="nominal":
-            return Cut("wjets_mg_flavour_weight")
+            return Weight("wjets_mg_flavour_shape_weight")
         elif systematic=="wjets_up":
-            return Cut("wjets_mg_flavour_weight_up")
+            return Weight("wjets_mg_flavour_shape_weight_up")
         elif systematic=="wjets_down":
-            return Cut("wjets_mg_flavour_weight_down")
+            return Weight("wjets_mg_flavour_shape_weight_down")
+        else:
+            raise ValueError("Unrecognized systematic=%s" % systematic)
+
+    @staticmethod
+    def wjets_madgraph_flat_weight(systematic="nominal"):
+        if systematic=="nominal":
+            return Weight("wjets_mg_flavour_flat_weight")
+        elif systematic=="wjets_up":
+            return Weight("wjets_mg_flavour_flat_weight_up")
+        elif systematic=="wjets_down":
+            return Weight("wjets_mg_flavour_flat_weight_down")
         else:
             raise ValueError("Unrecognized systematic=%s" % systematic) 
  
-    mu = Cut("muon_IsoWeight")*Cut("muon_IDWeight")*Cut("muon_TriggerWeight")
+    mu = Weight("muon_IsoWeight")*Weight("muon_IDWeight")*Weight("muon_TriggerWeight")
+    sherpa_weight = Weight("gen_weight")
+    sherpa_flavour_weight = Weight("wjets_sh_flavour_flat_weight")
+    #FIXME: put ele weight here
 
-flavour_scenarios = ["W_heavy", "W_light"]
+flavour_scenarios = dict()
+flavour_scenarios[0] = ["Wbb", "Wcc", "Wbc", "WbX", "WcX", "WgX", "Wgg", "WXX"]
+flavour_scenarios[1] = ["W_heavy", "W_light"]
+flavour_scenarios[2] = ["W_HH", "W_Hl", "W_ll"]
 
 

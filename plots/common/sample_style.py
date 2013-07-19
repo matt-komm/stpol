@@ -2,6 +2,7 @@ from colors import sample_colors_same as sample_colors
 from colors import sample_colors_separate
 import ROOT
 import itertools
+from SingleTopPolarization.Analysis import sample_types
 
 class Styling:
     @staticmethod
@@ -23,6 +24,15 @@ class Styling:
         hist.SetMarkerStyle(20)
         hist.SetMarkerColor(ROOT.kBlack)
         hist.SetFillStyle(0)
+
+    @staticmethod
+    def style_collection(coll):
+        for hn, h in coll.hists.items():
+            if sample_types.is_mc(hn):
+                Styling.mc_style(h, hn)
+            else:
+                Styling.data_style(h)
+
 
 class ColorStyleGen:
     col_index = 0

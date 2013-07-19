@@ -147,10 +147,13 @@ class HistCollection:
     """
     A class that manages saving and loading a collection of histograms to and from the disk.
     """
-    def __init__(self, hists, metadata, name, fi=None):
+    def __init__(self, hists, metadata={}, name="coll", fi=None):
         self.name = name
         self.hists = hists
         self.metadata = metadata
+        for k, v in self.hists.items():
+            if k not in self.metadata.keys():
+                self.metadata[k] = HistMetaData()
         self.fi = fi
         logger.debug("Created HistCollection with name %s, hists %s" % (name, str(hists)))
 
@@ -201,18 +204,31 @@ class HistCollection:
     def load(fname):
         fi = File(fname)
         name = re.match(".*/(.*)\.root", fname).group(1)
+        logger.info("Opened file %s" % fi.GetPath())
         metadata = pickle.load(open(fname.replace(".root", ".pickle")))
         hists = {}
         for path, dirs, hnames in fi.walk():
             if len(hnames)>0:
                 for hn in hnames:
-                    logger.debug("Getting %s" % (path + "/"  + hn))
                     if path:
                         hname = path + "/" + hn
                     else:
                         hname = hn
+                    logger.debug("Getting %s" % hname)
                     hists[hname] = fi.Get(hname)
 
                     md = metadata[hname]
         return HistCollection(hists, metadata, name, fi)
 
+def norm(hist):
+    integral, err = calc_int_err(hist)
+    if integral>0:
+        hist.SetTitle(hist.GetTitle() + " I=%.2E #pm %.1E" % (integral, err))
+        hist.Scale(1.0/integral)
+    else:
+        logger.error("Histogram integral was 0: %s" % hist.GetName())
+
+def calc_int_err(hist):
+    err = ROOT.Double()
+    integral = hist.IntegralAndError(1, hist.GetNbinsX(), err)
+    return (integral, err)
