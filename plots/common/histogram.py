@@ -7,6 +7,7 @@ import re
 import pickle
 from plots.common.utils import mkdir_p, escape
 logger = logging.getLogger("histogram")
+import copy
 
 try:
     import rootpy
@@ -155,7 +156,7 @@ class HistCollection:
     """
     def __init__(self, hists, metadata={}, name="coll", fi=None):
         self.name = name
-        self.hists = hists
+        self.hists = copy.deepcopy(hists)
         self.metadata = metadata
         for k, v in self.hists.items():
             if k not in self.metadata.keys():
