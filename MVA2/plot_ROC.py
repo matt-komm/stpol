@@ -1,34 +1,17 @@
 import ROOT
+import MVA2.common
+
 
 def plot_ROC(signals, backgrounds, variables, nbins = 100, name='noname', title='MVA ROC plot'):
 	"""plots the ROC curve for for the trees in signals vs trees in backgrounds for variables"""
 	
-	# find minimum and maximum values
-	minval = {}
-	maxval = {}
-	for var in variables:
-		if var in ["eta_lj"]:
-			minval[var] = 0.0
-			minv = float("inf")
-			maxv = float("-inf")
-			for tree in signals.keys() + backgrounds.keys():
-				minv = min(tree.GetMinimum(var), minv)
-				maxv = max(tree.GetMaximum(var), maxv)
-			maxval[var] = max(abs(minv), abs(maxv))
-		else:
-			minv = float("inf")
-			maxv = float("-inf")
-			for tree in signals.keys() + backgrounds.keys():
-				minv = min(tree.GetMinimum(var), minv)
-				maxv = max(tree.GetMaximum(var), maxv)
-			minval[var] = minv
-			maxval[var] = maxv
-	
 	sh = {}
 	bh = {}
 	for var in variables:
-		sh[var] = ROOT.TH1F("sh_"+var, var+" distribution for signal", nbins, minval[var], maxval[var])
-		bh[var] = ROOT.TH1F("bh_"+var, var+" distribution for background", nbins, minval[var], maxval[var])
+		minval = MVA2.common.find_min_in_trees(signals.keys() + backgrounds.keys(), var)
+		maxval = MVA2.common.find_max_in_trees(signals.keys() + backgrounds.keys(), var)
+		sh[var] = ROOT.TH1F("sh_"+var, var+" distribution for signal", nbins, minval, maxval)
+		bh[var] = ROOT.TH1F("bh_"+var, var+" distribution for background", nbins, minval, maxval)
 		if var in ["eta_lj"]:
 			for sg in signals.keys():
 				sg.Draw("abs("+var+") >>+ sh_"+var, str(signals[sg]))

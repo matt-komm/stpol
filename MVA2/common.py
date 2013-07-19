@@ -311,3 +311,27 @@ class HStack(ROOT.THStack):
 		super(HStack,self).Add(h)
 	#def Draw(self, *args):
 	#	super(HStack,self).Draw(*args)
+
+def find_min_in_trees(trees, var, special = ["eta_lj"]):
+	if var in special:
+		return 0.0
+	else:
+		minv = float("inf")
+		for tree in trees:
+			minv = min(tree.GetMinimum(var), minv)
+		return minv
+
+def find_max_in_trees(trees, var, special = ["eta_lj"]):
+	if var in special:
+		minv = float("inf")
+		maxv = float("-inf")
+		for tree in trees:
+			minv = min(tree.GetMinimum(var), minv)
+			maxv = max(tree.GetMaximum(var), maxv)
+		return max(abs(minv), abs(maxv))
+	else:
+		maxv = float("-inf")
+		for tree in trees:
+			maxv = max(tree.GetMaximum(var), maxv)
+		return maxv
+
