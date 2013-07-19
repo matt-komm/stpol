@@ -51,9 +51,13 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
                 cut_strs = [("cut__all", str(cut))]
                 if kwargs.get("flavour_split", False) and sample_types.is_wjets(sample.name):
                     cut_strs += [
-                        ("cut__flavour__W_HH", str(cut*Cuts.W_HH)),
-                        ("cut__flavour__W_Hl", str(cut*Cuts.W_Hl)),
-                        ("cut__flavour__W_ll", str(cut*Cuts.W_ll)),
+                        # ("cut__flavour__W_HH", str(cut*Cuts.W_HH)),
+                        # ("cut__flavour__W_Hl", str(cut*Cuts.W_Hl)),
+                        # ("cut__flavour__W_ll", str(cut*Cuts.W_ll)),
+                        # ("cut__flavour__W_HH", str(cut*Cuts.W_HH)),
+                        ("cut__flavour__W_heavy", str(cut*Cuts.W_heavy)),
+                        ("cut__flavour__W_light", str(cut*Cuts.W_light)),
+
                     ]
 
                 #Reweigh madgraph samples
