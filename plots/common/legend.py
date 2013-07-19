@@ -12,7 +12,7 @@ def legend(hists, **kwargs):
                 1. data
                 2. MC samples in the reverse order to appear in the legend
 
-        pos - a string specifying the desired position on the canvas
+        legend_pos - a string specifying the desired position on the canvas
         
         width, height - the size of the legend in relative coordinates
         

@@ -143,6 +143,12 @@ class HistMetaData:
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+    def __str__(self):
+        s = ""
+        for k, v in self.__dict__.items():
+            s += " %s: %s," %(k, v)
+        return s[:-1]
+
 class HistCollection:
     """
     A class that manages saving and loading a collection of histograms to and from the disk.

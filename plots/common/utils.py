@@ -5,6 +5,8 @@ import logging
 import os
 import re
 
+from rootpy.plotting.hist import Hist
+
 #Here the latter items will become topmost in stacks
 merge_cmds = dict()
 merge_cmds["data"] = ["SingleMu"]
@@ -46,10 +48,14 @@ def lumi_textbox(lumi, pos="top-left"):
     return text
 
 def merge_hists(hists_d, merge_groups):
+    for v in hists_d.values():
+        if not isinstance(v, Hist) and not isinstance(v, ROOT.TH1I) and not isinstance(v, ROOT.TH1F):
+            raise ValueError("First argument(hists_d) must be a dict of Histograms, but found %s" % v)
+
     out_d = dict()
     logging.debug("merge_hists: input histograms %s" % str(hists_d))
     for merge_name, items in merge_groups.items():
-        logging.debug("Merging %s to %s" % (items, merge_name))
+        logger.debug("Merging %s to %s" % (items, merge_name))
 
         matching_keys = []
         for item in items:
@@ -117,12 +123,7 @@ def mkdir_p(d):
     return
 
 def get_stack_total_hist(thstack):
-    hists = [h for h in thstack.GetHists()]
-    hnew = hists[0].Clone(thstack.GetName())
-    for h in hists[1:]:
-        hnew.Add(h)
-    return hnew
-
+    return sum([h for h in thstack.GetHists()])
 
 def filter_hists(indict, pat):
     """

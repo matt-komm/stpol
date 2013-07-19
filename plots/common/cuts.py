@@ -59,8 +59,10 @@ class Cuts:
     Wbc = Cut("wjets_flavour_classification0 == 2")
     WbX = Cut("wjets_flavour_classification0 == 3")
     WcX = Cut("wjets_flavour_classification0 == 4")
+
     WgX = Cut("wjets_flavour_classification0 == 5")
     Wgg = Cut("wjets_flavour_classification0 == 6")
+    
     WXX = Cut("wjets_flavour_classification0 == 7")
 
     W_HH = Cut("wjets_flavour_classification2 == 0")
