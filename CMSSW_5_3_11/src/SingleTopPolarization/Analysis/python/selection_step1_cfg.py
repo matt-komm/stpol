@@ -161,14 +161,65 @@ def SingleTopStep1(
   #-------------------------------------------------
   # Electrons
   # Implemented as in https://indico.cern.ch/getFile.py/access?contribId=1&resId=0&materialId=slides&confId=208765
+  #Taken from https://github.com/andrey-popov/single-top/blob/master/python/ObjectsDefinitions_cff.py
   #-------------------------------------------------
 
-  #if not maxLeptonIso is None:
-  #    process.pfIsolatedElectrons.isolationCut = maxLeptonIso
-  #Use both isolated and un-isolated electrons as patElectrons.
-  #NB: no need to change process.electronMatch.src to pfElectrons,
-  #    it's already gsfElectrons, which is a superset of the pfElectrons
+  # Define a module to produce a value map with rho correction of electron isolation. The
+  # configuration fragment is copied from [1] because it is not included in the current tag of
+  # UserCode/EGamma/EGammaAnalysisTools. General outline of configuration is inspired by [2].
+  # [1] http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/UserCode/EGamma/EGammaAnalysisTools/python/electronIsolatorFromEffectiveArea_cfi.py?hideattic=0&revision=1.1.2.2&view=markup
+  # [2] https://twiki.cern.ch/twiki/bin/viewauth/CMS/TwikiTopRefHermeticTopProjections?rev=4#Electrons
+  # 
+  # In both real data and simulation an effective area derived from real data (2012 HCP dataset)
+  # is applied. Possible difference between data and simulation is belived to be small [3-4]
+  # [3] https://hypernews.cern.ch/HyperNews/CMS/get/top/1607.html
+  # [4] https://hypernews.cern.ch/HyperNews/CMS/get/egamma/1263/1/2/1.html
+  process.elPFIsoValueEA03 = cms.EDFilter('ElectronIsolatorFromEffectiveArea',
+      gsfElectrons = cms.InputTag('gsfElectrons'),
+      pfElectrons = cms.InputTag('pfSelectedElectrons'),
+      rhoIso = cms.InputTag('kt6PFJets', 'rho'),
+      EffectiveAreaType = cms.string('kEleGammaAndNeutralHadronIso03'),
+      EffectiveAreaTarget = cms.string('kEleEAData2012'))
+  
+  
+  # Change the isolation cone used in pfIsolatedElectrons to 0.3, as recommended in [1] and [2].
+  # The parameter for the delta-beta correction is initialized with the map for the rho correction
+  # [1] https://twiki.cern.ch/twiki/bin/view/CMS/EgammaCutBasedIdentification?rev=17#Particle_Flow_Isolation
+  # [2] https://twiki.cern.ch/twiki/bin/view/CMS/TWikiTopRefEventSel?rev=178#Electrons
+  process.pfIsolatedElectrons.isolationValueMapsCharged = cms.VInputTag(
+      cms.InputTag('elPFIsoValueCharged03PFId')
+  )
+  process.pfIsolatedElectrons.deltaBetaIsolationValueMap = cms.InputTag('elPFIsoValuePU03PFId')
+  process.pfIsolatedElectrons.isolationValueMapsNeutral = cms.VInputTag(
+      cms.InputTag('elPFIsoValueNeutral03PFId'), cms.InputTag('elPFIsoValueGamma03PFId')
+  )
+  process.pfIsolatedElectrons.deltaBetaIsolationValueMap = cms.InputTag('elPFIsoValueEA03')
+  
+  PFRecoSequence.replace(process.pfIsolatedElectrons,
+   process.elPFIsoValueEA03 * process.pfIsolatedElectrons)
+  
+  
+  # Adjust parameters for the rho correction [1]. The cut on the isolation value is set in
+  # accordance with [2]
+  # [1] https://twiki.cern.ch/twiki/bin/viewauth/CMS/TwikiTopRefHermeticTopProjections?rev=4#Electrons
+  # [2] https://twiki.cern.ch/twiki/bin/view/CMS/TWikiTopRefEventSel?rev=178#Veto
+  process.pfIsolatedElectrons.doDeltaBetaCorrection = True
+  process.pfIsolatedElectrons.deltaBetaFactor = -1.
+  process.pfIsolatedElectrons.isolationCut = 0.15
+  
+  # Insert a module to filter electrons based on their ID. See [1] as an example
+  # [1] https://twiki.cern.ch/twiki/bin/viewauth/CMS/TwikiTopRefHermeticTopProjections?rev=4#Electrons
+  process.pfIdentifiedElectrons = cms.EDFilter('ElectronIDPFCandidateSelector',
+      recoGsfElectrons = cms.InputTag('gsfElectrons'),
+      electronIdMap = cms.InputTag('mvaTrigV0'),
+      electronIdCut = cms.double(0.),
+      src = cms.InputTag('pfIsolatedElectrons'))
+  
+  
 
+  # Load electron MVA ID modules. See an example in [1], which is referenced from [2]
+  # [1] http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/CMSSW/EgammaAnalysis/ElectronTools/test/patTuple_electronId_cfg.py?view=markup&pathrev=SE_PhotonIsoProducer_MovedIn
+  # [2] https://twiki.cern.ch/twiki/bin/view/CMS/MultivariateElectronIdentification?rev=45#Recipe_for_53X
   #From EgammaAnalysis/ElectronTools/test/patTuple_electronId_cfg.py
   process.load('EgammaAnalysis.ElectronTools.electronIdMVAProducer_cfi')
   process.mvaID = cms.Sequence(  process.mvaTrigV0 + process.mvaTrigNoIPV0 + process.mvaNonTrigV0 )
@@ -188,21 +239,22 @@ def SingleTopStep1(
     primaryVertexSource = cms.InputTag("goodOfflinePrimaryVertices")
   )
 
-  process.pfElectrons.isolationValueMapsCharged = cms.VInputTag(cms.InputTag("elPFIsoValueCharged03PFId"))
-  process.pfElectrons.deltaBetaIsolationValueMap = cms.InputTag("elPFIsoValuePU03PFId")
-  process.pfElectrons.isolationValueMapsNeutral = cms.VInputTag(cms.InputTag("elPFIsoValueNeutral03PFId"), cms.InputTag("elPFIsoValueGamma03PFId"))
-  process.pfElectrons.deltaBetaIsolationValueMap = cms.InputTag("elPFIsoValuePU03PFId")
-  process.pfElectrons.isolationValueMapsNeutral = cms.VInputTag(cms.InputTag("elPFIsoValueNeutral03PFId"), cms.InputTag("elPFIsoValueGamma03PFId"))
 
-  process.patElectrons.isolationValues.pfNeutralHadrons = cms.InputTag("elPFIsoValueNeutral03PFId")
-  process.patElectrons.isolationValues.pfChargedAll = cms.InputTag("elPFIsoValueChargedAll03PFId")
-  process.patElectrons.isolationValues.pfPUChargedHadrons = cms.InputTag("elPFIsoValuePU03PFId")
-  process.patElectrons.isolationValues.pfPhotons = cms.InputTag("elPFIsoValueGamma03PFId")
-  process.patElectrons.isolationValues.pfChargedHadrons = cms.InputTag("elPFIsoValueCharged03PFId")
+  # process.pfElectrons.isolationValueMapsCharged = cms.VInputTag(cms.InputTag("elPFIsoValueCharged03PFId"))
+  # process.pfElectrons.deltaBetaIsolationValueMap = cms.InputTag("elPFIsoValuePU03PFId")
+  # process.pfElectrons.isolationValueMapsNeutral = cms.VInputTag(cms.InputTag("elPFIsoValueNeutral03PFId"), cms.InputTag("elPFIsoValueGamma03PFId"))
+  # process.pfElectrons.deltaBetaIsolationValueMap = cms.InputTag("elPFIsoValuePU03PFId")
+  # process.pfElectrons.isolationValueMapsNeutral = cms.VInputTag(cms.InputTag("elPFIsoValueNeutral03PFId"), cms.InputTag("elPFIsoValueGamma03PFId"))
 
-  process.pfIsolatedElectrons.isolationValueMapsCharged = cms.VInputTag(cms.InputTag("elPFIsoValueCharged03PFId"))
-  process.pfIsolatedElectrons.deltaBetaIsolationValueMap = cms.InputTag("elPFIsoValuePU03PFId")
-  process.pfIsolatedElectrons.isolationValueMapsNeutral = cms.VInputTag(cms.InputTag("elPFIsoValueNeutral03PFId"), cms.InputTag("elPFIsoValueGamma03PFId"))
+  # process.patElectrons.isolationValues.pfNeutralHadrons = cms.InputTag("elPFIsoValueNeutral03PFId")
+  # process.patElectrons.isolationValues.pfChargedAll = cms.InputTag("elPFIsoValueChargedAll03PFId")
+  # process.patElectrons.isolationValues.pfPUChargedHadrons = cms.InputTag("elPFIsoValuePU03PFId")
+  # process.patElectrons.isolationValues.pfPhotons = cms.InputTag("elPFIsoValueGamma03PFId")
+  # process.patElectrons.isolationValues.pfChargedHadrons = cms.InputTag("elPFIsoValueCharged03PFId")
+
+  # process.pfIsolatedElectrons.isolationValueMapsCharged = cms.VInputTag(cms.InputTag("elPFIsoValueCharged03PFId"))
+  # process.pfIsolatedElectrons.deltaBetaIsolationValueMap = cms.InputTag("elPFIsoValuePU03PFId")
+  # process.pfIsolatedElectrons.isolationValueMapsNeutral = cms.VInputTag(cms.InputTag("elPFIsoValueNeutral03PFId"), cms.InputTag("elPFIsoValueGamma03PFId"))
 
   process.patElectronsAll = process.patElectrons.clone(
     pfElectronSource=cms.InputTag("pfElectrons")
