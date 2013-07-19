@@ -62,12 +62,14 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
     p2.Draw()
     p2.cd()
 
-    hist_data.SetName("merged_data")
-    hist_mc.SetName("merged_mc")
-    hist_mc.Add(hist_data, -1.0)
-    hist_mc.Divide(hist_data)
+    hist_ratio = hist_mc.Clone()
 
-    hist_ratio = hist_mc
+    hist_ratio.SetName("ratio")
+    hist_ratio.Add(hist_data, -1.0)
+    hist_ratio.Divide(hist_data)
+
+    hist_ratio.SetLineColor(ROOT.kBlack)
+    hist_ratio.SetMarkerColor(ROOT.kBlack)
 
     hist_ratio.SetStats(False)
     hist_ratio.SetMarkerStyle(23)

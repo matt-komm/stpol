@@ -139,6 +139,24 @@ def plot(canv, name, hists_merged, out_dir, **kwargs):
 
     tot_mc = get_stack_total_hist(stacks["mc"])
     tot_data = get_stack_total_hist(stacks["data"])
+    tot_mc.SetMarkerSize(0)
+    tot_mc.fillstyle = "/"
+    #tot_mc.SetLineColor(ROOT.kBlue)
+    tot_mc.SetFillColor(ROOT.kBlue)
+
+    #Draw the MC statistical error
+    tot_mc.Draw("E3 SAME")
+
+    #Draw the systematic error (if present)
+    tot_syst_error = kwargs.get("hist_tot_syst_error", None)
+    if tot_syst_error:
+        tot_syst_error.SetMarkerStyle(21)
+        tot_syst_error.SetFillStyle(3005)
+        tot_syst_error.SetMarkerColor(ROOT.kMagenta)
+        tot_syst_error.SetFillColor(ROOT.kMagenta)
+        tot_syst_error.SetLineColor(ROOT.kMagenta)
+        tot_syst_error.Draw("LP SAME")
+
     r = plot_data_mc_ratio(
         canv,
         tot_data,
@@ -159,4 +177,20 @@ def plot(canv, name, hists_merged, out_dir, **kwargs):
     canv.SaveAs(out_dir + "/%s.png" % name)
     canv.Close() #Must close canvas to prevent hang in ROOT upon GC
     logger.debug("Returning from plot()")
-    return 
+    return
+
+def plot_hists_dict(hist_dict, doNorm=False, **kwargs):
+    items = hist_dict.items()
+    for hn, h in items:
+        h.SetName(hn)
+        h.SetTitle(hn)
+    hists = [x[1] for x in items]
+    names = [x[0] for x in items]
+    if doNorm:
+        map(norm, hists)
+    ColorStyleGen.style_hists(hists)
+    canv = plot_hists(hists, **kwargs)
+
+    leg = legend(hists, styles=["f", "f"], **kwargs)
+    canv.LEGEND = leg
+    return canv
