@@ -318,10 +318,15 @@ public:
     bool doVetoLeptonCut;
     edm::InputTag vetoMuCountSrc;
     edm::InputTag vetoEleCountSrc;
-    
+    edm::InputTag vetoEleMvaSrc;
+    edm::InputTag vetoEleIdSrc;
+  
     void initialize_branches() {
         branch_vars.vars_int["n_veto_mu"] = BranchVars::def_val_int;
         branch_vars.vars_int["n_veto_ele"] = BranchVars::def_val_int;
+
+	branch_vars.vars_float["veto_el_mva"] = BranchVars::def_val;
+	branch_vars.vars_float["veto_el_id"] = BranchVars::def_val;
     }
     
     VetoLeptonCuts(const edm::ParameterSet& pars, BranchVars& _branch_vars) :
@@ -330,15 +335,22 @@ public:
         initialize_branches();
         doVetoLeptonCut = pars.getParameter<bool>("doVetoLeptonCut");
         vetoMuCountSrc = pars.getParameter<edm::InputTag>("vetoMuCountSrc");
-        vetoEleCountSrc = pars.getParameter<edm::InputTag>("vetoEleCountSrc");
+	vetoEleCountSrc = pars.getParameter<edm::InputTag>("vetoEleCountSrc");
+
+	vetoEleMvaSrc = pars.getParameter<edm::InputTag>("vetoEleMvaSrc");
+	vetoEleIdSrc = pars.getParameter<edm::InputTag>("vetoEleIdSrc");
     }
     
     bool process(const edm::EventBase& event) {
         pre_process();
         int n_veto_mu = get_collection<int>(event, vetoMuCountSrc, -1);
         int n_veto_ele = get_collection<int>(event, vetoEleCountSrc, -1);
+
         branch_vars.vars_int["n_veto_mu"] = n_veto_mu;
         branch_vars.vars_int["n_veto_ele"] = n_veto_ele;
+	branch_vars.vars_float["veto_el_mva"] = get_collection_n<float>(event, vetoEleMvaSrc);
+	branch_vars.vars_float["veto_el_id"] = get_collection_n<float>(event, vetoEleIdSrc);
+
         if(doVetoLeptonCut) {
             if (n_veto_mu != 0 || n_veto_ele != 0) return false;
         }
