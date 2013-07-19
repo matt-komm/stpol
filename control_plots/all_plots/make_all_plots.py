@@ -16,6 +16,7 @@ from plots.common.sample import Sample
 from plots.common.cuts import Cuts,Cut
 from plots.common.legend import *
 from plots.common.sample_style import Styling
+from plots.common.plot_defs import *
 import plots.common.pretty_names as pretty_names
 from plots.common.utils import merge_cmds, merge_hists
 import random
@@ -31,12 +32,11 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 # Declare which data we will use
-step3 = os.environ['STPOL_DIR']+'/step3_new/'
+step3 = os.environ['STPOL_DIR']+'/step3_mva/'
 data_fn = 'Single'+proc.title()
 del merge_cmds['data']
 flist=sum(merge_cmds.values(),[])
-tree='Events'
-from plot_defs import *
+tree='Events_MVA'
 
 mc_sf=1.
 lumiele=6144
@@ -67,7 +67,7 @@ if len(sys.argv) == 3:
     keylist=[sys.argv[2]]
 
 for pd in keylist:
-    if not plot_defs[pd]['enabled']:
+    if not plot_defs[pd]['enabled'] and len(keylist) > 1:
         continue
     var = plot_defs[pd]['var']
     cut = None
