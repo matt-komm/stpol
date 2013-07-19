@@ -27,6 +27,7 @@ class JobStats:
         completed = filter(lambda j: j.isCompleted(), task.jobs)
         needs_get = filter(lambda j: j.needsGet(), task.jobs)
         pending = filter(lambda j: j.isPending(), task.jobs)
+        needs_submit = filter(lambda j: j.isCreated(), task.jobs)
         if len(task.jobs)>0:
             quantiles_submissions = scipy.stats.mstats.mquantiles(map(lambda j: j.n_submission, task.jobs), prob=[0.25, 0.5, 0.75, 0.95])
             self.quantiles_submissions = [int(x) for x in quantiles_submissions]
@@ -39,6 +40,7 @@ class JobStats:
         self.jobs_total = len(task.jobs)
         self.jobs_completed = len(completed)
         self.jobs_to_get = len(needs_get)
+        self.jobs_to_submit = len(needs_submit)
         self.jobs_pending = len(pending)
         self.jobs_to_resubmit = len(needs_resubmit)
         self.max_submissions = max_submissions
@@ -52,7 +54,10 @@ class JobStats:
         self.name = task.name
 
     def summary(self):
-        s = "%s: (%d|%d|%d) | %.2f %%" % (self.name, self.jobs_total, self.jobs_completed, self.jobs_pending, 100.0*(float(self.jobs_completed) / float(self.jobs_total)))
+        s = "%s: (tot %d| comp %d| PD %d | RS %d | S %d) | %.2f %%" % (
+            self.name, self.jobs_total, self.jobs_completed, self.jobs_pending,
+            self.jobs_to_resubmit, self.jobs_to_submit,
+            100.0*(float(self.jobs_completed) / float(self.jobs_total)))
         if self.jobs_total != (self.jobs_pending + self.jobs_completed):
             s = ">>>" + s
         return s
@@ -134,7 +139,7 @@ class Task:
             raise ValueError("No jobs in XML")
         self.prev_jobs = self.jobs
         self.jobs = map(Task.parseJob, zip(jobs_a, jobs_b))
-        self.name = re.match(".*/WD_(.*)/share/RReport.xml", self.fname).group(1)
+        self.name = re.match(".*WD_(.*)/share/RReport.xml", self.fname).group(1)
 
     @staticmethod
     def timeStats(jobs):
@@ -193,7 +198,10 @@ class Job:
         self.lfn = lfn
 
     def isCompleted(self):
-        return self.state == "Cleared" and self.wrapper_ret_code == 0 and self.app_ret_code == 0
+        return self.wrapper_ret_code == 0 and self.app_ret_code == 0
+
+    def isCreated(self):
+        return self.state == "Created"
 
     def needsGet(self):
         return self.state == "Terminated"
@@ -202,10 +210,10 @@ class Job:
         return self.state == "SubSuccess"
 
     def needsResubmit(self):
-        return self.state == "Cleared" and not self.isCompleted()
+        return (self.state == "Cleared" or self.state=="Terminated") and not self.isCompleted()
 
     def totalTime(self):
-        t1 = self.get_output_time if self.get_output_time else datetime.datetime(time.localtime()[:6])
+        t1 = self.get_output_time if self.get_output_time else datetime.datetime.now()
         if self.submission_time and t1:
             return t1 - self.submission_time
         else:
