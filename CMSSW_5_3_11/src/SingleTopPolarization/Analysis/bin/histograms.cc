@@ -13,26 +13,91 @@
 #include <memory>
 #include <tr1/tuple> 
 
+#include <boost/any.hpp>
+#include <boost/program_options.hpp>
+
+#include "jet_flavour_classifications.h"
+
 template <typename T>
 void get_branch(const char* name, T* address, TTree* tree) {
     tree->SetBranchStatus(name, 1);
     tree->SetBranchAddress(name, address);
     tree->AddBranchToCache(name);
 }
+using namespace std;
+using namespace std::tr1;
 
-static const std::string sep("__");
-std::string hist_name(int n_jets, int n_tags) {
+
+typedef tuple<
+    int, int, int,
+//    string, string, string,
+    string, string
+> hist_ident;
+const std::string id_to_string(hist_ident tup) {
     std::ostringstream ss;
-    ss << sep << "NJets_" << n_jets;
-    ss << sep << "NTags_" << n_tags;
+    ss  << "N_jets__" << get<0>(tup)
+        << "/N_tags__" << get<1>(tup)
+        << "/jet_flavour__" << get<2>(tup)
+
+//        << "/mt_mu__" << get<3>(tup)
+//        << "/eta_lj__" << get<4>(tup)
+//        << "/top_mass__" << get<5>(tup)
+
+        << "/weight__" << get<3>(tup)
+        << "/var__" << get<4>(tup);
     return ss.str();
+};
+
+void ReplaceStringInPlace(std::string& subject, const std::string& search,
+                          const std::string& replace) {
+    size_t pos = 0;
+    while ((pos = subject.find(search, pos)) != std::string::npos) {
+         subject.replace(pos, search.length(), replace);
+         pos += replace.length();
+    }
 }
 
-int main(int argc, char* argv[]) {
+#define PLOT_PARS_COSTHETA 100, -1, 1
 
-    if(argc!=2) {
-        std::cout << "Usage: " << argv[0] << " /path/to/input/file.root" << std::endl;
+int main(int argc, char** argv) {
+
+    cout << "---------------" << endl;
+    cout << argv[0] << endl;
+
+    std::string infile;
+    std::string outfile;
+    bool doWJetsMadgraphWeights = false;
+    bool doSelect = false;
+    bool isMC = true;
+    std::string cut("n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025 && abs(eta_lj)>2.5 && top_mass<220 && top_mass>130 && mt_mu>50");
+
+    namespace po = boost::program_options;
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help", "produce help message")
+        ("infile", po::value<string>(&infile)->required(), "the input file with a TTree trees/Events")
+        ("outfile", po::value<string>(&outfile)->required(), "the output ROOT file with histograms")
+        ("cut", po::value<string>(&cut), "The preselection cut string")
+
+        ("doWJetsMadgraphWeight", po::value<bool>(&doWJetsMadgraphWeights), "do weighted histograms with madgraph?")
+        ("doSelect", po::value<bool>(&doSelect), "do the selection again?")
+
+        ("isMC", po::value<bool>(&isMC), "do the selection again?")
+    ;
+
+    po::variables_map vm;
+
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);    
+    } catch(po::error& e) {
+        cout << "ERROR: " << e.what() << endl;
         exit(1);
+    }
+
+    if (vm.count("help")) {
+        cout << desc << "\n";
+        return 1;
     }
 
     std::vector<int> N_jets;
@@ -43,12 +108,13 @@ int main(int argc, char* argv[]) {
     N_tags.push_back(1);
     N_tags.push_back(2);
 
-    const std::string infile(argv[1]);
     const std::string fname = infile.substr(infile.rfind("/")+1, infile.find(".root") - infile.rfind("/"));
     std::cout << "Input file is " << infile << std::endl;
 
     TFile* fi = new TFile(infile.c_str());
     TTree* events = (TTree*)fi->Get("trees/Events");
+    if(doWJetsMadgraphWeights)
+        events->AddFriend("trees/WJets_weights");
     events->SetCacheSize(10000000);
     
     events->SetBranchStatus("*", 0);
@@ -72,26 +138,31 @@ int main(int argc, char* argv[]) {
     events->AddBranchToCache("rms_lj");
     events->AddBranchToCache("mt_mu");
 
-    TFile* ofi = new TFile("out.root", "UPDATE");
+    TFile* ofi = new TFile(outfile.c_str(), "UPDATE");
+    std::cout << "Output file is " << outfile << std::endl;
     ofi->cd();
 
-    std::cout << "Performing preselection" << std::endl;
 
     const std::string elist_name = std::string("elist__") + fname;
 
-    std::cout << "Looking for event list with name " << elist_name << std::endl;
+    //std::cout << "Looking for event list with name " << elist_name << std::endl;
     TObject* elist_ = ofi->Get(elist_name.c_str());
-    std::cout << "elist_=" << elist_ << std::endl;
+    //std::cout << "elist_=" << elist_ << std::endl;
     TEventList* elist = (TEventList*)elist_;
     
     int Nentries = -1;
-    if (elist==0) {
-        Nentries = events->Draw((std::string(">>") + elist_name).c_str(), "n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025 && abs(eta_lj)>2.5 && top_mass<220 && top_mass>130 && mt_mu>50");
+    if (elist==0 || doSelect) {
+        std::cout << "Performing preselection with str='" << cut << "'" << std::endl;
+
+        Nentries = events->Draw((std::string(">>") + elist_name).c_str(), cut.c_str());
         elist = (TEventList*)ofi->Get(elist_name.c_str());
         std::cout << Nentries << " events selected with preselection" << std::endl;
-        elist->Write();
+        ofi->Flush();
+    } else { 
+        Nentries = elist->GetN();
+        std::cout << "Loaded preselection" << endl;
+
     }
-    Nentries = elist->GetN();
 
     events->SetBranchStatus("*", 0);
     events->SetEventList(elist);
@@ -100,39 +171,131 @@ int main(int argc, char* argv[]) {
     get_branch<int>("n_jets", &n_jets, events);
     int n_tags = -1;
     get_branch<int>("n_tags", &n_tags, events); 
-    //int wjets_flavour_classification = -1;
-    //get_branch<int>("wjets_flavour_classification", &wjets_flavour_classification, events); 
+
     float cos_theta = -1;
     get_branch<float>("cos_theta", &cos_theta, events);
 
-    typedef std::tr1::tuple<int, int, const char*> hist_ident;
+    int jet_flavour_classification = -1;
+
+
+
     std::map<hist_ident, TH1*> hists;
-    hists[std::tr1::make_tuple(2, 1, "cos_theta")] = new TH1F("cos_theta_2_1", "cos_theta", 20, -1, 1);
-    hists[std::tr1::make_tuple(2, 0, "cos_theta")] = new TH1F("cos_theta_2_0", "cos_theta", 20, -1, 1);
+    TH1::AddDirectory(false);
+
+    vector<string> weights;
+    weights.push_back("unweighted");
+
+    map<string, float> wjets_weight_branches;
+    auto getbranch = [&events, &wjets_weight_branches](const char* s){
+        wjets_weight_branches[s] = (float)1.0;
+        events->SetBranchStatus(s, 1);
+        events->SetBranchAddress(s, &wjets_weight_branches[s]);
+        events->AddBranchToCache(s);
+    };
+
+
+    if(doWJetsMadgraphWeights) {
+        get_branch<int>("wjets_flavour_classification0", &jet_flavour_classification, events);
+
+        weights.push_back("weighted_wjets_mg_flavour_nominal");
+        weights.push_back("weighted_wjets_mg_flavour_up");
+        weights.push_back("weighted_wjets_mg_flavour_down");
+
+        getbranch("wjets_mg_flavour_flat_weight");
+        getbranch("wjets_mg_flavour_flat_weight_up");
+        getbranch("wjets_mg_flavour_flat_weight_down");
+        getbranch("wjets_mg_flavour_shape_weight");
+        getbranch("wjets_mg_flavour_shape_weight_up");
+        getbranch("wjets_mg_flavour_shape_weight_down");
+    }
+
+    int min_flavour= -1;
+    int max_flavour= -1;
+    if(doWJetsMadgraphWeights) {
+        min_flavour = 0;
+        max_flavour = 7;
+    }
+
+    for(auto& weight : weights) {
+        for (int i=min_flavour; i<=max_flavour; i++) {
+            for (int n_jets=2; n_jets<3; n_jets++) {
+                for(int n_tags=0; n_tags<3; n_tags++) {
+                    hists[std::tr1::make_tuple(n_jets, n_tags, i, weight.c_str(), "cos_theta")] = new TH1F("cos_theta", "cos_theta", PLOT_PARS_COSTHETA);
+                }
+            }
+        }
+    }
+
+    for (auto& e : hists) {
+        const std::string dirname(id_to_string(e.first));
+        //ofi->rmdir(dirname.c_str());
+        TDirectory* dir = (TDirectory*)ofi->Get(dirname.c_str());
+        if (!dir) {
+            dir = ofi->mkdir(dirname.c_str());
+        }
+        if(dir) {
+            dir = (TDirectory*)ofi->Get(dirname.c_str());
+        } else {
+            cerr << "Couldn't make directory " << dirname << endl;
+            throw 1;
+        }
+        //std::cout << "Making directory " << dirname << std::endl;
+        //std::cout << "TDir=" << dir->GetPath() << endl;
+        e.second->SetDirectory(dir);
+        e.second->Sumw2();
+    }
 
     //cos_theta_hists[]
     long Nbytes = 0;
+    cout << "Beginning event loop." << endl;
     for (int n=0; n<Nentries; n++) {
         long idx = elist->GetEntry(n);
         Nbytes += events->GetEntry(idx);
-        if (n_jets==2 && n_tags==1)
-            hists[std::tr1::make_tuple(2,1, "cos_theta")]->Fill(cos_theta);
-        if (n_jets==2 && n_tags==0)
-            hists[std::tr1::make_tuple(2,0, "cos_theta")]->Fill(cos_theta);
+        if (n_jets == 2) {
+            if (n_tags==1 || n_tags==0) {
+                hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[0], "cos_theta")]->Fill(cos_theta);
+
+                if(doWJetsMadgraphWeights) {
+                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[1], "cos_theta")]->Fill(cos_theta,
+                        wjets_weight_branches["wjets_mg_flavour_flat_weight"]*wjets_weight_branches["wjets_mg_flavour_shape_weight"]
+                    );
+                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[2], "cos_theta")]->Fill(cos_theta,
+                        wjets_weight_branches["wjets_mg_flavour_flat_weight_up"]*wjets_weight_branches["wjets_mg_flavour_shape_weight_up"]
+                    );
+                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "cos_theta")]->Fill(cos_theta,
+                        wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_shape_weight_down"]
+                    );
+                }
+            }
+        }
 
     }
     std::cout << "Read " << Nbytes << " bytes" << std::endl;
 
-    for (auto& e : hists) {
-        e.second->Print("ALL");
-        //ofi->Delete((std::string(e.second->GetName()) + std::string(";")).c_str());
+    events->SetCacheSize(0);
 
-        e.second->Write("", TObject::kOverwrite);
+    //fi->Write();
+    TObject* count_hist = (fi->Get("trees/count_hist;1"));
+    float ngen = 1.0;
+    if (count_hist && isMC) {
+        ngen = ((TH1I*)count_hist)->GetBinContent(1);
     }
-    
+    std::cout << "ngen=" << ngen << endl;
+    for (auto& e : hists) {
+        std::cout << e.second->GetDirectory()->GetPath() << endl;
+        if(ngen>0.0) {
+            e.second->Scale(1.0/ngen);
+        }
+        
+        //e.second->Print();
+        //cout << "Writing histogram " << e.second->GetDirectory()->GetPath() << ":" << e.second->GetName() << endl;
+    }
+
+    cout << "Writing file" << endl;
+    ofi->Write();
     fi->Close();
+    delete fi;
     ofi->Close();
-    
-    //std::cout << "Wrote " << Nbytes << " bytes" << std::endl;
+    delete ofi;
     return 0;
 }

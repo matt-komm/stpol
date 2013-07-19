@@ -7,37 +7,13 @@
 #include <TH1F.h>
 #include <TH1.h>
 #include <map>
+#include <cmath>
 
-//TFile global("global.root", "RECREATE");
+#include "jet_flavour_classifications.h"
 
-enum WJetsClassification0 {
-    //W_QQ
-    Wbb,
-    Wcc,
-    Wbc,
+using namespace std;
 
-    //W_Qq
-    WbX,
-    WcX,
-
-    //W_qq
-    WgX,
-    Wgg,
-    WXX,
-};
-
-enum WJetsClassification1 {
-    WJETS1_W_heavy,
-    WJETS1_W_light,
-};
-
-enum WJetsClassification2 {
-    WJETS2_W_QQ,
-    WJETS2_W_Qq,
-    WJETS2_W_qq,
-};
-
-WJetsClassification1 classify_1(int cls) {
+WJetsClassification1 classify_1(WJetsClassification0 cls) {
     if (cls == Wbb || cls==Wcc || cls==WbX || cls==WcX || cls==Wbc) {
         return WJETS1_W_heavy;
     }
@@ -46,7 +22,7 @@ WJetsClassification1 classify_1(int cls) {
     }
 }
 
-WJetsClassification2 classify_2(int cls) {
+WJetsClassification2 classify_2(WJetsClassification0 cls) {
     if (cls == Wbb || cls==Wcc || cls==Wbc) {
         return WJETS2_W_QQ;
     }
@@ -57,17 +33,9 @@ WJetsClassification2 classify_2(int cls) {
     }
 }
 
-std::string classify_1_str(int cls) {
-    if(cls==WJETS1_W_heavy)
-        return std::string("W_heavy");
-    else if(WJETS1_W_light)
-        return std::string("W_light");
-    else
-        throw 1;
-}
-
 static const float Wlight_sf = 1.0991871445834183;
-void weight(int cls, float cos_theta, TH1F* hist,
+void weight(
+    WJetsClassification0 cls, float cos_theta, TH1F* hist,
     float& w_flat, float& w_flat_up, float& w_flat_down,
     float& w_shape, float& w_shape_up, float& w_shape_down) {
     w_flat = 1.0;
@@ -92,16 +60,17 @@ void weight(int cls, float cos_theta, TH1F* hist,
 
         //madgraph W+light, measured in 2J data/madgraph
         w_flat *= Wlight_sf;
-        w_flat_up *= Wlight_sf+(Wlight_sf-1.0);
-        w_flat_down *= Wlight_sf-(Wlight_sf-1.0);
+        w_flat_up *= Wlight_sf + fabs(Wlight_sf-1.0);
+        w_flat_down *= Wlight_sf - fabs(Wlight_sf-1.0);
     }
     else 
         throw 1;
 
     //Measured shape differences sherpa vs madgraph
-    w_shape *= hist->GetBinContent(bin);
-    w_shape_up *= (hist->GetBinContent(bin) + hist->GetBinError(bin));
-    w_shape_down *= (hist->GetBinContent(bin) - hist->GetBinError(bin));
+    float w = hist->GetBinContent(bin);
+    w_shape *= w;
+    w_shape_up *= w + fabs(w - 1.0);
+    w_shape_down *= w - fabs(w - 1.0);
     //std::cout << "w=" << w << std::endl;
 
 }
@@ -179,7 +148,6 @@ int main(int argc, char* argv[]) {
     ratio_hists0[WcX] = (TH1F*)hists_fi0->Get("ratio__WcX");
     ratio_hists0[WgX] = (TH1F*)hists_fi0->Get("ratio__WgX");
     ratio_hists0[Wgg] = (TH1F*)hists_fi0->Get("ratio__Wgg");
-    ratio_hists0[WgX] = (TH1F*)hists_fi0->Get("ratio__WgX");
     ratio_hists0[WXX] = (TH1F*)hists_fi0->Get("ratio__WXX");
 
     int gen_flavour_bj = -1;
@@ -212,15 +180,21 @@ int main(int argc, char* argv[]) {
     weights_shape["up"] = 1.0;
     weights_shape["down"] = 1.0;
 
+    std::map<const std::string, float> weights_mg_combined;
+    weights_mg_combined["nominal"] = 1.0;
+    weights_mg_combined["up"] = 1.0;
+    weights_mg_combined["down"] = 1.0;
+
     std::map<const std::string, float> weight_sherpa;
     weight_sherpa["nominal"] = 1.0;
     weight_sherpa["up"] = 1.0;
     weight_sherpa["down"] = 1.0;
 
+/*
     weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa["nominal"], "wjets_sh_flavour_flat_weight/F"); 
-    weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa["up"], "wjets_sh_flavour_flat_weight/F"); 
-    weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa["down"], "wjets_sh_flavour_flat_weight/F"); 
-    
+    weight_tree->Branch("wjets_sh_flavour_flat_weight_up", &weight_sherpa["up"], "wjets_sh_flavour_flat_weight/F"); 
+    weight_tree->Branch("wjets_sh_flavour_flat_weight_down", &weight_sherpa["down"], "wjets_sh_flavour_flat_weight/F"); 
+*/    
     weight_tree->Branch("wjets_mg_flavour_flat_weight", &weights_flat["nominal"], "wjets_mg_flavour_flat_weight/F"); 
     weight_tree->Branch("wjets_mg_flavour_flat_weight_up", &weights_flat["up"], "wjets_mg_flavour_flat_weight_up/F"); 
     weight_tree->Branch("wjets_mg_flavour_flat_weight_down", &weights_flat["down"], "wjets_mg_flavour_flat_weight_down/F"); 
@@ -228,12 +202,22 @@ int main(int argc, char* argv[]) {
     weight_tree->Branch("wjets_mg_flavour_shape_weight", & weights_shape["nominal"], "wjets_mg_flavour_shape_weight/F"); 
     weight_tree->Branch("wjets_mg_flavour_shape_weight_up", &weights_shape["up"], "wjets_mg_flavour_shape_weight_up/F"); 
     weight_tree->Branch("wjets_mg_flavour_shape_weight_down", &weights_shape["down"], "wjets_mg_flavour_shape_weight_down/F"); 
+/*
+    weight_tree->Branch("wjets_mg_flavour_weight_comb", &weights_mg_combined["nominal"], "wjets_mg_flavour_weight_comb/F"); 
+    weight_tree->Branch("wjets_mg_flavour_weight_comb_up", &weights_mg_combined["up"], "wjets_mg_flavour_weight_comb_up/F"); 
+    weight_tree->Branch("wjets_mg_flavour_weight_comb_down", &weights_mg_combined["down"], "wjets_mg_flavour_weight_comb_down/F"); 
+*/
 
     weight_tree->Branch("wjets_flavour_classification0", &cls0, "wjets_flavour_classification0/I"); 
     weight_tree->Branch("wjets_flavour_classification1", &cls1, "wjets_flavour_classification1/I"); 
     weight_tree->Branch("wjets_flavour_classification2", &cls2, "wjets_flavour_classification2/I"); 
     
     int Nbytes = 0;
+
+    vector <string> systematics;
+    systematics.push_back("nominal");
+    systematics.push_back("up");
+    systematics.push_back("down");
 
     std::cout << "Beginning event loop over " << events->GetEntries() << " events." << std::endl;
      for (int n=0; n<events->GetEntries(); n++) {
@@ -242,12 +226,17 @@ int main(int argc, char* argv[]) {
         cls1 = classify_1(cls0);
         cls2 = classify_2(cls0);
 
-        weight_sherpa["nominal"] = weights[cls0];
+        //weight_sherpa["nominal"] = weights[cls0];
 
         weight(cls0, cos_theta, ratio_hists0[cls0],
             weights_flat["nominal"], weights_flat["up"], weights_flat["down"],
-            weights_shape["nominal"], weights_shape["up"], weights_shape["down"]);
+            weights_shape["nominal"], weights_shape["up"], weights_shape["down"]
+        );
 
+/*
+        for (auto& s : systematics)
+            weights_mg_combined[s] = weights_flat[s] * weights_shape[s];
+*/
         int nbytes = weight_tree->Fill();
         if (nbytes<0) {
             std::cerr << "Write error!" << std::endl;
