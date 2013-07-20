@@ -124,187 +124,89 @@ MuonEfficiencyProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
    for ( uint i = 0; i < 1; ++i ) {
       const pat::Muon& muon = (pat::Muon&)muons->at(i);
    
+      //ID and iso SF-s from: https://indico.cern.ch/getFile.py/access?contribId=1&resId=2&materialId=slides&confId=257630
+      //Trigger SF-s from: https://indico.cern.ch/getFile.py/access?contribId=2&resId=0&materialId=slides&confId=257000
       LogDebug("eta ") << muon.eta() << std::endl;
       LogDebug("iso ") << muon.userFloat("deltaBetaCorrRelIso") << std::endl;
       
       if(fabs(muon.eta())<0.9){
-         weightID = 0.9939;
+         weightID = 0.9925;
          weightIDUp = weightID + 0.0002;
          weightIDDown = weightID - 0.0002;
          if(muon.userFloat("deltaBetaCorrRelIso")<0.12  || muon.userFloat("deltaBetaCorrRelIso")>0.2){
-            weightIso = 1.0004;
+            weightIso = 0.9959;
             weightIsoUp = weightIso + 0.0002;
             weightIsoDown = weightIso - 0.0002;
          }else if(muon.userFloat("deltaBetaCorrRelIso")<0.2){
-            weightIso = 0.9999;
+            weightIso = 0.9994;
             weightIsoUp = weightIso + 0.0001;
             weightIsoDown = weightIso - 0.0001;
          }
 
-         //https://indico.cern.ch/getFile.py/access?contribId=2&resId=0&materialId=slides&confId=228197
-         if (dataRun == "RunA") {
-             weightTrig = 0.9560;
-             float err = 0.0008;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         else if(dataRun == "RunB") {
-             weightTrig = 0.9798;
-             float err = 0.0004;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         else if(dataRun == "RunC") {
-             weightTrig = 0.9841;
-             float err = 0.0003;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         //https://indico.cern.ch/getFile.py/access?contribId=2&resId=0&materialId=slides&confId=228197
-         else if(dataRun == "RunD") {
-             weightTrig = 0.98151;
-             float err = 0.00032;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
 
-         //weighted avg according to lumi
-         else if(dataRun == "RunABCD") {
-             weightTrig = 0.980917;
-             float err = 0.000187267;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
+	 weightTrig = 0.9837;
+	 float err = 0.00021;
+	 weightTrigUp = weightTrig + err;
+	 weightTrigDown = weightTrig - err; 
       }
       else if (fabs(muon.eta()) < 1.2){
-         weightID = 0.9902;
+         weightID = 0.9928;
          weightIDUp = weightID + 0.0003;
          weightIDDown = weightID - 0.0003;
          if(muon.userFloat("deltaBetaCorrRelIso")<0.12 || muon.userFloat("deltaBetaCorrRelIso")>0.2){
-            weightIso = 1.0031;
+            weightIso = 0.9878;
             weightIsoUp = weightIso + 0.0003;
             weightIsoDown = weightIso - 0.0003;
          }else if(muon.userFloat("deltaBetaCorrRelIso")<0.2){
-            weightIso = 1.0013;
+            weightIso = 1.0014;
             weightIsoUp = weightIso + 0.0002;
             weightIsoDown = weightIso - 0.0002;
          }
          
-         //https://indico.cern.ch/getFile.py/access?contribId=2&resId=0&materialId=slides&confId=228197
-         if (dataRun == "RunA") {
-             weightTrig = 0.9528;  
-             float err = 0.0021;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         else if(dataRun == "RunB") {
-             weightTrig = 0.9618;
-             float err = 0.0010;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         else if(dataRun == "RunC") {
-             weightTrig = 0.9688;
-             float err = 0.0009;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         //https://indico.cern.ch/getFile.py/access?contribId=2&resId=0&materialId=slides&confId=228197
-         else if(dataRun == "RunD") {
-             weightTrig = 0.96156;
-             float err = 0.00091;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         //weighted avg according to lumi
-         else if(dataRun == "RunABCD") {
-             weightTrig = 0.963837;
-             float err = 0.00052732;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
+      
+	 weightTrig = 0.9656;
+	 float err = 0.00066;
+	 weightTrigUp = weightTrig + err;
+	 weightTrigDown = weightTrig - err; 
       }
       else if(fabs(muon.eta())<2.1){
-         weightID = 0.9970;
+         weightID = 0.9960;
          weightIDUp = weightID + 0.0003;
          weightIDDown = weightID - 0.0003;
          if(muon.userFloat("deltaBetaCorrRelIso")<0.12 || muon.userFloat("deltaBetaCorrRelIso")>0.2){
-            weightIso = 1.0050;
+            weightIso = 1.0027;
             weightIsoUp = weightIso + 0.0002;
             weightIsoDown = weightIso - 0.0002;
          }else if(muon.userFloat("deltaBetaCorrRelIso")<0.2){
-            weightIso = 1.0023;
+            weightIso = 1.0014;
             weightIsoUp = weightIso + 0.0001;
             weightIsoDown = weightIso - 0.0001;
          }
          
-         //https://indico.cern.ch/getFile.py/access?contribId=2&resId=0&materialId=slides&confId=228197
-         if (dataRun == "RunA") {
-             weightTrig = 0.9809; 
-             float err = 0.0016;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         else if(dataRun == "RunB") {
-             weightTrig = 0.9814;
-             float err = 0.0008;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         else if(dataRun == "RunC") {
-             weightTrig = 1.0021;
-             float err = 0.0007;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         //https://indico.cern.ch/getFile.py/access?contribId=2&resId=0&materialId=slides&confId=228197
-         else if(dataRun == "RunD") {
-             weightTrig = 0.99721;
-             float err = 0.00069;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
-         //weighted avg according to lumi
-         else if(dataRun == "RunABCD") {
-             weightTrig = 0.994706;
-             float err = 0.000407864;
-             weightTrigUp = weightTrig + err;
-             weightTrigDown = weightTrig - err; 
-         }
+	 weightTrig = 0.9962;
+	 float err = 0.00052;
+	 weightTrigUp = weightTrig + err;
+	 weightTrigDown = weightTrig - err; 
       }
-
-      
    }
-
    
-
    LogDebug("Muon with id weights") << weightID << weightIDUp << weightIDDown;
    
    /*
-   //tight
-   abs(eta)<0.9 -> sf = 0.9939+-0.0002
-   0.9<abs(eta)<1.2 -> 0.9902+-0.0003
-   1.2<abs(eta)<2.1 -> 0.9970+-0.0003
-   //loose
-   A+B
-   abs(eta)<0.9 -> sf = 0.9988+-0.0002
-   0.9<abs(eta)<1.2 -> 0.9993+-0.0005
-   1.2<abs(eta)<2.1 -> 0.9982+-0.0002
-   C+D
-   abs(eta)<0.9 -> sf = 0.9985+-0.0001
-   0.9<abs(eta)<1.2 -> 0.9988+-0.0002
-   1.2<abs(eta)<2.1 -> 0.9984+-0.0001
-
+   //tight ID
+   abs(eta)<0.9 -> sf = 0.9925+-0.0002
+   0.9<abs(eta)<1.2 -> 0.9928+-0.0003
+   1.2<abs(eta)<2.1 -> 0.9960+-0.0003
    ____
    PFComb dBeta RelIso <0.12
-   abs(eta)<0.9 -> sf = 1.0004+-0.0002
-   0.9<abs(eta)<1.2 -> 1.0031+-0.0003
-   1.2<abs(eta)<2.1 -> 1.0050+-0.0002
+   abs(eta)<0.9 -> sf = 1.9959+-0.0002
+   0.9<abs(eta)<1.2 -> 0.9878+-0.0003
+   1.2<abs(eta)<2.1 -> 1.0027+-0.0002
 
    PFComb dBeta RelIso <0.2
-   abs(eta)<0.9 -> sf = 0.9999+-0.0001
-   0.9<abs(eta)<1.2 -> 1.0013+-0.0002
-   1.2<abs(eta)<2.1 -> 1.0023+-0.0001
+   abs(eta)<0.9 -> sf = 0.9994+-0.0001
+   0.9<abs(eta)<1.2 -> 1.0014+-0.0002
+   1.2<abs(eta)<2.1 -> 1.0014+-0.0001
 
    */
    iEvent.put(std::auto_ptr<double>(new double(weightID)), "muonIDWeight");
