@@ -1,3 +1,4 @@
+#ROOTCC=c++ -std=c++11 `root-config --cflags --libs`
 ROOTCC=c++ -std=c++0x `root-config --cflags --libs`
 
 test:

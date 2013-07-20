@@ -117,7 +117,7 @@ class Histogram(Base):
         hi = self.hist.Clone(self.name + "_plus_" + other.name)
         hi.Add(other.hist)
         return Histogram.make(hi)
-    
+
     @staticmethod
     def sum(histograms):
         if len(histograms)>0:
@@ -147,11 +147,20 @@ class HistCollection:
     """
     A class that manages saving and loading a collection of histograms to and from the disk.
     """
-    def __init__(self, hists, metadata, name):
+    def __init__(self, hists, metadata={}, name="coll", fi=None):
         self.name = name
         self.hists = hists
         self.metadata = metadata
+        for k, v in self.hists.items():
+            if k not in self.metadata.keys():
+                self.metadata[k] = HistMetaData()
+        self.fi = fi
         logger.debug("Created HistCollection with name %s, hists %s" % (name, str(hists)))
+
+    def __del__(self):
+        if self.fi:
+            logger.debug("Closing file %s of HistCollection" % self.fi.GetPath())
+            self.fi.Close()
 
     def get(self, hname):
         return self.hists[hname], self.metadata[hname]
@@ -167,8 +176,10 @@ class HistCollection:
         out_dir - a string indicating the output directory
         """
         mkdir_p(out_dir) #recursively create the directory
-        histo_file = escape(out_dir + "/%s.root" % self.name)
+        histo_file = out_dir + "/%s.root" % escape(self.name)
         fi = File(histo_file, "RECREATE")
+        if not fi:
+            raise Exception("Couldn't open file for writing")
         logger.info("Saving histograms to ROOT file %s" % histo_file)
         for hn, h in self.hists.items():
             dirn = "/".join(hn.split("/")[:-1])
@@ -176,7 +187,7 @@ class HistCollection:
             try:
                 d = fi.Get(dirn)
             except rootpy.io.DoesNotExist:
-                d = rootpy.io.utils.mkdir(dirn, recurse=True)
+                d = fi.mkdir(dirn, recurse=True)
             d.cd()
             h.SetName(hn.split("/")[-1])
             h.SetDirectory(d)
@@ -193,19 +204,31 @@ class HistCollection:
     def load(fname):
         fi = File(fname)
         name = re.match(".*/(.*)\.root", fname).group(1)
+        logger.info("Opened file %s" % fi.GetPath())
         metadata = pickle.load(open(fname.replace(".root", ".pickle")))
         hists = {}
         for path, dirs, hnames in fi.walk():
             if len(hnames)>0:
                 for hn in hnames:
-                    logger.debug("Getting %s" % (path + "/"  + hn))
                     if path:
                         hname = path + "/" + hn
                     else:
                         hname = hn
+                    logger.debug("Getting %s" % hname)
                     hists[hname] = fi.Get(hname)
-                    
+
                     md = metadata[hname]
+        return HistCollection(hists, metadata, name, fi)
 
-        return HistCollection(hists, metadata, name)
+def norm(hist):
+    integral, err = calc_int_err(hist)
+    if integral>0:
+        hist.SetTitle(hist.GetTitle() + " I=%.2E #pm %.1E" % (integral, err))
+        hist.Scale(1.0/integral)
+    else:
+        logger.error("Histogram integral was 0: %s" % hist.GetName())
 
+def calc_int_err(hist):
+    err = ROOT.Double()
+    integral = hist.IntegralAndError(1, hist.GetNbinsX(), err)
+    return (integral, err)

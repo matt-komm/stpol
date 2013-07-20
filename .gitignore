@@ -5,6 +5,15 @@ testing*
 log*
 
 CMSSW_5_3_11/src/SingleTopPolarization/*/python/__init__.py
+CMSSW*/.SCRAM
+CMSSW*/config
+CMSSW*/python
+CMSSW*/tmp
+
+bin/*
+*.png
+*.pickle
+out*
 
 # Compiled Object files
 *.slo
@@ -22,7 +31,8 @@ CMSSW_5_3_11/src/SingleTopPolarization/*/python/__init__.py
 
 #ROOT files
 *.root
-trees
+!CMSSW_*/src/data/
+/trees
 
 #Logs
 *.log
@@ -50,7 +60,6 @@ misc/*
 rootpy
 root_numpy
 local
-data
 theta
 
 stpol.xcodeproj/xcuserdata

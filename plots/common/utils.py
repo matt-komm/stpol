@@ -64,7 +64,8 @@ def merge_hists(hists_d, merge_groups):
             hist.Add(hists_d[item])
 
         out_d[merge_name] = hist
-        out_d[merge_name].SetTitle("%s" % merge_name)
+        out_d[merge_name].SetTitle(merge_name)
+        out_d[merge_name].SetName(merge_name)
     return out_d
 
 
@@ -139,5 +140,5 @@ def filter_hists(indict, pat):
     return out
 
 def escape(s):
-    return re.sub("[/\(\)\\ \.*+><] #{}", "", s)
+    return re.sub("[\/ \( \) \\ \. \* \+ \> \< \# \{ \}]", "", s)
 
