@@ -94,17 +94,20 @@ options.nTMax = int(options.nT.split(",")[1])
 
 #Note: the isolation cut is already necesarily applied in step 2. Applying it here is redundant, unless
 #one wants to tighten the single (anti)-isolated lepton and get a strict subset of the selected events.
-if options.lepton=="mu":
-    if options.isAntiIso:
-        isoC = 0.2
-        isoCHigh = 0.9
-    else:
-        isoC = 0.12
-        isoCHigh = 0.12
-else:
-    #FIXME: whatever is needed for electrons
-    isoC = -1
-    isoCHigh = -1
+#'Relaxing the isolation cut at step2' is not an option, since it actually redefines anti-isolated leptons
+#and consequently events having a SINGLE anti-isolated lepton
+# if options.lepton=="mu":
+#     if options.isAntiIso:
+#         isoC = 0.2
+#         isoCHigh = 0.9
+#     else:
+#         isoC = 0.12
+#         isoCHigh = 0.12
+# else:
+#     #FIXME: whatever is needed for electrons
+#     isoC = -1
+#     isoCHigh = -1
+
 
 process = cms.Process("STPOLSEL3")
 process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
@@ -128,10 +131,10 @@ process.fwliteOutput = cms.PSet(
 process.muonCuts = cms.PSet(
     requireOneMuon  = cms.bool(options.doLepton and options.lepton=="mu"),
     doControlVars  = cms.bool(options.doControlVars),
-    reverseIsoCut  = cms.bool(options.isAntiIso),
-    cutOnIso = cms.bool(False), #by default this is NOT necessary (done @ step2)
-    isoCut  = cms.double(isoC),
-    isoCutHigh  = cms.double(isoCHigh),
+    #reverseIsoCut  = cms.bool(options.isAntiIso),
+    #cutOnIso = cms.bool(False), #by default this is NOT necessary (done @ step2)
+    #isoCut  = cms.double(isoC),
+    #isoCutHigh  = cms.double(isoCHigh),
 
     muonPtSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "Pt"),
     muonEtaSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "Eta"),
@@ -161,10 +164,10 @@ process.muonCuts = cms.PSet(
 
 process.eleCuts = cms.PSet(
     requireOneElectron = cms.bool(options.doLepton and options.lepton=="ele"),
-    reverseIsoCut = cms.bool(options.isAntiIso),
-    cutOnIso = cms.bool(False),
-    isoCut = cms.double(0.1),
-    mvaCut = cms.double(0.9),
+    #reverseIsoCut = cms.bool(options.isAntiIso),
+    #cutOnIso = cms.bool(False),
+    #isoCut = cms.double(0.1),
+    #mvaCut = cms.double(0.9),
 
     eleCountSrc  = cms.InputTag("electronCount"),
     muonCountSrc = cms.InputTag("muonCount"),

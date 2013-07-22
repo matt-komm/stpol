@@ -78,7 +78,7 @@ const std::string default_str("");
 class MuonCuts : public CutsBase {
 public:
     bool cutOnIso;
-    bool reverseIsoCut;
+    //bool reverseIsoCut;
     bool requireOneMuon;
     bool doControlVars;
     
@@ -140,7 +140,7 @@ public:
         requireOneMuon = pars.getParameter<bool>("requireOneMuon");
         
         cutOnIso = pars.getParameter<bool>("cutOnIso");
-        reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
+        //reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
         isoCut = (float)pars.getParameter<double>("isoCut");
         isoCutHigh = (float)pars.getParameter<double>("isoCutHigh");
         
@@ -203,14 +203,14 @@ public:
             branch_vars.vars_int["mu_stations"] = (int)get_collection_n<float>(event, muonStationsSrc);
         }
         
-        bool passesMuIso = true;
-        if (cutOnIso) {
-            if(!reverseIsoCut)
-                passesMuIso = branch_vars.vars_float["mu_iso"] < isoCut;
-            else
-                passesMuIso = branch_vars.vars_float["mu_iso"] > isoCut && branch_vars.vars_float["mu_iso"] < isoCutHigh;
-        }
-        if(cutOnIso && !passesMuIso) return false;
+        //bool passesMuIso = true;
+        // if (cutOnIso) {
+        //     if(!reverseIsoCut)
+        //         passesMuIso = branch_vars.vars_float["mu_iso"] < isoCut;
+        //     else
+        //         passesMuIso = branch_vars.vars_float["mu_iso"] > isoCut && branch_vars.vars_float["mu_iso"] < isoCutHigh;
+        // }
+        //if(cutOnIso && !passesMuIso) return false;
         
         post_process();
         return true;
@@ -220,9 +220,9 @@ public:
 class ElectronCuts : public CutsBase {
 public:
     bool requireOneElectron;
-    bool cutOnIso;
-    bool reverseIsoCut;
-    float isoCut;
+    //bool cutOnIso;
+    //bool reverseIsoCut;
+    //float isoCut;
     float mvaCut;
     
     edm::InputTag eleCountSrc;
@@ -241,7 +241,7 @@ public:
         branch_vars.vars_int["n_muons"] = BranchVars::def_val_int;
         branch_vars.vars_int["n_eles"] = BranchVars::def_val_int;
         branch_vars.vars_float["el_mva"] = BranchVars::def_val;
-        branch_vars.vars_float["el_reliso"] = BranchVars::def_val;
+        branch_vars.vars_float["el_iso"] = BranchVars::def_val;
 
         branch_vars.vars_float["el_pt"] = BranchVars::def_val;
         branch_vars.vars_float["el_eta"] = BranchVars::def_val;
@@ -258,7 +258,7 @@ public:
         initialize_branches();
         requireOneElectron = pars.getParameter<bool>("requireOneElectron");
         cutOnIso = pars.getParameter<bool>("cutOnIso");
-        reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
+        //reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
         isoCut = (float)pars.getParameter<double>("isoCut");
         mvaCut = (float)pars.getParameter<double>("mvaCut");
         eleCountSrc = pars.getParameter<edm::InputTag>("eleCountSrc");
@@ -286,7 +286,7 @@ public:
         branch_vars.vars_int["n_eles"] = n_eles;
         if( requireOneElectron && ( n_eles!=1 || n_muons !=0) ) return false;
         
-        branch_vars.vars_float["el_reliso"] = get_collection_n<float>(event, electronRelIsoSrc);
+        branch_vars.vars_float["el_iso"] = get_collection_n<float>(event, electronRelIsoSrc);
         branch_vars.vars_float["el_mva"] = get_collection_n<float>(event, electronMvaSrc);
 
         branch_vars.vars_float["el_pt"] = get_collection_n<float>(event, electronPtSrc);
@@ -301,12 +301,12 @@ public:
             branch_vars.vars_int["el_mother_id"] = get_parent(decay_tree, 11);
         }
         
-        bool passesElIso = true;
+        /*bool passesElIso = true;
         if( cutOnIso && !reverseIsoCut ){
             passesElIso = branch_vars.vars_float["el_reliso"] < isoCut && branch_vars.vars_float["el_mva"] > mvaCut;
             if( !passesElIso )
                 return false;
-        }
+        }*/
         
         post_process();
         return true;
