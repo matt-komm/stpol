@@ -136,7 +136,7 @@ int main(int argc, char* argv[]) {
     desc.add_options()
         ("help", "produce help message")
         ("infile", po::value<string>(&infile)->required(), "the input file with a TTree trees/Events")
-        ("isWJets", po::value<bool>(&isMC), "do you want to calculate the weights or set a dummy value to unity?")
+        ("isWJets", po::value<bool>(&isWJets), "do you want to calculate the weights or set a dummy value to unity?")
     ;
 
     po::variables_map vm;
@@ -154,7 +154,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-
+    cout << "Input file=" << infile << endl;
 
     rng = new TRandom();
     rng->SetSeed();
@@ -190,17 +190,12 @@ int main(int argc, char* argv[]) {
     events->SetBranchAddress("cos_theta", &cos_theta);
     events->SetBranchAddress("n_tags", &n_tags);
     
-    //float wjets_flavour_weight = 1.0;
     WJetsClassification0 cls0;
     WJetsClassification1 cls1;
     WJetsClassification2 cls2;
 
     std::map<const std::string, float> weights_flat;
     std::map<const std::string, float> weights_shape;
-    vector<string> systematic_scenarios;
-    systematic_scenarios.push_back("wjets_mg_flavour_nominal");
-    systematic_scenarios.push_back("wjets_mg_flavour_up");
-    systematic_scenarios.push_back("wjets_mg_flavour_down");
 
     weights_flat["nominal"] = 1.0;
     weights_flat["up"] = 1.0;
@@ -210,21 +205,6 @@ int main(int argc, char* argv[]) {
     weights_shape["up"] = 1.0;
     weights_shape["down"] = 1.0;
 
-    std::map<const std::string, float> weights_mg_combined;
-    weights_mg_combined["nominal"] = 1.0;
-    weights_mg_combined["up"] = 1.0;
-    weights_mg_combined["down"] = 1.0;
-
-    std::map<const std::string, float> weight_sherpa;
-    weight_sherpa["nominal"] = 1.0;
-    weight_sherpa["up"] = 1.0;
-    weight_sherpa["down"] = 1.0;
-
-/*
-    weight_tree->Branch("wjets_sh_flavour_flat_weight", &weight_sherpa["nominal"], "wjets_sh_flavour_flat_weight/F"); 
-    weight_tree->Branch("wjets_sh_flavour_flat_weight_up", &weight_sherpa["up"], "wjets_sh_flavour_flat_weight/F"); 
-    weight_tree->Branch("wjets_sh_flavour_flat_weight_down", &weight_sherpa["down"], "wjets_sh_flavour_flat_weight/F"); 
-*/    
     weight_tree->Branch("wjets_mg_flavour_flat_weight", &weights_flat["nominal"], "wjets_mg_flavour_flat_weight/F"); 
     weight_tree->Branch("wjets_mg_flavour_flat_weight_up", &weights_flat["up"], "wjets_mg_flavour_flat_weight_up/F"); 
     weight_tree->Branch("wjets_mg_flavour_flat_weight_down", &weights_flat["down"], "wjets_mg_flavour_flat_weight_down/F"); 
@@ -232,11 +212,6 @@ int main(int argc, char* argv[]) {
     weight_tree->Branch("wjets_mg_flavour_shape_weight", & weights_shape["nominal"], "wjets_mg_flavour_shape_weight/F"); 
     weight_tree->Branch("wjets_mg_flavour_shape_weight_up", &weights_shape["up"], "wjets_mg_flavour_shape_weight_up/F"); 
     weight_tree->Branch("wjets_mg_flavour_shape_weight_down", &weights_shape["down"], "wjets_mg_flavour_shape_weight_down/F"); 
-/*
-    weight_tree->Branch("wjets_mg_flavour_weight_comb", &weights_mg_combined["nominal"], "wjets_mg_flavour_weight_comb/F"); 
-    weight_tree->Branch("wjets_mg_flavour_weight_comb_up", &weights_mg_combined["up"], "wjets_mg_flavour_weight_comb_up/F"); 
-    weight_tree->Branch("wjets_mg_flavour_weight_comb_down", &weights_mg_combined["down"], "wjets_mg_flavour_weight_comb_down/F"); 
-*/
 
     weight_tree->Branch("wjets_flavour_classification0", &cls0, "wjets_flavour_classification0/I"); 
     weight_tree->Branch("wjets_flavour_classification1", &cls1, "wjets_flavour_classification1/I"); 
@@ -244,29 +219,26 @@ int main(int argc, char* argv[]) {
     
     int Nbytes = 0;
 
-    vector <string> systematics;
-    systematics.push_back("nominal");
-    systematics.push_back("up");
-    systematics.push_back("down");
-
     std::cout << "Beginning event loop over " << events->GetEntries() << " events." << std::endl;
      for (int n=0; n<events->GetEntries(); n++) {
         events->GetEntry(n);
+
         cls0 = classify(gen_flavour_bj, gen_flavour_lj);
         cls1 = classify_1(cls0);
         cls2 = classify_2(cls0);
+        
+        if(isWJets) {
+            weight(cls0, cos_theta, ratio_hists0[cls0],
+                weights_flat["nominal"], weights_flat["up"], weights_flat["down"],
+                weights_shape["nominal"], weights_shape["up"], weights_shape["down"]
+            );
+        } else { //not producing the W+jets weights
+            for (auto& e : weights_flat)
+                e.second = 1.0;
+            for (auto& e : weights_shape)
+                e.second = 1.0;
+        }
 
-        //weight_sherpa["nominal"] = weights[cls0];
-
-        weight(cls0, cos_theta, ratio_hists0[cls0],
-            weights_flat["nominal"], weights_flat["up"], weights_flat["down"],
-            weights_shape["nominal"], weights_shape["up"], weights_shape["down"]
-        );
-
-/*
-        for (auto& s : systematics)
-            weights_mg_combined[s] = weights_flat[s] * weights_shape[s];
-*/
         int nbytes = weight_tree->Fill();
         if (nbytes<0) {
             std::cerr << "Write error!" << std::endl;
@@ -277,18 +249,12 @@ int main(int argc, char* argv[]) {
     events->SetBranchStatus("*", 1);
     fi->cd("trees");
 
-    /*TList* list = events->GetListOfFriends();
-    for(int i=0;i<list->GetEntries(); i++) {
-        events->RemoveFriend((TTree*)list->At(i));
-    }*/
-
     weight_tree->Write("", TObject::kOverwrite);
-    events->Write("", TObject::kOverwrite);
+    //events->Write("", TObject::kOverwrite);
     fi->Close();
     std::cout << "Wrote " << Nbytes << " bytes" << std::endl;
 
     hists_fi0->Close();
-    hists_fi2->Close();
-    //global.Close();
+
     return 0;
 }
