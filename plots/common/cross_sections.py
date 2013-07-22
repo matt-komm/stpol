@@ -53,6 +53,11 @@ xs = {
 	, "QCD_Pt_170_250_BCtoE": 30980.0*0.0204
 	, "QCD_Pt_250_350_BCtoE": 4250.0*0.0243
 	, "QCD_Pt_350_BCtoE": 811.0*0.0295
+
+	#These are here for convenience (no effect)
+	, "SingleMu": 1.0
+	, "SingleEle": 1.0
+
 }
 
 #systematics:

@@ -11,12 +11,12 @@ def plot_hists(hists, name="canv", **kwargs):
     y_label = kwargs.get("y_label", "")
     do_log_y = kwargs["do_log_y"] if "do_log_y" in kwargs.keys() else False
     min_bin = kwargs.get("min_bin", 0)
+    max_bin = kwargs.get("max_bin", None)
     max_bin_mult = kwargs.get("max_bin_mult", 1.5)
-    title = kwargs.get("title", "")
     styles = kwargs.get("styles", {})
     do_chi2 = kwargs.get("do_chi2", False)
 
-    max_bin = get_max_bin([hist for hist in hists])
+    max_bin_val = get_max_bin([hist for hist in hists])
 
     first = False
     for hist in hists:
@@ -25,10 +25,12 @@ def plot_hists(hists, name="canv", **kwargs):
 
 #    hists[0].SetTitle(title)
     hists[0].SetStats(False)
-    hists[0].SetMaximum(max_bin_mult*max_bin)
+    if not max_bin:
+        hists[0].SetMaximum(max_bin_mult*max_bin_val)
+    else:
+        hists[0].SetMaximum(max_bin)
+
     hists[0].SetMinimum(min_bin)
-    if len(title)>0:
-        hists[0].SetTitle(title)
     hists[0].GetXaxis().SetTitle(x_label)
     hists[0].GetYaxis().SetTitle(y_label)
 
@@ -62,12 +64,14 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
     p2.Draw()
     p2.cd()
 
-    hist_data.SetName("merged_data")
-    hist_mc.SetName("merged_mc")
-    hist_mc.Add(hist_data, -1.0)
-    hist_mc.Divide(hist_data)
+    hist_ratio = hist_mc.Clone()
 
-    hist_ratio = hist_mc
+    hist_ratio.SetName("ratio")
+    hist_ratio.Add(hist_data, -1.0)
+    hist_ratio.Divide(hist_data)
+
+    hist_ratio.SetLineColor(ROOT.kBlack)
+    hist_ratio.SetMarkerColor(ROOT.kBlack)
 
     hist_ratio.SetStats(False)
     hist_ratio.SetMarkerStyle(23)

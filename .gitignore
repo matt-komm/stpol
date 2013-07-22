@@ -4,16 +4,18 @@
 testing*
 log*
 
-CMSSW_5_3_11/src/SingleTopPolarization/*/python/__init__.py
-CMSSW*/.SCRAM
-CMSSW*/config
-CMSSW*/python
-CMSSW*/tmp
+*__init__.py
+CMSSW_5_3_11/.SCRAM
+CMSSW_5_3_11/config
+CMSSW_5_3_11/python
+CMSSW_5_3_11/tmp
 
-bin/*
+/bin/*
 *.png
 *.pickle
-out*
+*.out
+/data
+/out*
 
 # Compiled Object files
 *.slo
@@ -40,26 +42,22 @@ out*
 #Xcode files
 *.xcworkspace
 
-#testing stuff
-#test*
-
 #crab jobs
-crabs/step*
+/crabs/step*
 
 #related to documentation
-AN*
+/AN*
 
-pres
+/pres
+
 #vim temps
 *.un~
 *~
 
 *.hdf5
 
-misc/*
-rootpy
-root_numpy
-local
-theta
+/misc/*
+/local
+/theta
 
-stpol.xcodeproj/xcuserdata
+/stpol.xcodeproj/xcuserdata

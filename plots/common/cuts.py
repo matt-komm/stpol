@@ -59,13 +59,18 @@ class Cuts:
     Wbc = Cut("wjets_flavour_classification0 == 2")
     WbX = Cut("wjets_flavour_classification0 == 3")
     WcX = Cut("wjets_flavour_classification0 == 4")
+
     WgX = Cut("wjets_flavour_classification0 == 5")
     Wgg = Cut("wjets_flavour_classification0 == 6")
+    
     WXX = Cut("wjets_flavour_classification0 == 7")
 
     W_HH = Cut("wjets_flavour_classification2 == 0")
     W_Hl = Cut("wjets_flavour_classification2 == 1")
     W_ll = Cut("wjets_flavour_classification2 == 2")
+
+    W_heavy = Cut("wjets_flavour_classification1 == 0")
+    W_light = Cut("wjets_flavour_classification1 == 1")
 
 Cuts.mu = Cuts.one_muon*Cuts.lepton_veto
 Cuts.eta_fit = Cuts.hlt_isomu*Cuts.mt_mu*Cuts.rms_lj*Cuts.eta_jet
