@@ -1,7 +1,8 @@
 #ROOTCC=c++ -std=c++11 `root-config --cflags --libs`
 ROOTCC=c++ -std=c++0x `root-config --cflags --libs` -lTreePlayer -lboost_program_options-mt
 
-SRCDIR=$(STPOL_DIR)/CMSSW_5_3_11/src/SingleTopPolarization/Analysis/bin/
+SRC_DIR=$(STPOL_DIR)/CMSSW_5_3_11/src/SingleTopPolarization/Analysis/bin/
+PYTHON_INC_DIR=`python -c "import distutils.sysconfig;print distutils.sysconfig.get_python_inc()"`
 test:
 	util/test_step1.sh
 	util/test_step2.sh
@@ -17,4 +18,4 @@ wjets_rew:
 	$(ROOTCC) $(SRC_DIR)/histograms.cc -o bin/histograms
 
 pytest:
-	c++ --std=c++0x -lpython  $(SRC_DIR)/pytest.cc -o bin/pytest
+	c++ --std=c++0x -I$(PYTHON_INC_DIR) -lboost_python-mt -lpython $(SRC_DIR)/pytest.cc -o bin/pytest
