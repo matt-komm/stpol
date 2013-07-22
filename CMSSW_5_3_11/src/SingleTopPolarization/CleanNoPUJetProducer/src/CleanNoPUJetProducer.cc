@@ -36,10 +36,6 @@
 #include <TMath.h>
 #include "CMGTools/External/interface/PileupJetIdentifier.h"
 
-//
-// class declaration
-//
-
 class CleanNoPUJetProducer : public edm::EDProducer {
    public:
       explicit CleanNoPUJetProducer(const edm::ParameterSet&);
@@ -62,7 +58,6 @@ class CleanNoPUJetProducer : public edm::EDProducer {
       const edm::InputTag jetPUIdFlagSrc;
       const edm::InputTag jetPUIdVarsSrc;
 
-      // ----------member data ---------------------------
       const bool isOriginal;
       const bool doFilterJets;
 };
@@ -75,21 +70,13 @@ CleanNoPUJetProducer::CleanNoPUJetProducer(const edm::ParameterSet& iConfig)
 , isOriginal(iConfig.getParameter<bool>("isOriginal"))
 , doFilterJets(iConfig.getParameter<bool>("doFilterJets"))
 {
-  produces<std::vector<pat::Jet> >();
-  
+  produces<std::vector<pat::Jet> >(); 
 }
-
 
 CleanNoPUJetProducer::~CleanNoPUJetProducer()
 {
 }
 
-
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
 void
 CleanNoPUJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
