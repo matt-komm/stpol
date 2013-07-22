@@ -787,7 +787,7 @@ public:
     {
         initialize_branches();
         mtMuSrc = pars.getParameter<edm::InputTag>("mtMuSrc");
-	mtElSrc = pars.getParameter<edm::InputTag>("mtElSrc");
+        mtElSrc = pars.getParameter<edm::InputTag>("mtElSrc");
         metSrc = pars.getParameter<edm::InputTag>("metSrc");
         metPhiSrc = pars.getParameter<edm::InputTag>("metPhiSrc");
         minValMtw = (float)pars.getParameter<double>("minValMtw");
@@ -916,7 +916,8 @@ int main(int argc, char* argv[])
     const edm::ParameterSet& out = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("fwliteOutput");
     
     const std::string outputFile_( out.getParameter<std::string>("fileName"));
-    const std::string cut_str( out.getParameter<std::string>("cutString"));
+    //const std::string cut_str( out.getParameter<std::string>("cutString"));
+    
     std::vector<std::string> inputFiles_( in.getParameter<std::vector<std::string> >("fileNames") );
     
     const edm::ParameterSet& mu_cuts_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("muonCuts");
@@ -965,9 +966,11 @@ int main(int argc, char* argv[])
     Weights weights(weight_pars, branch_vars);
     METCuts mt_mu_cuts(mt_mu_cuts_pars, branch_vars);
     MiscVars misc_vars(miscvars_pars, branch_vars);
-    #ifdef WITH_LHAPDF
+
+#ifdef WITH_LHAPDF
     PDFWeights pdf_weights(pdfweights_pars, branch_vars);
-    #endif
+#endif
+
     EvtShapeVars evt_shape_vars(evtshapevars_pars, branch_vars);
     GenParticles gen_particles(gen_particle_pars, branch_vars);
     HLTCuts hlt_mu_cuts(hlt_pars_mu, branch_vars);
@@ -1170,15 +1173,18 @@ int main(int argc, char* argv[])
     LogInfo << "processing speed = " << speed << " events/sec" << std::endl;
     LogInfo << "read " << mb_total << " Mb in total, average speed " << (double)mb_total / time << " Mb/s" << std::endl;
   
+    /*
     LogInfo << "Copying tree with cut " << cut_str << std::endl;
     dir.cd();
     TTree* cut_tree = out_tree->CopyTree(cut_str.c_str());
     cut_tree->SetName("Events_selected");
+    cut_tree->SetTitle(cut_str.c_str());
+    cut_tree->Write();
+    */
 
     TNamed* pdesc = new TNamed("process_desc", builder.processDesc()->dump().c_str());
     pdesc->Write();
-    cut_tree->SetTitle(cut_str.c_str());
-    //cut_tree->Write();
+
 
     return 0;
 }
