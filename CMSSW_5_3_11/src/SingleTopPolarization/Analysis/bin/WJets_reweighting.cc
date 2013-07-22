@@ -13,10 +13,11 @@
 
 #include "jet_flavour_classifications.h"
 
-#define QUADSUM(x,y) sqrt(pow(x,2)+pow(y,2))
+#include <boost/program_options.hpp>
 
 using namespace std;
 
+//Produces a binary classification to W+heavy or W+light, depending on whether there is a b or a c
 WJetsClassification1 classify_1(WJetsClassification0 cls) {
     if (cls == Wbb || cls==Wcc || cls==WbX || cls==WcX || cls==Wbc) {
         return WJETS1_W_heavy;
@@ -26,6 +27,7 @@ WJetsClassification1 classify_1(WJetsClassification0 cls) {
     }
 }
 
+//Produces a ternary classification to 1) 2 x b/c-containing, 2) 1 x b/c-containing, 3) not containing a b/c 
 WJetsClassification2 classify_2(WJetsClassification0 cls) {
     if (cls == Wbb || cls==Wcc || cls==Wbc) {
         return WJETS2_W_QQ;
@@ -37,9 +39,17 @@ WJetsClassification2 classify_2(WJetsClassification0 cls) {
     }
 }
 
+//The random number generator used for weighting
 TRandom* rng = 0;
 
+//The W+light scale factor that is extracted from 2J0T (final selection), to match MC yield to data
 static const float Wlight_sf = 1.0991871445834183;
+
+//Produces the cos-theta dependent event weight and the corresponding up-down variations
+// cls - The W+xy-type event classification (based on the two identified jets)
+// hist - a pointer to the histogram with the look-up for the cos-theta dependent scale factor for the given classification
+// w_flat(up/down) - the normalization scale factor applied on flavours irrespective of cos theta and the corresponding 1-sigma up/down variations
+// w_shape(u/down) - the shape scale factor applied as depending on cos theta and the corresponding systematic variations
 void weight(
     WJetsClassification0 cls, float cos_theta, TH1F* hist,
     float& w_flat, float& w_flat_up, float& w_flat_down,
@@ -72,16 +82,17 @@ void weight(
         throw 1;
 
     //Measured shape differences sherpa vs madgraph
+    //The scale factor is a random variable and in order to lessed the effect of the fluctuation, in low-statistics channels,
+    //we randomly draw the per-event scale factor from the corresponding Gaussian distribution
     float w = rng->Gaus(hist->GetBinContent(bin), hist->GetBinError(bin));
-    //cout << hist->GetBinContent(bin) << ":" << hist->GetBinError(bin) << ":" << w << endl;
-    float e = fabs(w - 1.0);//QUADSUM(fabs(w - 1.0), hist->GetBinError(bin));
+    float e = fabs(w - 1.0);
+
     w_shape *= w;
     w_shape_up *= w + e;
     w_shape_down *= w - e;
-    //std::cout << "w=" << w << std::endl;
-
 }
 
+//Returns the per-event classification based on the identified flavour of the two jets
 WJetsClassification0 classify(int flavour_a, int flavour_b) {
     int a = abs(flavour_a);
     int b = abs(flavour_b);
@@ -113,33 +124,40 @@ WJetsClassification0 classify(int flavour_a, int flavour_b) {
 
 int main(int argc, char* argv[]) {
 
-    if(argc!=2) {
-        std::cout << "Usage: " << argv[0] << " /path/to/input/file.root" << std::endl;
+
+    cout << "---------------" << endl;
+    cout << argv[0] << endl;
+
+    std::string infile;
+    bool isWJets = true;
+
+    namespace po = boost::program_options;
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help", "produce help message")
+        ("infile", po::value<string>(&infile)->required(), "the input file with a TTree trees/Events")
+        ("isWJets", po::value<bool>(&isMC), "do you want to calculate the weights or set a dummy value to unity?")
+    ;
+
+    po::variables_map vm;
+
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);    
+    } catch(po::error& e) {
+        cout << "ERROR: " << e.what() << endl;
         exit(1);
     }
-    const std::string infile(argv[1]);
-    std::cout << "Input file is " << infile << std::endl;
+
+    if (vm.count("help")) {
+        cout << desc << "\n";
+        return 1;
+    }
+
+
 
     rng = new TRandom();
     rng->SetSeed();
-
-
-/* For reweighting sherpa fractions to madgraph
-    std::map<WJetsClassification0, float> weights;
-    //weights[WJETS2_W_QQ] = 0.163661; //error=0.009857 [1]
-    //weights[WJETS2_W_Qq] = 0.498646; //error=0.007892 [2]
-    //weights[WJETS2_W_qq] = 1.244096; //error=0.012993 [3]
-
-    weights[Wbb] = 0.309315; //error=0.044416 [1]
-    weights[Wcc] = 0.225933; //error=0.017562 [2]
-    weights[Wbc] = 0.047298; //error=0.006804 [3]
-    weights[WbX] = 0.111583; //error=0.005099 [4]
-    weights[WcX] = 0.645442; //error=0.011115 [5]
-    weights[WgX] = 1.385702; //error=0.020337 [6]
-    weights[Wgg] = 1.443654; //error=0.044480 [7]
-    weights[WXX] = 1.011214; //error=0.017198 [8]
-
-*/
 
     TFile* fi = new TFile(infile.c_str(), "UPDATE");
     fi->cd("trees");
@@ -147,12 +165,6 @@ int main(int argc, char* argv[]) {
     TTree* weight_tree = new TTree("WJets_weights", "WJets_weights");
 
     TFile* hists_fi0 = new TFile("$STPOL_DIR/CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario0.root", "UPDATE");
-    TFile* hists_fi2 = new TFile("$STPOL_DIR/CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario2.root", "UPDATE");    
-
-    std::map<WJetsClassification2, TH1F*> ratio_hists2;
-    ratio_hists2[WJETS2_W_QQ] = (TH1F*)hists_fi2->Get("ratio__W_QQ");
-    ratio_hists2[WJETS2_W_Qq] = (TH1F*)hists_fi2->Get("ratio__W_Qq");
-    ratio_hists2[WJETS2_W_qq] = (TH1F*)hists_fi2->Get("ratio__W_qq");
 
     std::map<WJetsClassification0, TH1F*> ratio_hists0;
     ratio_hists0[Wbb] = (TH1F*)hists_fi0->Get("ratio__Wbb");
@@ -185,7 +197,11 @@ int main(int argc, char* argv[]) {
 
     std::map<const std::string, float> weights_flat;
     std::map<const std::string, float> weights_shape;
-    
+    vector<string> systematic_scenarios;
+    systematic_scenarios.push_back("wjets_mg_flavour_nominal");
+    systematic_scenarios.push_back("wjets_mg_flavour_up");
+    systematic_scenarios.push_back("wjets_mg_flavour_down");
+
     weights_flat["nominal"] = 1.0;
     weights_flat["up"] = 1.0;
     weights_flat["down"] = 1.0;
