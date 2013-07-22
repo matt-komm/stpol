@@ -42,7 +42,7 @@ if __name__=="__main__":
             hist = samp.drawHistogram("eta_lj", cut_str, weight=weight_str, plot_range=[20, -5, 5])
             
             if sn not in ["DATA", "qcd"]:
-                hist.normalize_lumi(lumi)
+                hist.Scale(samp.lumiScaleFactor(lumi))
             
             outfile.cd() #Must cd after histogram creation
             

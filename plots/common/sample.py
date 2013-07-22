@@ -142,17 +142,7 @@ class Sample:
             raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
         hist_new = hist.Clone(filter_alnum(name))
 
-        hist = hist_new
-        hist.SetTitle(name)
-        hist_ = Histogram()
-        hist_.setHist(hist, histogram_entries=n_entries, var=var,
-            cut=cut_str, weight=kwargs["weight"] if "weight" in kwargs.keys() else None,
-            sample_name=self.name,
-            sample_entries_total=self.getTotalEventCount(),
-            sample_entries_cut=self.getEventCount(),
-
-        )
-        return hist_
+        return hist_new
 
     def getColumn(self, col, cut):
         N = self.tree.Draw(col, cut, "goff")
