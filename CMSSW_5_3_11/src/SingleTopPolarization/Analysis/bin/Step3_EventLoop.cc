@@ -674,7 +674,7 @@ public:
                 branch_vars.vars_float["gen_weight"] = genEventInfo->weight();
             }
             else {
-                branch_vars.vars_float["gen_weight"] =1.;
+                branch_vars.vars_float["gen_weight"] = 1.0;
             }
             
             branch_vars.vars_float["b_weight_nominal"] = get_collection<float>(event, bWeightNominalSrc, 0.0);
