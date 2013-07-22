@@ -9,21 +9,6 @@ import SingleTopPolarization.Analysis.pileUpDistributions as pileUpDistributions
 from SingleTopPolarization.Analysis.weights_cfg import WeightSetup
 import SingleTopPolarization.Analysis.sample_types as sample_types
 
-
-#BTag working points from https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagPerformanceOP#B_tagging_Operating_Points_for_5
-#TODO: place in proper class
-#TrackCountingHighPur     TCHPT   3.41
-#JetProbability   JPL     0.275
-#JetProbability   JPM     0.545
-#JetProbability   JPT     0.790
-#CombinedSecondaryVertex  CSVL    0.244
-#CombinedSecondaryVertex  CSVM    0.679
-#CombinedSecondaryVertex  CSVT    0.898
-
-#BTag tagger names
-#trackCountingHighPurBJetTags
-#combinedSecondaryVertexMVABJetTags
-
 def SingleTopStep2():
 
     if not Config.onGrid:
