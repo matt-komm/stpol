@@ -125,6 +125,7 @@ class MVA_trainer:
 	def _prepare(self):
 		initEvs = self.metadata['initial_events']
 		channel = self.metadata['lept']
+		fract = self.metadata['fractions']
 		
 		# Load trees
 		for (typekey,(kSigBg,kTrainTest)) in self.treetypes.items():
@@ -133,7 +134,9 @@ class MVA_trainer:
 			for key in keylist:
 				sName = key.GetName()
 				sTree = key.ReadObj()
-				sScaleFactor = getSCF(channel, sName, initEvs[sName])
+				if sTree.GetEntries() == 0:
+					continue
+				sScaleFactor = getSCF(channel, sName, initEvs[sName]) * fract[sName]
 				#sScaleFactor = 1.0/sTree.GetEntries()
 				# TODO: multiply scf with fraction of train/total
 				print ' > ', sName, sScaleFactor
