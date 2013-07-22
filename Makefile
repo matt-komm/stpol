@@ -1,5 +1,5 @@
 #ROOTCC=c++ -std=c++11 `root-config --cflags --libs`
-ROOTCC=c++ -std=c++0x `root-config --cflags --libs` -lboost_program_options-mt
+ROOTCC=c++ -std=c++0x `root-config --cflags --libs` -lTreePlayer -lboost_program_options-mt
 
 test:
 	util/test_step1.sh
