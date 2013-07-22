@@ -16,12 +16,9 @@ if __name__=="__main__":
         help="the output directory for the step3 trees"
     )
     parser.add_argument("--cutStringProcessed", type=str,
-        default="--doNJets --nJ=2,3 --doHLT --doLepton --doEventShape", required=False,
+        default="--doNJets --nJ=2,3 --doHLT --doLepton", required=False,
         help="Specify the cutstring for the step3 config, which will reduce the amount of events processed. For options, see step3_eventloop_base_nocuts_cfg.py"
     )
-    parser.add_argument("--cutStringSelected", type=str,
-        default="1.0", required=False,
-        help="The additional cutstring for which to create an Events_selected TTree.")
     parser.add_argument("--applyCutsToSignal", type=bool,
         default=False, required=False,
         help="Should the processing cuts be applied on the signal samples?"
@@ -30,9 +27,13 @@ if __name__=="__main__":
         default=False, action="store_true",
         help="Don't really submit the jobs."
     )
+    parser.add_argument("--fileDir",
+        default="filelists/Jul15_partial", type="str", required=False,
+        help="Input directory with the file lists"
+    )
     cmdline_args = parser.parse_args()
     print cmdline_args
-    fldir = "filelists/Jul15_partial"
+    print "Input directory is %s" % cmdline_args.fileDir
 
     data_samples = ["SingleMu", "SingleEle"]
     if not cmdline_args.ofdir:
@@ -41,7 +42,7 @@ if __name__=="__main__":
 
     cmdline_args.cutStringSelected = cmdline_args.cutStringSelected.strip().replace(" ","")
 
-    for root, dirs, files in os.walk(fldir):
+    for root, dirs, files in os.walk(parser.fileDir):
         for fi in files:
             fi = root+"/" + fi
             if not fi.endswith(".txt"):
@@ -53,10 +54,7 @@ if __name__=="__main__":
             for lep in leptons:
                 args = "--lepton=%s" % lep
                 if isMC:
-                    args += " --doControlVars --isMC"
-
-                #Always apply the selection cuts
-                args += ' --cutString="%s"' % cmdline_args.cutStringSelected
+                    args += " --doControlVars --doWeight --isMC"
 
                 #Apply the processing cuts
                 if not is_signal or (is_signal and cmdline_args.applyCutsToSignal):
@@ -72,10 +70,3 @@ if __name__=="__main__":
                 print cmd
                 if not cmdline_args.dryRun:
                     check_call(cmd, shell=True)
-
-#    ofpath = "/".join([cmdline_args.ofdir, lep, iso, "wjets_sherpa"])
-#    args = "--lepton=mu --doControlVars --isMC"
-#    fi = "filelists/step2/WJets_sherpa_06_10/*.txt"
-#    cmd = " ".join(["$STPOL_DIR/analysis_step3/suball.sh", "'"+args+"'", ofpath, fi])
-#    check_call(cmd, shell=True)
-

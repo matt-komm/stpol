@@ -4,8 +4,26 @@ import string
 import logging
 import os
 import re
+import glob
 
 from rootpy.plotting.hist import Hist
+
+def get_file_list(merge_cmds, dir, fullpath=True):
+    """
+    Returns the file list from the input directory that matches the corresponding merge pattern
+    dir - the input directory path
+    merge_cmds - a dict with string, list(regex patterns) pairs specifying the merges
+    fullpath - return the full path of the file (or only the filename)
+    returns - a list with the matched filenames
+    """
+    files = glob.glob("/".join([dir, "*.root"]))
+    out_files = []
+    for cmds in merge_cmds.values():
+        for pat in cmds:
+            out_files += filter(lambda x: re.match(pat, x.split("/")[-1]), files)
+    if not fullpath:
+        out_files = map(lambda x: x.split("/")[-1], out_files)
+    return out_files
 
 class PhysicsProcess:
     desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan"]
@@ -60,9 +78,9 @@ PhysicsProcess.WJets_mg_exc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"], 
 #PhysicsProcess.WJets_mg_inc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"], pretty_name="W(#rightarrow l #nu,qq) + j (mg)")
 PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"], pretty_name="DY-jets")
 PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"], pretty_name="t#bar{t} (#rightarrow ll, lq) (mg)")
-PhysicsProcess.tWchan = PhysicsProcess("tW", [".*_tW"], pretty_name="tW-channel")
-PhysicsProcess.schan = PhysicsProcess("s", [".*_s"], pretty_name="s-channel")
-PhysicsProcess.tchan = PhysicsProcess("tchan", [".*_t_ToLeptons"], pretty_name="t-channel")
+PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW-channel")
+PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"], pretty_name="s-channel")
+PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name="t-channel")
 
 merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel="mu")
 
