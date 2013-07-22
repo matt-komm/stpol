@@ -8,7 +8,7 @@ def WeightSetup(process, conf):
     if conf.subChannel.lower() == "ttbar":
         channel = dict()
         channel["TTJets_FullLept"] = "FullLept"
-        channel["TTJets_SemiLept"] = "FullLept"
+        channel["TTJets_SemiLept"] = "SemiLept"
         channel["TTbar"] = "FullSemiLept"
         process.ttbarTopWeight = cms.EDProducer(
             'TopPtReweightProducer',
