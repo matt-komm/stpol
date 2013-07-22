@@ -139,10 +139,10 @@ public:
         initialize_branches();
         requireOneMuon = pars.getParameter<bool>("requireOneMuon");
         
-        cutOnIso = pars.getParameter<bool>("cutOnIso");
+        //cutOnIso = pars.getParameter<bool>("cutOnIso");
         //reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
-        isoCut = (float)pars.getParameter<double>("isoCut");
-        isoCutHigh = (float)pars.getParameter<double>("isoCutHigh");
+        //isoCut = (float)pars.getParameter<double>("isoCut");
+        //isoCutHigh = (float)pars.getParameter<double>("isoCutHigh");
         
         muonPtSrc = pars.getParameter<edm::InputTag>("muonPtSrc");
         muonEtaSrc = pars.getParameter<edm::InputTag>("muonEtaSrc");
@@ -257,9 +257,9 @@ public:
     {
         initialize_branches();
         requireOneElectron = pars.getParameter<bool>("requireOneElectron");
-        cutOnIso = pars.getParameter<bool>("cutOnIso");
+        //cutOnIso = pars.getParameter<bool>("cutOnIso");
         //reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
-        isoCut = (float)pars.getParameter<double>("isoCut");
+        //isoCut = (float)pars.getParameter<double>("isoCut");
         mvaCut = (float)pars.getParameter<double>("mvaCut");
         eleCountSrc = pars.getParameter<edm::InputTag>("eleCountSrc");
         muonCountSrc = pars.getParameter<edm::InputTag>("muonCountSrc");
