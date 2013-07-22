@@ -12,6 +12,9 @@ class TObjectOpenException(Exception):
 
 
 def get_sample_name(filename):
+    """
+    Returns the sample name from the input file name
+    """
     return filename.split("/")[-1].split(".")[0]
     
 def get_process_name(sample_name):

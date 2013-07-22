@@ -3,7 +3,10 @@ import re
 
 
 def is_wjets_mg(sample_name):
-    return re.match("w[0-9]jets_exclusive.*", sample_name.lower())
+    if re.match("w[0-9]jets_exclusive.*", sample_name.lower()):
+    	return True
+    else:
+    	return False
 
 def is_wjets(sample_name):
     return is_wjets_mg(sample_name) or sample_name.lower().startswith("wjets")
