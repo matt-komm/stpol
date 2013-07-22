@@ -102,13 +102,13 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
         lepton_weight = "*muon_TriggerWeight*muon_IsoWeight*muon_IDWeight"
         #cuts.setTrigger("1")
 
-    cuts.setWeightMC("pu_weight*b_weight_nominal"+lepton_weight)
+    cuts.setWeightMC("SF_total")
     #Recreate all necessary cuts after manual changes
     cuts.calcCuts()
     #Luminosities for each different set of data have to be specified.
     #Now only for iso and anti-iso. In the future additional ones for systematics.
     #See DataLumiStorage for details if needed
-
+    print cuts
     if channel == "mu":
         dataLumiIso = lumi_iso["mu"]
         dataLumiAntiIso = lumi_antiiso["mu"]
