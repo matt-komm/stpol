@@ -106,18 +106,31 @@ SimpleElectronAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
    //for (edm::View<reco::Candidate>::const_iterator obj = objects->begin(); obj != objects->end(); obj++) {
    edm::LogInfo("analyze()") << "Collection " << o.label() << " has " << objects->size() << " items";
    int i = 0;
+
    for (auto& pobj : *objects) {
     const pat::Electron& obj = (const pat::Electron& )pobj;
     edm::LogInfo("analyze()") << o.label() << "(" << i << "):" <<
-    " pt: " << obj.pt() << 
-    " ecalPt: " << obj.ecalDrivenMomentum().Pt() << 
-    " eta: " << obj.eta() <<
-    " phi: " << obj.phi() << 
-    " rhoCorrRelIso: " << obj.userFloat("rhoCorrRelIso") <<
-    " deltaBetaCorrRelIso: " << obj.userFloat("deltaBetaCorrRelIso") <<
-    " dxy: " << obj.userFloat("dxy") <<
-    " gsfTrack_trackerExpectedHitsInner_numberOfHits: " << obj.userFloat("gsfTrack_trackerExpectedHitsInner_numberOfHits") <<
-    " dr03EcalRecHitSumEt: " << obj.dr03EcalRecHitSumEt();
+    "\n\t pt: " << obj.pt() << 
+    "\n\t ecalPt: " << obj.ecalDrivenMomentum().Pt() << 
+    "\n\t eta: " << obj.eta() <<
+    "\n\t eta: " << obj.superCluster()->eta() <<
+    "\n\t phi: " << obj.phi() << 
+ 
+    "\n\t rhoCorrRelIso: " << obj.userFloat("rhoCorrRelIso") <<
+    "\n\t deltaBetaCorrRelIso: " << obj.userFloat("deltaBetaCorrRelIso") <<
+ 
+    "\n\t dxy: " << obj.userFloat("dxy") <<
+
+    "\n\t sigmaIetaIeta: " << obj.sigmaIetaIeta() <<
+    "\n\t hadronicOverEm: " << obj.hadronicOverEm() <<
+    "\n\t dr03TkSumPt()/pt(): " << obj.dr03TkSumPt()/pt() <<
+    "\n\t dr03EcalRecHitSumEt()/pt(): " << obj.dr03EcalRecHitSumEt()/pt() <<
+    "\n\t dr03HcalTowerSumEt()/pt(): " << obj.dr03HcalTowerSumEt()/pt() <<
+    "\n\t deltaEtaSuperClusterTrackAtVtx(): " << obj.deltaEtaSuperClusterTrackAtVtx() <<
+    "\n\t deltaPhiSuperClusterTrackAtVtx(): " << obj.deltaPhiSuperClusterTrackAtVtx() <<
+
+    "\n\tgsfTrack_trackerExpectedHitsInner_numberOfHits: " << obj.userFloat("gsfTrack_trackerExpectedHitsInner_numberOfHits") <<
+    "\n\tdr03EcalRecHitSumEt: " << obj.dr03EcalRecHitSumEt();
     i++;   
    }
  }
