@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from ROOT import TFile, TCanvas, TColor, gStyle
 from math import sqrt
 from array import array
@@ -29,9 +31,9 @@ hcorr.SetMaximum(1)
 #hcorr.SetMarkerColor(0)
 
 # setup color palette
-r = [1.0, 1.0, 0.0]
-g = [0.0, 1.0, 0.3]
-b = [0.0, 1.0, 1.0]
+r = [0.0, 1.0, 1.0]
+g = [0.3, 1.0, 0.0]
+b = [1.0, 1.0, 0.0]
 stop = [.0, 0.5, 1.0]
 
 # convert to c arrays
@@ -51,6 +53,6 @@ gStyle.SetPalette(palsize,palarray)
 gStyle.SetOptStat(0)
 
 hcorr.Draw("COLZ TEXT")
-canvas.Print("corr.png")
-canvas.Print("corr.pdf")
+canvas.Print("plots/corr.png")
+canvas.Print("plots/corr.pdf")
 fcov.Close()

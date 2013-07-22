@@ -1,5 +1,10 @@
 signal = 'tchan'
 
+def histofilter(s):
+    if '__up' in s or '__down' in s:
+        return False
+    return True
+
 def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'):
     found_match = False
     par_name = u_name
@@ -17,9 +22,7 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
 
 
 def get_model():
-    #model = build_model_from_rootfile('histos/lqeta.root', include_mc_uncertainties = False)
-    # FIXME Using pseudo data
-    model = build_model_from_rootfile('histos/pseudo_data.root', include_mc_uncertainties = False)
+    model = build_model_from_rootfile('histos/lqeta.root', include_mc_uncertainties = False, histogram_filter = histofilter)
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
     return model
@@ -29,35 +32,14 @@ model = get_model()
 print sorted(model.processes)
 
 # model uncertainties
-#model.add_lognormal_uncertainty('lumi', math.log(1.022), '*')
-#model.add_lognormal_uncertainty('ttbar', math.log(1.15), 'ttbar')
-#model.add_lognormal_uncertainty('wjets', math.log(2.0), 'wjets')
-#model.add_lognormal_uncertainty('wjets', math.log(1.3), 'wjets') # test
-#model.add_lognormal_uncertainty('zjets', math.log(1.3), 'zjets')
-#model.add_lognormal_uncertainty('QCD', math.log(1.03), 'QCD')
-
-# gaussian uncertainties
-#add_normal_uncertainty(model, 'qcd', 0.5, 'qcd')
-add_normal_uncertainty(model, 'qcd', 0.1, 'qcd')
-add_normal_uncertainty(model, 'top', 0.1, 'top')
-#add_normal_uncertainty(model, 'wzjets', inf, 'wzjets')
-add_normal_uncertainty(model, 'wzjets', 0.3, 'wzjets')
-
-#
-##add_normal_uncertainty(model, 'wjets_heavy', inf, 'wjets_heavy')
-##add_normal_uncertainty(model, 'wjets_light', 0.3, 'wjets_light')
-#add_normal_uncertainty(model, 'wjets_heavy', inf, 'wjets_light')
-#add_normal_uncertainty(model, 'wjets_light', 0.5, 'wjets_light')
-#add_normal_uncertainty(model, 'zjets', 0.3, 'zjets')
-
-#print sorted(model.processes)
+execfile('uncertainties.py')
 
 options = Options()
 #options.set("minimizer","strategy","newton_vanilla")
 #options.set("minimizer","strategy","tminuit")
 
 # maximum likelihood estimate
-# pseudo data
+# FIXME pseudo data
 #result = mle(model, input = 'toys-asimov:1.0', n=1, with_covariance = True)
 # data
 result = mle(model, input = 'data', n=1, with_covariance = True, options=options)
@@ -68,7 +50,7 @@ for process in result[signal]:
         fitresults[process] = [result[signal][process][0][0], result[signal][process][0][1]]
 
 # export sorted fit values
-f = open('results.txt','w')
+f = open('results/nominal.txt','w')
 for key in sorted(fitresults.keys()):
         line = '%s %f %f\n' % (key, fitresults[key][0], fitresults[key][1])
         print line,
@@ -76,11 +58,11 @@ for key in sorted(fitresults.keys()):
 f.close()
 
 # covariance matrix
-pars = sorted(model.get_parameters(['tchan']))
+pars = sorted(model.get_parameters([signal]))
 n = len(pars)
 #print pars
 
-cov = result['tchan']['__cov'][0]
+cov = result[signal]['__cov'][0]
 #print cov
 
 # write out covariance matrix
@@ -100,8 +82,8 @@ for i in range(n):
         h.SetBinContent(i+1,j+1,cov[i][j])
 
 h.Draw("COLZ TEXT")
-canvas.Print("cov.png")
-canvas.Print("cov.pdf")
+canvas.Print("plots/cov.png")
+canvas.Print("plots/cov.pdf")
 h.Write()
 fcov.Close()
 

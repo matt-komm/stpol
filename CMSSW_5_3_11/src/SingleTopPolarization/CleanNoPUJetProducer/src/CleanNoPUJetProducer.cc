@@ -36,10 +36,6 @@
 #include <TMath.h>
 #include "CMGTools/External/interface/PileupJetIdentifier.h"
 
-//
-// class declaration
-//
-
 class CleanNoPUJetProducer : public edm::EDProducer {
    public:
       explicit CleanNoPUJetProducer(const edm::ParameterSet&);
@@ -62,44 +58,25 @@ class CleanNoPUJetProducer : public edm::EDProducer {
       const edm::InputTag jetPUIdFlagSrc;
       const edm::InputTag jetPUIdVarsSrc;
 
-      // ----------member data ---------------------------
       const bool isOriginal;
+      const bool doFilterJets;
 };
 
-//
-// constants, enums and typedefs
-//
-
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 CleanNoPUJetProducer::CleanNoPUJetProducer(const edm::ParameterSet& iConfig)
 : jetSrc(iConfig.getParameter<edm::InputTag>("jetSrc"))
 , jetPUIdMVASrc(iConfig.getParameter<edm::InputTag>("PUidMVA"))
 , jetPUIdFlagSrc(iConfig.getParameter<edm::InputTag>("PUidFlag"))
 , jetPUIdVarsSrc(iConfig.getParameter<edm::InputTag>("PUidVars"))
 , isOriginal(iConfig.getParameter<bool>("isOriginal"))
+, doFilterJets(iConfig.getParameter<bool>("doFilterJets"))
 {
-  produces<std::vector<pat::Jet> >();
-  
+  produces<std::vector<pat::Jet> >(); 
 }
-
 
 CleanNoPUJetProducer::~CleanNoPUJetProducer()
 {
 }
 
-
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
 void
 CleanNoPUJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
@@ -137,7 +114,7 @@ CleanNoPUJetProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     //Get the values from the valueMaps
 
     LogDebug("produce()") << "jet pt: " << jet.pt() << " eta: " << jet.eta() << " mvaID: " << mva;
-    if( PileupJetIdentifier::passJetId( idflag, PileupJetIdentifier::kLoose ) ) {
+    if( PileupJetIdentifier::passJetId(idflag, PileupJetIdentifier::kLoose) || !doFilterJets ) {
       LogDebug("produce()") << " pass loose wp";
       outJets->push_back(jet);
 

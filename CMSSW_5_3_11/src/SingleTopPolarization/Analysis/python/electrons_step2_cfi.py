@@ -26,12 +26,10 @@ def ElectronSetup(process, conf):
     #Sanity cut
     goodSignalElectronCut += " && (electronID('mvaTrigV0') > 0.0)"
     if not conf.Electrons.reverseIsoCut:
-        #Latest MVA ID WP-s
-        #https://twiki.cern.ch/twiki/bin/viewauth/CMS/MultivariateElectronIdentification#Training_of_the_MVA
-        goodSignalElectronCut += " && ((abs(eta)>0.0 && abs(eta) < 0.8 && (electronID('mvaTrigV0') > %f))" % 0.94
-        goodSignalElectronCut += " || (abs(eta)>0.8 && abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f))" % 0.85
-        goodSignalElectronCut += " || (abs(eta)>1.479 && abs(eta) < 1.479 && (electronID('mvaTrigV0') > %f)))" % 0.92
-
+        #Top ref. sel.
+        #https://twiki.cern.ch/twiki/bin/view/CMS/TWikiTopRefEventSel
+        goodSignalElectronCut += "&& (electronID('mvaTrigV0') > %f)" %conf.Electrons.mvaCut
+        
     #Impact parameter dropped because using MVA ID
     #https://hypernews.cern.ch/HyperNews/CMS/get/egamma-elecid/72.html
     #goodSignalElectronCut += " && abs(userFloat('dxy')) < 0.02"

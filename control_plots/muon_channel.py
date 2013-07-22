@@ -3,13 +3,6 @@
 import sys
 import os
 
-##Need to add parent dir to python path to import plots
-#try:
-#    sys.path.append(os.environ["STPOL_DIR"] )
-#except KeyError:
-#    print "Could not find the STPOL_DIR environment variable, dod you run `source setenv.sh` in the code base directory?"
-#    sys.exit(1)
-
 import ROOT
 import plots
 from plots.common.stack_plot import plot_hists_stacked

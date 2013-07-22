@@ -18,14 +18,14 @@ def JetSetup(process, conf):
     jetCut += ' && (chargedHadronEnergyFraction > 0. || abs(eta) >= 2.4)'
     jetCut += ' && (chargedMultiplicity > 0 || abs(eta) >= 2.4)'
 
-    if conf.Jets.doPUClean:
-        process.noPUJets = cms.EDProducer('CleanNoPUJetProducer',
-            jetSrc = cms.InputTag(conf.Jets.source),
-            PUidMVA = cms.InputTag("puJetMva", "full53xDiscriminant", "PAT"),
-            PUidFlag = cms.InputTag("puJetMva", "full53xId", "PAT"),
-            PUidVars = cms.InputTag("puJetId", "", "PAT"),
-            isOriginal=cms.bool(conf.Jets.source == "selectedPatJets")
-        )
+    process.noPUJets = cms.EDProducer('CleanNoPUJetProducer',
+        jetSrc = cms.InputTag(conf.Jets.source),
+        PUidMVA = cms.InputTag("puJetMva", "full53xDiscriminant", "PAT"),
+        PUidFlag = cms.InputTag("puJetMva", "full53xId", "PAT"),
+        PUidVars = cms.InputTag("puJetId", "", "PAT"),
+        isOriginal=cms.bool(conf.Jets.source == "selectedPatJets"),
+        doFilterJets=cms.bool(conf.Jets.doPUClean)
+    )
 
     bTagCutStr = 'bDiscriminator("%s") >= %f' % (conf.Jets.bTagDiscriminant, conf.Jets.BTagWorkingPointVal())
 
@@ -33,7 +33,7 @@ def JetSetup(process, conf):
         conf.Jets.source = "patJetsWithOwnRef"
     process.deltaRJets = cms.EDProducer("DeltaRProducer",
         leptonSrc=cms.InputTag("goodSignalLeptons"),
-        jetSrc=cms.InputTag("noPUJets" if conf.Jets.doPUClean else conf.Jets.source)
+        jetSrc=cms.InputTag("noPUJets")
         #jetSrc=cms.InputTag(conf.Jets.source)
     )
 
@@ -235,8 +235,7 @@ def JetSetup(process, conf):
         )
 
     process.jetSequence = cms.Sequence()
-    if conf.Jets.doPUClean:
-        process.jetSequence += process.noPUJets
+    process.jetSequence += process.noPUJets
     process.jetSequence += process.deltaRJets
 
 
@@ -270,8 +269,7 @@ def JetSetup(process, conf):
         #process.sourceJetAnalyzer = cms.EDAnalyzer("SimpleJetAnalyzer", interestingCollections=cms.untracked.VInputTag(conf.Jets.source))
         #process.jetSequence.insert(0, process.sourceJetAnalyzer)
         process.jetAnalyzer = cms.EDAnalyzer("SimpleJetAnalyzer", interestingCollections=cms.untracked.VInputTag("selectedPatJets", conf.Jets.source, "goodJets"))
-        if conf.Jets.doPUClean:
-            process.jetAnalyzer.interestingCollections.append("noPUJets")
+        process.jetAnalyzer.interestingCollections.append("noPUJets")
         process.jetSequence += process.jetAnalyzer
 
     print process.jetSequence

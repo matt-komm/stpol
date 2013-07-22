@@ -91,10 +91,9 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     #Use Default cuts for final selection. See FitConfig for details on how to change the cuts.
 
-
     if channel == "ele":
         cuts.setTrigger("1") #  || HLT_Ele27_WP80_v9==1 || HLT_Ele27_WP80_v8==1")
-        cuts.setIsolationCut("el_mva > 0.9 & el_reliso < 0.1")
+        cuts.setIsolationCut("el_reliso < 0.1")
         cuts.setAntiIsolationCut("el_reliso > 0.1 & el_reliso < 0.5")
         cuts.setAntiIsolationCutUp("el_reliso > 0.11 & el_reliso < 0.55") # check +-10% variation
         cuts.setAntiIsolationCutDown("el_reliso > 0.09 & el_reliso < 0.45")
@@ -170,15 +169,18 @@ if __name__=="__main__":
 
     cuts_final = FitConfig( "final_selection", trigger="1.0")
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
+    cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0 && n_veto_mu==0 && n_veto_ele==0")
+    cuts_3j1t = FitConfig( "3j1t_selection", trigger="1.0")
+    cuts_3j1t.setBaseCuts("n_jets == 3 && n_tags == 1 && n_veto_mu==0 && n_veto_ele==0")
     cuts_mva = FitConfig( "mva_selection", trigger="1.0")
     cuts_mva.setFinalCuts("1")
-    cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0 && n_veto_mu==0 && n_veto_ele==0")
     cuts_final_without_eta = FitConfig( "final_selection_without_eta_cut", trigger="1.0")
     cuts_final_without_eta.setFinalCuts("top_mass < 220 && top_mass > 130")
 
     cuts = {}
     cuts["final"] = cuts_final
     cuts["2j0t"] = cuts_2j0t
+    cuts["3j1t"] = cuts_3j1t
     cuts["final_without_eta"] = cuts_final_without_eta
     cuts["mva"] = cuts_mva
     
