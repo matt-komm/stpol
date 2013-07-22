@@ -1,5 +1,4 @@
 from plots.common.utils import *
-from plots.common.histogram import *
 from plots.common.stack_plot import *
 from plots.common.hist_plots import *
 from plots.common.legend import *
@@ -38,48 +37,12 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
             weight_ = copy.deepcopy(weight)
             if sample.isMC:
 
-                #Apply sherpa gen-level weight
-                if "sherpa" in sample.name:
-                    logger.debug("WJets sherpa sample, enabling sherpa weights")
-                    weight_ = weight_*Weights.sherpa_weight
-
-                weight_strs = [("weight__nominal", str(weight_))]
-
-                if "sherpa" in sample.name:
-                    weight_strs += [("weight__sherpa_flavour", str(weight_*Weights.sherpa_flavour_weight))]
-
-                cut_strs = [("cut__all", str(cut))]
-                if kwargs.get("flavour_split", False) and sample_types.is_wjets(sample.name):
-                    cut_strs += [
-                        # ("cut__flavour__W_HH", str(cut*Cuts.W_HH)),
-                        # ("cut__flavour__W_Hl", str(cut*Cuts.W_Hl)),
-                        # ("cut__flavour__W_ll", str(cut*Cuts.W_ll)),
-                        # ("cut__flavour__W_HH", str(cut*Cuts.W_HH)),
-                        ("cut__flavour__W_heavy", str(cut*Cuts.W_heavy)),
-                        ("cut__flavour__W_light", str(cut*Cuts.W_light)),
-
-                    ]
-
-                #Reweigh madgraph samples
-                if kwargs.get("reweight_madgraph", False) and re.match("W[0-9]Jets_exclusive", sample.name):
-                    sample.tree.AddFriend("trees/WJets_weights", sample.file_name)
-                    logger.debug("WJets madgraph sample, enabling flavour weight")
-                    avg_weight = sample.drawHistogram(
-                        str(Weights.wjets_madgraph_shape_weight(systematic)),
-                        str(cut), weight=str(weight_), plot_range=[100, 0, 2]
-                    ).hist.GetMean()
-
-                    logger.debug("average weight = %.2f" % avg_weight)
-                    reweighted_sample_weight_str = str(weight_*Weights.wjets_madgraph_flat_weight(systematic) * Weights.wjets_madgraph_shape_weight(systematic) * Weight(str(1.0/avg_weight)))
-                    logger.debug("weight=%s" % reweighted_sample_weight_str)
-                    weight_strs += [("weight__reweight_madgraph", reweighted_sample_weight_str)]    
-
                 for weight_name, weight_str in weight_strs:
                     for cut_name, cut_str in cut_strs:
                         logger.debug("Drawing with %s, %s" % (weight_str, cut_str))
                         hname_ = weight_name + "/" + cut_name + "/" + hname
                         hist = sample.drawHistogram(var, cut_str, weight=weight_str, **kwargs)
-                        hist.hist.Scale(sample.lumiScaleFactor(lumi))
+                        hist.Scale(sample.lumiScaleFactor(lumi))
                         hists[hname_] = hist.hist
                         metadata[hname_] = HistMetaData(
                             sample_name = sample.name,
@@ -87,7 +50,7 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
                         )
             else:
                 hist = sample.drawHistogram(var, str(cut), **kwargs)
-                hists[hname] = hist.hist
+                hists[hname] = hist
                 metadata[hname] = HistMetaData(
                     sample_name = sample.name,
                     process_name = sample.process_name,
@@ -104,13 +67,6 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
     hist_coll = HistCollection.load(out_dir + "/%s.root" % plot_name)
     logger.debug("loaded hist collection %s" % (out_dir + "/%s.root" % plot_name))
     return hist_coll
-
-    # merges = copy.deepcopy(merge_cmds)
-    # merged = merge_hists(hists)
-    # canv = ROOT.TCanvas()
-    # plot(canv, plot_name, merged, out_dir)
-    # canv.Update()
-    # canv.SaveAs(out_dir + "/%s.png" % plot_name)
 
 def plot(canv, name, hists_merged, out_dir, desired_order=PhysicsProcess.desired_plot_order,  **kwargs):
     """

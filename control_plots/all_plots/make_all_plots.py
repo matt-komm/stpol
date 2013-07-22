@@ -85,11 +85,11 @@ for pd in keylist:
         print "Starting:",name
         if sample.isMC:
             hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
-            hist.hist.Scale(sample.lumiScaleFactor(lumi)*mc_sf)
+            hist.Scale(sample.lumiScaleFactor(lumi)*mc_sf)
             hists_mc[sample.name] = hist.hist
             Styling.mc_style(hists_mc[sample.name], sample.name)
         elif name[0:6] == "Single":
-            hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range).hist
+            hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
             hist_data.SetTitle('Data')
             Styling.data_style(hist_data)
 
@@ -100,7 +100,7 @@ for pd in keylist:
                 cv='el_reliso'
                 lb=0.1
             qcd_cut = cut*Cut('deltaR_lj>0.3 && deltaR_bj>0.3 && '+cv+'>'+str(lb)+' & '+cv+'<0.5')
-            hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range).hist
+            hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
             hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
             hists_mc['QCD'] = hist_qcd
             hists_mc['QCD'].SetTitle('QCD')
