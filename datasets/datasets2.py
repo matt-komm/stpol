@@ -24,13 +24,13 @@ step2_mc_files = [
 ]
 
 step2_mc_files_qcd = [
-#    "/mc/Apr19_qcd", #QCD samples
+    "/mc/Jul15_qcd", #QCD samples
 ]
 
 #Systematic input files for step2 (that don't need to be variated)
 step2_mc_syst_files = [
 #    "/mc_syst/Apr19",
-    "/mc_syst/Jul15",
+    "/mc_syst/Jul22",
 ]
 
 step2_data_files = [
