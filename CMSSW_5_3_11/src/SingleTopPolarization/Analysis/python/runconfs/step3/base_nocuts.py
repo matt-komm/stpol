@@ -67,12 +67,12 @@ parser.add_option("--mtop", dest="mtop", type="string", default="none", choices=
 parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False,
     description="Add several additional variables in the trees."
 )
-parser.add_option("--doEventShape", dest="doEventShape", action="store_true", default=False,
-    description="Do runtime calculation of the event shape variables."
-)
-parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False,
-    description="Enable anti-iso lepton specific processing."
-)
+#parser.add_option("--doEventShape", dest="doEventShape", action="store_true", default=False,
+#    description="Do runtime calculation of the event shape variables."
+#)
+#parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False,
+#    description="Enable anti-iso lepton specific processing."
+#)
 parser.add_option("--skipTree", dest="skipTree", action="store_true", default=False,
     description="Do not produce the output tree."
 )
@@ -167,7 +167,7 @@ process.eleCuts = cms.PSet(
     #reverseIsoCut = cms.bool(options.isAntiIso),
     #cutOnIso = cms.bool(False),
     #isoCut = cms.double(0.1),
-    #mvaCut = cms.double(0.9),
+    mvaCut = cms.double(0.9),
 
     eleCountSrc  = cms.InputTag("electronCount"),
     muonCountSrc = cms.InputTag("muonCount"),
@@ -209,6 +209,7 @@ process.jetCuts = cms.PSet(
     lightJetEtaSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Eta"),
     lightJetPhiSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Phi"),
     lightJetPUMVASrc = cms.InputTag("lowestBTagJetNTupleProducer", "puMva"),
+    lightJetMassSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Mass"),
 
     lightJetBdiscrSrc = cms.InputTag("lowestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
     lightJetRmsSrc = cms.InputTag("lowestBTagJetNTupleProducer", "rms"),
@@ -229,7 +230,8 @@ process.bTagCuts = cms.PSet(
     bJetPUMVASrc = cms.InputTag("highestBTagJetNTupleProducer", "puMva"),
 
     bJetBdiscrSrc = cms.InputTag("highestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
-    bJetDeltaRSrc = cms.InputTag("highestBTagJetNTupleProducer", "deltaR")
+    bJetDeltaRSrc = cms.InputTag("highestBTagJetNTupleProducer", "deltaR"),
+    bJetMassSrc = cms.InputTag("highestBTagJetNTupleProducer", "Mass"),
 )
 
 process.topCuts = cms.PSet(
