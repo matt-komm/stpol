@@ -6,10 +6,14 @@
 #include <stdlib.h>
 #include <TH1F.h>
 #include <TH1.h>
+#include <TRandom.h>
+
 #include <map>
 #include <cmath>
 
 #include "jet_flavour_classifications.h"
+
+#define QUADSUM(x,y) sqrt(pow(x,2)+pow(y,2))
 
 using namespace std;
 
@@ -33,6 +37,8 @@ WJetsClassification2 classify_2(WJetsClassification0 cls) {
     }
 }
 
+TRandom* rng = 0;
+
 static const float Wlight_sf = 1.0991871445834183;
 void weight(
     WJetsClassification0 cls, float cos_theta, TH1F* hist,
@@ -50,7 +56,6 @@ void weight(
 
     int bin = hist->FindBin(cos_theta);
     
-    //std::cout << "cos_theta=" << cos_theta << " Bin=" << bin << " cls=" << cls << " cls_1=" << cls_simple << " w=" << h->GetBinContent(bin) << std::endl;
     if (cls_simple==WJETS1_W_heavy) { //W+heavy
         w_flat *= 1.0;
         w_flat_up *= 2.0;
@@ -67,10 +72,12 @@ void weight(
         throw 1;
 
     //Measured shape differences sherpa vs madgraph
-    float w = hist->GetBinContent(bin);
+    float w = rng->Gaus(hist->GetBinContent(bin), hist->GetBinError(bin));
+    //cout << hist->GetBinContent(bin) << ":" << hist->GetBinError(bin) << ":" << w << endl;
+    float e = fabs(w - 1.0);//QUADSUM(fabs(w - 1.0), hist->GetBinError(bin));
     w_shape *= w;
-    w_shape_up *= w + fabs(w - 1.0);
-    w_shape_down *= w - fabs(w - 1.0);
+    w_shape_up *= w + e;
+    w_shape_down *= w - e;
     //std::cout << "w=" << w << std::endl;
 
 }
@@ -113,6 +120,11 @@ int main(int argc, char* argv[]) {
     const std::string infile(argv[1]);
     std::cout << "Input file is " << infile << std::endl;
 
+    rng = new TRandom();
+    rng->SetSeed();
+
+
+/* For reweighting sherpa fractions to madgraph
     std::map<WJetsClassification0, float> weights;
     //weights[WJETS2_W_QQ] = 0.163661; //error=0.009857 [1]
     //weights[WJETS2_W_Qq] = 0.498646; //error=0.007892 [2]
@@ -126,6 +138,8 @@ int main(int argc, char* argv[]) {
     weights[WgX] = 1.385702; //error=0.020337 [6]
     weights[Wgg] = 1.443654; //error=0.044480 [7]
     weights[WXX] = 1.011214; //error=0.017198 [8]
+
+*/
 
     TFile* fi = new TFile(infile.c_str(), "UPDATE");
     fi->cd("trees");
