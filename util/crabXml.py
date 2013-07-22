@@ -58,17 +58,18 @@ class JobStats:
             self.name, self.jobs_total, self.jobs_completed, self.jobs_pending,
             self.jobs_to_resubmit, self.jobs_to_submit,
             100.0*(float(self.jobs_completed) / float(self.jobs_total)))
-        if self.jobs_total != (self.jobs_pending + self.jobs_completed):
+        if self.jobs_total != (self.jobs_pending + self.jobs_completed + self.jobs_to_resubmit + self.jobs_to_submit):
             s = ">>>" + s
         return s
     def __str__(self):
         s = self.name
-        s += "\nJobs: tot %d, comp %d , get %d, resub %d, pending %d\n" % (
+        s += "\nJobs: tot %d, comp %d , get %d, resub %d, pending %d\n, not submitted %d" % (
             self.jobs_total,
             self.jobs_completed,
             self.jobs_to_get,
             self.jobs_to_resubmit,
-            self.jobs_pending
+            self.jobs_pending,
+            self.jobs_to_submit
         )
         s += "Submissions: quantiles[0.25, 0.5, 0.75, 0.95]=%s, max %d\n" % (self.quantiles_submissions, self.max_submissions)
         s += "Successful job timing: %s\n" % str(self.time_stats_success)
