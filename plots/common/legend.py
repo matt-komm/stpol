@@ -43,7 +43,7 @@ def legend(hists, **kwargs):
     pos = kwargs.get("legend_pos", "top-right")
     
     #The relative size of the text in the legend
-    text_size = kwargs.get("text_size", 0.03)
+    text_size = kwargs.get("legend_text_size", 0.03)
     
     nudge_x = kwargs.get("nudge_x", 0.0)
     nudge_y = kwargs.get("nudge_y", 0.0)
@@ -53,7 +53,7 @@ def legend(hists, **kwargs):
     
     #The height is determined automatically with some sensible settings from
     #the number of legend items
-    height = kwargs.get("height", 0.03*len(hists))
+    height = kwargs.get("height", text_size*len(hists))
 
     #The style characters for drawing the legend
     styles = kwargs.get("styles", ["p", "f"])

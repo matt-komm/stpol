@@ -112,7 +112,7 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
     # canv.Update()
     # canv.SaveAs(out_dir + "/%s.png" % plot_name)
 
-def plot(canv, name, hists_merged, out_dir, **kwargs):
+def plot(canv, name, hists_merged, out_dir, desired_order=PhysicsProcess.desired_plot_order,  **kwargs):
     """
     Plots the data/mc stack with the ratio.
     """
@@ -125,7 +125,7 @@ def plot(canv, name, hists_merged, out_dir, **kwargs):
     p1.cd()
     kwargs["title"] = name + kwargs.get("title", "")
     hists = OrderedDict()
-    hists["mc"] = [v for (k,v) in hists_merged.items() if k!="data"]
+    hists["mc"] = [hists_merged[k] for k in desired_order if k!="data"]
     hists["data"] = [hists_merged["data"]]
 
     x_title = kwargs.pop("x_label", "")

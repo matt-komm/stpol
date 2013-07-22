@@ -8,7 +8,7 @@ import re
 from rootpy.plotting.hist import Hist
 
 class PhysicsProcess:
-    desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tW", "s", "t"]
+    desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan"]
     def __init__(self, name, subprocesses, pretty_name=None):
         self.name = name
         self.subprocesses = subprocesses

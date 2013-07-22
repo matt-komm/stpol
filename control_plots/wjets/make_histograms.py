@@ -14,14 +14,22 @@ if __name__=="__main__":
 		("SB", "n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025"),
 	]
 
+	weight = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight"
 	for fn in fnames:
 		sn = fn.split("/")[-1]
 		of = ofdir + sn
 		args = []
 		if is_wjets(sn):
 			args += ["--doWJetsMadgraphWeight=true"]
-		elif not is_mc(sn):
+		if "sherpa" in sn:
+			args += ["--doWJetsSherpaWeight=true"]
+
+		#if is_mc(sn):
+		#	args += ["--weight=" + weight]
+
+		if not is_mc(sn):
 			args += ["--isMC=false"]
+
 
 		for cut_name, cut_str in cuts:
 			ofdir_cut = "/".join([ofdir, cut_name]) + "/"
