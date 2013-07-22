@@ -43,7 +43,7 @@ for s in speclist:
     reader.AddSpectator( s, vars[s] )
 
 # Book the MVA's
-mvalist = [ 'BDT', 'cat4' ]
+mvalist = [ 'BDT' ]
 mva={}
 for m in mvalist:
     reader.BookMVA(m,"weights/stop_"+sample+"_"+m+".weights.xml")

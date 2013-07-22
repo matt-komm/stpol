@@ -11,6 +11,9 @@ class TObjectOpenException(Exception):
     pass
 
 
+def get_sample_name(filename):
+    return filename.split("/")[-1].split(".")[0]
+    
 def get_process_name(sample_name):
     if sample_name.startswith("WJets_sherpa_nominal"):
         return "WJets_sherpa_nominal"

@@ -1,14 +1,22 @@
+#!/bin/env python
 # Import necessary libraries and data
 import os
+import sys
 from ROOT import *
 from copy import copy
 from plots.common.sample import Sample
 from plots.common.utils import merge_cmds
 from plots.common.colors import sample_colors_same
+from plots.common.cross_sections import lumi_iso,lumi_antiiso
 
+if len(sys.argv) < 2: 
+    print "Usage: ./trainMVA.py ele/mu"
+    sys.exit(1)
+
+sample = sys.argv[1]
 # Choose between electron / muon channel fitting
-lumi=6144
-sample = "ele"
+lumi=lumi_iso[sample]
+
 #sample = "mu"
 step3 = "step3_mva"
 datadirs={}
@@ -97,6 +105,7 @@ factory.BookMethod(TMVA.Types.kBDT,
                    "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.1:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"\
                    )
 
+"""
 # We use categorized BDT
 cat2=factory.BookMethod(TMVA.Types.kCategory,
                     "cat2",
@@ -141,6 +150,7 @@ cat4.AddMethod(TCut("abs(eta_lj)>=2.5 & cos_theta >= 0"),
               TMVA.Types.kBDT,
               "Category4_BDT_highEta_highCTH",
               "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6")
+"""
 
 factory.TrainAllMethods()
 factory.TestAllMethods()

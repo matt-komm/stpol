@@ -5,8 +5,12 @@ global_tags = dict()
 global_tags["data"] = dict()
 global_tags["mc"] = dict()
 
-gt_mc = "START53_V20::All"
-gt_data = "FT_53_V21_AN4::All"
+#gt_mc = "START53_V20::All"
+#gt_data = "FT_53_V21_AN4::All"
+
+#https://hypernews.cern.ch/HyperNews/CMS/get/JetMET/1461.html
+gt_data = "FT_53_V21_AN5::All"
+gt_mc = "START53_V27::All"
 
 #step1
 global_tags["mc"]["nominal_Summer12_DR53X"] = gt_mc
@@ -22,5 +26,6 @@ global_tags["data"]["May20"] = gt_data
 
 global_tags["mc"]["Jul15"] = gt_mc
 global_tags["mc"]["Jul15"] = gt_mc
+global_tags["mc"]["Jul15_qcd"] = gt_mc
 global_tags["data"]["Jul15"] = gt_data
 
