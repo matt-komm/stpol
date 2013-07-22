@@ -82,6 +82,12 @@ PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW-channel
 PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"], pretty_name="s-channel")
 PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name="t-channel")
 
+for syst in ["scaleup", "scaledown"]:
+    for nominal in [PhysicsProcess.tchan]:
+        proc = deepcopy(nominal)
+        proc.subprocesses = [x+"_%s" % syst for x in proc]
+        PhysicsProcess.systematic[syst].tchan = proc
+
 merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel="mu")
 
 logger = logging.getLogger("utils")
