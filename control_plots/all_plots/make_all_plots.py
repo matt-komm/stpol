@@ -12,7 +12,6 @@ import ROOT
 ROOT.gROOT.SetBatch(True)
 import plots
 from plots.common.stack_plot import plot_hists_stacked
-from plots.common.utils import lumi_textbox
 from plots.common.odict import OrderedDict
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts,Cut,Weights
@@ -75,7 +74,8 @@ if __name__=="__main__":
         merge_cmds,
         args.indir + "/%s/data/iso/Jul15/" % proc
     )
-    print flist
+    if len(flist)==0:
+        raise Exception("Couldn't open any files. Are you sure that %s exists and contains root files?" % args.indir
     #Load all the samples in the isolated directory
     samples={}
     for f in flist:
@@ -102,7 +102,7 @@ if __name__=="__main__":
             Weights.wjets_madgraph_flat_weight())
 
         plot_range = plot_defs[pd]['range']
-        
+
         hist_qcd = None
         hists_mc = dict()
         hists_data = dict()
