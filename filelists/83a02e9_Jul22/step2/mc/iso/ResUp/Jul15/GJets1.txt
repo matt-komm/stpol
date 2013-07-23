@@ -7,6 +7,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_6_2_kJe.ro
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_7_2_N8D.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_8_2_yzv.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_9_2_2EG.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_10_3_xFZ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_11_2_wQu.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_12_2_rVD.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_13_2_W1P.root
@@ -37,6 +38,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_37_2_J0w.r
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_38_2_Ob9.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_39_2_ClO.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_40_2_jml.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_41_3_6Y9.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_42_2_Bx0.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_43_2_i09.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_44_2_dge.root
@@ -48,6 +50,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_49_2_EYg.r
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_50_2_zf1.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_51_2_xJJ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_52_2_C8w.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_53_3_Tjw.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_54_2_Ldr.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_55_2_eLQ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_56_2_xmP.root
@@ -72,6 +75,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_74_2_HqD.r
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_75_2_1Yo.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_76_2_zaP.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_77_2_KmW.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_78_3_R6M.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_79_2_P38.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_80_2_IlT.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/GJets1/output_81_2_EBU.root

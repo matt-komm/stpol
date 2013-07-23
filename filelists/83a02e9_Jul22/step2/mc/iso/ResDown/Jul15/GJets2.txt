@@ -1,6 +1,7 @@
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/GJets2/output_1_2_bSU.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/GJets2/output_2_2_GrV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/GJets2/output_3_2_Dz2.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/GJets2/output_4_3_mgZ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/GJets2/output_5_2_DsZ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/GJets2/output_6_2_7X3.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/GJets2/output_7_2_fUD.root

@@ -38,6 +38,12 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_38_2_gsJ
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_39_2_B2N.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_41_2_QBi.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_42_2_ZQv.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_43_2_8bD.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_44_2_GPy.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_45_2_5Zj.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_46_2_WTd.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_47_2_RR3.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_48_2_4yA.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_49_2_Dbp.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_50_2_HfU.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_51_2_EJF.root
@@ -64,6 +70,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_71_2_MoU
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_72_2_Ghs.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_73_2_Nu3.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_74_2_4xE.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_75_2_RrM.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_76_2_Hfj.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_77_2_mVg.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_78_2_3mr.root
@@ -72,6 +79,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_80_2_82s
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_81_2_nGz.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_82_2_vin.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_83_2_VFx.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_84_2_bWR.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_85_2_2Xi.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_86_2_G8p.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/DYJets/output_87_2_eos.root

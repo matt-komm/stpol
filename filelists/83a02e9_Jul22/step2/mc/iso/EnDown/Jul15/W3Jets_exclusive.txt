@@ -34,6 +34,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_34_2_Sez.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_35_2_cLA.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_36_2_A8O.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_37_2_5ZA.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_38_2_L4l.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_39_2_j7W.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_40_2_y0A.root
@@ -64,6 +65,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_66_2_3vq.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_67_2_Y4a.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_68_2_WG9.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_69_2_3ez.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_70_2_xvV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_71_2_TqQ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_72_2_qot.root
@@ -87,6 +89,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_90_2_NAK.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_91_2_iPA.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_92_2_WU7.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_93_3_xPL.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_94_2_Dmy.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_95_2_WmE.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_96_2_V6V.root
@@ -446,6 +449,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_453_2_aX4.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_454_2_Gxc.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_455_2_wzz.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_456_3_Wae.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_457_2_3KS.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_458_2_vN2.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_459_2_Z4a.root
@@ -485,6 +489,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_493_2_Mrm.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_494_2_BwG.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_495_2_v3P.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_496_2_V2v.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_497_2_X2N.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_498_2_1PI.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_499_2_aU2.root
@@ -497,10 +502,12 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_506_2_2da.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_507_2_SYc.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_508_2_f0E.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_509_3_80g.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_510_2_Wg8.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_511_2_WYY.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_512_2_WOg.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_513_2_VwH.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_514_2_F7M.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_515_2_9w0.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_516_2_H37.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_517_2_kOB.root
@@ -530,6 +537,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_541_2_ijI.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_542_2_X0J.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_543_2_uR7.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_544_2_3Ne.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_545_2_4qH.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_546_2_k3e.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_547_2_986.root
@@ -548,6 +556,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_560_2_f08.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_561_2_UQS.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_562_2_128.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_563_3_BAp.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_564_2_ahm.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_565_2_NYq.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/W3Jets_exclusive/output_566_2_KS4.root

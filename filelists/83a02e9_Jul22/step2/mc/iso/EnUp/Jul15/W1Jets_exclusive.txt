@@ -42,6 +42,8 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_4
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_42_2_6ig.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_43_2_Upx.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_44_2_JrJ.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_45_3_Fxs.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_46_3_JEI.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_47_2_pba.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_48_2_scF.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_49_2_wR4.root
@@ -137,6 +139,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_1
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_140_2_jfV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_141_2_TBq.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_142_2_bVI.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_143_3_OE1.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_144_2_h9R.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_145_2_ft5.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_146_2_Sl7.root
@@ -155,6 +158,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_1
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_160_2_Q2l.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_161_2_DCP.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_162_2_BQA.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_164_2_G7t.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_165_2_bnm.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_166_2_0A2.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W1Jets_exclusive/output_167_2_CeF.root

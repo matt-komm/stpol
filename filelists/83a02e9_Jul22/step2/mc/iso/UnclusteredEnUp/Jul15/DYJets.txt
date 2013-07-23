@@ -42,9 +42,14 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_44_2_3D8.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_45_2_2UJ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_46_2_1Y5.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_47_2_oqf.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_48_2_hpg.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_49_2_mhO.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_50_2_svq.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_51_2_TaQ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_52_2_CQI.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_53_2_Fgh.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_54_2_xvG.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_55_2_B6Z.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_56_2_gf1.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_57_2_5AM.root
@@ -74,6 +79,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_81_2_RzK.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_82_2_KQh.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_83_2_0Bj.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_84_2_oWC.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_86_2_klJ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_87_2_IoF.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnUp/DYJets/output_88_2_E2B.root
