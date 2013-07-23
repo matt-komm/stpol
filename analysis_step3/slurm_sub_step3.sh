@@ -24,7 +24,7 @@ if [[ ! -s $INFILE ]]; then
 fi
 
 #split input file into N-line pieces
-split $INFILE -a4 -l 50 -d
+split $INFILE -a4 -l 10 -d
 for file in x*
 do
     echo "Submitting step3 job $CONF on file $file"
