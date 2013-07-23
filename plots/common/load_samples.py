@@ -3,8 +3,9 @@ from plots.common.sample import Sample
 from plots.common.histogram import Histogram
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
 
-def load_samples(systematic="nominal", sherpa=False, sherpa_reweighting=None):
+def load_samples(systematic="nominal"):
     #datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "iso", "nominal"))
+    #FIXME: make independent of machine (no reference to specific directories like out_step3_06_01)
     samples2 = None
     if systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
         datadir = "/".join((os.environ["STPOL_DIR"], "out_step3_06_01", "mu", "iso", systematic))
@@ -22,6 +23,10 @@ def load_samples(systematic="nominal", sherpa=False, sherpa_reweighting=None):
     #samples["SingleMu_aiso"] = Sample.fromFile("/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "antiiso", "Nominal", "SingleMu.root")))
     wzjets = ["DYJets", "WW", "WZ", "ZZ"]
     wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
+    
+
+
+
     if systematic in "nominal":
         samples["SingleMu_aiso"] = Sample.fromFile("/".join((os.environ["STPOL_DIR"], "step3_mva_temp", "mu", "antiiso", systematic, "SingleMu.root")))
         sampnames = (
@@ -91,7 +96,7 @@ def load_samples(systematic="nominal", sherpa=False, sherpa_reweighting=None):
     return (samples, sampnames)
     
 def get_qcd_scale_factor():
-    #FIXME - automate
+    #FIXME - automate, take from some "central" file
     return 0.912881608
 
 def create_histogram_for_fit(sample_name, sample, weight_str, cut_str_iso, cut_str_antiiso, var="abs(eta_lj)", plot_range=[15, 0, 4.5]):
@@ -101,11 +106,11 @@ def create_histogram_for_fit(sample_name, sample, weight_str, cut_str_iso, cut_s
         if "sherpa" in sample.name:
             weight_str += "*gen_weight"
         hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, plot_range=plot_range)
-        hist.hist.Scale(sample.lumiScaleFactor(lumi))
+        hist.Scale(sample.lumiScaleFactor(lumi))
         #hist.normalize_lumi(lumi)
     elif sample_name == "DATA":   #no weights here
         hist = sample.drawHistogram(var, cut_str_iso, weight="1.0", plot_range=plot_range)
     elif sample_name in "qcd":   #take from antiiso data
         hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", plot_range=plot_range)
-        hist.hist.Scale(get_qcd_scale_factor())
+        hist.Scale(get_qcd_scale_factor())
     return hist

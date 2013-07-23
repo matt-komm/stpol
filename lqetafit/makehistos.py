@@ -83,11 +83,11 @@ def write_histogram(hname, weight, samples, sn, sampn, cuts, cuts_antiiso):
     outfile.cd() #Must cd after histogram creation
                             
     #Write histogram to file
-    logging.info("Writing histogram %s to file %s" % (hist.hist.GetName(), outfile.GetPath()))
-    logging.info("%i entries, %.2f events" % (hist.hist.GetEntries(), hist.hist.Integral()))
-    hist.hist.SetName(hname)
-    hist.update(file=outfile)
-    hist.hist.Write()
+    logging.info("Writing histogram %s to file %s" % (hist.GetName(), outfile.GetPath()))
+    logging.info("%i entries, %.2f events" % (hist.GetEntries(), hist.Integral()))
+    hist.SetName(hname)
+    hist.SetDirectory(outfile)
+    #hist.hist.Write()
     outfile.Write()
     outfile.Close()
 
