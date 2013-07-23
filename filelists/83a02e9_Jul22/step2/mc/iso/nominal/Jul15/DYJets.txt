@@ -51,6 +51,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/DYJets/output_50_1_P4D
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/DYJets/output_51_1_CQr.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/DYJets/output_52_1_11a.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/DYJets/output_53_1_S9t.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/DYJets/output_54_3_p4f.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/DYJets/output_55_1_lli.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/DYJets/output_56_1_0Ey.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/DYJets/output_57_1_r90.root
