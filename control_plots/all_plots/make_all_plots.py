@@ -4,8 +4,10 @@ import os
 
 import logging
 logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("make_all_plots")
+logger.setLevel(logging.DEBUG)
 
-
+import argparse
 import ROOT
 ROOT.gROOT.SetBatch(True)
 import plots
@@ -21,7 +23,6 @@ import plots.common.pretty_names as pretty_names
 from plots.common.utils import *
 import random
 from array import array
-import argparse
 import plots.common.tdrstyle as tdrstyle
 import rootpy
 
@@ -35,7 +36,7 @@ lumis = {
 tree='Events'
 if __name__=="__main__":
     tdrstyle.tdrstyle()
-    
+
     #rootpy.log.basic_config_colorized()
 
     parser = argparse.ArgumentParser(
@@ -80,8 +81,9 @@ if __name__=="__main__":
     for f in flist:
         samples[f] = Sample.fromFile(f, tree_name=tree)
 
-    hists_mc = dict()
-    hists_data = dict()
+    samples_antiiso = Sample.fromDirectory(
+        "%s/%s/data/antiiso/Jul15" % (args.indir, proc)
+    )
 
     for pd in args.plots:
         if not plot_defs[pd]['enabled'] and len(args.plots) > 1:
@@ -98,41 +100,44 @@ if __name__=="__main__":
         weight_str = "pu_weight*b_weight_nominal*muon_IsoWeight*muon_IDWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
 
         plot_range = plot_defs[pd]['range']
+        
         hist_qcd = None
+        hists_mc = dict()
+        hists_data = dict()
         for name, sample in samples.items():
-            logging.info("Starting to plot %s" % name)
+            logger.info("Starting to plot %s" % name)
             if sample.isMC:
                 hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
                 hist.Scale(sample.lumiScaleFactor(lumi))
                 hists_mc[sample.name] = hist
                 Styling.mc_style(hists_mc[sample.name], sample.name)
-            elif name == "data_aiso" and plot_defs[pd]['estQcd'] and proc == 'ele':
-                cv='mu_iso'
-                lb=0.3
-                if proc == 'ele':
-                    cv='el_iso'
-                    lb=0.1
-                qcd_cut = cut*Cut('deltaR_lj>0.3 && deltaR_bj>0.3 && '+cv+'>'+str(lb)+' & '+cv+'<0.5')
-                hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
-                hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
-                hists_mc['QCD'] = hist_qcd
-                hists_mc['QCD'].SetTitle('QCD')
-                Styling.mc_style(hists_mc['QCD'], 'QCD')
             else:
                 hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
                 hist_data.SetTitle('Data')
                 Styling.data_style(hist_data)
                 hists_data[name] = hist_data
 
+
+
+        for name, sample in samples_antiiso.items():
+                qcd_cut = cut
+                __hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
+                __hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
+                logger.debug("hist=%s" % str(hist_qcd))
+                if not hist_qcd:
+                    hist_qcd = __hist_qcd
+                else:
+                    hist_qcd += __hist_qcd
+                Styling.mc_style(hist_qcd, 'QCD')
+
         if len(hists_data.values())==0:
             raise Exception("Couldn't draw the data histogram")
 
         #Combine the subsamples to physical processes
         add=[]
-        if hist_qcd:
-            add=[hist_qcd]
+        #if hist_qcd:
+        #    add=[hist_qcd]
         hist_data = sum(hists_data.values())
-        logging.info("hists=%s" % hists_mc)
         merged_hists = add+merge_hists(hists_mc, merge_cmds).values()
         leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
@@ -166,7 +171,7 @@ if __name__=="__main__":
         canv = ROOT.TCanvas()
 
         stacks_d = OrderedDict()
-        stacks_d["mc"] = merged_hists #+[hist_qcd]
+        stacks_d["mc"] = merged_hists
         stacks_d["data"] = [hist_data]
         #xlab = 'cos #theta'
         #ylab = 'N / 0.1'
