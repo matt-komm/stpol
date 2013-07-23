@@ -1,0 +1,3 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_1_2_jxc.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_15_2_bAG.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_17_2_Ufe.root
