@@ -160,11 +160,19 @@ int main(int argc, char* argv[]) {
     rng->SetSeed();
 
     TFile* fi = new TFile(infile.c_str(), "UPDATE");
+    if(!fi) {
+        cerr << "Couldn't open " << infile << endl;
+        throw 1;
+    }
     fi->cd("trees");
     TTree* events = (TTree*)fi->Get("trees/Events");
+    
     TTree* weight_tree = new TTree("WJets_weights", "WJets_weights");
-
-    TFile* hists_fi0 = new TFile("$STPOL_DIR/CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario0.root", "UPDATE");
+    const char* weight_file = "$STPOL_DIR/CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario0.root";
+    TFile* hists_fi0 = new TFile(weight_file, "UPDATE");
+    if(!weight_tree) {
+        cerr << "Couldn't open " << weight_file << endl;
+    }
 
     std::map<WJetsClassification0, TH1F*> ratio_hists0;
     ratio_hists0[Wbb] = (TH1F*)hists_fi0->Get("ratio__Wbb");
