@@ -120,7 +120,7 @@ if __name__=="__main__":
                 hists_data[name] = hist_data
 
         for name, sample in samples_antiiso.items():
-                qcd_cut = cut
+                qcd_cut = cut*Cuts.deltaR(0.5)
                 __hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
                 __hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
                 logger.debug("hist=%s" % str(hist_qcd))
@@ -135,8 +135,8 @@ if __name__=="__main__":
 
         #Combine the subsamples to physical processes
         add=[]
-        #if hist_qcd:
-        #    add=[hist_qcd]
+        if hist_qcd:
+            add=[hist_qcd]
         hist_data = sum(hists_data.values())
         merged_hists = add+merge_hists(hists_mc, merge_cmds).values()
         leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])

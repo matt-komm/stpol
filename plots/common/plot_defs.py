@@ -43,6 +43,20 @@ plot_defs['cos_th_final']={
     'mucut': cutlist['2j1t']*cutlist['final_mu']
 }
 
+plot_defs['dr_bj']={
+    'enabled': True,
+    'var': 'deltaR_bj',
+    'range': [20,0,5],
+    'iso': True,
+    'estQcd': 'final',
+    'gev': False,
+    'log': False,
+    'xlab': '#delta R(l,b)',
+    'labloc': 'top-left',
+    'elecut': cutlist['2j1t']*cutlist['final_ele'],
+    'mucut': cutlist['2j1t']*cutlist['final_mu']
+}
+
 plot_defs['cos_th_2j0t']={
     'enabled': True,
     'var': 'cos_theta',
