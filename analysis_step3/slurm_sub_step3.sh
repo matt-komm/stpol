@@ -18,6 +18,11 @@ OUTDIR=`readlink -f $OUTDIR`
 cd $OUTDIR
 echo $0 $@ > $OUTDIR/job
 
+if [[ ! -s $INFILE ]]; then
+    echo "Input file is empty, exiting!"
+    exit 0
+fi
+
 #split input file into N-line pieces
 split $INFILE -a4 -l 50 -d
 for file in x*
