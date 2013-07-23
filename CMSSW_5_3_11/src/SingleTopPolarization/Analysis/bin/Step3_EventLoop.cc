@@ -113,9 +113,9 @@ public:
 
         branch_vars.vars_float["mu_iso"] = BranchVars::def_val;
         
-	    branch_vars.vars_int["mu_charge"] = BranchVars::def_val_int;
-	    branch_vars.vars_int["mu_mother_id"] = BranchVars::def_val_int;
-	    branch_vars.vars_int["mu_trigger_match"] = BranchVars::def_val_int;
+        branch_vars.vars_int["mu_charge"] = BranchVars::def_val_int;
+        branch_vars.vars_int["mu_mother_id"] = BranchVars::def_val_int;
+        branch_vars.vars_int["mu_trigger_match"] = BranchVars::def_val_int;
         
         branch_vars.vars_int["n_muons"] = BranchVars::def_val;
         branch_vars.vars_int["n_eles"] = BranchVars::def_val;
@@ -150,9 +150,9 @@ public:
 
         muonRelIsoSrc = pars.getParameter<edm::InputTag>("muonRelIsoSrc");
         
-	    muonDecayTreeSrc = pars.getParameter<edm::InputTag>("muonDecayTreeSrc");
-	    muonChargeSrc = pars.getParameter<edm::InputTag>("muonChargeSrc");
-	    muonTriggerMatchSrc = pars.getParameter<edm::InputTag>("muonTriggerMatchSrc");
+        muonDecayTreeSrc = pars.getParameter<edm::InputTag>("muonDecayTreeSrc");
+        muonChargeSrc = pars.getParameter<edm::InputTag>("muonChargeSrc");
+        muonTriggerMatchSrc = pars.getParameter<edm::InputTag>("muonTriggerMatchSrc");
         
         if(doControlVars) {
             muonDbSrc = pars.getParameter<edm::InputTag>("muonDbSrc");
@@ -184,8 +184,8 @@ public:
 
         branch_vars.vars_float["mu_iso"] = get_collection_n<float>(event, muonRelIsoSrc);
 
-	    branch_vars.vars_int["mu_charge"] = (int)get_collection_n<float>(event, muonChargeSrc);
-	    branch_vars.vars_int["mu_trigger_match"] = (int)get_collection_n<float>(event, muonTriggerMatchSrc);
+        branch_vars.vars_int["mu_charge"] = (int)get_collection_n<float>(event, muonChargeSrc);
+        branch_vars.vars_int["mu_trigger_match"] = (int)get_collection_n<float>(event, muonTriggerMatchSrc);
         
         const std::string decay_tree = get_collection<std::string>(event, muonDecayTreeSrc, default_str);
         if(decay_tree.size()>0) {
@@ -594,11 +594,10 @@ public:
     edm::InputTag electronIDWeightDownSrc;
     edm::InputTag electronTriggerWeightDownSrc;
     
+    bool isMC;
     bool doWeights;
     bool doWeightSys;
     const string leptonChannel; // needed for calculating the total scale factor (depending on the channel)
-    float el_weight;
-    float mu_weight;
     
     void initialize_branches() {
       branch_vars.vars_float["b_weight_nominal"] = 1.0;
@@ -613,22 +612,22 @@ public:
       branch_vars.vars_float["SF_total"] = 1.0;
 
       if( doWeights && doWeightSys ) {
-	branch_vars.vars_float["b_weight_nominal_Lup"] = 1.0;
-	branch_vars.vars_float["b_weight_nominal_Ldown"] = 1.0;
-	branch_vars.vars_float["b_weight_nominal_BCup"] = 1.0;
-	branch_vars.vars_float["b_weight_nominal_BCdown"] = 1.0;
-        
-	branch_vars.vars_float["muon_IDWeight_up"] = 1.0;
-	branch_vars.vars_float["muon_IDWeight_down"] = 1.0;
-	branch_vars.vars_float["muon_IsoWeight_up"] = 1.0;
-	branch_vars.vars_float["muon_IsoWeight_down"] = 1.0;
-	branch_vars.vars_float["muon_TriggerWeight_up"] = 1.0;
-	branch_vars.vars_float["muon_TriggerWeight_down"] = 1.0;
-        
-	branch_vars.vars_float["electron_IDWeight_up"] = 1.0;
-	branch_vars.vars_float["electron_IDWeight_down"] = 1.0;
-	branch_vars.vars_float["electron_TriggerWeight_up"] = 1.0;
-	branch_vars.vars_float["electron_TriggerWeight_down"] = 1.0;
+        branch_vars.vars_float["b_weight_nominal_Lup"] = 1.0;
+        branch_vars.vars_float["b_weight_nominal_Ldown"] = 1.0;
+        branch_vars.vars_float["b_weight_nominal_BCup"] = 1.0;
+        branch_vars.vars_float["b_weight_nominal_BCdown"] = 1.0;
+            
+        branch_vars.vars_float["muon_IDWeight_up"] = 1.0;
+        branch_vars.vars_float["muon_IDWeight_down"] = 1.0;
+        branch_vars.vars_float["muon_IsoWeight_up"] = 1.0;
+        branch_vars.vars_float["muon_IsoWeight_down"] = 1.0;
+        branch_vars.vars_float["muon_TriggerWeight_up"] = 1.0;
+        branch_vars.vars_float["muon_TriggerWeight_down"] = 1.0;
+            
+        branch_vars.vars_float["electron_IDWeight_up"] = 1.0;
+        branch_vars.vars_float["electron_IDWeight_down"] = 1.0;
+        branch_vars.vars_float["electron_TriggerWeight_up"] = 1.0;
+        branch_vars.vars_float["electron_TriggerWeight_down"] = 1.0;
       }
     }
     
@@ -640,6 +639,7 @@ public:
             std::cerr << "Lepton channel must be 'mu' or 'ele'" << std::endl;
             throw 1;
         }
+        isMC = pars.getParameter<bool>("isMC");
         doWeights = pars.getParameter<bool>("doWeights");
         doWeightSys = pars.getParameter<bool>("doWeightSys");
 
@@ -700,20 +700,20 @@ public:
             branch_vars.vars_float["electron_IDWeight"] = get_collection<double>(event, electronIDWeightSrc, 0.0);
             branch_vars.vars_float["electron_TriggerWeight"] = get_collection<double>(event, electronTriggerWeightSrc, 0.0);
             
-            mu_weight = branch_vars.vars_float["muon_IDWeight"]*
-                branch_vars.vars_float["muon_IsoWeight"]*
-                branch_vars.vars_float["muon_TriggerWeight"];
-            el_weight = branch_vars.vars_float["electron_IDWeight"]*
-                branch_vars.vars_float["electron_TriggerWeight"];
+            branch_vars.vars_float["muon_TriggerWeight"];
+            
+            branch_vars.vars_float["SF_total"] = branch_vars.vars_float["b_weight_nominal"] * branch_vars.vars_float["pu_weight"];
             
             if( leptonChannel == "mu") {
-                branch_vars.vars_float["SF_total"] = branch_vars.vars_float["b_weight_nominal"]*branch_vars.vars_float["pu_weight"]*mu_weight;
+                float mu_weight = branch_vars.vars_float["muon_IDWeight"] * branch_vars.vars_float["muon_IsoWeight"];
+                branch_vars.vars_float["SF_total"] = branch_vars.vars_float["SF_total"] * mu_weight;
             }
             else if( leptonChannel == "ele") {
-                branch_vars.vars_float["SF_total"] = branch_vars.vars_float["b_weight_nominal"]*branch_vars.vars_float["pu_weight"]*el_weight;
+                float el_weight = branch_vars.vars_float["electron_IDWeight"] * branch_vars.vars_float["electron_TriggerWeight"];
+                branch_vars.vars_float["SF_total"] = branch_vars.vars_float["SF_total"] * el_weight;
             }
         }
-	
+    
         if( doWeights && doWeightSys ) {
             branch_vars.vars_float["b_weight_nominal_Lup"] = get_collection<float>(event, bWeightNominalLUpSrc, 0.0);
             branch_vars.vars_float["b_weight_nominal_Ldown"] = get_collection<float>(event, bWeightNominalLDownSrc, 0.0);
@@ -734,12 +734,16 @@ public:
         }
         
         //Remove NaN weights
-        auto not_nan = [&branch_vars] (const std::string& key) {
+        auto not_nan = [&branch_vars, &isMC] (const std::string& key) {
             if (branch_vars.vars_float[key] != branch_vars.vars_float[key]) {
                 branch_vars.vars_float[key] = 0.0;
             }
+            //In case of data weight will be unity
+            if(!isMC)
+                branch_vars.vars_float[key] = 1.0;
         };
 
+        //Post-regularize weight branches (set to 0/unity in case of problems(/data)
         if(doWeights) {    
             not_nan("b_weight_nominal");
             not_nan("pu_weight");
