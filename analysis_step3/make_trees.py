@@ -60,7 +60,7 @@ if __name__=="__main__":
                 #Apply the processing cuts
                 if not is_signal or (is_signal and cmdline_args.applyCutsToSignal):
                     args += " " + cmdline_args.cutStringProcessed
-                    nlines = 10
+                    nlines = 50
                 else:
                     nlines = 5
 
