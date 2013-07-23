@@ -74,6 +74,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_74_3_Qzj.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_75_3_Kgq.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_76_3_Fzs.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_77_3_bRd.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_78_3_TJm.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_79_4_1Zw.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_80_3_0iQ.root
@@ -226,6 +227,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_227_3_EDb.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_228_3_Hbp.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_229_3_iDp.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_230_4_AGK.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_231_3_n79.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_232_3_r1D.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_233_3_ykd.root
@@ -321,6 +323,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_323_3_doV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_324_3_OvX.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_325_3_hoB.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_326_4_dyV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_327_3_raF.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_328_3_CxW.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/W4Jets_exclusive/output_329_3_pOW.root

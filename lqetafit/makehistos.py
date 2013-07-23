@@ -8,10 +8,9 @@ import subprocess
 import shutil
 from plots.common.load_samples import *
 
-#outdir = "histos" #NB: please don't use such relative paths, especcially when doing rmtree. data can be destroyed
 outdir = "/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"])
 
-NOMINAL_WEIGHT = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight"
+NOMINAL_WEIGHT = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
 
 def makehistos(cuts, cuts_antiiso, systematics):
     #Draw the histograms of eta_lj in the final selection sans the eta cut
@@ -46,9 +45,9 @@ def makehistos(cuts, cuts_antiiso, systematics):
     hadd_histos(outdir)
 
 def make_histos_for_syst(main_syst, sub_systs, cuts, cuts_antiiso):
-        if sub_systs.keys()[0] in ["plus", "minus"] and main_syst in ["Res", "En", "UnclusteredEn"]:
+        if sub_systs.keys()[0] in ["up", "down"] and main_syst in ["Res", "En", "UnclusteredEn"]:
             ss_type=sub_systs[sub_systs.keys()[0]]
-        elif sub_systs.keys()[0] in ["plus", "minus"]:
+        elif sub_systs.keys()[0] in ["up", "down"]:
             ss_type=main_syst + "__" + sub_systs.keys()[0]
         else:
             ss_type=main_syst
@@ -113,7 +112,7 @@ if __name__=="__main__":
     systematics = {}
     systematics["nominal"]={}
     systematics["nominal"]["nominal"] = NOMINAL_WEIGHT
-    systs_infile = ["pileup", "btaggingBC", "btaggingL", "muonID", "muonIso", "muonTrigger"]
+    systs_infile = ["pileup", "btaggingBC", "btaggingL", "muonID", "muonIso", "muonTrigger", "wjets_flat", "wjets_shape"]
     systs_infile_file=["En", "Res", "UnclusteredEn"]
     for sys in systs_infile:
         systematics["nominal"][sys] = {}
@@ -121,46 +120,45 @@ if __name__=="__main__":
         systematics[sys] = {}
 
     #FIXME: add pileup variations
-    systematics["nominal"]["pileup"]["plus"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight"
-    systematics["nominal"]["pileup"]["minus"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight"
-    systematics["nominal"]["btaggingBC"]["plus"] = "pu_weight*b_weight_nominal_BCup*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight"
-    systematics["nominal"]["btaggingBC"]["minus"] = "pu_weight*b_weight_nominal_BCdown*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight"
-    systematics["nominal"]["btaggingL"]["plus"] = "pu_weight*b_weight_nominal_Lup*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight"
-    systematics["nominal"]["btaggingL"]["minus"] = "pu_weight*b_weight_nominal_Ldown*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight"
-    systematics["nominal"]["muonID"]["plus"] = "pu_weight*b_weight_nominal*muon_IDWeight_up*muon_IsoWeight*muon_TriggerWeight"
-    systematics["nominal"]["muonID"]["minus"] = "pu_weight*b_weight_nominal*muon_IDWeight_down*muon_IsoWeight*muon_TriggerWeight"
-    systematics["nominal"]["muonIso"]["plus"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight_up*muon_TriggerWeight"
-    systematics["nominal"]["muonIso"]["minus"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight_down*muon_TriggerWeight"
-    systematics["nominal"]["muonTrigger"]["plus"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight_up"
-    systematics["nominal"]["muonTrigger"]["minus"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight_down"
+    systematics["nominal"]["pileup"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["pileup"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["btaggingBC"]["up"] = "pu_weight*b_weight_nominal_BCup*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["btaggingBC"]["down"] = "pu_weight*b_weight_nominal_BCdown*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["btaggingL"]["up"] = "pu_weight*b_weight_nominal_Lup*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["btaggingL"]["down"] = "pu_weight*b_weight_nominal_Ldown*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["muonID"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight_up*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["muonID"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight_down*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["muonIso"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight_up*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["muonIso"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight_down*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["muonTrigger"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight_up*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["muonTrigger"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight_down*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["wjets_flat"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight_up*wjets_mg_flavour_flat_weight_up*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["wjets_flat"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight_down*wjets_mg_flavour_flat_weight_down*wjets_mg_flavour_shape_weight"
+    systematics["nominal"]["wjets_shape"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight_up*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight_up"
+    systematics["nominal"]["wjets_shape"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight_down*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight_down"
     #TODO: Add PDF-s
-    #TODO: Add W+Jets
 
-    #TODO: systematics from separate files
-    #systs_inflile = , 'mass','top_scale','tchan_scale','matching']
     systematics["partial"] = {}
     #systematics["partial"]["mass"] = {}
-    #systematics["partial"]["mass"]["minus"] = {}
-    #systematics["partial"]["mass"]["plus"] = {}
+    #systematics["partial"]["mass"]["down"] = {}
+    #systematics["partial"]["mass"]["up"] = {}
     systematics["partial"]["tchan_scale"] = {}
-    systematics["partial"]["tchan_scale"]["minus"] = {}
-    systematics["partial"]["tchan_scale"]["plus"] = {}
+    systematics["partial"]["tchan_scale"]["down"] = {}
+    systematics["partial"]["tchan_scale"]["up"] = {}
     systematics["partial"]["ttbar_scale"] = {}
-    systematics["partial"]["ttbar_scale"]["minus"] = {}
-    systematics["partial"]["ttbar_scale"]["plus"] = {}
+    systematics["partial"]["ttbar_scale"]["down"] = {}
+    systematics["partial"]["ttbar_scale"]["up"] = {}
     systematics["partial"]["ttbar_matching"] = {}
-    systematics["partial"]["ttbar_matching"]["minus"] = {}
-    systematics["partial"]["ttbar_matching"]["plus"] = {}
-
-    #TODO JES, JER, UncE ['en','unclusen'
-    systematics["Res"]["minus"]="ResDown"
-    systematics["Res"]["plus"]="ResUp"
-    systematics["En"]["minus"]="EnDown"
-    systematics["En"]["plus"]="EnDown"
-    systematics["UnclusteredEn"]["minus"]="UnclusteredEnDown"
-    systematics["UnclusteredEn"]["plus"]="UnclusteredEnUp"
-
-
+    systematics["partial"]["ttbar_matching"]["down"] = {}
+    systematics["partial"]["ttbar_matching"]["up"] = {}
+        
+    systematics["Res"]["down"]="ResDown"
+    systematics["Res"]["up"]="ResUp"
+    systematics["En"]["down"]="EnDown"
+    systematics["En"]["up"]="EnDown"    
+    systematics["UnclusteredEn"]["down"]="UnclusteredEnDown"
+    systematics["UnclusteredEn"]["up"]="UnclusteredEnUp"    
+    
     cut_str = "n_jets==2 && n_tags==1 && top_mass>130 && top_mass<220 && rms_lj<0.025 && mt_mu>50"
     cut_str_antiiso = cut_str+" && mu_iso>0.3 && mu_iso<0.5"
 

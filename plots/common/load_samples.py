@@ -42,44 +42,43 @@ def load_samples(systematic="nominal"):
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_FullLept", "TTJets_SemiLept"]),
             ("wzjets", wzjets),
         )
-    elif systematic == "mass__plus":
+    elif systematic == "mass__up":
         sampnames = (
             ("tchan", ["TToLeptons_t-channel_mass166_5", "TbarToLeptons_t-channel_mass178_5"]),
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass178_5"]),
         )
-    elif systematic == "mass__minus":
+    elif systematic == "mass__down":
         sampnames = (
             ("tchan", ["TToLeptons_t-channel_mass166_5", "TbarToLeptons_t-channel_mass166_5"]),
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass166_5"]),
         )
-    elif systematic == "tchan_scale__plus":
+    elif systematic == "tchan_scale__up":
         sampnames = (
             #("tchan", ["TToLeptons_t-channel_scaleup", "TBarToLeptons_t-channel_scaleup"]),
             ("tchan", ["TToLeptons_t-channel_scaleup", "Tbar_t_scaleup"]),
         )
 
-    elif systematic == "tchan_scale__minus":
+    elif systematic == "tchan_scale__down":
         sampnames = (
             #("tchan", ["TToLeptons_t-channel_scaledown", "TBarToLeptons_t-channel_scaledown"]),
             ("tchan", ["TToLeptons_t-channel_scaledown", "Tbar_t_scaledown"]),
         )
-
-    elif systematic == "ttbar_scale__plus":
+    elif systematic == "ttbar_scale__up":
         sampnames = (
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_scaleup"]),
         )
 
-    elif systematic == "ttbar_scale__minus":
+    elif systematic == "ttbar_scale__down":
         sampnames = (
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_scaledown"]),
         )
 
-    elif systematic == "ttbar_matching__plus":
+    elif systematic == "ttbar_matching__up":
         sampnames = (
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_matchingup"]),
         )
 
-    elif systematic == "ttbar_matching__minus":
+    elif systematic == "ttbar_matching__down":
         sampnames = (
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_matchingdown"]),
         )
@@ -98,9 +97,9 @@ def get_qcd_scale_factor():
     #FIXME - automate, take from some "central" file
     return 0.912881608
 
-def create_histogram_for_fit(sample_name, sample, weight_str, cut_str_iso, cut_str_antiiso, var="abs(eta_lj)", plot_range=[15, 0, 4.5]):
+def create_histogram_for_fit(sample_name, sample, weight_str, cut_str_iso, cut_str_antiiso, var="abs(eta_lj)", plot_range=[15, 0, 5]):
     #Create histogram with sample metadata
-    lumi=lumi_iso["mu"] #FIXME: Add electorns later as a parameter
+    lumi=lumi_iso["mu"] #FIXME: Add electrons later as a parameter
     if sample_name not in ["DATA", "qcd"]:
         if "sherpa" in sample.name:
             weight_str += "*gen_weight"

@@ -88,8 +88,17 @@ class Weight:
 
 class Weights:
     @staticmethod
-    def total(systematic="nominal"):
+    def total(lepton, systematic="nominal"):
+
+        #PU weight applied always
         w = Weight("pu_weight")
+
+        
+        if lepton in ["mu", "ele"]:
+            w *= getattr(Weights, lepton)
+        else:
+            raise ValueError("Lepton channel %s not defined" % channel)
+
         if systematic=="nominal":
             w*= Weight("b_weight_nominal")
         else:
@@ -119,9 +128,9 @@ class Weights:
             raise ValueError("Unrecognized systematic=%s" % systematic) 
  
     mu = Weight("muon_IsoWeight")*Weight("muon_IDWeight")*Weight("muon_TriggerWeight")
+    ele = Weight("electron_IDWeight")*Weight("electron_TriggerWeight")
     sherpa_weight = Weight("gen_weight")
     sherpa_flavour_weight = Weight("wjets_sh_flavour_flat_weight")
-    #FIXME: put ele weight here
 
 flavour_scenarios = dict()
 flavour_scenarios[0] = ["Wbb", "Wcc", "Wbc", "WbX", "WcX", "WgX", "Wgg", "WXX"]

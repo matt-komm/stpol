@@ -4,6 +4,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/WZ/output_3_2_wSG.
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/WZ/output_4_2_mI1.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/WZ/output_5_2_Wsy.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/WZ/output_6_2_eJd.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/WZ/output_7_2_Dfu.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/WZ/output_8_2_3Lw.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/WZ/output_9_2_M8U.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/WZ/output_10_2_1KB.root
