@@ -241,15 +241,8 @@ def load_samples(basedir=None):
     if not basedir:
         basedir = os.environ["STPOL_DIR"]
     datadirs = dict()
-    datadirs["iso"] = "/".join((basedir, "step3_latest", "mu" ,"iso", "nominal"))
-    #Use the anti-isolated data for QCD $STPOL_DIR/step3_latest/mu/antiiso/nominal/SingleMu.root
-    # datadirs["antiiso"] = "/".join((basedir, "step3_latest", "mu" ,"antiiso", "nominal"))
+    for root, paths, files in os.path.walk(basedir + "/step3_latest"):
 
-    #Load all the samples in the isolated directory
-    samples = Sample.fromDirectory(datadirs["iso"], out_type="dict", prefix="iso/")
-
-    for name, sample in samples.items():
-            sample.process_name = get_process_name(sample.name)
-    # samples["antiiso/SingleMu"] = Sample.fromFile(datadirs["antiiso"] + "/SingleMu.root")
-
-    return samples
+        rootfiles = filter(lambda x: x.endswith(".root"), files)
+        for fi in rootfiles:
+            print path
