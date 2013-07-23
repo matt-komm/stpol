@@ -40,8 +40,12 @@ if __name__=="__main__":
             print "ERROR: wrong input line %s % fi"
             continue
         #print "Processing report file %s" % fi
+        
+        try:
+            t = Task(fi)
+        except ValueError:
+            continue
 
-        t = Task(fi)
         ofpath = "/".join(fi.replace("crabs", "filelists").split("/")[:-3])
         try:
             os.makedirs(ofpath)

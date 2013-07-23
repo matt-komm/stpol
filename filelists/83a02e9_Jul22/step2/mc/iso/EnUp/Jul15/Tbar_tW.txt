@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/Tbar_tW/output_1_1_08c.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/Tbar_tW/output_2_1_zSL.root
