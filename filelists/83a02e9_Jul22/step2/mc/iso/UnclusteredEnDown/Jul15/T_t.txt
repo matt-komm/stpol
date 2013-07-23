@@ -1,4 +1,6 @@
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/T_t/output_1_2_LtA.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/T_t/output_3_2_Arz.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/T_t/output_4_2_nvD.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/T_t/output_5_2_969.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/T_t/output_6_2_itH.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/T_t/output_7_2_sAh.root

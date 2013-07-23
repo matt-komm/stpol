@@ -40,6 +40,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_FullLept/output_4
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_FullLept/output_41_2_Bm2.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_FullLept/output_42_2_Dat.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_FullLept/output_43_2_f9i.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_FullLept/output_44_2_ZgX.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_FullLept/output_45_2_V3Q.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_FullLept/output_46_2_EtB.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_FullLept/output_47_2_ExK.root

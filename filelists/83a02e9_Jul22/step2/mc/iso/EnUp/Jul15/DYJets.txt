@@ -31,6 +31,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/DYJets/output_31_2_EOx.ro
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/DYJets/output_32_2_iMJ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/DYJets/output_33_2_jyW.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/DYJets/output_34_2_gX1.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/DYJets/output_35_2_Eb3.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/DYJets/output_36_2_Btq.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/DYJets/output_37_2_LMS.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/DYJets/output_38_2_8Rj.root
