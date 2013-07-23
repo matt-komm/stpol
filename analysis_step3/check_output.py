@@ -55,7 +55,7 @@ if __name__=="__main__":
         for rf in runningfiles:
             print "\tR %s" %(root + "/" + rf)
         for ff in failedfiles:
-            print "\tF %s" % ff
+            print "\tF %s" % (root + "/" + ff)
         if len(tasks)!=len(xfiles):
             print "Problem with %s" % root
             print tasks
