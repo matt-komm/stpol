@@ -212,7 +212,7 @@ plot_defs['mva_bdt']={
 }
 
 plot_defs['cos_th_mva_loose']={
-    'enabled': True,
+    'enabled': False,
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
@@ -227,7 +227,7 @@ plot_defs['cos_th_mva_loose']={
 
 
 plot_defs['cos_th_mva_tight']={
-    'enabled': True,
+    'enabled': False,
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,

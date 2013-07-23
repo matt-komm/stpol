@@ -62,6 +62,7 @@ class Dataset:
         out = out.replace("DATASET", self.ds)
         out = out.replace("WORKDIR", workdir)
 
+
         if self.step=="step1":
             if self.do_skimming:
                 cmdline += " doSkimming=True"
@@ -71,13 +72,12 @@ class Dataset:
             if is_fastsim(self.name):
                 cmdline += " runOnFastSim=True"
 
+        elif self.step=="step2":
             if is_sherpa(self.name):
-                cmdline += "isSherpa=True"
+                cmdline += " isSherpa=True"
+            elif is_comphep(self.name):
+                cmdline += " isComphep=True"
 
-            if is_comphep(self.name):
-                cmdline += "isComphep=True"
-
-        if self.step=="step2":
             out = out.replace("SUBCHAN", self.name)
             out = out.replace("OUTDIR", subdir)
         if self.lumi_file:

@@ -23,6 +23,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_22
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_23_2_hU1.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_24_2_u5N.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_25_2_VXQ.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_26_2_47p.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_27_2_izQ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_28_2_AHs.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_29_2_x1b.root

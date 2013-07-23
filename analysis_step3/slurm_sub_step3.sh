@@ -24,7 +24,7 @@ if [[ ! -s $INFILE ]]; then
 fi
 
 #split input file into N-line pieces
-split $INFILE -a4 -l 10 -d
+split $INFILE -a4 -l 5 -d
 for file in x*
 do
     echo "Submitting step3 job $CONF on file $file"
@@ -36,7 +36,6 @@ do
     until `eval $CMD`
     do 
         echo "ERROR!: could not submit slurm job on file $file, retrying after sleep..." >&2
-        sleep 20
+        sleep 0.5
     done 
-    sleep 1
 done

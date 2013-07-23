@@ -19,6 +19,3 @@ def is_signal(sample_name):
 
 def is_mc(name):
     return not "SingleMu" in name or "SingleEle" in name
-
-def get_process_name(sn):
-    pass

@@ -1,2 +1,16 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_1_2_34r.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_2_2_eCM.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_3_2_TJS.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_4_2_sDU.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_6_2_8HD.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_7_2_72t.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_8_2_2xt.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_9_2_h7Z.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_10_2_nhh.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_11_2_ciB.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_12_2_AVj.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_13_2_xbY.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_14_2_1cS.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_15_2_Z7S.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_16_2_8pV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/WZ/output_17_2_AvG.root
