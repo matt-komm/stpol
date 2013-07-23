@@ -37,7 +37,6 @@ do
     until `eval $CMD`
     do 
         echo "ERROR!: could not submit slurm job on file $file, retrying after sleep..." >&2
-        sleep 20
+        sleep 1
     done 
-    sleep 1
 done
