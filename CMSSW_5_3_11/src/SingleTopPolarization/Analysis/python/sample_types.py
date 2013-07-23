@@ -1,5 +1,7 @@
 import re
 
+
+
 def is_wjets_mg(sample_name):
     if re.match("w[0-9]jets_exclusive.*", sample_name.lower()):
     	return True
@@ -17,3 +19,6 @@ def is_signal(sample_name):
 
 def is_mc(name):
     return not "SingleMu" in name or "SingleEle" in name
+
+def get_process_name(sn):
+    pass

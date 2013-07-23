@@ -78,7 +78,7 @@ const std::string default_str("");
 class MuonCuts : public CutsBase {
 public:
     bool cutOnIso;
-    bool reverseIsoCut;
+    //bool reverseIsoCut;
     bool requireOneMuon;
     bool doControlVars;
     
@@ -139,10 +139,10 @@ public:
         initialize_branches();
         requireOneMuon = pars.getParameter<bool>("requireOneMuon");
         
-        cutOnIso = pars.getParameter<bool>("cutOnIso");
-        reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
-        isoCut = (float)pars.getParameter<double>("isoCut");
-        isoCutHigh = (float)pars.getParameter<double>("isoCutHigh");
+        //cutOnIso = pars.getParameter<bool>("cutOnIso");
+        //reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
+        //isoCut = (float)pars.getParameter<double>("isoCut");
+        //isoCutHigh = (float)pars.getParameter<double>("isoCutHigh");
         
         muonPtSrc = pars.getParameter<edm::InputTag>("muonPtSrc");
         muonEtaSrc = pars.getParameter<edm::InputTag>("muonEtaSrc");
@@ -203,14 +203,14 @@ public:
             branch_vars.vars_int["mu_stations"] = (int)get_collection_n<float>(event, muonStationsSrc);
         }
         
-        bool passesMuIso = true;
-        if (cutOnIso) {
-            if(!reverseIsoCut)
-                passesMuIso = branch_vars.vars_float["mu_iso"] < isoCut;
-            else
-                passesMuIso = branch_vars.vars_float["mu_iso"] > isoCut && branch_vars.vars_float["mu_iso"] < isoCutHigh;
-        }
-        if(cutOnIso && !passesMuIso) return false;
+        //bool passesMuIso = true;
+        // if (cutOnIso) {
+        //     if(!reverseIsoCut)
+        //         passesMuIso = branch_vars.vars_float["mu_iso"] < isoCut;
+        //     else
+        //         passesMuIso = branch_vars.vars_float["mu_iso"] > isoCut && branch_vars.vars_float["mu_iso"] < isoCutHigh;
+        // }
+        //if(cutOnIso && !passesMuIso) return false;
         
         post_process();
         return true;
@@ -220,9 +220,9 @@ public:
 class ElectronCuts : public CutsBase {
 public:
     bool requireOneElectron;
-    bool cutOnIso;
-    bool reverseIsoCut;
-    float isoCut;
+    //bool cutOnIso;
+    //bool reverseIsoCut;
+    //float isoCut;
     float mvaCut;
     
     edm::InputTag eleCountSrc;
@@ -241,7 +241,7 @@ public:
         branch_vars.vars_int["n_muons"] = BranchVars::def_val_int;
         branch_vars.vars_int["n_eles"] = BranchVars::def_val_int;
         branch_vars.vars_float["el_mva"] = BranchVars::def_val;
-        branch_vars.vars_float["el_reliso"] = BranchVars::def_val;
+        branch_vars.vars_float["el_iso"] = BranchVars::def_val;
 
         branch_vars.vars_float["el_pt"] = BranchVars::def_val;
         branch_vars.vars_float["el_eta"] = BranchVars::def_val;
@@ -257,9 +257,9 @@ public:
     {
         initialize_branches();
         requireOneElectron = pars.getParameter<bool>("requireOneElectron");
-        cutOnIso = pars.getParameter<bool>("cutOnIso");
-        reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
-        isoCut = (float)pars.getParameter<double>("isoCut");
+        //cutOnIso = pars.getParameter<bool>("cutOnIso");
+        //reverseIsoCut = pars.getParameter<bool>("reverseIsoCut");
+        //isoCut = (float)pars.getParameter<double>("isoCut");
         mvaCut = (float)pars.getParameter<double>("mvaCut");
         eleCountSrc = pars.getParameter<edm::InputTag>("eleCountSrc");
         muonCountSrc = pars.getParameter<edm::InputTag>("muonCountSrc");
@@ -286,7 +286,7 @@ public:
         branch_vars.vars_int["n_eles"] = n_eles;
         if( requireOneElectron && ( n_eles!=1 || n_muons !=0) ) return false;
         
-        branch_vars.vars_float["el_reliso"] = get_collection_n<float>(event, electronRelIsoSrc);
+        branch_vars.vars_float["el_iso"] = get_collection_n<float>(event, electronRelIsoSrc);
         branch_vars.vars_float["el_mva"] = get_collection_n<float>(event, electronMvaSrc);
 
         branch_vars.vars_float["el_pt"] = get_collection_n<float>(event, electronPtSrc);
@@ -301,12 +301,12 @@ public:
             branch_vars.vars_int["el_mother_id"] = get_parent(decay_tree, 11);
         }
         
-        bool passesElIso = true;
+        /*bool passesElIso = true;
         if( cutOnIso && !reverseIsoCut ){
             passesElIso = branch_vars.vars_float["el_reliso"] < isoCut && branch_vars.vars_float["el_mva"] > mvaCut;
             if( !passesElIso )
                 return false;
-        }
+        }*/
         
         post_process();
         return true;
@@ -377,12 +377,14 @@ public:
     edm::InputTag lightJetBdiscrSrc;
     edm::InputTag lightJetRmsSrc;
     edm::InputTag lightJetDeltaRSrc;
+    edm::InputTag lightJetMassSrc;
     
     virtual void initialize_branches() {
         branch_vars.vars_float["pt_lj"] = BranchVars::def_val;
         branch_vars.vars_float["eta_lj"] = BranchVars::def_val;
         branch_vars.vars_float["phi_lj"] = BranchVars::def_val;
         branch_vars.vars_float["pu_lj"] = BranchVars::def_val;
+        branch_vars.vars_float["mass_lj"] = BranchVars::def_val;
 
         branch_vars.vars_float["bdiscr_lj"] = BranchVars::def_val;
         branch_vars.vars_float["rms_lj"] = BranchVars::def_val;
@@ -416,27 +418,32 @@ public:
         lightJetPtSrc = pars.getParameter<edm::InputTag>("lightJetPtSrc");
         lightJetRmsSrc = pars.getParameter<edm::InputTag>("lightJetRmsSrc");
         lightJetDeltaRSrc = pars.getParameter<edm::InputTag>("lightJetDeltaRSrc");
+        lightJetMassSrc = pars.getParameter<edm::InputTag>("lightJetMassSrc");
         
     }
     
     bool process(const edm::EventBase& event) {
         pre_process();
+        branch_vars.vars_int["n_jets"] = get_collection<int>(event, goodJetsCountSrc, -1);
+        if (cutOnNJets && (branch_vars.vars_int["n_jets"] > nJetsCutMax || branch_vars.vars_int["n_jets"] < nJetsCutMin)) return false;
+        
         branch_vars.vars_float["pt_lj"] = get_collection_n<float>(event, lightJetPtSrc);
         branch_vars.vars_float["eta_lj"] = get_collection_n<float>(event, lightJetEtaSrc);
+        bool passes_eta_lj = (fabs(branch_vars.vars_float["eta_lj"]) > etaMin);
+        if (applyEtaLj && !passes_eta_lj) return false;
+        
         branch_vars.vars_float["phi_lj"] = get_collection_n<float>(event, lightJetPhiSrc);
         branch_vars.vars_float["pu_lj"] = get_collection_n<float>(event, lightJetPUMVASrc);
+        branch_vars.vars_float["mass_lj"] = get_collection_n<float>(event, lightJetMassSrc);
 
         branch_vars.vars_float["bdiscr_lj"] = get_collection_n<float>(event, lightJetBdiscrSrc);
         branch_vars.vars_float["rms_lj"] = get_collection_n<float>(event, lightJetRmsSrc);
-        branch_vars.vars_float["deltaR_lj"] = get_collection_n<float>(event, lightJetDeltaRSrc);
         bool passes_rms_lj = (branch_vars.vars_float["rms_lj"] < rmsMax);
-        bool passes_eta_lj = (fabs(branch_vars.vars_float["eta_lj"]) > etaMin);
-        
-        branch_vars.vars_int["n_jets"] = get_collection<int>(event, goodJetsCountSrc, -1);
-        
-        if (cutOnNJets && (branch_vars.vars_int["n_jets"] > nJetsCutMax || branch_vars.vars_int["n_jets"] < nJetsCutMin)) return false;
         if (applyRmsLj && !passes_rms_lj) return false;
-        if (applyEtaLj && !passes_eta_lj) return false;
+
+        branch_vars.vars_float["deltaR_lj"] = get_collection_n<float>(event, lightJetDeltaRSrc);
+        
+        
         
         post_process();
         return true;
@@ -458,6 +465,7 @@ public:
     edm::InputTag bJetBdiscrSrc;
     edm::InputTag bTagJetsCountSrc;
     edm::InputTag bJetDeltaRSrc;
+    edm::InputTag bJetMassSrc;
     
     virtual void initialize_branches() {
         branch_vars.vars_float["pt_bj"] = BranchVars::def_val;
@@ -468,6 +476,7 @@ public:
         branch_vars.vars_float["bdiscr_bj"] = BranchVars::def_val;
         branch_vars.vars_int["n_tags"] = BranchVars::def_val_int;
         branch_vars.vars_float["deltaR_bj"] = BranchVars::def_val;
+        branch_vars.vars_float["mass_bj"] = BranchVars::def_val;
     }
     
     TagCuts(const edm::ParameterSet& pars, BranchVars& _branch_vars) :
@@ -486,6 +495,7 @@ public:
         bJetBdiscrSrc = pars.getParameter<edm::InputTag>("bJetBdiscrSrc");
         bTagJetsCountSrc = pars.getParameter<edm::InputTag>("bTagJetsCountSrc");
         bJetDeltaRSrc = pars.getParameter<edm::InputTag>("bJetDeltaRSrc");
+        bJetMassSrc = pars.getParameter<edm::InputTag>("bJetMassSrc");
     }
     
     bool process(const edm::EventBase& event) {
@@ -499,6 +509,8 @@ public:
         branch_vars.vars_float["bdiscr_bj"] = get_collection_n<float>(event, bJetBdiscrSrc);
         branch_vars.vars_int["n_tags"] = get_collection<int>(event, bTagJetsCountSrc, -1);
         branch_vars.vars_float["deltaR_bj"] = get_collection_n<float>(event, bJetDeltaRSrc);
+        
+        branch_vars.vars_float["mass_bj"] = get_collection_n<float>(event, bJetMassSrc);
         
         if (cutOnNTags && (branch_vars.vars_int["n_tags"] > nTagsCutMax || branch_vars.vars_int["n_tags"] < nTagsCutMin)) return false;
         
@@ -597,7 +609,7 @@ public:
       branch_vars.vars_float["muon_IsoWeight"] = 1.0;
       branch_vars.vars_float["muon_TriggerWeight"] = 1.0;
       branch_vars.vars_float["electron_IDWeight"] = 1.0;
-      branch_vars.vars_float["electron_triggerWeight"] = 1.0;
+      branch_vars.vars_float["electron_TriggerWeight"] = 1.0;
       branch_vars.vars_float["SF_total"] = 1.0;
 
       if( doWeights && doWeightSys ) {
@@ -615,8 +627,8 @@ public:
         
 	branch_vars.vars_float["electron_IDWeight_up"] = 1.0;
 	branch_vars.vars_float["electron_IDWeight_down"] = 1.0;
-	branch_vars.vars_float["electron_triggerWeight_up"] = 1.0;
-	branch_vars.vars_float["electron_triggerWeight_down"] = 1.0;
+	branch_vars.vars_float["electron_TriggerWeight_up"] = 1.0;
+	branch_vars.vars_float["electron_TriggerWeight_down"] = 1.0;
       }
     }
     
@@ -674,7 +686,7 @@ public:
                 branch_vars.vars_float["gen_weight"] = genEventInfo->weight();
             }
             else {
-                branch_vars.vars_float["gen_weight"] =1.;
+                branch_vars.vars_float["gen_weight"] = 1.0;
             }
             
             branch_vars.vars_float["b_weight_nominal"] = get_collection<float>(event, bWeightNominalSrc, 0.0);
@@ -686,10 +698,13 @@ public:
             branch_vars.vars_float["muon_TriggerWeight"] = get_collection<double>(event, muonTriggerWeightSrc, 0.0);
             
             branch_vars.vars_float["electron_IDWeight"] = get_collection<double>(event, electronIDWeightSrc, 0.0);
-            branch_vars.vars_float["electron_triggerWeight"] = get_collection<double>(event, electronTriggerWeightSrc, 0.0);
+            branch_vars.vars_float["electron_TriggerWeight"] = get_collection<double>(event, electronTriggerWeightSrc, 0.0);
             
-            mu_weight = branch_vars.vars_float["muon_IDWeight"]*branch_vars.vars_float["muon_IsoWeight"]*branch_vars.vars_float["muon_TriggerWeight"];
-            el_weight = branch_vars.vars_float["electron_IDWeight"]*branch_vars.vars_float["electron_triggerWeight"];
+            mu_weight = branch_vars.vars_float["muon_IDWeight"]*
+                branch_vars.vars_float["muon_IsoWeight"]*
+                branch_vars.vars_float["muon_TriggerWeight"];
+            el_weight = branch_vars.vars_float["electron_IDWeight"]*
+                branch_vars.vars_float["electron_TriggerWeight"];
             
             if( leptonChannel == "mu") {
                 branch_vars.vars_float["SF_total"] = branch_vars.vars_float["b_weight_nominal"]*branch_vars.vars_float["pu_weight"]*mu_weight;
@@ -714,8 +729,8 @@ public:
             
             branch_vars.vars_float["electron_IDWeight_up"] = get_collection<double>(event, electronIDWeightUpSrc, 0.0);
             branch_vars.vars_float["electron_IDWeight_down"] = get_collection<double>(event, electronIDWeightDownSrc, 0.0);
-            branch_vars.vars_float["electron_triggerWeight_up"] = get_collection<double>(event, electronTriggerWeightUpSrc, 0.0);
-            branch_vars.vars_float["electron_triggerWeight_down"] = get_collection<double>(event, electronTriggerWeightDownSrc, 0.0);
+            branch_vars.vars_float["electron_TriggerWeight_up"] = get_collection<double>(event, electronTriggerWeightUpSrc, 0.0);
+            branch_vars.vars_float["electron_TriggerWeight_down"] = get_collection<double>(event, electronTriggerWeightDownSrc, 0.0);
         }
         
         //Remove NaN weights
@@ -735,7 +750,7 @@ public:
             not_nan("muon_TriggerWeight");
             
             not_nan("electron_IDWeight");
-            not_nan("electron_triggerWeight");
+            not_nan("electron_TriggerWeight");
             
             not_nan("SF_total");
         }
@@ -754,8 +769,8 @@ public:
             
             not_nan("electron_IDWeight_up");
             not_nan("electron_IDWeight_down");
-            not_nan("electron_triggerWeight_up");
-            not_nan("electron_triggerWeight_down");
+            not_nan("electron_TriggerWeight_up");
+            not_nan("electron_TriggerWeight_down");
         }
         
         post_process();
@@ -1175,13 +1190,13 @@ int main(int argc, char* argv[])
   
     /*
     LogInfo << "Copying tree with cut " << cut_str << std::endl;
-    dir.cd();
     TTree* cut_tree = out_tree->CopyTree(cut_str.c_str());
     cut_tree->SetName("Events_selected");
     cut_tree->SetTitle(cut_str.c_str());
     cut_tree->Write();
     */
 
+    dir.cd();
     TNamed* pdesc = new TNamed("process_desc", builder.processDesc()->dump().c_str());
     pdesc->Write();
 

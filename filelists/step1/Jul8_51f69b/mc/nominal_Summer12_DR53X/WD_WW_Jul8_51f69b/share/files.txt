@@ -1,3 +1,0 @@
-/copy_problem/output_Skim_48_1_mD7.root
-/copy_problem/output_Skim_198_1_RSx.root
-/store/user/joosep/WW_TuneZ2star_8TeV_pythia6_tauola/Jul8_51f69b/d1c6e244c12015ac8c182161016516af/output_Skim_295_1_dZK.root

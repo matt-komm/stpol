@@ -47,15 +47,15 @@ if __name__=="__main__":
     for name, sample in samples.items():
         if sample.isMC:
             hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
-            hist.normalize_lumi(lumi)
+            hist.Scale(sample.lumiScaleFactor(lumi)*mc_sf)
             hists_mc[sample.name] = hist.hist
             Styling.mc_style(hists_mc[sample.name], sample.name)
         elif name == "SingleMu":
-            hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range).hist
+            hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
             Styling.data_style(hist_data)
 
         elif name == "SingleMu_aiso":
-            hist_qcd = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range).hist
+            hist_qcd = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
             #hist_qcd.
             pass
 
