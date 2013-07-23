@@ -53,7 +53,7 @@ if __name__=="__main__":
         total["running"] += len(runningfiles)
         print stat, root, len(tasks), len(xfiles), len(slurmfiles), len(donefiles)
         for rf in runningfiles:
-            print "\tR %s" %(root+rf)
+            print "\tR %s" %(root + "/" + rf)
         for ff in failedfiles:
             print "\tF %s" % ff
         if len(tasks)!=len(xfiles):
