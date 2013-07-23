@@ -8,7 +8,7 @@ import re
 import glob
 from copy import deepcopy
 
-from rootpy.plotting.hist import Hist
+from rootpy.plotting.hist import Hist, Hist2D
 
 def get_file_list(merge_cmds, dir, fullpath=True):
     """
@@ -135,7 +135,7 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
     returns - a dictionary with the merged histograms. Optionally you can specify a list with the desired order of the keys.
     """
     for v in hists_d.values():
-        if not isinstance(v, Hist) and not isinstance(v, ROOT.TH1I) and not isinstance(v, ROOT.TH1F):
+        if not isinstance(v, Hist) and not isinstance(v, ROOT.TH1I) and not isinstance(v, ROOT.TH1F) and not isinstance(v, Hist2D) and not isinstance(v, ROOT.TH2I) and not isinstance(v, ROOT.TH2F):
             raise ValueError("First argument(hists_d) must be a dict of Histograms, but found %s" % v)
 
     out_d = dict()

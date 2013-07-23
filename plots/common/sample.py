@@ -5,7 +5,7 @@ from plots.common.histogram import *
 import numpy
 from cross_sections import xs as sample_xs_map
 import rootpy
-from rootpy.plotting import Hist
+from rootpy.plotting import Hist, Hist2D
 
 class HistogramException(Exception):
     pass
@@ -53,6 +53,10 @@ class Sample:
             raise e
         try:
             self.tree = self.tfile.Get("trees/"+tree_name)
+            #regex = re.compile("^W[1-4]Jets*")
+            regex2 = re.compile("^Single*")
+            #if regex2.match(self.process_name) is None:
+            #    self.tree.AddFriend("trees/WJets_weights")
         except Exception as e:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.file_name, self.tfile))
 
@@ -110,7 +114,7 @@ class Sample:
         ROOT.gROOT.cd()
         if plot_range:
             hist = Hist(*plot_range, type=dtype, name="htemp")
-        elif binning:
+        elif binning is not None:
             hist = Hist(binning, type=dtype)
         else:
             raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=(nbins, numpy.array(..))")
@@ -118,6 +122,55 @@ class Sample:
         hist.Sumw2()
 
         draw_cmd = var + ">>%s" % hist.GetName()
+
+        if weight_str:
+            cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
+        else:
+            cutweight_cmd = "(" + cut_str + ")"
+
+        logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
+
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
+        logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
+
+        if n_entries<0:
+            raise HistogramException("Could not draw histogram: %s" % self.name)
+
+        if hist.Integral() != hist.Integral():
+            raise HistogramException("Histogram had 'nan' Integral(), probably weight was 'nan'")
+        if not hist:
+            raise TObjectOpenException("Could not get histogram: %s" % hist)
+        if hist.GetEntries() != n_entries:
+            raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        hist_new = hist.Clone(filter_alnum(name))
+
+        return hist_new
+
+    def drawHistogram2D(self, var, var2, cut_str, **kwargs):
+        logger.debug("drawHistogram: var=%s, var2=%s, cut_str=%sm kwargs=%s" % (str(var), str(var2), str(cut_str), str(kwargs)))
+        name = self.name + "_" + unique_name(var+"_"+var2, cut_str, kwargs.get("weight"))
+
+        plot_range_x = kwargs.get("plot_range_x", None)
+        plot_range_y = kwargs.get("plot_range_y", None)
+        binning_x = kwargs.get("binning_x", None)
+        binning_y = kwargs.get("binning_y", None)
+
+        weight_str = kwargs.get("weight", None)
+        dtype = kwargs.get("dtype", "F")
+
+        ROOT.gROOT.cd()
+        if plot_range_x and plot_range_y:
+            pass
+            #TODO: make it work if needed
+            #hist = Hist2D(*plot_range_x, *plot_range_y, type=dtype, name="htemp")
+        elif binning_x is not None and binning_y is not None:
+            hist = Hist2D(binning_x, binning_y, type=dtype)
+        else:
+            raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
+
+        hist.Sumw2()
+
+        draw_cmd = var+":"+var2 + ">>%s" % hist.GetName()
 
         if weight_str:
             cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
