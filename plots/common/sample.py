@@ -1,11 +1,13 @@
 import ROOT
 import logging
-from plots.common.utils import filter_alnum
+from plots.common.utils import filter_alnum, NestedDict
 from plots.common.histogram import *
 import numpy
 from cross_sections import xs as sample_xs_map
 import rootpy
 from rootpy.plotting import Hist, Hist2D
+
+import os
 
 class HistogramException(Exception):
     pass
@@ -237,12 +239,37 @@ class Sample:
 def is_mc(name):
     return not "SingleMu" in name
 
-def load_samples(basedir=None):
+def get_paths(basedir=None):
     if not basedir:
         basedir = os.environ["STPOL_DIR"]
     datadirs = dict()
-    for root, paths, files in os.path.walk(basedir + "/step3_latest"):
-
+    fnames = NestedDict()
+    for root, paths, files in os.walk(basedir + "/step3_latest"):
         rootfiles = filter(lambda x: x.endswith(".root"), files)
         for fi in rootfiles:
-            print path
+            fn = root + "/" + fi
+
+            spl = fn.split("/")
+            try:
+                idx = spl.index("mu")
+            except ValueError:
+                idx = spl.index("ele")
+
+            spl = spl[idx:]
+            lepton = spl[0]
+            sample_type = spl[1]
+            iso = spl[2]
+            
+            if len(spl)==6:
+                systematic=spl.pop(3)
+            elif len(spl)==5:
+                systematic="NONE"
+            else:
+                raise ValueError("Couldn't parse filename: %s" % fn)
+            dataset = spl[3]
+            fname = spl[4]
+
+            fnames[dataset][sample_type][lepton][systematic][iso] = root
+            break
+    return fnames.as_dict()
+
