@@ -55,7 +55,7 @@ if __name__=="__main__":
                     continue
                 args = "--lepton=%s" % lep
                 if isMC:
-                    args += " --doControlVars --doWeight --isMC"
+                    args += " --doControlVars --doWeights --isMC"
 
                 #Apply the processing cuts
                 if not is_signal or (is_signal and cmdline_args.applyCutsToSignal):
