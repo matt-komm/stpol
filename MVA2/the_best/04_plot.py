@@ -24,7 +24,6 @@ b = {
 MVA2.plot_ROC.plot_ROC(s, b, ["mva_" + mva for mva in meta["mvas"]] + ["eta_lj"], name="plot", title="comparison of MVAs vs plain eta_lj cut")
 
 # plot histograms
-
 channelnames = MVA2.common.samples.signal + MVA2.common.samples.WJets + MVA2.common.samples.other
 files = {}
 for ch in channelnames:
@@ -33,5 +32,11 @@ for ch in channelnames:
 dataname = "SingleMu" if meta["lept"] == "mu" else "SingleEle"
 datafile = ROOT.TFile("filled_trees/"+dataname+".root")
 
-MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta", "eta_lj"], cutstring = meta["cutstring"] + " && (mva_BDT > 0.35)", lept = meta['lept'], nbins = 30, jobname="BDT_0.35")
-MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta", "eta_lj" ], cutstring = meta["cutstring"] + " && (abs(eta_lj) > 2.5)", lept = meta['lept'], nbins = 30, jobname="abs_eta_lj_2.5")
+MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta"], cutstring = meta["cutstring"] + " && (mva_BDT > 0.0)", lept = meta['lept'], nbins = 30, jobname="BDT_0.0")
+MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta"], cutstring = meta["cutstring"] + " && (mva_BDT > 0.1)", lept = meta['lept'], nbins = 30, jobname="BDT_0.1")
+MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta"], cutstring = meta["cutstring"] + " && (mva_BDT > 0.2)", lept = meta['lept'], nbins = 30, jobname="BDT_0.2")
+MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta"], cutstring = meta["cutstring"] + " && (mva_BDT > 0.3)", lept = meta['lept'], nbins = 30, jobname="BDT_0.3")
+MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta"], cutstring = meta["cutstring"] + " && (mva_BDT > 0.4)", lept = meta['lept'], nbins = 30, jobname="BDT_0.4")
+MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta"], cutstring = meta["cutstring"] + " && (mva_BDT > 0.5)", lept = meta['lept'], nbins = 30, jobname="BDT_0.5")
+MVA2.plot_histo.plot_histo(files, datafile, ["cos_theta"], cutstring = meta["cutstring"] + " && (mva_BDT > 0.6)", lept = meta['lept'], nbins = 30, jobname="BDT_0.6")
+MVA2.plot_histo.plot_histo(files, datafile, ["mva_BDT"], cutstring = meta["cutstring"], lept = meta['lept'], nbins = 30, jobname="mva_BDT")

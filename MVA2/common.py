@@ -136,9 +136,7 @@ class MVA_trainer:
 				sTree = key.ReadObj()
 				if sTree.GetEntries() == 0:
 					continue
-				sScaleFactor = getSCF(channel, sName, initEvs[sName]) * fract[sName]
-				#sScaleFactor = 1.0/sTree.GetEntries()
-				# TODO: multiply scf with fraction of train/total
+				sScaleFactor = getSCF(channel, sName, initEvs[sName]) / fract[sName]
 				print ' > ', sName, sScaleFactor
 				self.factory.AddTree(sTree, kSigBg, sScaleFactor, ROOT.TCut(''), kTrainTest)
 
