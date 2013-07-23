@@ -1,0 +1,12 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_1_1_4Hz.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_2_1_w2a.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_4_1_107.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_5_1_VuE.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_6_1_fmf.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_7_1_ssn.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_8_1_Wur.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_9_1_Aso.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_10_1_xlq.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_11_1_GwD.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_12_1_z3n.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/T_t_ToLeptons/output_13_1_FgV.root

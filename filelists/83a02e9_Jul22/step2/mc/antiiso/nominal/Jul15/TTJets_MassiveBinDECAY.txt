@@ -3,6 +3,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinD
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_3_1_SNr.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_4_1_Tw2.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_5_1_j2f.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_6_2_B47.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_7_1_j9p.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_8_1_IXI.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_9_1_oj2.root
@@ -12,6 +13,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinD
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_13_1_Hzc.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_14_1_053.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_15_1_6TS.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_16_2_iZc.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_17_1_JOX.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_18_1_3SJ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_19_1_fA5.root
@@ -39,6 +41,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinD
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_42_1_fWf.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_43_1_2lp.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_44_1_X3H.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_45_2_FL7.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_46_1_nvh.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_47_1_D7L.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/TTJets_MassiveBinDECAY/output_48_1_GsO.root

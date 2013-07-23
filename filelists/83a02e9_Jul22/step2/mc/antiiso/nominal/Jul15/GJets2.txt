@@ -32,6 +32,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/GJets2/output_31_1
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/GJets2/output_32_1_rio.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/GJets2/output_33_1_O5K.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/GJets2/output_34_1_zve.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/GJets2/output_35_2_CKz.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/GJets2/output_36_1_CKd.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/GJets2/output_37_1_Jsg.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/GJets2/output_38_1_IeE.root
