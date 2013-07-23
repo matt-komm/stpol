@@ -216,7 +216,7 @@ class Sample:
         return sample
 
     @staticmethod
-    def fromDirectory(directory, out_type="list", prefix="", tree_name="Events"):
+    def fromDirectory(directory, out_type="dict", prefix="", tree_name="Events"):
         import glob
         file_names = glob.glob(directory + "/*.root")
         logging.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
