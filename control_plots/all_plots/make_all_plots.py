@@ -117,8 +117,6 @@ if __name__=="__main__":
                 Styling.data_style(hist_data)
                 hists_data[name] = hist_data
 
-
-
         for name, sample in samples_antiiso.items():
                 qcd_cut = cut
                 __hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
