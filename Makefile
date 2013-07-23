@@ -1,5 +1,5 @@
 #ROOTCC=c++ -std=c++11 `root-config --cflags --libs`
-ROOTCC=c++ -std=c++0x `root-config --cflags --libs` -lTreePlayer -I/cvmfs/cms.cern.ch/slc5_amd64_gcc462/external/boost/1.47.0/include -L/cvmfs/cms.cern.ch/slc5_amd64_gcc462/external/boost/1.47.0/lib -lboost_program_options 
+ROOTCC=c++ -std=c++0x `root-config --cflags --libs` -lTreePlayer -I/cvmfs/cms.cern.ch/slc5_amd64_gcc462/external/boost/1.47.0/include -L/cvmfs/cms.cern.ch/slc5_amd64_gcc462/external/boost/1.47.0/lib -lboost_program_options-mt
 
 SRC_DIR=$(STPOL_DIR)/CMSSW_5_3_11/src/SingleTopPolarization/Analysis/bin
 PYTHON_INC_DIR=`python -c "import distutils.sysconfig;print distutils.sysconfig.get_python_inc()"`
