@@ -51,12 +51,12 @@ def SingleTopStep2():
                   "destination pile-up distribution"
         )
 
-        options.register ('compHep', False,
+        options.register ('isComphep', False,
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.bool,
                   "Use CompHep-specific processing")
 
-        options.register ('sherpa', False,
+        options.register ('isSherpa', False,
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.bool,
                   "Use sherpa-specific processing")
@@ -83,8 +83,8 @@ def SingleTopStep2():
         Config.subChannel = options.subChannel
         Config.doDebug = options.doDebug
         Config.isMC = options.isMC
-        Config.isCompHep = options.compHep
-        Config.isSherpa = options.sherpa
+        Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
+        Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
         Config.systematic = options.systematic
         Config.dataRun = options.dataRun
         print "Systematic! ",Config.systematic

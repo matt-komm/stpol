@@ -42,7 +42,7 @@ def is_fastsim(name):
     return "FSIM" in name
 
 class Dataset:
-    def __init__(self, name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file, do_comphep):
+    def __init__(self, name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file):
         self.name = name
         self.ds = ds
         self.step = step
@@ -51,7 +51,6 @@ class Dataset:
         self.template_fn = template_fn
         self.global_tag = global_tag
         self.lumi_file = lumi_file
-        self.do_comphep = do_comphep
 
     def parseTemplate(self, tag, cmdline, subdir):
         out = open(self.template_fn).read()
@@ -71,11 +70,16 @@ class Dataset:
 
             if is_fastsim(self.name):
                 cmdline += " runOnFastSim=True"
+
+            if is_sherpa(self.name):
+                cmdline += "isSherpa=True"
+
+            if is_comphep(self.name):
+                cmdline += "isComphep=True"
+
         if self.step=="step2":
             out = out.replace("SUBCHAN", self.name)
             out = out.replace("OUTDIR", subdir)
-            if self.do_comphep:
-                cmdline += " compHep=True"
         if self.lumi_file:
             out = out.replace("LUMIFILE", self.lumi_file)
         cmdline = cmdline.strip()
@@ -106,6 +110,9 @@ def is_skimmable(sample_name):
 
 def is_comphep(sample_name):
     return "comphep" in sample_name
+
+def is_sherpa(sample_name):
+    return "sherpa" in sample_name
 
 def skip_comments(fi):
     for line in fi:
@@ -163,9 +170,8 @@ def parse_file(fn):
         template_fn = get_template(step, is_mc(name), is_local)
         global_tag = get_global_tag(name, fn)
         lumi_file = get_lumi_file(name, fn) if not is_mc(name) else None
-        do_comphep = is_comphep(name)
 
-        datasets.append(Dataset(name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file, do_comphep))
+        datasets.append(Dataset(name, ds, step, do_skimming, is_local, template_fn, global_tag, lumi_file))
     return datasets
 
 def make_cfgs(fn, tag, cmdline, subdir=None):

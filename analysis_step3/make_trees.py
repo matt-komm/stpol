@@ -27,22 +27,20 @@ if __name__=="__main__":
         default=False, action="store_true",
         help="Don't really submit the jobs."
     )
-    parser.add_argument("--fileDir",
-        default="filelists/Jul15_partial", type="str", required=False,
+    parser.add_argument("--indir",
+        default="filelists/Jul15_partial", type=str, required=False,
         help="Input directory with the file lists"
     )
     cmdline_args = parser.parse_args()
     print cmdline_args
-    print "Input directory is %s" % cmdline_args.fileDir
+    print "Input directory is %s" % cmdline_args.indir
 
     data_samples = ["SingleMu", "SingleEle"]
     if not cmdline_args.ofdir:
         cmdline_args.ofdir = "out_step3_%s_%s" % (os.getlogin(), datetime.datetime.now().strftime("%d_%m_%H_%M"))
     leptons = ["mu", "ele"]
 
-    cmdline_args.cutStringSelected = cmdline_args.cutStringSelected.strip().replace(" ","")
-
-    for root, dirs, files in os.walk(parser.fileDir):
+    for root, dirs, files in os.walk(cmdline_args.indir):
         for fi in files:
             fi = root+"/" + fi
             if not fi.endswith(".txt"):
@@ -50,11 +48,14 @@ if __name__=="__main__":
             sampn = get_sample_name(fi)
             is_signal = sample_types.is_signal(sampn)
             isMC = not sampn in data_samples
-            #if iso=="antiiso" and isMC: continue
             for lep in leptons:
+                if sampn.startswith("SingleMu") and lep=="ele":
+                    continue
+                if sampn.startswith("SingleEle") and lep=="mu":
+                    continue
                 args = "--lepton=%s" % lep
                 if isMC:
-                    args += " --doControlVars --doWeight --isMC"
+                    args += " --doControlVars --isMC"
 
                 #Apply the processing cuts
                 if not is_signal or (is_signal and cmdline_args.applyCutsToSignal):

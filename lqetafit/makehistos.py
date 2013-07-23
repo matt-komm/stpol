@@ -1,7 +1,6 @@
 import ROOT
 import os
 from plots.common.sample import Sample
-from plots.common.histogram import Histogram
 from plots.common.utils import mkdir_p
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
 import logging
@@ -9,7 +8,8 @@ import subprocess
 import shutil
 from plots.common.load_samples import *
 
-outdir = "histos"
+outdir = "/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"])
+
 NOMINAL_WEIGHT = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
 
 def makehistos(cuts, cuts_antiiso, systematics):
@@ -18,9 +18,12 @@ def makehistos(cuts, cuts_antiiso, systematics):
     #logging.basicConfig(level="INFO")
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     logging.debug('This message should appear on the console')
-    
-    shutil.rmtree(outdir)
-    mkdir_p(outdir)    
+    try:
+        shutil.rmtree(outdir)
+    except OSError:
+        logging.warning("Couldn't remove directory %s" % outdir)
+
+    mkdir_p(outdir)
     #print systematics
     for main_syst, sub_systs in systematics.items():
         systname = main_syst
@@ -29,7 +32,7 @@ def makehistos(cuts, cuts_antiiso, systematics):
             for sub_syst, updown in sub_systs.items():
                 for (k, v) in updown.items():
                     ss = {}
-                    ss[k] = v 
+                    ss[k] = v
                     make_histos_for_syst(sub_syst, ss, cuts, cuts_antiiso)
         elif systname != "nominal":
             for sub_syst, path in sub_systs.items():
@@ -70,24 +73,24 @@ def make_histos_for_syst(main_syst, sub_systs, cuts, cuts_antiiso):
                     else:
                         hname = "%s__%s__%s" % ("eta_lj", sn, ss_type)
                         write_histogram(hname, NOMINAL_WEIGHT, samples, sn, sampn, cuts, cuts_antiiso)
-                            
+
 
 def write_histogram(hname, weight, samples, sn, sampn, cuts, cuts_antiiso):
     weight_str = weight
     #print samples
-    samp = samples[sampn]   
+    samp = samples[sampn]
     outfile = ROOT.TFile(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
-                            
+
     #print weight_str
     hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso)
     outfile.cd() #Must cd after histogram creation
-                            
+
     #Write histogram to file
-    logging.info("Writing histogram %s to file %s" % (hist.hist.GetName(), outfile.GetPath()))
-    logging.info("%i entries, %.2f events" % (hist.hist.GetEntries(), hist.hist.Integral()))
-    hist.hist.SetName(hname)
-    hist.update(file=outfile)
-    hist.hist.Write()
+    logging.info("Writing histogram %s to file %s" % (hist.GetName(), outfile.GetPath()))
+    logging.info("%i entries, %.2f events" % (hist.GetEntries(), hist.Integral()))
+    hist.SetName(hname)
+    hist.SetDirectory(outfile)
+    hist.Write() #Double write?
     outfile.Write()
     outfile.Close()
 
@@ -149,7 +152,6 @@ if __name__=="__main__":
     systematics["partial"]["ttbar_matching"]["down"] = {}
     systematics["partial"]["ttbar_matching"]["up"] = {}
         
-    #TODO JES, JER, UncE
     systematics["Res"]["down"]="ResDown"
     systematics["Res"]["up"]="ResUp"
     systematics["En"]["down"]="EnDown"
@@ -157,8 +159,7 @@ if __name__=="__main__":
     systematics["UnclusteredEn"]["down"]="UnclusteredEnDown"
     systematics["UnclusteredEn"]["up"]="UnclusteredEnUp"    
     
-
     cut_str = "n_jets==2 && n_tags==1 && top_mass>130 && top_mass<220 && rms_lj<0.025 && mt_mu>50"
     cut_str_antiiso = cut_str+" && mu_iso>0.3 && mu_iso<0.5"
-    
+
     makehistos(cut_str, cut_str_antiiso, systematics)
