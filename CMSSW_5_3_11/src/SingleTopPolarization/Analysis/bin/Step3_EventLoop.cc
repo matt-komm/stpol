@@ -748,6 +748,7 @@ public:
             not_nan("b_weight_nominal");
             not_nan("pu_weight");
             not_nan("gen_weight");
+            not_nan("ttbar_weight");
             
             not_nan("muon_IDWeight");
             not_nan("muon_IsoWeight");
