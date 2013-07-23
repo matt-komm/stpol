@@ -1,7 +1,6 @@
 import ROOT
 import os
 from plots.common.sample import Sample
-from plots.common.histogram import Histogram
 from plots.common.utils import mkdir_p
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
 import logging
@@ -9,7 +8,9 @@ import subprocess
 import shutil
 from plots.common.load_samples import *
 
-outdir = "histos"
+#outdir = "histos" #NB: please don't use such relative paths, especcially when doing rmtree. data can be destroyed
+outdir = "/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"])
+
 NOMINAL_WEIGHT = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight"
 
 def makehistos(cuts, cuts_antiiso, systematics):
@@ -18,8 +19,11 @@ def makehistos(cuts, cuts_antiiso, systematics):
     #logging.basicConfig(level="INFO")
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     logging.debug('This message should appear on the console')
+    try:
+        shutil.rmtree(outdir)
+    except OSError:
+        logging.warning("Couldn't remove directory %s" % outdir)
 
-    shutil.rmtree(outdir)
     mkdir_p(outdir)
     #print systematics
     for main_syst, sub_systs in systematics.items():
@@ -87,7 +91,7 @@ def write_histogram(hname, weight, samples, sn, sampn, cuts, cuts_antiiso):
     logging.info("%i entries, %.2f events" % (hist.GetEntries(), hist.Integral()))
     hist.SetName(hname)
     hist.SetDirectory(outfile)
-    hist.Write()
+    hist.Write() #Double write?
     outfile.Write()
     outfile.Close()
 
