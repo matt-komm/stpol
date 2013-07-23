@@ -12,7 +12,7 @@
 #include <vector>
 #include <map>
 #include <memory>
-#include <tr1/tuple> 
+#include <tuple> 
 
 #include <boost/any.hpp>
 #include <boost/program_options.hpp>
@@ -26,7 +26,7 @@ void get_branch(const char* name, T* address, TTree* tree) {
     tree->AddBranchToCache(name);
 }
 using namespace std;
-using namespace std::tr1;
+//using namespace std::tr1;
 
 
 typedef tuple<
@@ -241,9 +241,9 @@ int main(int argc, char** argv) {
         for (int i=min_flavour; i<=max_flavour; i++) {
             for (int n_jets=2; n_jets<3; n_jets++) {
                 for(int n_tags=0; n_tags<3; n_tags++) {
-                    hists[std::tr1::make_tuple(n_jets, n_tags, i, weight.c_str(), "cos_theta")] = new TH1F("cos_theta", "cos_theta", PLOT_PARS_COSTHETA);
-                    hists[std::tr1::make_tuple(n_jets, n_tags, i, weight.c_str(), "abs_eta_lj")] = new TH1F("abs_eta_lj", "abs_eta_lj", PLOT_PARS_ABS_ETA_LJ);
-                    hists[std::tr1::make_tuple(n_jets, n_tags, i, weight.c_str(), "eta_lj")] = new TH1F("eta_lj", "eta_lj", PLOT_PARS_ETA_LJ);
+                    hists[make_tuple(n_jets, n_tags, i, weight.c_str(), "cos_theta")] = new TH1F("cos_theta", "cos_theta", PLOT_PARS_COSTHETA);
+                    hists[make_tuple(n_jets, n_tags, i, weight.c_str(), "abs_eta_lj")] = new TH1F("abs_eta_lj", "abs_eta_lj", PLOT_PARS_ABS_ETA_LJ);
+                    hists[make_tuple(n_jets, n_tags, i, weight.c_str(), "eta_lj")] = new TH1F("eta_lj", "eta_lj", PLOT_PARS_ETA_LJ);
                 }
             }
         }
@@ -286,48 +286,48 @@ int main(int argc, char** argv) {
                         w *= wjets_weight_branches["gen_weight"];
                 }
                 //std::cout << w << endl;
-                hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[0], "cos_theta")]->Fill(cos_theta, w);
-                hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[0], "abs_eta_lj")]->Fill(fabs(eta_lj), w);
-                hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[0], "eta_lj")]->Fill(eta_lj, w);
+                hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[0], "cos_theta")]->Fill(cos_theta, w);
+                hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[0], "abs_eta_lj")]->Fill(fabs(eta_lj), w);
+                hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[0], "eta_lj")]->Fill(eta_lj, w);
 
                 if(doWJetsMadgraphWeights) {
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[1], "cos_theta")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[1], "cos_theta")]->Fill(
                         cos_theta,
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight"]*wjets_weight_branches["wjets_mg_flavour_shape_weight"]
                     );
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[1], "abs_eta_lj")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[1], "abs_eta_lj")]->Fill(
                         fabs(eta_lj), 
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight"]*wjets_weight_branches["wjets_mg_flavour_shape_weight"]
                     );
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[1], "eta_lj")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[1], "eta_lj")]->Fill(
                         eta_lj,
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight"]*wjets_weight_branches["wjets_mg_flavour_shape_weight"]
                     );
 
 
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[2], "cos_theta")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[2], "cos_theta")]->Fill(
                         cos_theta,
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight_up"]*wjets_weight_branches["wjets_mg_flavour_shape_weight_up"]
                     );
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[2], "abs_eta_lj")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[2], "abs_eta_lj")]->Fill(
                         fabs(eta_lj), 
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight_up"]*wjets_weight_branches["wjets_mg_flavour_flat_weight_up"]
                     );
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[2], "eta_lj")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[2], "eta_lj")]->Fill(
                         eta_lj,
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight_up"]*wjets_weight_branches["wjets_mg_flavour_flat_weight_up"]
                     );
 
 
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "cos_theta")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "cos_theta")]->Fill(
                         cos_theta,
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_shape_weight_down"]
                     );
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "abs_eta_lj")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "abs_eta_lj")]->Fill(
                         fabs(eta_lj), 
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]
                     );
-                    hists[std::tr1::make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "eta_lj")]->Fill(
+                    hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "eta_lj")]->Fill(
                         eta_lj,
                         w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]
                     );
