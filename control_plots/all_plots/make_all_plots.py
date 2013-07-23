@@ -2,8 +2,12 @@
 import sys
 import os
 
+import logging
+logging.basicConfig(level=logging.INFO)
+
 
 import ROOT
+ROOT.gROOT.SetBatch(True)
 import plots
 from plots.common.stack_plot import plot_hists_stacked
 from plots.common.utils import lumi_textbox
@@ -21,9 +25,18 @@ import argparse
 import plots.common.tdrstyle as tdrstyle
 import rootpy
 
+import pdb
+
+mc_sf=1.
+lumis = {
+    "mu": 6784+6398+5277,
+    "ele":12410+6144
+}
+tree='Events'
 if __name__=="__main__":
     tdrstyle.tdrstyle()
-    rootpy.log.basic_config_colorized()
+    
+    #rootpy.log.basic_config_colorized()
 
     parser = argparse.ArgumentParser(
         description='Creates the final plots'
@@ -33,32 +46,33 @@ if __name__=="__main__":
         help="the lepton channel to use"
     )
     parser.add_argument(
-        "--indir", type=str, required=False, default=(os.environ["STPOL_DIR"] + "step3_latest"),
+        "--indir", type=str, required=False, default=(os.environ["STPOL_DIR"] + "/step3_latest"),
         help="the input directory"
     )
+    parser.add_argument(
+        "-p", "--plots", type=str, required=False, default=None, action='append', choices=plot_defs.keys(),
+        help="the plots to draw"
+    )
+
     args = parser.parse_args()
+    if args.plots is None:
+        args.plots = plot_defs.keys()
     proc=args.channel
     datadirs = dict()
 
-    # reduce chatter
-    import logging
-    logging.basicConfig(level=logging.INFO)
-
     # Declare which data we will use
     step3 = args.indir
-    tree='Events'
 
-    mc_sf=1.
-    lumis = {"mu": 1, "ele":1}
     lumi = lumis[proc]
 
+    merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel=proc)
     flist = get_file_list(
-        PhysicsProcess.get_merge_dict(lepton_channel=proc),
-        step3 + "/data/83a02e9_Jul22/mu/mc/iso/nominal/Jul15/"
+        merge_cmds,
+        args.indir + "/%s/mc/iso/nominal/Jul15/" % proc
     )
     flist += get_file_list(
-        PhysicsProcess.get_merge_dict(lepton_channel=proc),
-        step3 + "/data/83a02e9_Jul22/mu/data/iso/Jul15/"
+        merge_cmds,
+        args.indir + "/%s/data/iso/Jul15/" % proc
     )
     print flist
     #Load all the samples in the isolated directory
@@ -67,15 +81,10 @@ if __name__=="__main__":
         samples[f] = Sample.fromFile(f, tree_name=tree)
 
     hists_mc = dict()
-    hist_data = None
+    hists_data = dict()
 
-    #Define the variable, cut, weight and lumi
-    keylist=plot_defs.keys()
-#    if len(sys.argv) == 3:
-#        keylist=[sys.argv[2]]
-
-    for pd in keylist:
-        if not plot_defs[pd]['enabled'] and len(keylist) > 1:
+    for pd in args.plots:
+        if not plot_defs[pd]['enabled'] and len(args.plots) > 1:
             continue
         var = plot_defs[pd]['var']
         cut = None
@@ -85,27 +94,23 @@ if __name__=="__main__":
             cut = plot_defs[pd]['mucut']
 
         cut_str = str(cut)
-        weight_str = "SF_total"
+        #weight_str = "pu_weight*b_weight_nominal*"
+        weight_str = "pu_weight*b_weight_nominal*muon_IsoWeight*muon_IDWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
 
         plot_range = plot_defs[pd]['range']
         hist_qcd = None
         for name, sample in samples.items():
-            print "Starting:",name
+            logging.info("Starting to plot %s" % name)
             if sample.isMC:
                 hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
-                hist.Scale(sample.lumiScaleFactor(lumi)*mc_sf)
-                hists_mc[sample.name] = hist.hist
+                hist.Scale(sample.lumiScaleFactor(lumi))
+                hists_mc[sample.name] = hist
                 Styling.mc_style(hists_mc[sample.name], sample.name)
-            elif name[0:6] == "Single":
-                hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
-                hist_data.SetTitle('Data')
-                Styling.data_style(hist_data)
-
             elif name == "data_aiso" and plot_defs[pd]['estQcd'] and proc == 'ele':
                 cv='mu_iso'
                 lb=0.3
                 if proc == 'ele':
-                    cv='el_reliso'
+                    cv='el_iso'
                     lb=0.1
                 qcd_cut = cut*Cut('deltaR_lj>0.3 && deltaR_bj>0.3 && '+cv+'>'+str(lb)+' & '+cv+'<0.5')
                 hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
@@ -113,11 +118,21 @@ if __name__=="__main__":
                 hists_mc['QCD'] = hist_qcd
                 hists_mc['QCD'].SetTitle('QCD')
                 Styling.mc_style(hists_mc['QCD'], 'QCD')
+            else:
+                hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
+                hist_data.SetTitle('Data')
+                Styling.data_style(hist_data)
+                hists_data[name] = hist_data
+
+        if len(hists_data.values())==0:
+            raise Exception("Couldn't draw the data histogram")
 
         #Combine the subsamples to physical processes
         add=[]
         if hist_qcd:
             add=[hist_qcd]
+        hist_data = sum(hists_data.values())
+        logging.info("hists=%s" % hists_mc)
         merged_hists = add+merge_hists(hists_mc, merge_cmds).values()
         leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
