@@ -1,6 +1,6 @@
-#Note - this is a generic example file. Rather than changing it, make your own based on it, using the cuts you need.
 #NOTE!!!!
 #Don't change the cut behaviour in this file without notice. It's imported by other files and sets reasonable defaults.
+#Note - this is a generic example file. Rather than changing it, make your own based on it, using the cuts you need.
 
 import FWCore.ParameterSet.Config as cms
 import sys
@@ -116,7 +116,7 @@ process.fwliteInput = cms.PSet(
     fileNames   = cms.vstring(input_files),
     maxEvents   = cms.int32(-1),
     outputEvery = cms.uint32(10000),
-    makeTree = cms.bool(not options.skipTree)
+    makeTree = cms.bool(not options.skipTree),
 )
 print "Input files:"
 for fi in input_files:
@@ -243,8 +243,9 @@ process.topCuts = cms.PSet(
 )
 
 process.weights = cms.PSet(
-    doWeights = cms.bool(options.isMC),
-    doWeightSys = cms.bool(options.isMC),
+    isMC = cms.bool(options.isMC),
+    doWeights = cms.bool(True),
+    doWeightSys = cms.bool(True),
     leptonChannel = cms.string(options.lepton),
 
     bWeightNominalSrc = cms.InputTag("bTagWeightProducerNoCut", "bTagWeight"),
