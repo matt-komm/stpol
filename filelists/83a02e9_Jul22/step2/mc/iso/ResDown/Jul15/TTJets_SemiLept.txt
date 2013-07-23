@@ -35,6 +35,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_SemiLept/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_SemiLept/output_36_2_Ptt.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_SemiLept/output_37_2_IXK.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_SemiLept/output_38_2_39k.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_SemiLept/output_39_2_oac.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_SemiLept/output_40_2_wEu.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_SemiLept/output_41_2_zFV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_SemiLept/output_42_3_qgn.root

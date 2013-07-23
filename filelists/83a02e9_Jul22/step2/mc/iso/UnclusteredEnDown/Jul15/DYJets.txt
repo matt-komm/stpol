@@ -89,6 +89,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/DYJets/outpu
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/DYJets/output_89_2_NDa.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/DYJets/output_90_2_31h.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/DYJets/output_91_2_Oln.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/DYJets/output_92_3_vE6.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/DYJets/output_93_2_XhJ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/DYJets/output_94_3_QW8.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/UnclusteredEnDown/DYJets/output_95_2_Bxy.root
