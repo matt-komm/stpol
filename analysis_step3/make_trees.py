@@ -60,6 +60,9 @@ if __name__=="__main__":
                 #Apply the processing cuts
                 if not is_signal or (is_signal and cmdline_args.applyCutsToSignal):
                     args += " " + cmdline_args.cutStringProcessed
+                    nlines = 10
+                else:
+                    nlines = 5
 
                 ofpath = root.replace("filelists", cmdline_args.ofdir).replace("step2", lep)
                 try:
@@ -67,7 +70,7 @@ if __name__=="__main__":
                 except OSError:
                     pass
 
-                cmd = " ".join(["$STPOL_DIR/analysis_step3/suball.sh", "'"+args+"'", ofpath, fi])
+                cmd = " ".join(["$STPOL_DIR/analysis_step3/suball.sh", str(nlines), "'"+args+"'", ofpath, fi])
                 print cmd
                 if not cmdline_args.dryRun:
                     check_call(cmd, shell=True)
