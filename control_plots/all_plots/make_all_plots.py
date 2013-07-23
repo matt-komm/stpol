@@ -3,9 +3,9 @@ import sys
 import os
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger("make_all_plots")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 import argparse
 import ROOT
@@ -75,7 +75,7 @@ if __name__=="__main__":
         args.indir + "/%s/data/iso/Jul15/" % proc
     )
     if len(flist)==0:
-        raise Exception("Couldn't open any files. Are you sure that %s exists and contains root files?" % args.indir
+        raise Exception("Couldn't open any files. Are you sure that %s exists and contains root files?" % args.indir)
     #Load all the samples in the isolated directory
     samples={}
     for f in flist:
