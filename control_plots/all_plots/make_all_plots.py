@@ -15,7 +15,7 @@ from plots.common.stack_plot import plot_hists_stacked
 from plots.common.utils import lumi_textbox
 from plots.common.odict import OrderedDict
 from plots.common.sample import Sample
-from plots.common.cuts import Cuts,Cut
+from plots.common.cuts import Cuts,Cut,Weights
 from plots.common.legend import *
 from plots.common.sample_style import Styling
 from plots.common.plot_defs import *
@@ -97,7 +97,9 @@ if __name__=="__main__":
 
         cut_str = str(cut)
         #weight_str = "pu_weight*b_weight_nominal*"
-        weight_str = "pu_weight*b_weight_nominal*muon_IsoWeight*muon_IDWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+        weight_str = str(Weights.total(proc) *
+            Weights.wjets_madgraph_shape_weight() *
+            Weights.wjets_madgraph_flat_weight())
 
         plot_range = plot_defs[pd]['range']
         
