@@ -24,7 +24,13 @@ if [[ ! -s $INFILE ]]; then
 fi
 
 #split input file into N-line pieces
-split $INFILE -a4 -l 5 -d
+if [[ "$INFILE" == *T_t* ]] || [[ "$INFILE" == *Tbar_t* ]]; then
+    N=1
+else
+    N=50;
+fi
+
+split $INFILE -a8 -l $N -d
 for file in x*
 do
     echo "Submitting step3 job $CONF on file $file"
