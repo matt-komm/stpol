@@ -36,4 +36,5 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/GJets2/output_35_2_7UE.ro
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/GJets2/output_36_2_OQz.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/GJets2/output_37_2_I6L.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/GJets2/output_38_2_XhY.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/GJets2/output_39_3_iCm.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/GJets2/output_40_2_jBn.root

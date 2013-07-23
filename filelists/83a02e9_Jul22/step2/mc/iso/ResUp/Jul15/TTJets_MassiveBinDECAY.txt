@@ -6,6 +6,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_MassiveBinDECAY/o
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_MassiveBinDECAY/output_6_2_3s7.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_MassiveBinDECAY/output_7_2_JDc.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_MassiveBinDECAY/output_8_2_Ipc.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_MassiveBinDECAY/output_9_3_HX7.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_MassiveBinDECAY/output_10_2_S7U.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_MassiveBinDECAY/output_11_2_Sz9.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_MassiveBinDECAY/output_12_2_mMe.root

@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/TToBTauNu_t-channel/output_1_1_nDC.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/TToBTauNu_t-channel/output_2_1_lyd.root
