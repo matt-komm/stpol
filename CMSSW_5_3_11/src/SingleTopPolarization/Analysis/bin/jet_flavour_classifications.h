@@ -11,7 +11,7 @@ enum WJetsClassification0 {
     //W_qq
     WgX,
     Wgg,
-    WXX,
+    WXX
 };
 
 enum WJetsClassification1 {

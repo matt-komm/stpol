@@ -18,19 +18,24 @@ OUTDIR=`readlink -f $OUTDIR`
 cd $OUTDIR
 echo $0 $@ > $OUTDIR/job
 
+if [[ ! -s $INFILE ]]; then
+    echo "Input file is empty, exiting!"
+    exit 0
+fi
+
 #split input file into N-line pieces
-split $INFILE -a4 -l 50 -d
+split $INFILE -a4 -l 5 -d
 for file in x*
 do
     echo "Submitting step3 job $CONF on file $file"
 
 #save the task
-    echo sbatch -p prio $STPOL_DIR/analysis_step3/run_step3_eventloop.sh `readlink -f $file` $OUTDIR $CONF > task_$file
+    CMD="sbatch -p cms,phys,ied,prio $STPOL_DIR/analysis_step3/run_step3_eventloop.sh `readlink -f $file` $OUTDIR $CONF > task_$file"
 
 #try to submit until successfully submitted
-    until sbatch -p prio $STPOL_DIR/analysis_step3/run_step3_eventloop.sh `readlink -f $file` $OUTDIR $CONF
+    until `eval $CMD`
     do 
         echo "ERROR!: could not submit slurm job on file $file, retrying after sleep..." >&2
-        sleep 20
+        sleep 0.5
     done 
 done

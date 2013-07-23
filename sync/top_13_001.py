@@ -35,7 +35,8 @@ def mc_amount(cut, weight, lumi=lumi_total, ref=None):
     histsD = dict()
     for samp in samples:
         histsD[samp.name] = samp.drawHistogram("mu_pt", str(cut), dtype="float", weight=weight, plot_range=[100, 0, 100000000])
-
+        histsD[samp.name].Scale(samp.lumiScaleFactor(lumi))
+        
     for name, hist in histsD.items():
         hist.normalize_lumi(lumi)
     for name, hist in histsD.items():

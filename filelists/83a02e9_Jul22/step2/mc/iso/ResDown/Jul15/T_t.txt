@@ -1,0 +1,8 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/T_t/output_1_2_tCZ.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/T_t/output_2_2_es9.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/T_t/output_3_2_AEB.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/T_t/output_5_2_keB.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/T_t/output_8_2_SSu.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/T_t/output_9_2_SUM.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/T_t/output_10_2_N2h.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/T_t/output_13_2_1SC.root

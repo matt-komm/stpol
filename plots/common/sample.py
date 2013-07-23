@@ -1,9 +1,11 @@
 import ROOT
 import logging
-from plots.common.histogram import Histogram
 from plots.common.utils import filter_alnum
+from plots.common.histogram import *
 import numpy
 from cross_sections import xs as sample_xs_map
+import rootpy
+from rootpy.plotting import Hist
 
 class HistogramException(Exception):
     pass
@@ -12,8 +14,11 @@ class TObjectOpenException(Exception):
 
 
 def get_sample_name(filename):
+    """
+    Returns the sample name from the input file name
+    """
     return filename.split("/")[-1].split(".")[0]
-    
+
 def get_process_name(sample_name):
     if sample_name.startswith("WJets_sherpa_nominal"):
         return "WJets_sherpa_nominal"
@@ -55,6 +60,8 @@ class Sample:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
         self.tree.SetCacheSize(100*1024*1024)
+        if self.tfile.Get("trees/WJets_weights"):
+            self.tree.AddFriend("trees/WJets_weights")
         #self.tree.AddBranchToCache("*", 1)
 
         self.event_count = None
@@ -92,34 +99,25 @@ class Sample:
 
     def drawHistogram(self, var, cut_str, **kwargs):
         logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
-        name = self.name + "_" + Histogram.unique_name(var, cut_str, kwargs.get("weight"))
+        name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)
         binning = kwargs.get("binning", None)
 
         weight_str = kwargs.get("weight", None)
-        dtype = kwargs.get("dtype", "float")
+        dtype = kwargs.get("dtype", "F")
 
         ROOT.gROOT.cd()
-        if plot_range is not None:
-            hist_args = ["htemp", "htemp"] + plot_range
-        elif binning is not None:
-            hist_args = "htemp", "htemp", binning[0], binning[1]
+        if plot_range:
+            hist = Hist(*plot_range, type=dtype, name="htemp")
+        elif binning:
+            hist = Hist(binning, type=dtype)
         else:
             raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=(nbins, numpy.array(..))")
 
-        if dtype=="float":
-            histfn = ROOT.TH1F
-        elif dtype=="int":
-            histfn = ROOT.TH1I
-        else:
-            raise ValueError("Unrecognized dtype: %s" % dtype)
-
-        hist = histfn(*hist_args)
-
         hist.Sumw2()
 
-        draw_cmd = var + ">>htemp"
+        draw_cmd = var + ">>%s" % hist.GetName()
 
         if weight_str:
             cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
@@ -142,17 +140,7 @@ class Sample:
             raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
         hist_new = hist.Clone(filter_alnum(name))
 
-        hist = hist_new
-        hist.SetTitle(name)
-        hist_ = Histogram()
-        hist_.setHist(hist, histogram_entries=n_entries, var=var,
-            cut=cut_str, weight=kwargs["weight"] if "weight" in kwargs.keys() else None,
-            sample_name=self.name,
-            sample_entries_total=self.getTotalEventCount(),
-            sample_entries_cut=self.getEventCount(),
-
-        )
-        return hist_
+        return hist_new
 
     def getColumn(self, col, cut):
         N = self.tree.Draw(col, cut, "goff")

@@ -1,0 +1,3 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/TToBTauNu_anomWtb-0100_t-channel/output_1_1_CGM.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/TToBTauNu_anomWtb-0100_t-channel/output_2_1_2VA.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/TToBTauNu_anomWtb-0100_t-channel/output_3_1_JNb.root

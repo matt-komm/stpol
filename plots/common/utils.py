@@ -2,9 +2,11 @@ import ROOT
 from odict import OrderedDict as dict
 import string
 import logging
+logger = logging.getLogger("utils")
 import os
 import re
 import glob
+from copy import deepcopy
 
 from rootpy.plotting.hist import Hist
 
@@ -17,6 +19,8 @@ def get_file_list(merge_cmds, dir, fullpath=True):
     returns - a list with the matched filenames
     """
     files = glob.glob("/".join([dir, "*.root"]))
+    logger.debug("using directory %s" % dir)
+    logger.debug("dir contains %s" % files)
     out_files = []
     for cmds in merge_cmds.values():
         for pat in cmds:
@@ -70,6 +74,7 @@ class PhysicsProcess:
         for name, process in in_d.items():
             out_d[name] = process.subprocesses
         return out_d
+    systematic = {}
 
 PhysicsProcess.SingleMu = PhysicsProcess("SingleMu", ["SingleMu.*"], pretty_name="data")
 PhysicsProcess.SingleEle = PhysicsProcess("SingleEle", ["SingleEle.*"], pretty_name="data")
@@ -82,9 +87,14 @@ PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW-channel
 PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"], pretty_name="s-channel")
 PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name="t-channel")
 
+#for syst in ["scaleup", "scaledown"]:
+#    for nominal in [PhysicsProcess.tchan]:
+#        proc = deepcopy(nominal)
+#        proc.subprocesses = [x+"_%s" % syst for x in proc.subprocesses]
+#        PhysicsProcess.systematic[syst][proc.name] = proc
+
 merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel="mu")
 
-logger = logging.getLogger("utils")
 def lumi_textbox(lumi, pos="top-left"):
     """
     This method creates and draws the "CMS Preliminary" luminosity box,

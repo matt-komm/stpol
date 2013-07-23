@@ -67,23 +67,23 @@ parser.add_option("--mtop", dest="mtop", type="string", default="none", choices=
 parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False,
     description="Add several additional variables in the trees."
 )
-parser.add_option("--doEventShape", dest="doEventShape", action="store_true", default=False,
-    description="Do runtime calculation of the event shape variables."
-)
-parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False,
-    description="Enable anti-iso lepton specific processing."
-)
+#parser.add_option("--doEventShape", dest="doEventShape", action="store_true", default=False,
+#    description="Do runtime calculation of the event shape variables."
+#)
+#parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False,
+#    description="Enable anti-iso lepton specific processing."
+#)
 parser.add_option("--skipTree", dest="skipTree", action="store_true", default=False,
     description="Do not produce the output tree."
 )
 parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root",
     description="Filename of the flat ROOT output file."
 )
-parser.add_option("--cutString", dest="cutString", type="string", default="1.0",
-    description="An additional TTree called Events_selected will be created by applying this cutstring.\
-    Note that applying this cut string will NOT decrease processing time by skipping some events,\
-    which is conceptually different from the above cuts."
-)
+# parser.add_option("--cutString", dest="cutString", type="string", default="1.0",
+#     description="An additional TTree called Events_selected will be created by applying this cutstring.\
+#     Note that applying this cut string will NOT decrease processing time by skipping some events,\
+#     which is conceptually different from the above cuts."
+# )
 
 options, args = parser.parse_args()
 
@@ -94,17 +94,20 @@ options.nTMax = int(options.nT.split(",")[1])
 
 #Note: the isolation cut is already necesarily applied in step 2. Applying it here is redundant, unless
 #one wants to tighten the single (anti)-isolated lepton and get a strict subset of the selected events.
-if options.lepton=="mu":
-    if options.isAntiIso:
-        isoC = 0.2
-        isoCHigh = 0.9
-    else:
-        isoC = 0.12
-        isoCHigh = 0.12
-else:
-    #FIXME: whatever is needed for electrons
-    isoC = -1
-    isoCHigh = -1
+#'Relaxing the isolation cut at step2' is not an option, since it actually redefines anti-isolated leptons
+#and consequently events having a SINGLE anti-isolated lepton
+# if options.lepton=="mu":
+#     if options.isAntiIso:
+#         isoC = 0.2
+#         isoCHigh = 0.9
+#     else:
+#         isoC = 0.12
+#         isoCHigh = 0.12
+# else:
+#     #FIXME: whatever is needed for electrons
+#     isoC = -1
+#     isoCHigh = -1
+
 
 process = cms.Process("STPOLSEL3")
 process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
@@ -122,16 +125,16 @@ print "Output file: %s" % options.outputFile
 
 process.fwliteOutput = cms.PSet(
     fileName = cms.string(options.outputFile),
-    cutString = cms.string(options.cutString)
+    #cutString = cms.string(options.cutString)
 )
 
 process.muonCuts = cms.PSet(
     requireOneMuon  = cms.bool(options.doLepton and options.lepton=="mu"),
     doControlVars  = cms.bool(options.doControlVars),
-    reverseIsoCut  = cms.bool(options.isAntiIso),
-    cutOnIso = cms.bool(False), #by default this is NOT necessary (done @ step2)
-    isoCut  = cms.double(isoC),
-    isoCutHigh  = cms.double(isoCHigh),
+    #reverseIsoCut  = cms.bool(options.isAntiIso),
+    #cutOnIso = cms.bool(False), #by default this is NOT necessary (done @ step2)
+    #isoCut  = cms.double(isoC),
+    #isoCutHigh  = cms.double(isoCHigh),
 
     muonPtSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "Pt"),
     muonEtaSrc  = cms.InputTag("goodSignalMuonsNTupleProducer", "Eta"),
@@ -161,9 +164,9 @@ process.muonCuts = cms.PSet(
 
 process.eleCuts = cms.PSet(
     requireOneElectron = cms.bool(options.doLepton and options.lepton=="ele"),
-    reverseIsoCut = cms.bool(options.isAntiIso),
-    cutOnIso = cms.bool(False),
-    isoCut = cms.double(0.1),
+    #reverseIsoCut = cms.bool(options.isAntiIso),
+    #cutOnIso = cms.bool(False),
+    #isoCut = cms.double(0.1),
     mvaCut = cms.double(0.9),
 
     eleCountSrc  = cms.InputTag("electronCount"),
@@ -206,6 +209,7 @@ process.jetCuts = cms.PSet(
     lightJetEtaSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Eta"),
     lightJetPhiSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Phi"),
     lightJetPUMVASrc = cms.InputTag("lowestBTagJetNTupleProducer", "puMva"),
+    lightJetMassSrc = cms.InputTag("lowestBTagJetNTupleProducer", "Mass"),
 
     lightJetBdiscrSrc = cms.InputTag("lowestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
     lightJetRmsSrc = cms.InputTag("lowestBTagJetNTupleProducer", "rms"),
@@ -226,7 +230,8 @@ process.bTagCuts = cms.PSet(
     bJetPUMVASrc = cms.InputTag("highestBTagJetNTupleProducer", "puMva"),
 
     bJetBdiscrSrc = cms.InputTag("highestBTagJetNTupleProducer", "bDiscriminatorTCHP"),
-    bJetDeltaRSrc = cms.InputTag("highestBTagJetNTupleProducer", "deltaR")
+    bJetDeltaRSrc = cms.InputTag("highestBTagJetNTupleProducer", "deltaR"),
+    bJetMassSrc = cms.InputTag("highestBTagJetNTupleProducer", "Mass"),
 )
 
 process.topCuts = cms.PSet(
@@ -283,7 +288,7 @@ process.metCuts = cms.PSet(
     )
 
 process.evtShapeVars = cms.PSet(
-    doEvtShapeVars = cms.bool(options.doEventShape),
+    doEvtShapeVars = cms.bool(True),
     leptonChannel = cms.string(options.lepton),
 
     muPtSrc = cms.InputTag("goodSignalMuonsNTupleProducer", "Pt"),

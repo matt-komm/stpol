@@ -9,21 +9,6 @@ import SingleTopPolarization.Analysis.pileUpDistributions as pileUpDistributions
 from SingleTopPolarization.Analysis.weights_cfg import WeightSetup
 import SingleTopPolarization.Analysis.sample_types as sample_types
 
-
-#BTag working points from https://twiki.cern.ch/twiki/bin/viewauth/CMS/BTagPerformanceOP#B_tagging_Operating_Points_for_5
-#TODO: place in proper class
-#TrackCountingHighPur     TCHPT   3.41
-#JetProbability   JPL     0.275
-#JetProbability   JPM     0.545
-#JetProbability   JPT     0.790
-#CombinedSecondaryVertex  CSVL    0.244
-#CombinedSecondaryVertex  CSVM    0.679
-#CombinedSecondaryVertex  CSVT    0.898
-
-#BTag tagger names
-#trackCountingHighPurBJetTags
-#combinedSecondaryVertexMVABJetTags
-
 def SingleTopStep2():
 
     if not Config.onGrid:
@@ -66,12 +51,12 @@ def SingleTopStep2():
                   "destination pile-up distribution"
         )
 
-        options.register ('compHep', False,
+        options.register ('isComphep', False,
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.bool,
                   "Use CompHep-specific processing")
 
-        options.register ('sherpa', False,
+        options.register ('isSherpa', False,
                   VarParsing.multiplicity.singleton,
                   VarParsing.varType.bool,
                   "Use sherpa-specific processing")
@@ -103,8 +88,8 @@ def SingleTopStep2():
         Config.subChannel = options.subChannel
         Config.doDebug = options.doDebug
         Config.isMC = options.isMC
-        Config.isCompHep = options.compHep
-        Config.isSherpa = options.sherpa
+        Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
+        Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
         Config.systematic = options.systematic
         Config.dataRun = options.dataRun
         Config.doSync = options.doSync
