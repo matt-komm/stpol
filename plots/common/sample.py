@@ -1,7 +1,7 @@
 import ROOT
 import logging
-from plots.common.histogram import Histogram
 from plots.common.utils import filter_alnum
+from plots.common.histogram import *
 import numpy
 from cross_sections import xs as sample_xs_map
 
@@ -16,7 +16,7 @@ def get_sample_name(filename):
     Returns the sample name from the input file name
     """
     return filename.split("/")[-1].split(".")[0]
-    
+
 def get_process_name(sample_name):
     if sample_name.startswith("WJets_sherpa_nominal"):
         return "WJets_sherpa_nominal"
@@ -95,7 +95,7 @@ class Sample:
 
     def drawHistogram(self, var, cut_str, **kwargs):
         logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
-        name = self.name + "_" + Histogram.unique_name(var, cut_str, kwargs.get("weight"))
+        name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)
         binning = kwargs.get("binning", None)

@@ -16,9 +16,9 @@ except Exception as e:
     raise e
 
 
-class Histogram(Base):
-    def __init__(self, *args, **kwargs):
-        raise Exception("This class is outdated! Sample.drawHistogram now returns a regular ROOT histogram")
+#class Histogram:
+#    def __init__(self, *args, **kwargs):
+#        raise Exception("This class is outdated! Sample.drawHistogram now returns a regular ROOT histogram")
 
 
 class HistMetaData:
@@ -121,3 +121,8 @@ def calc_int_err(hist):
     err = ROOT.Double()
     integral = hist.IntegralAndError(1, hist.GetNbinsX(), err)
     return (integral, err)
+
+def unique_name(var, cut, weight):
+    cut_str = cut if cut is not None else "NOCUT"
+    weight_str = weight if weight is not None else "NOWEIGHT"
+    return filter_alnum(var + "_" + cut_str + "_" + weight_str)
