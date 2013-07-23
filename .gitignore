@@ -33,7 +33,8 @@ CMSSW_5_3_11/tmp
 
 #ROOT files
 *.root
-!CMSSW_*/src/data/
+!CMSSW_*/src/data/*
+!CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario0.root
 /trees
 
 #Logs
