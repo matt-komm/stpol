@@ -27,6 +27,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_27_2_YxJ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_28_2_QgH.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_29_2_iZq.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_30_3_nF4.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_31_2_kqV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_32_2_kjr.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_33_2_Pcp.root
@@ -81,6 +82,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_82_2_rl9.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_83_2_kQu.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_84_2_tP6.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_85_3_MaL.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_86_2_zdr.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_87_2_v6Q.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResDown/TTJets_FullLept/output_88_2_l1L.root

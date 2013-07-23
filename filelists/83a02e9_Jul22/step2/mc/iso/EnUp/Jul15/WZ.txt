@@ -1,8 +1,10 @@
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_1_2_jxc.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_2_3_ixA.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_3_2_iyB.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_4_2_ELZ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_5_2_ITg.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_6_2_Ynk.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_7_2_F2W.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_8_2_Trl.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_9_2_E0F.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WZ/output_10_2_tit.root
