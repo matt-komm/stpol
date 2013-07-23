@@ -257,6 +257,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W2Jets_exclusive/output_2
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W2Jets_exclusive/output_260_2_Ptp.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W2Jets_exclusive/output_261_2_fYs.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W2Jets_exclusive/output_262_2_aEk.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W2Jets_exclusive/output_263_2_Lzy.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W2Jets_exclusive/output_264_2_PDY.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W2Jets_exclusive/output_265_2_CBm.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/W2Jets_exclusive/output_266_2_deV.root
