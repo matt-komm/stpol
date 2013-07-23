@@ -2,6 +2,7 @@ import ROOT
 from odict import OrderedDict as dict
 import string
 import logging
+logger = logging.getLogger("utils")
 import os
 import re
 import glob
@@ -18,6 +19,8 @@ def get_file_list(merge_cmds, dir, fullpath=True):
     returns - a list with the matched filenames
     """
     files = glob.glob("/".join([dir, "*.root"]))
+    logger.debug("using directory %s" % dir)
+    logger.debug("dir contains %s" % files)
     out_files = []
     for cmds in merge_cmds.values():
         for pat in cmds:
@@ -92,7 +95,6 @@ PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name=
 
 merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel="mu")
 
-logger = logging.getLogger("utils")
 def lumi_textbox(lumi, pos="top-left"):
     """
     This method creates and draws the "CMS Preliminary" luminosity box,
