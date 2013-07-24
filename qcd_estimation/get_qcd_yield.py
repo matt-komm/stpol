@@ -9,6 +9,7 @@ except Exception as e:
     sys.stderr.write("You need a working version of theta in your PATH. See the script $STPOL_DIR/setup/install_theta.sh and $STPOL_DIR/setenv.sh.\n")
     raise e
 
+
 from ROOT import *
 
 from make_input_histos import *
@@ -33,18 +34,18 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     print "QCD scale factor:", hQCD.Integral()/hQCDShapeOrig.Integral(), hQCD.Integral(), hQCDShapeOrig.Integral()
     hQCDShapeOrig.Scale(hQCD.Integral()/hQCDShapeOrig.Integral())
     #print fit_result
+    err = array('d',[0.])
     if cutMT:
         bin1 = hQCD.FindBin(mtMinValue)
         bin2 = hQCD.GetNbinsX() + 1
         #print hQCD.Integral(), y.Integral()
         error = array('d',[0.])
-        err = array('d',[0.])
         y = hQCD.IntegralAndError(bin1,bin2,error)
         print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(bin1,bin2,err), "+-",err, " - use only in fit regions not covering whole mT/MET"
         return (y, error[0])
         #return (hQCD.Integral(6,20), hQCD.Integral(6,20)*(fit_result.qcd_uncert/fit_result.qcd))
     else:
-        print "QCD yield from original shape:", hQCDShape.IntegralAndError(0,100,err), "+-",err, " - use only in fit regions not covering whole mT/MET"
+        print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(0, 100, err), "+-",err, " - use only in fit regions not covering whole mT/MET"
         return (hQCD.Integral(), hQCD.Integral()*(fit_result.qcd_uncert/fit_result.qcd))
 
 def get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup):
@@ -61,7 +62,7 @@ def get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGro
     return (get_yield(var, cuts.name, cutMT, mtMinValue, fit, dataGroup), fit)
 
 
-def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/step3_latest/", do_systematics=False):
+def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$STPOL_DIR/step3_latest/", do_systematics=False):
 #    do_systematics = True
 #
 #    if channel == "ele":
@@ -76,16 +77,17 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
         var = Variable("met", 0, 200, 40, "MET", "MET")
     else:
         raise ValueError("channel must be 'mu' or 'ele': %s" % channel)
-    
+
     #Do you want to get the resulting yield after a cut on the fitted variable?
     #If yes, specify minumum value for the variable the cut. Obviously change to MET for electrons
     #Remember that the cut should be on the edge of 2 bins, otherwise the result will be inaccurate
 
+
     if channel == "mu":
-        cutMT = True
+        #cutMT = True
         mtMinValue = 50.01 # M_T>50
     elif channel == "ele":
-        cutMT = True
+        #cutMT = True
         mtMinValue = 45.01 # MET>45
 
     #Use Default cuts for final selection. See FitConfig for details on how to change the cuts.
@@ -167,8 +169,12 @@ if __name__=="__main__":
         raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py`")
 
     cuts_final = FitConfig( "final_selection", trigger="1.0")
+
     cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
     cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0 && n_veto_mu==0 && n_veto_ele==0")
+    cuts_2j1t = FitConfig( "2j1t_selection", trigger="1.0")
+    cuts_2j1t.setBaseCuts("n_jets == 2 && n_tags == 1 && n_veto_mu==0 && n_veto_ele==0")
+
     cuts_3j1t = FitConfig( "3j1t_selection", trigger="1.0")
     cuts_3j1t.setBaseCuts("n_jets == 3 && n_tags == 1 && n_veto_mu==0 && n_veto_ele==0")
     cuts_mva = FitConfig( "mva_selection", trigger="1.0")
@@ -176,27 +182,32 @@ if __name__=="__main__":
     cuts_final_without_eta = FitConfig( "final_selection_without_eta_cut", trigger="1.0")
     cuts_final_without_eta.setFinalCuts("top_mass < 220 && top_mass > 130")
 
+
     cuts = {}
     cuts["final"] = cuts_final
     cuts["2j0t"] = cuts_2j0t
+    cuts["2j1t"] = cuts_2j1t
     cuts["3j1t"] = cuts_3j1t
     cuts["final_without_eta"] = cuts_final_without_eta
     cuts["mva"] = cuts_mva
-    
+
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
     try:
         sys.argv.pop(sys.argv.index("get_qcd_yield.py"))
     except ValueError:
         pass
     import argparse
+
     parser = argparse.ArgumentParser(description='Does the QCD fit using theta-auto')
     parser.add_argument('--lepton', dest='lepton', choices=["mu", "ele"], required=True, help="The lepton channel used for the fit")
     parser.add_argument('--cut', dest='cut', choices=cuts.keys(), required=True, help="The cut region to use in the fit")
-    parser.add_argument('--doSystematics', dest='doSystematics', action="store_true", default=False)
+    parser.add_argument('--doSystematics', action="store_true", default=False)
+    parser.add_argument('--mtcut',dest='mtcut',action='store_true', default=True, help="Apply the corresponding MET/MtW cut")
+    parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
     args = parser.parse_args()
 
     cut = cuts[args.cut]
-    ((y, error), fit) = get_qcd_yield_with_selection(cut, args.lepton, do_systematics=args.doSystematics)
+    ((y, error), fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.lepton, do_systematics=args.doSystematics)
     print "Selection: %s" % cut.name
     print "QCD yield in selected region: %.2f +- %.2f, ratio to template from ONLY data %.3f" % (y, error, y/fit.orig["qcd_no_mc_sub"])
     print "Total: QCD: %.2f +- %.2f, ratio to template from data %.3f" % (fit.qcd, fit.qcd_uncert, fit.qcd/fit.orig["qcd"])
@@ -205,4 +216,7 @@ if __name__=="__main__":
 
     print "Fit info:"
     print fit
+    print "doMTCut=",args.mtcut
+    print "cut=",args.cut
+
     plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.lepton])

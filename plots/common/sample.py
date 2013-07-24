@@ -267,7 +267,7 @@ def get_paths(basedir=None, samples_dir="step3_latest"):
             lepton = spl[0]
             sample_type = spl[1]
             iso = spl[2]
-            
+
             if len(spl)==6:
                 systematic=spl.pop(3)
             elif len(spl)==5:
@@ -280,4 +280,3 @@ def get_paths(basedir=None, samples_dir="step3_latest"):
             fnames[dataset][sample_type][lepton][systematic][iso] = root
             break
     return fnames.as_dict()
-
