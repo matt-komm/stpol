@@ -46,10 +46,10 @@ class HistCollection:
         self.fi = fi
         logger.debug("Created HistCollection with name %s, hists %s" % (name, str(hists)))
 
-    def __del__(self):
-        if self.fi:
-            logger.debug("Closing file %s of HistCollection" % self.fi.GetPath())
-            self.fi.Close()
+    # def __del__(self):
+    #     if self.fi:
+    #         logger.debug("Closing file %s of HistCollection" % self.fi.GetPath())
+    #         self.fi.Close()
 
     def get(self, hname):
         return self.hists[hname], self.metadata[hname]

@@ -219,4 +219,10 @@ if __name__=="__main__":
     print "doMTCut=",args.mtcut
     print "cut=",args.cut
 
+    #output to file
+    of = open("QCD_yield_%s.txt" % args.cut, "w")
+    of.write("%f %f" % (fit.qcd, fit.qcd_uncert))
+    of.write("\n")
+    of.close()
+
     plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.lepton])

@@ -90,7 +90,7 @@ class Weight:
         return Weight(weight_str)
 
     def __str__(self):
-        return "(%s)" % self.weight_str
+        return self.weight_str
 
 class Weights:
     @staticmethod
