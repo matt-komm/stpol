@@ -92,11 +92,11 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     if channel == "ele":
         cuts.setTrigger("1") #  || HLT_Ele27_WP80_v9==1 || HLT_Ele27_WP80_v8==1")
-        cuts.setIsolationCut("el_reliso < 0.1")
-        cuts.setAntiIsolationCut("el_reliso > 0.1 & el_reliso < 0.5")
-        cuts.setAntiIsolationCutUp("el_reliso > 0.11 & el_reliso < 0.55") # check +-10% variation
-        cuts.setAntiIsolationCutDown("el_reliso > 0.09 & el_reliso < 0.45")
-        lepton_weight = "*electron_triggerWeight*electron_IDWeight"
+        cuts.setIsolationCut("el_iso < 0.1")
+        cuts.setAntiIsolationCut("el_iso > 0.1 & el_iso < 0.5")
+        cuts.setAntiIsolationCutUp("el_iso > 0.11 & el_iso < 0.55") # check +-10% variation
+        cuts.setAntiIsolationCutDown("el_iso > 0.09 & el_iso < 0.45")
+        lepton_weight = "*electron_TriggerWeight*electron_IDWeight"
     elif channel == "mu":
         lepton_weight = "*muon_TriggerWeight*muon_IsoWeight*muon_IDWeight"
         #cuts.setTrigger("1")
