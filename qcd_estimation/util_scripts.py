@@ -46,7 +46,7 @@ def generate_paths(systematics, base_path, lepton="mu"):
     paths["data"] = {}
     paths["mc"] = {}
     
-    date = os.listdir(os.environ["STPOL_DIR"]+/step3_latest" + "/" + lepton + "/data/iso/")[0]
+    date = os.listdir(os.environ["STPOL_DIR"]+"/step3_latest" + "/" + lepton + "/data/iso/")[0]
     for iso in isos:
         paths["mc"][iso] = {}
         paths["data"][iso] = base_path + "/" + lepton + "/data/" + iso + "/" + date + "/"
