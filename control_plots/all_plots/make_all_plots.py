@@ -14,7 +14,7 @@ import plots
 from plots.common.stack_plot import plot_hists_stacked
 from plots.common.odict import OrderedDict
 from plots.common.sample import Sample
-from plots.common.cuts import Cuts,Cut,Weights
+from plots.common.cuts import *
 from plots.common.legend import *
 from plots.common.sample_style import Styling
 from plots.common.plot_defs import *
@@ -32,7 +32,6 @@ lumis = {
     "mu": 6784+6398+5277,
     "ele":12410+6144
 }
-tree='Events'
 if __name__=="__main__":
     tdrstyle.tdrstyle()
 
@@ -53,11 +52,16 @@ if __name__=="__main__":
         "-p", "--plots", type=str, required=False, default=None, action='append', choices=plot_defs.keys(),
         help="the plots to draw"
     )
+    parser.add_argument(
+        "-t", "--tree", type=str, required=False, default="Events", choices=['Events','Events_MVA'],
+        help="the tree to use"
+    )
 
     args = parser.parse_args()
     if args.plots is None:
         args.plots = plot_defs.keys()
     proc=args.channel
+    tree = args.tree
     datadirs = dict()
 
     # Declare which data we will use
@@ -74,16 +78,17 @@ if __name__=="__main__":
         merge_cmds,
         args.indir + "/%s/data/iso/Jul15/" % proc
     )
+    flist += get_file_list(
+        {'data':merge_cmds['data']},
+        args.indir + "/%s/data/antiiso/Jul15/" % proc
+    )
     if len(flist)==0:
         raise Exception("Couldn't open any files. Are you sure that %s exists and contains root files?" % args.indir)
+
     #Load all the samples in the isolated directory
     samples={}
     for f in flist:
         samples[f] = Sample.fromFile(f, tree_name=tree)
-
-    samples_antiiso = Sample.fromDirectory(
-        "%s/%s/data/antiiso/Jul15" % (args.indir, proc)
-    )
 
     for pd in args.plots:
         if not plot_defs[pd]['enabled'] and len(args.plots) > 1:
@@ -96,14 +101,12 @@ if __name__=="__main__":
             cut = plot_defs[pd]['mucut']
 
         cut_str = str(cut)
-        #weight_str = "pu_weight*b_weight_nominal*"
         weight_str = str(Weights.total(proc) *
             Weights.wjets_madgraph_shape_weight() *
             Weights.wjets_madgraph_flat_weight())
 
         plot_range = plot_defs[pd]['range']
 
-        hist_qcd = None
         hists_mc = dict()
         hists_data = dict()
         for name, sample in samples.items():
@@ -113,33 +116,32 @@ if __name__=="__main__":
                 hist.Scale(sample.lumiScaleFactor(lumi))
                 hists_mc[sample.name] = hist
                 Styling.mc_style(hists_mc[sample.name], sample.name)
-            else:
+            elif "antiiso" in name and plot_defs[pd]['estQcd']:
+                cv='mu_iso'
+                lb=0.3
+                if proc == 'ele':
+                    cv='el_iso'
+                    lb=0.1
+                qcd_cut = cut*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
+                hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
+                hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
+                hists_mc["QCD"+sample.name] = hist_qcd
+                hists_mc["QCD"+sample.name].SetTitle('QCD')
+                Styling.mc_style(hists_mc["QCD"+sample.name], 'QCD')
+            elif not "antiiso" in name:
                 hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
                 hist_data.SetTitle('Data')
                 Styling.data_style(hist_data)
                 hists_data[name] = hist_data
 
-        for name, sample in samples_antiiso.items():
-                qcd_cut = cut*Cuts.deltaR(0.5)
-                __hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
-                __hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
-                logger.debug("hist=%s" % str(hist_qcd))
-                if not hist_qcd:
-                    hist_qcd = __hist_qcd
-                else:
-                    hist_qcd += __hist_qcd
-                Styling.mc_style(hist_qcd, 'QCD')
-                hist_qcd.SetTitle("QCD")
-
         if len(hists_data.values())==0:
             raise Exception("Couldn't draw the data histogram")
 
         #Combine the subsamples to physical processes
-        add=[]
-        if hist_qcd:
-            add=[hist_qcd]
         hist_data = sum(hists_data.values())
-        merged_hists = add+merge_hists(hists_mc, merge_cmds).values()
+        merge_cmds['QCD']=["QCD"+merge_cmds['data'][0]]
+        order=['QCD']+PhysicsProcess.desired_plot_order
+        merged_hists = merge_hists(hists_mc, merge_cmds, order=order).values()
         leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
         #Create the dir if it doesn't exits
@@ -172,10 +174,8 @@ if __name__=="__main__":
         canv = ROOT.TCanvas()
 
         stacks_d = OrderedDict()
-        stacks_d["mc"] = merged_hists
+        stacks_d["mc"] = merged_hists 
         stacks_d["data"] = [hist_data]
-        #xlab = 'cos #theta'
-        #ylab = 'N / 0.1'
         xlab = plot_defs[pd]['xlab']
         ylab = 'N / '+str((1.*(plot_range[2]-plot_range[1])/plot_range[0]))
         if plot_defs[pd]['gev']:

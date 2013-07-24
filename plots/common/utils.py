@@ -156,7 +156,10 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
 
     out_d = OrderedDict()
     logging.debug("merge_hists: input histograms %s" % str(hists_d))
-    for merge_name, items in merge_groups.items():
+    for name in order:
+        if name in merge_groups.keys():
+            merge_name=name
+            items=merge_groups[name]
         logger.debug("Merging %s to %s" % (items, merge_name))
 
         matching_keys = []
