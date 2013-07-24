@@ -22,7 +22,7 @@ qcdScale['ele']['presel']=4.05
 qcdScale['ele']['2j0t']=2.46
 qcdScale['ele']['3j1t']=0.28
 qcdScale['mu']={}
-qcdScale['mu']['final']=27.455
+qcdScale['mu']['final']=38.962
 qcdScale['mu']['nomet']=3.32
 qcdScale['mu']['presel']=4.05
 qcdScale['mu']['2j0t']=2.46
@@ -49,7 +49,7 @@ plot_defs['cos_th_final']={
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
-    'estQcd': 'presel',
+    'estQcd': 'final',
     'gev': False,
     'log': False,
     'xlab': 'cos #theta',
