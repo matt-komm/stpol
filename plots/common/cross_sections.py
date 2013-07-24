@@ -26,7 +26,7 @@ xs = {
 	, "W4Jets_exclusive": 214.0 * WJets_lo_nnlo_scale_factor
     
     #http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa
-    ,"WJets_sherpa_nominal": 30503.0 * WJets_lo_nnlo_scale_factor / WJets_sherpa_weight_factor
+    ,"WJets_sherpa": 30503.0 * WJets_lo_nnlo_scale_factor / WJets_sherpa_weight_factor
 
 	#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=*GJets_HT-*_8TeV-madgraph*
 	, "GJets1": 960.5 #200To400
