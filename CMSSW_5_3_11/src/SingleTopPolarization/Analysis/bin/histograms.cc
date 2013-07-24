@@ -212,6 +212,17 @@ int main(int argc, char **argv)
     int jet_flavour_classification = -1;
 
     vector<string> weights;
+
+    vector<string, string> shape_weight_names;
+    shape_weight_names.push_back("wjets_mg_flavour_shape_weight");
+    shape_weight_names.push_back("wjets_mg_flavour_shape_weight_up");
+    shape_weight_names.push_back("wjets_mg_flavour_shape_weight_down");
+
+    vector<string, string> yield_weight_names;
+    yield_weight_names.push_back("wjets_mg_flavour_flat_weight");
+    yield_weight_names.push_back("wjets_mg_flavour_flat_weight_up");
+    yield_weight_names.push_back("wjets_mg_flavour_flat_weight_down");
+
     weights.push_back("unweighted");
 
     map<string, float> wjets_weight_branches;
@@ -237,16 +248,14 @@ int main(int argc, char **argv)
     {
         get_branch<int>("wjets_flavour_classification0", &jet_flavour_classification, events);
 
+        for (auto & e : shape_weight_names)
+            getbranch(e);
+        for (auto & e : yield_weight_names)
+            getbranch(e);
+
         weights.push_back("weighted_wjets_mg_flavour_nominal");
         weights.push_back("weighted_wjets_mg_flavour_up");
         weights.push_back("weighted_wjets_mg_flavour_down");
-
-        getbranch("wjets_mg_flavour_flat_weight");
-        getbranch("wjets_mg_flavour_flat_weight_up");
-        getbranch("wjets_mg_flavour_flat_weight_down");
-        getbranch("wjets_mg_flavour_shape_weight");
-        getbranch("wjets_mg_flavour_shape_weight_up");
-        getbranch("wjets_mg_flavour_shape_weight_down");
     }
 
     int min_flavour = -1;
@@ -295,10 +304,7 @@ int main(int argc, char **argv)
             cerr << "Couldn't make directory " << dirname << endl;
             throw 1;
         }
-        //std::cout << "Making directory " << dirname << std::endl;
-        //std::cout << "TDir=" << dir->GetPath() << endl;
         e.second->SetDirectory(dir);
-        //std::cout << "TDir=" << e.second->GetDirectory()->GetPath() << endl;
         e.second->Sumw2();
     }
 
@@ -306,10 +312,21 @@ int main(int argc, char **argv)
     //cos_theta_hists[]
     long Nbytes = 0;
     cout << "Beginning event loop." << endl;
+
+    map<string, float> sum_weights;
+    for (auto & e : yield_weight_names)
+        sum_weights[e] = 0.0;
+
     for (int n = 0; n < Nentries; n++)
     {
         long idx = elist->GetEntry(n);
         Nbytes += events->GetEntry(idx);
+
+        //Calculate the sum of the shape weights for normalization
+        for (auto & e : yield_weight_names)
+            sum_weights[e] += wjets_weight_branches[e];
+
+
         if (n_jets == 2)
         {
             if (n_tags == 1 || n_tags == 0)
@@ -365,11 +382,11 @@ int main(int argc, char **argv)
                     );
                     hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "abs_eta_lj")]->Fill(
                         fabs(eta_lj),
-                        w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]
+                        w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_shape_weight_down"]
                     );
                     hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "eta_lj")]->Fill(
                         eta_lj,
-                        w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]
+                        w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_shape_weight_down"]
                     );
 
 
@@ -380,9 +397,20 @@ int main(int argc, char **argv)
     }
     std::cout << "Read " << Nbytes << " bytes" << std::endl;
 
+    for (auto & e : sum_weights)
+    {
+        e.second = e.second / (float)Nentries;
+    }
+    for (auto & e : hists)
+    {
+        if (get<3>(e.first) == weights[1])
+        {
+            e.second->Scale(sum_weights["wjets_mg_flavour_shape_weight"])
+        }
+    }
+
     events->SetCacheSize(0);
 
-    //fi->Write();
     TObject *count_hist = (fi->Get("trees/count_hist;1"));
     float ngen = 1.0;
     if (count_hist && isMC)
@@ -392,22 +420,19 @@ int main(int argc, char **argv)
     std::cout << "ngen=" << ngen << endl;
     for (auto & e : hists)
     {
-        //cout << id_to_string(e.first) << " " << e.second << " " << e.second->GetDirectory() << endl;
-        //cout << e.second << " " << e.second->GetDirectory()->GetPath() << endl;
         if (ngen > 0.0)
         {
             e.second->Scale(1.0 / ngen);
         }
-
-        //e.second->Print();
-        //cout << "Writing histogram " << e.second->GetDirectory()->GetPath() << ":" << e.second->GetName() << endl;
     }
+
+    fi->Close();
+    delete fi;
 
     cout << "Writing file" << endl;
     ofi->Write();
-    fi->Close();
-    delete fi;
     ofi->Close();
     delete ofi;
+
     return 0;
 }

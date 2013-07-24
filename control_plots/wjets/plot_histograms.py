@@ -48,10 +48,12 @@ def filter_hists(pat, hists):
 
 LUMI=lumi_iso["mu"]
 
-def load_hists(dirname):
+def load_hists(dirname, histsA=None, histsB=None):
 	files = map(File, glob.glob(dirname+"/*.root"))
-	histsA = NestedDict()
-	histsB = NestedDict()
+	if not histsA:
+		histsA = NestedDict()
+	if not histsB:
+		histsB = NestedDict()
 
 	for fi in files:
 		sample_name = get_sample_name(fi.name)
@@ -95,10 +97,14 @@ def merge_flavours(hists):
 		v.SetName(k)
 	return ret
 
+qcd_yields = NestedDict()
+qcd_yields[2][1]["SR"] = 38.582
+qcd_yields = qcd_yields.as_dict()
 
 if __name__=="__main__":
 	logging.basicConfig(level=logging.INFO)
-	logging.getLogger("utils").setLevel(level=logging.DEBUG)
+	logger.setLevel(logging.DEBUG)
+	#logging.getLogger("utils").setLevel(level=logging.DEBUG)
 
 
 	tdrstyle()
@@ -106,22 +112,35 @@ if __name__=="__main__":
 
 	plot_order = PhysicsProcess.desired_plot_order
 	plot_order.pop(plot_order.index("WJets"))
-	plot_order.insert(1, "WJets W+hf")
-	plot_order.insert(2, "WJets W+l")
-	plot_order.insert(3, "WJets W+g")
+	plot_order.insert(1,"QCD")
+	plot_order.insert(2, "WJets W+hf")
+	plot_order.insert(3, "WJets W+l")
+	plot_order.insert(4, "WJets W+g")
+	logging.info("Plotting order: %s" % str(plot_order))
+
 	N_jets = 2
 	N_tags = 1
 	cut_region = "SR"
+
+
 	cut_name = "%dJ%dT %s" % (N_jets, N_tags, cut_region)
 	cos_theta = "cos #theta"
 	plot_args = {"legend_text_size":0.015, "legend_pos":"top-left", "x_label":cos_theta}
 
+#Load the histograms
 	out_dir = "out/plots/wjets/%dJ%dT_%s/" % (N_jets, N_tags, cut_region)
 	mkdir_p(out_dir)
-	histsA, histsB = load_hists("hists/%s" % cut_region)
+	histsA, histsB = load_hists("hists/mu/mc/iso/%s" % cut_region)
+	histsA, histsB = load_hists("hists/mu/data/iso/%s" % cut_region, histsA=histsA, histsB=histsB)
+
+	histsA = histsA.as_dict()
+	histsB = histsB.as_dict()
+
+	histsA_qcd, histsB_qcd = load_hists("hists/mu/data/antiiso/cut1_qcd")
+	histsA_qcd = histsA_qcd.as_dict()
+	histsB_qcd = histsB_qcd.as_dict()
 
 	wjets_hists = NestedDict()
-
 	for k, v in histsA["cos_theta"][N_jets][N_tags]["unweighted"].items():
 		if re.match("W.*Jets.*", k):
 			for flavour, hist in v.items():
@@ -133,7 +152,9 @@ if __name__=="__main__":
 	wjets_merges["madgraph"] = ["W[1-4]Jets_exclusive"]
 	hists_ratio = NestedDict()
 
+	logger.info("Merging histograms")
 	for flavour, hists in wjets_hists.items():
+		logger.debug("Merging flavour %s: %s" % (flavour, str(hists)))
 		merged_wjets[flavour] = merge_hists(hists, wjets_merges, order=wjets_merges.keys())
 
 		madgraph_rew_hists = dict(
@@ -147,6 +168,7 @@ if __name__=="__main__":
 		madgraph_rew = sum(madgraph_rew_hists)
 
 		cloned = dc(merged_wjets[flavour])
+		logger.debug("Merge output %s" % str(cloned))
 		norm(cloned["sherpa"])
 		norm(cloned["madgraph"])
 		madgraph_rew.Scale(cloned["madgraph"].Integral() / madgraph_rew.Integral())
@@ -202,6 +224,20 @@ if __name__=="__main__":
 					if k in merged_final[var][weight].keys():
 						continue
 					merged_final[var][weight][k] = dc(v)
+
+			merged_final[var][weight]["QCD"] = None
+			for k, v in histsA_qcd[var][N_jets][N_tags]["unweighted"].items():
+				hist = v[-1] #Get the histogram with unsplit flavour
+				if not merged_final[var][weight]["QCD"]:
+					merged_final[var][weight]["QCD"] = hist
+				else:
+					merged_final[var][weight]["QCD"] += hist
+			merged_final[var][weight]["QCD"].Scale(qcd_yields[N_jets][N_tags][cut_region])
+			Styling.mc_style(merged_final[var][weight]["QCD"], "QCD")
+
+		print "Normalizations"
+		for process, hist in merged_final[var]["unweighted"].items():
+			print "%s %s" % (process, hist.Integral())
 
 		canv = ROOT.TCanvas()
 		r = plot(canv, "2J_%s" % var, merged_final[var]["unweighted"], out_dir, desired_order=plot_order, **plot_args)
