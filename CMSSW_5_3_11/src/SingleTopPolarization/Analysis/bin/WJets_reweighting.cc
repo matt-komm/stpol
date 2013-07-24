@@ -169,7 +169,7 @@ int main(int argc, char* argv[]) {
     
     TTree* weight_tree = new TTree("WJets_weights", "WJets_weights");
     const char* weight_file = "$STPOL_DIR/CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario0.root";
-    TFile* hists_fi0 = new TFile(weight_file, "UPDATE");
+    TFile* hists_fi0 = new TFile(weight_file);
     if(!weight_tree) {
         cerr << "Couldn't open " << weight_file << endl;
     }
