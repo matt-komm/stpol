@@ -236,7 +236,7 @@ plot_defs['cos_th_mva_loose']={
     'xlab': 'cos #theta',
     'labloc': 'top-left',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.3'),
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>-0.38')
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.4')
 }
 
 
@@ -251,6 +251,6 @@ plot_defs['cos_th_mva_tight']={
     'xlab': 'cos #theta',
     'labloc': 'top-left',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.6'),
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>-0.15')
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.6')
 }
 
