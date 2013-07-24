@@ -21,11 +21,17 @@ def get_sample_name(filename):
     """
     return filename.split("/")[-1].split(".")[0]
 
-def get_process_name(sample_name):
-    if sample_name.startswith("WJets_sherpa_nominal"):
-        return "WJets_sherpa_nominal"
-    else:
-        return sample_name
+
+process_names = {
+    "WJets_sherpa.*": "WJets_sherpa",
+    "SingleMu.*": "SingleMu",
+    "SingleEle.*": "SingleEle"
+}
+def get_process_name(sn):
+    for k, v in process_names.items():
+        if re.match(k, sn):
+            return v
+    return sn
 
 logger = logging.getLogger("sample.py")
 class Sample:
