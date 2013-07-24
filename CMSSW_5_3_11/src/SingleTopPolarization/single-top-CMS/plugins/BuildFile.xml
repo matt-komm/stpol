@@ -1,0 +1,12 @@
+<use  name = "CondFormats/JetMETObjects" />
+<use  name = "DataFormats/PatCandidates" />
+<use  name = "HLTrigger/HLTcore" />
+<use  name = "JetMETCorrections/Objects" />
+
+<!-- <use  name = "LHAPDF" /> -->
+<use  name = "root" />
+
+<library  name = "UserCodeSingleTop_plugins" file = "ElectronIsolatorFromEffectiveArea.cc">
+    <flags  EDM_PLUGIN = "1" />
+    <flags  CXXFLAGS = "-O2" />
+</library>
