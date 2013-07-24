@@ -132,7 +132,7 @@ if __name__=="__main__":
 	hists_ratio = NestedDict()
 
 	for flavour, hists in wjets_hists.items():
-		merged_wjets[flavour] = merge_hists(hists, wjets_merges)
+		merged_wjets[flavour] = merge_hists(hists, wjets_merges, order=wjets_merges.keys())
 
 		madgraph_rew_hists = dict(
 			filter(lambda x:
@@ -143,8 +143,6 @@ if __name__=="__main__":
 			)
 		).values()
 		madgraph_rew = sum(madgraph_rew_hists)
-		#pdb.set_trace()
-		#norm(madgraph_rew)
 
 		cloned = dc(merged_wjets[flavour])
 		norm(cloned["sherpa"])
@@ -188,7 +186,7 @@ if __name__=="__main__":
 					merged_flavours[var][weight][sample_name] = hists[-1]
 
 
-			merged_final[var][weight] = merge_hists(merged_flavours[var][weight], merges)
+			merged_final[var][weight] = merge_hists(merged_flavours[var][weight], merges, merges.keys())
 
 			merged_final[var][weight]["WJets W+hf"].SetFillColor(
 				merged_final[var][weight]["WJets W+l"].GetFillColor()+1
