@@ -1,5 +1,5 @@
 import ROOT
-from odict import OrderedDict as dict
+from odict import OrderedDict
 import string
 import logging
 logger = logging.getLogger("utils")
@@ -9,6 +9,22 @@ import glob
 from copy import deepcopy
 
 from rootpy.plotting.hist import Hist, Hist2D
+
+
+class NestedDict(OrderedDict):
+    def __missing__(self, key):
+        self[key] = NestedDict()
+        return self[key]
+
+    def as_dict(self):
+        out_d = OrderedDict()
+        for k, v in self.items():
+            if isinstance(v, NestedDict):
+                r = v.as_dict()
+            else:
+                r = v
+            out_d[k] = r
+        return out_d
 
 def get_file_list(merge_cmds, dir, fullpath=True):
     """
@@ -45,7 +61,7 @@ class PhysicsProcess:
         Returns the collection of PhysicsProcesses, that contain samples to be merged for the
         particular lepton channel and systematic scenario.
         """
-        out_d = dict()
+        out_d = OrderedDict()
         if lepton_channel=="mu":
             out_d["data"] = self.SingleMu
         elif lepton_channel=="ele":
@@ -70,7 +86,7 @@ class PhysicsProcess:
         Used for merging.
         """
         in_d = self.get_dict(lepton_channel, **kwargs)
-        out_d = dict()
+        out_d = OrderedDict()
         for name, process in in_d.items():
             out_d[name] = process.subprocesses
         return out_d
@@ -138,7 +154,7 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
         if not isinstance(v, Hist) and not isinstance(v, ROOT.TH1I) and not isinstance(v, ROOT.TH1F) and not isinstance(v, Hist2D) and not isinstance(v, ROOT.TH2I) and not isinstance(v, ROOT.TH2F):
             raise ValueError("First argument(hists_d) must be a dict of Histograms, but found %s" % v)
 
-    out_d = dict()
+    out_d = OrderedDict()
     logging.debug("merge_hists: input histograms %s" % str(hists_d))
     for merge_name, items in merge_groups.items():
         logger.debug("Merging %s to %s" % (items, merge_name))
@@ -186,7 +202,7 @@ def get_sample_name(arg):
         return arg.split("/")[-1].split(".")[0]
 
 def get_sample_dict(path, sample_d):
-    out_d = dict()
+    out_d = OrderedDict()
     for (name, samples) in sample_d.items():
         files = []
         for samp in samples:
@@ -218,7 +234,7 @@ def filter_hists(indict, pat):
     indict - a dictionary
     pat - a regex pattern that has at least 1 parenthesized group
     """
-    out = dict()
+    out = OrderedDict()
     for k,v in indict.items():
         m = re.match(pat, k)
         if not m:
