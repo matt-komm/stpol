@@ -19,7 +19,7 @@ qcdScale['ele']={}
 qcdScale['ele']['final']=0.83
 qcdScale['ele']['nomet']=1.33
 qcdScale['ele']['presel']=1.33
-qcdScale['ele']['2j0t']=2.25
+qcdScale['ele']['2j0t']=1.37
 qcdScale['ele']['3j1t']=0.26
 qcdScale['mu']={}
 qcdScale['mu']['final']=28
@@ -39,7 +39,7 @@ plot_defs['top_mass']={
     'gev': True,
     'log': False,
     'xlab': 'M_{b l #nu}',
-    'labloc': 'top-left',
+    'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.eta_lj*Cuts.met,
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.eta_lj*Cuts.mt_mu
 }
@@ -240,36 +240,8 @@ plot_defs['abs_eta_lj_3j2t']={
     'mucut': cutlist['3j2t']*cutlist['noeta_mu']
 }
 
-plot_defs['mva_cat4']={
-    'enabled': False,
-    'var': 'mva_cat4',
-    'range': [40,-1,1],
-    'iso': True,
-    'estQcd': 'presel',
-    'gev': False,
-    'log': True,
-    'xlab': '4-category BDT',
-    'labloc': 'top-right',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele'],
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']
-}
-
-plot_defs['mva_cat2']={
-    'enabled': False,
-    'var': 'mva_cat2',
-    'range': [40,-1,1],
-    'iso': True,
-    'estQcd': 'presel',
-    'gev': False,
-    'log': True,
-    'xlab': '2-category BDT',
-    'labloc': 'top-right',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele'],
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']
-}
-
 plot_defs['mva_bdt']={
-    'enabled': False,
+    'enabled': True,
     'var': 'mva_BDT',
     'range': [40,-1,1],
     'iso': True,
@@ -283,7 +255,7 @@ plot_defs['mva_bdt']={
 }
 
 plot_defs['cos_th_mva_loose']={
-    'enabled': False,
+    'enabled': True,
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
@@ -292,13 +264,13 @@ plot_defs['cos_th_mva_loose']={
     'log': False,
     'xlab': 'cos #theta',
     'labloc': 'top-left',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.3'),
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.4')
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.38'),
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.32')
 }
 
 
 plot_defs['cos_th_mva_tight']={
-    'enabled': False,
+    'enabled': True,
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
@@ -307,7 +279,7 @@ plot_defs['cos_th_mva_tight']={
     'log': False,
     'xlab': 'cos #theta',
     'labloc': 'top-left',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.6'),
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.6')
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.7'),
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.5')
 }
 

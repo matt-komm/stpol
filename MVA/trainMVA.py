@@ -9,6 +9,7 @@ from plots.common.utils import *
 from plots.common.colors import sample_colors_same
 from plots.common.cross_sections import lumis
 from plots.common.cuts import *
+from plots.common.plot_defs import qcdScale
 
 if len(sys.argv) < 2: 
     print "Usage: ./trainMVA.py ele/mu"
@@ -17,7 +18,7 @@ if len(sys.argv) < 2:
 proc = sys.argv[1]
 # Choose between electron / muon channel fitting
 step3_ver="83a02e9_Jul22"
-step3 = "/home/mario/Summer13/stpol/step3"
+step3 = "/home/mario/Summer13/stpol/step3_new"
 lumi=lumis[step3_ver]["iso"][proc]
 
 merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel=proc)
@@ -26,28 +27,31 @@ flist = get_file_list(
    step3 + "/%s/mc/iso/nominal/Jul15/" % proc
 )
 flist += get_file_list(
-   merge_cmds,
-   step3 +  "/%s/data/iso/Jul15/" % proc
+    {'QCD': merge_cmds['data']},
+    step3 + "/%s/data/antiiso/Jul15/" % proc
 )
 
 # Read in the file list from the output directory
 samples = {}
 for f in flist:
     samples[f] = Sample.fromFile(f, tree_name="Events_MVA")
-#samples['qcd'] = Sample.fromFile(adirs['antiiso']+'/Single'+sample.title()+'.root', tree_name="Events_MVA")
 
 # To compute accurate weight we need to load from the tree also the weights in question
-weightString = str(Weights.total(proc))
+#weightString = str(Weights.total(proc))
+# Temporary patch until proper step3 is available
+weightString = "1.0"
+
 t={}
 f={}
 w={}
 
-for key in flist:#samples.keys():
-    #for key in klist:
+for key in flist:
     w[key]=1.
     t[key]=samples[key].getTree()
     if samples[key].isMC: 
         w[key]=samples[key].lumiScaleFactor(lumi)
+    if 'data' in key and proc=='ele':
+        w[key]=qcdScale[proc]['presel']
 
 signal=['T_t_ToLeptons','Tbar_t_ToLeptons']
 
@@ -105,10 +109,10 @@ factory.BookMethod(TMVA.Types.kBDT,
                    "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.1:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"\
                    )
 
-factory.BookMethod(TMVA.Types.kBDT,
-                   "BDT_stop",
-                   "!H:!V:NTrees=300:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=-1:PruneMethod=CostComplexity:PruneStrength=1.:NNodesMax=20:MaxDepth=30:AdaBoostBeta=0.2"\
-                  )
+#factory.BookMethod(TMVA.Types.kBDT,
+#                   "BDT_stop",
+#                   "!H:!V:NTrees=300:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=-1:PruneMethod=CostComplexity:PruneStrength=1.:NNodesMax=20:MaxDepth=30:AdaBoostBeta=0.2"\
+#                  )
 
 factory.TrainAllMethods()
 factory.TestAllMethods()

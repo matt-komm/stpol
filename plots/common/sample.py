@@ -60,11 +60,7 @@ class Sample:
         except Exception as e:
             raise e
         try:
-            self.tree = self.tfile.Get("trees/"+tree_name)
-            #regex = re.compile("^W[1-4]Jets*")
-            regex2 = re.compile("^Single*")
-            #if regex2.match(self.process_name) is None:
-            #    self.tree.AddFriend("trees/WJets_weights")
+            self.tree = self.tfile.Get("trees/"+tree_name)            
         except Exception as e:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.file_name, self.tfile))
 
