@@ -129,6 +129,7 @@ if __name__=="__main__":
                 else:
                     hist_qcd += __hist_qcd
                 Styling.mc_style(hist_qcd, 'QCD')
+                hist_qcd.SetTitle("QCD")
 
         if len(hists_data.values())==0:
             raise Exception("Couldn't draw the data histogram")
