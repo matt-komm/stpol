@@ -16,15 +16,15 @@ cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
 qcdScale={}
 qcdScale['ele']={}
-qcdScale['ele']['final']=3.32
-qcdScale['ele']['nomet']=3.32
-qcdScale['ele']['presel']=4.05
-qcdScale['ele']['2j0t']=2.46
-qcdScale['ele']['3j1t']=0.28
+qcdScale['ele']['final']=0.83
+qcdScale['ele']['nomet']=1.33
+qcdScale['ele']['presel']=1.33
+qcdScale['ele']['2j0t']=2.25
+qcdScale['ele']['3j1t']=0.26
 qcdScale['mu']={}
-qcdScale['mu']['final']=3.32
-qcdScale['mu']['nomet']=3.32
-qcdScale['mu']['presel']=4.05
+qcdScale['mu']['final']=28
+qcdScale['mu']['nomet']=28
+qcdScale['mu']['presel']=27.9
 qcdScale['mu']['2j0t']=2.46
 qcdScale['mu']['3j1t']=0.28
 
