@@ -1,0 +1,3 @@
+chi square	Χ²
+nu ν
+cosine theta θ
