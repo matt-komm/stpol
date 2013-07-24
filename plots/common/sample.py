@@ -1,11 +1,13 @@
 import ROOT
 import logging
-from plots.common.utils import filter_alnum
+from plots.common.utils import filter_alnum, NestedDict
 from plots.common.histogram import *
 import numpy
 from cross_sections import xs as sample_xs_map
 import rootpy
 from rootpy.plotting import Hist, Hist2D
+
+import os
 
 class HistogramException(Exception):
     pass
@@ -237,19 +239,37 @@ class Sample:
 def is_mc(name):
     return not "SingleMu" in name
 
-def load_samples(basedir=None):
+def get_paths(basedir=None):
     if not basedir:
         basedir = os.environ["STPOL_DIR"]
     datadirs = dict()
-    datadirs["iso"] = "/".join((basedir, "step3_latest", "mu" ,"iso", "nominal"))
-    #Use the anti-isolated data for QCD $STPOL_DIR/step3_latest/mu/antiiso/nominal/SingleMu.root
-    # datadirs["antiiso"] = "/".join((basedir, "step3_latest", "mu" ,"antiiso", "nominal"))
+    fnames = NestedDict()
+    for root, paths, files in os.walk(basedir + "/step3_latest"):
+        rootfiles = filter(lambda x: x.endswith(".root"), files)
+        for fi in rootfiles:
+            fn = root + "/" + fi
 
-    #Load all the samples in the isolated directory
-    samples = Sample.fromDirectory(datadirs["iso"], out_type="dict", prefix="iso/")
+            spl = fn.split("/")
+            try:
+                idx = spl.index("mu")
+            except ValueError:
+                idx = spl.index("ele")
 
-    for name, sample in samples.items():
-            sample.process_name = get_process_name(sample.name)
-    # samples["antiiso/SingleMu"] = Sample.fromFile(datadirs["antiiso"] + "/SingleMu.root")
+            spl = spl[idx:]
+            lepton = spl[0]
+            sample_type = spl[1]
+            iso = spl[2]
+            
+            if len(spl)==6:
+                systematic=spl.pop(3)
+            elif len(spl)==5:
+                systematic="NONE"
+            else:
+                raise ValueError("Couldn't parse filename: %s" % fn)
+            dataset = spl[3]
+            fname = spl[4]
 
-    return samples
+            fnames[dataset][sample_type][lepton][systematic][iso] = root
+            break
+    return fnames.as_dict()
+
