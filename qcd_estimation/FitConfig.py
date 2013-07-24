@@ -7,7 +7,7 @@ class FitConfig():
     def __init__(self,
             name = "final_selection",    #name will go into output file names 
             trigger = "(HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1)",
-          weightMC = "b_weight_nominal*pu_weight*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight",
+          weightMC = "b_weight_nominal*pu_weight*muon_IDWeight*muon_IsoWeight*muon_TriggerWeightwjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight",
             baseCuts = "n_jets == 2 && n_tags == 1 && n_veto_ele==0 && n_veto_mu==0",
             jetCuts = "pt_lj>40 && pt_bj>40 && rms_lj<0.025",
             finalCuts = "abs(eta_lj)>2.5 && top_mass < 220 && top_mass > 130",

@@ -61,7 +61,7 @@ def get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGro
     return (get_yield(var, cuts.name, cutMT, mtMinValue, fit, dataGroup), fit)
 
 
-def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/step3_new/", do_systematics=False):
+def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/step3_latest/", do_systematics=False):
 #    do_systematics = True
 #
 #    if channel == "ele":
@@ -76,8 +76,7 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
         var = Variable("met", 0, 200, 40, "MET", "MET")
     else:
         raise ValueError("channel must be 'mu' or 'ele': %s" % channel)
-    base_path = base_path + channel + "/"
-
+    
     #Do you want to get the resulting yield after a cut on the fitted variable?
     #If yes, specify minumum value for the variable the cut. Obviously change to MET for electrons
     #Remember that the cut should be on the edge of 2 bins, otherwise the result will be inaccurate
@@ -102,7 +101,7 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
         lepton_weight = "*muon_TriggerWeight*muon_IsoWeight*muon_IDWeight"
         #cuts.setTrigger("1")
 
-    cuts.setWeightMC("SF_total")
+    cuts.setWeightMC("pu_weight*b_weight_nominal*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"+lepton_weight)
     #Recreate all necessary cuts after manual changes
     cuts.calcCuts()
     #Luminosities for each different set of data have to be specified.
@@ -143,10 +142,10 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     #Generate path structure as base_path/iso/systematic, see util_scripts
     #If you have a different structure, change paths manually
-    paths = generate_paths(systematics, base_path)
+    paths = generate_paths(systematics, base_path, channel)
     #For example:
-    paths["iso"]["Nominal"] = base_path+"/iso/nominal/"
-    paths["antiiso"]["Nominal"] = base_path+"/antiiso/nominal/"
+    #paths["iso"]["Nominal"] = base_path+"/iso/nominal/"
+    #paths["antiiso"]["Nominal"] = base_path+"/antiiso/nominal/"
     #Then open files
     print "opening data and MC files"
     openedFiles = open_all_data_files(dataGroup, MCGroups, QCDGroup, paths)
