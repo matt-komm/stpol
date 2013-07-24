@@ -1,10 +1,14 @@
 import subprocess
 from plots.common.utils import *
+from plots.common.sample import get_paths
 import glob
 from subprocess import check_call
 from SingleTopPolarization.Analysis.sample_types import *
 
 if __name__=="__main__":
+
+
+	path = get_paths()
 	fnames = glob.glob("/Users/joosep/Documents/stpol/step3_latest/mu/iso/nominal/*.root")
 
 	ofdir = "hists/"
