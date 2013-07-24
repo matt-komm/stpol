@@ -286,6 +286,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/W4Jets_exclusive/o
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/W4Jets_exclusive/output_286_2_8c2.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/W4Jets_exclusive/output_287_2_xG5.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/W4Jets_exclusive/output_288_2_4SE.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/W4Jets_exclusive/output_289_4_smn.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/W4Jets_exclusive/output_290_2_wmF.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/W4Jets_exclusive/output_291_2_FXV.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/W4Jets_exclusive/output_292_2_LdW.root

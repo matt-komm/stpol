@@ -1,0 +1,13 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_1_1_jt4.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_2_1_R1q.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_3_1_Rm0.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_4_1_UD0.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_5_1_2ks.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_6_1_RUu.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_7_1_0kr.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_8_1_fue.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_9_2_WA8.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_10_1_kxU.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_11_1_Iv3.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_12_1_Fsc.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/EnUp/T_t_ToLeptons/output_13_1_Vun.root
