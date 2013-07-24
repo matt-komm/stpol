@@ -103,7 +103,7 @@ class Weights:
         if lepton in ["mu", "ele"]:
             w *= getattr(Weights, lepton)
         else:
-            raise ValueError("Lepton channel %s not defined" % channel)
+            raise ValueError("Lepton channel %s not defined" % lepton)
 
         if systematic=="nominal":
             w*= Weight("b_weight_nominal")
