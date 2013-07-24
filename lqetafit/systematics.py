@@ -1,10 +1,15 @@
+import ROOT
+
 signal = 'tchan'
 
 current_syst = ''
 #systematics = ['unclusen','en','res']
 #systematics = ['mass','scale','unclusen','en']
 # res up not working
-systematics = ['en','unclusen', 'mass','top_scale','tchan_scale','matching']
+#systematics = ['en','unclusen', 'mass','top_scale','tchan_scale','matching']
+# FIXME new
+#systematics = ['btaggingBC', 'btaggingL', 'muonID', 'muonIso', 'muonTrigger', 'pileup', 'wjets_flat', 'wjets_shape', 'ttbar_scale']
+systematics = ['btaggingBC', 'btaggingL', 'muonID', 'muonIso', 'muonTrigger', 'pileup', 'ttbar_scale','wjets_shape','wjets_flat']
 
 def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'):
     found_match = False
@@ -39,14 +44,49 @@ def norm_shape(model, process, syst):
 def histofilter(s):
     if s.count('__') == 3:
         chan, proc, syst, dir = s.split('__')
+        #if syst == 'wjets_shape' and not proc == 'wzjets':
+        #    return False
         if not current_syst == syst:
             return False
     return True
 
+def write_cov_matrix(syst, mname, model, result):
+    # write out covariance matrix
+    # current systematic needs to be removed
+    pars = sorted(model.get_parameters([signal]))
+    n = len(pars)
+    #print pars
+
+    cov = result[signal]['__cov'][0]
+
+    # write out covariance matrix
+    ROOT.gStyle.SetOptStat(0)
+
+    fcov = ROOT.TFile("results/cov_"+mname+".root","RECREATE")
+    canvas = ROOT.TCanvas("c1","Covariance")
+    h = ROOT.TH2D("covariance","covariance",n-1,0,n-1,n-1,0,n-1)
+
+    # Needs 2 separate indices to remove current syst. from covariance matrix
+    l = 0
+    for i in range(n):
+        if pars[i] == current_syst: continue
+        l = l + 1
+        h.GetXaxis().SetBinLabel(l,pars[i]);
+        h.GetYaxis().SetBinLabel(l,pars[i]);
+        m = 0
+        for j in range(n):
+            if pars[j] == current_syst: continue
+            m = m + 1
+            h.SetBinContent(l,m,cov[i][j])
+
+    h.Write()
+    fcov.Close()
+
+
 def get_model():
-    model = build_model_from_rootfile('histos/lqeta.root', include_mc_uncertainties = False, histogram_filter = histofilter)
-    # FIXME Using pseudo data
-    #model = build_model_from_rootfile('histos/pseudo_data.root', include_mc_uncertainties = False, histogram_filter = histofilter)
+    # FIXME
+    #model = build_model_from_rootfile('histos/lqeta.root', include_mc_uncertainties = False, histogram_filter = histofilter)
+    model = build_model_from_rootfile('histos/andres3.root', include_mc_uncertainties = False, histogram_filter = histofilter)
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
     return model
@@ -87,17 +127,20 @@ for syst in systematics:
         else:
             shift = 'down'
         model.distribution.set_distribution_parameters(p, mean = new_mean, range = (new_mean, new_mean))
-        res = mle(model, input = 'toys-asimov:1.0', n = 1, nuisance_constraint = fit_dist, options = options)
+        res = mle(model, input = 'toys-asimov:1.0', n = 1, with_covariance = True, nuisance_constraint = fit_dist, options = options)
         fitresults = {}
         for process in res[signal]:
             if '__' in process: continue
             fitresults[process] = [res[signal][process][0][0], res[signal][process][0][1]]
-        f = open('results/syst_'+p+'_'+shift+'.txt','w')
+        f = open('results/syst_'+p+'__'+shift+'.txt','w')
         for key in sorted(fitresults.keys()):
             if key == current_syst: continue
             line = '%s %f %f\n' % (key, fitresults[key][0], fitresults[key][1])
             f.write(line)
             print line,
         f.close()
+        # write covariance matrix
+        mname = 'syst_'+p+'__'+shift
+        write_cov_matrix(current_syst, mname, model, res)
         model.distribution = orig_dist
 

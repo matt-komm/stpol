@@ -50,8 +50,8 @@ void makehisto(TString varname, TString process, TString ofile, TString file)
 	TH1::SetDefaultSumw2(true);
 	TH1I *hcount = (TH1I*)f->Get("trees/count_hist");
 	Int_t count = hcount->GetBinContent(1); 
+	cout << "sample size: " << count << endl;
 
-	//cout << "sample size: " << count << endl;
 	Float_t xsec = get_xsec(file);
 	cout << "xsec: " << xsec << endl;
 	
@@ -103,10 +103,10 @@ void makehisto(TString varname, TString process, TString ofile, TString file)
 
 int main()
 {
+/*
 	// varname histoname outfile inputfile
-	/*
-	//makehisto("eta_lj","tchan","tchan_t","T_t");
-	//makehisto("eta_lj","tchan","tchan_tbar","Tbar_t");
+	//makehisto("eta_lj","tchan","tchan_t","T_t"); // inclusive
+	//makehisto("eta_lj","tchan","tchan_tbar","Tbar_t"); // inclusive
 	makehisto("eta_lj","tchan","tchan_t","T_t_ToLeptons");
 	makehisto("eta_lj","tchan","tchan_tbar","Tbar_t_ToLeptons");
 	makehisto("eta_lj","schan","schan_t","T_s");
@@ -114,6 +114,7 @@ int main()
 	makehisto("eta_lj","twchan","twchan_t","T_tW");
 	makehisto("eta_lj","twchan","twchan_tbar","Tbar_tW");
 	makehisto("eta_lj","ttbar","ttbar_semilept","TTJets_SemiLept");
+	makehisto("eta_lj","ttbar","ttbar_fulllept","TTJets_FullLept");
 	makehisto("eta_lj","wjets","wjets1","W1Jets_exclusive");
 	makehisto("eta_lj","wjets","wjets2","W2Jets_exclusive");
 	makehisto("eta_lj","wjets","wjets3","W3Jets_exclusive");
@@ -122,11 +123,12 @@ int main()
 	makehisto("eta_lj","diboson","ww","WW");
 	makehisto("eta_lj","diboson","wz","WZ");
 	makehisto("eta_lj","diboson","zz","ZZ");
-	//makehisto("eta_lj","qcd","qcd","QCDMu");
+	//makehisto("eta_lj","qcd","qcd","QCDMu"); // QCD MC
 	makehisto("eta_lj","qcd","qcd","QCDShape");
 	makehisto("eta_lj","DATA","DATA_SingleMu","SingleMu");
 	*/
 
+	// top wzjets
 	makehisto("eta_lj","tchan","tchan_t","T_t_ToLeptons");
 	makehisto("eta_lj","tchan","tchan_tbar","Tbar_t_ToLeptons");
 	makehisto("eta_lj","top","schan_t","T_s");
@@ -146,7 +148,6 @@ int main()
 	//makehisto("eta_lj","qcd","qcd","QCDMu");
 	makehisto("eta_lj","qcd","qcd","QCDShape");
 	makehisto("eta_lj","DATA","DATA_SingleMu","SingleMu");
-
 	/*
 	// split wjets flavor
 	makehisto("eta_lj","wjets_light","wjets1_light","W1Jets_exclusive");
