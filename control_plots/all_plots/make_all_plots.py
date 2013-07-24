@@ -10,10 +10,9 @@ import ROOT
 ROOT.gROOT.SetBatch(True)
 import plots
 from plots.common.stack_plot import plot_hists_stacked
-from plots.common.utils import lumi_textbox
 from plots.common.odict import OrderedDict
 from plots.common.sample import Sample
-from plots.common.cuts import Cuts,Cut
+from plots.common.cuts import *
 from plots.common.legend import *
 from plots.common.sample_style import Styling
 from plots.common.plot_defs import *
@@ -32,7 +31,6 @@ lumis = {
     "mu": 6784+6398+5277,
     "ele":12410+6144
 }
-tree='Events'
 if __name__=="__main__":
     tdrstyle.tdrstyle()
     
@@ -53,11 +51,16 @@ if __name__=="__main__":
         "-p", "--plots", type=str, required=False, default=None, action='append', choices=plot_defs.keys(),
         help="the plots to draw"
     )
+    parser.add_argument(
+        "-t", "--tree", type=str, required=False, default="Events", choices=['Events','Events_MVA'],
+        help="the tree to use"
+    )
 
     args = parser.parse_args()
     if args.plots is None:
         args.plots = plot_defs.keys()
     proc=args.channel
+    tree = args.tree
     datadirs = dict()
 
     # Declare which data we will use
@@ -74,7 +77,10 @@ if __name__=="__main__":
         merge_cmds,
         args.indir + "/%s/data/iso/Jul15/" % proc
     )
-    print flist
+    flist += get_file_list(
+        {'data':merge_cmds['data']},
+        args.indir + "/%s/data/antiiso/Jul15/" % proc
+    )
     #Load all the samples in the isolated directory
     samples={}
     for f in flist:
@@ -94,19 +100,19 @@ if __name__=="__main__":
             cut = plot_defs[pd]['mucut']
 
         cut_str = str(cut)
-        #weight_str = "pu_weight*b_weight_nominal*"
-        weight_str = "pu_weight*b_weight_nominal*muon_IsoWeight*muon_IDWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+        weight_str = str(Weights.total(proc))
 
         plot_range = plot_defs[pd]['range']
         hist_qcd = None
         for name, sample in samples.items():
             logging.info("Starting to plot %s" % name)
+            print name,sample.name
             if sample.isMC:
                 hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
                 hist.Scale(sample.lumiScaleFactor(lumi))
                 hists_mc[sample.name] = hist
                 Styling.mc_style(hists_mc[sample.name], sample.name)
-            elif name == "data_aiso" and plot_defs[pd]['estQcd'] and proc == 'ele':
+            elif "antiiso" in name and plot_defs[pd]['estQcd']:
                 cv='mu_iso'
                 lb=0.3
                 if proc == 'ele':
@@ -115,10 +121,10 @@ if __name__=="__main__":
                 qcd_cut = cut*Cut('deltaR_lj>0.3 && deltaR_bj>0.3 && '+cv+'>'+str(lb)+' & '+cv+'<0.5')
                 hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
-                hists_mc['QCD'] = hist_qcd
-                hists_mc['QCD'].SetTitle('QCD')
-                Styling.mc_style(hists_mc['QCD'], 'QCD')
-            else:
+                hists_mc["QCD"+sample.name] = hist_qcd
+                hists_mc["QCD"+sample.name].SetTitle('QCD')
+                Styling.mc_style(hists_mc["QCD"+sample.name], 'QCD')
+            elif not "antiiso" in name:
                 hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
                 hist_data.SetTitle('Data')
                 Styling.data_style(hist_data)
@@ -128,12 +134,10 @@ if __name__=="__main__":
             raise Exception("Couldn't draw the data histogram")
 
         #Combine the subsamples to physical processes
-        add=[]
-        if hist_qcd:
-            add=[hist_qcd]
         hist_data = sum(hists_data.values())
         logging.info("hists=%s" % hists_mc)
-        merged_hists = add+merge_hists(hists_mc, merge_cmds).values()
+        merge_cmds['QCD']=["QCD"+merge_cmds['data'][0]]
+        merged_hists = merge_hists(hists_mc, merge_cmds).values()
         leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
         #Create the dir if it doesn't exits
@@ -166,7 +170,7 @@ if __name__=="__main__":
         canv = ROOT.TCanvas()
 
         stacks_d = OrderedDict()
-        stacks_d["mc"] = merged_hists #+[hist_qcd]
+        stacks_d["mc"] = merged_hists 
         stacks_d["data"] = [hist_data]
         #xlab = 'cos #theta'
         #ylab = 'N / 0.1'
