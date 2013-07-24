@@ -71,12 +71,12 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
 
     #Specify variable on which to fit
     if channel == "mu":
-        var = Variable("mt_mu", 0, 200, 20, "mtwMass", "m_{T }")
+        var = Variable("mt_mu", 0, 200, 4, "mtwMass", "m_{T }")
     elif channel == "ele":
         var = Variable("met", 0, 200, 40, "MET", "MET")
     else:
         raise ValueError("channel must be 'mu' or 'ele': %s" % channel)
-    
+
     #Do you want to get the resulting yield after a cut on the fitted variable?
     #If yes, specify minumum value for the variable the cut. Obviously change to MET for electrons
     #Remember that the cut should be on the edge of 2 bins, otherwise the result will be inaccurate
@@ -96,7 +96,7 @@ def get_qcd_yield_with_selection(cuts, channel = "mu", base_path="$STPOL_DIR/ste
         cuts.setAntiIsolationCut("el_iso > 0.1 & el_iso < 0.5")
         cuts.setAntiIsolationCutUp("el_iso > 0.11 & el_iso < 0.55") # check +-10% variation
         cuts.setAntiIsolationCutDown("el_iso > 0.09 & el_iso < 0.45")
-        lepton_weight = "*electron_triggerWeight*electron_IDWeight"
+        lepton_weight = "*electron_TriggerWeight*electron_IDWeight"
     elif channel == "mu":
         lepton_weight = "*muon_TriggerWeight*muon_IsoWeight*muon_IDWeight"
         #cuts.setTrigger("1")
@@ -205,4 +205,4 @@ if __name__=="__main__":
 
     print "Fit info:"
     print fit
-    plot_fit(fit.var, cut, fit.dataHisto, fit)
+    plot_fit(fit.var, cut, fit.dataHisto, fit, dataLumiIso)

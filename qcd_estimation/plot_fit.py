@@ -13,7 +13,7 @@ from plots.common.tdrstyle import *
 import os
 import logging
 
-def plot_fit(var, fitConf, hData, fit_result):
+def plot_fit(var, fitConf, hData, fit_result, lumi):
     tdrstyle()
     canvases = []
     infile = "fits/"+var.shortName+"_fit_"+fitConf.name+".root"
@@ -111,7 +111,7 @@ def plot_fit(var, fitConf, hData, fit_result):
     #hData.SetTitle("QCD fit, "+title)
     hData.Draw("E1 same")
 
-    lumibox = lumi_textbox(19739)
+    lumibox = lumi_textbox(lumi)
 
     leg = legend(
          [hData, hQCD, hQCDp, hNonQCD, hNonQCDp, hWJets, hWJetsp, hTotal],
