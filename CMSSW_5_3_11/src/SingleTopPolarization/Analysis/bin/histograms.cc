@@ -1,3 +1,5 @@
+#define CLANG
+
 #include <TTree.h>
 #include <TEventList.h>
 #include <TFile.h>
@@ -12,7 +14,12 @@
 #include <vector>
 #include <map>
 #include <memory>
+
+#ifdef CLANG
+#include <tr1/tuple>
+#else
 #include <tuple>
+#endif
 
 #include <boost/any.hpp>
 #include <boost/program_options.hpp>
@@ -27,8 +34,10 @@ void get_branch(const char *name, T *address, TTree *tree)
     tree->AddBranchToCache(name);
 }
 using namespace std;
-//using namespace std::tr1;
 
+#ifdef CLANG
+using namespace std::tr1;
+#endif
 
 typedef tuple <
 int, int, int,
@@ -156,7 +165,7 @@ int main(int argc, char **argv)
     events->AddBranchToCache("rms_lj");
     events->AddBranchToCache("mt_mu");
 
-    TFile *ofi = new TFile(outfile.c_str(), "UPDATE");
+    TFile *ofi = new TFile(outfile.c_str(), "RECREATE");
     std::cout << "Output file is " << outfile << std::endl;
     ofi->cd();
 
@@ -201,11 +210,6 @@ int main(int argc, char **argv)
     get_branch<float>("eta_lj", &eta_lj, events);
 
     int jet_flavour_classification = -1;
-
-
-
-    std::map<hist_ident, TH1 *> hists;
-    TH1::AddDirectory(false);
 
     vector<string> weights;
     weights.push_back("unweighted");
@@ -253,6 +257,8 @@ int main(int argc, char **argv)
         max_flavour = 7;
     }
 
+    std::map<hist_ident, TH1 *> hists;
+    TH1::AddDirectory(false);
     for (auto & weight : weights)
     {
         for (int i = min_flavour; i <= max_flavour; i++)
@@ -268,6 +274,8 @@ int main(int argc, char **argv)
             }
         }
     }
+
+    TH1::AddDirectory(true);
 
     for (auto & e : hists)
     {
@@ -290,8 +298,10 @@ int main(int argc, char **argv)
         //std::cout << "Making directory " << dirname << std::endl;
         //std::cout << "TDir=" << dir->GetPath() << endl;
         e.second->SetDirectory(dir);
+        //std::cout << "TDir=" << e.second->GetDirectory()->GetPath() << endl;
         e.second->Sumw2();
     }
+
 
     //cos_theta_hists[]
     long Nbytes = 0;
@@ -382,7 +392,8 @@ int main(int argc, char **argv)
     std::cout << "ngen=" << ngen << endl;
     for (auto & e : hists)
     {
-        std::cout << e.second->GetDirectory()->GetPath() << endl;
+        //cout << id_to_string(e.first) << " " << e.second << " " << e.second->GetDirectory() << endl;
+        //cout << e.second << " " << e.second->GetDirectory()->GetPath() << endl;
         if (ngen > 0.0)
         {
             e.second->Scale(1.0 / ngen);
