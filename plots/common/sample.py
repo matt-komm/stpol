@@ -239,12 +239,20 @@ class Sample:
 def is_mc(name):
     return not "SingleMu" in name
 
-def get_paths(basedir=None):
+def get_paths(basedir=None, samples_dir="step3_latest"):
+    """
+    basedir - the path where your STPOL directory is located
+    samples_dir - the subdirectory in STPOL/...
+
+    Returns a dictionary with the path structure of the samples in the format of
+    out[dataset_name][mc/data][mu/ele][systematic_scenario][isolation] = "/path/to/samples"
+    where dataset_name is the name/tag of the reprocessing
+    """
     if not basedir:
         basedir = os.environ["STPOL_DIR"]
     datadirs = dict()
     fnames = NestedDict()
-    for root, paths, files in os.walk(basedir + "/step3_latest"):
+    for root, paths, files in os.walk(basedir + "/" + samples_dir):
         rootfiles = filter(lambda x: x.endswith(".root"), files)
         for fi in rootfiles:
             fn = root + "/" + fi
