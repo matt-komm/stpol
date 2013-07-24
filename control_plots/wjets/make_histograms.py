@@ -9,7 +9,10 @@ if __name__=="__main__":
 
 
 	path = get_paths()
-	fnames = glob.glob("/Users/joosep/Documents/stpol/step3_latest/mu/iso/nominal/*.root")
+	print path.keys()
+	data_repro = "Jul15"
+	fnames = glob.glob(path[data_repro]["mc"]["mu"]["nominal"]["iso"] + "/*.root")
+	fnames += glob.glob(path[data_repro]["data"]["mu"]["NONE"]["iso"] + "/*.root")
 
 	ofdir = "hists/"
 
@@ -28,9 +31,6 @@ if __name__=="__main__":
 		if "sherpa" in sn:
 			args += ["--doWJetsSherpaWeight=true"]
 
-		#if is_mc(sn):
-		#	args += ["--weight=" + weight]
-
 		if not is_mc(sn):
 			args += ["--isMC=false"]
 
@@ -38,6 +38,6 @@ if __name__=="__main__":
 		for cut_name, cut_str in cuts:
 			ofdir_cut = "/".join([ofdir, cut_name]) + "/"
 			mkdir_p(ofdir_cut)
-			check_call(
-				["bin/histograms", "--infile="+fn, "--outfile=" + ofdir_cut + sn] + args + ["--cut=%s" % cut_str.replace(" ", "")]
-			)
+			cmd = ["bin/histograms", "--infile="+fn, "--outfile=" + ofdir_cut + sn] + args + ["--cut=%s" % cut_str.replace(" ", "")]
+			print " ".join(cmd)
+			check_call(cmd)
