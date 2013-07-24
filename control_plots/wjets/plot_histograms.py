@@ -45,12 +45,6 @@ def make_metadata(histname):
 def filter_hists(pat, hists):
 	return filter(lambda x: re.match(k))
 
-class NestedDict(OrderedDict):
-	def __missing__(self, key):
-		self[key] = NestedDict()
-		return self[key]
-
-
 LUMI=19739
 
 def load_hists(dirname):

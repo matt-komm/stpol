@@ -3,9 +3,11 @@ import sys
 import os
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger("make_all_plots")
+logger.setLevel(logging.INFO)
 
-
+import argparse
 import ROOT
 ROOT.gROOT.SetBatch(True)
 import plots
@@ -20,7 +22,6 @@ import plots.common.pretty_names as pretty_names
 from plots.common.utils import *
 import random
 from array import array
-import argparse
 import plots.common.tdrstyle as tdrstyle
 import rootpy
 
@@ -33,7 +34,7 @@ lumis = {
 }
 if __name__=="__main__":
     tdrstyle.tdrstyle()
-    
+
     #rootpy.log.basic_config_colorized()
 
     parser = argparse.ArgumentParser(
@@ -81,13 +82,13 @@ if __name__=="__main__":
         {'data':merge_cmds['data']},
         args.indir + "/%s/data/antiiso/Jul15/" % proc
     )
+    if len(flist)==0:
+        raise Exception("Couldn't open any files. Are you sure that %s exists and contains root files?" % args.indir)
+
     #Load all the samples in the isolated directory
     samples={}
     for f in flist:
         samples[f] = Sample.fromFile(f, tree_name=tree)
-
-    hists_mc = dict()
-    hists_data = dict()
 
     for pd in args.plots:
         if not plot_defs[pd]['enabled'] and len(args.plots) > 1:
@@ -100,13 +101,16 @@ if __name__=="__main__":
             cut = plot_defs[pd]['mucut']
 
         cut_str = str(cut)
-        weight_str = str(Weights.total(proc))
+        weight_str = str(Weights.total(proc) *
+            Weights.wjets_madgraph_shape_weight() *
+            Weights.wjets_madgraph_flat_weight())
 
         plot_range = plot_defs[pd]['range']
-        hist_qcd = None
+
+        hists_mc = dict()
+        hists_data = dict()
         for name, sample in samples.items():
-            logging.info("Starting to plot %s" % name)
-            print name,sample.name
+            logger.info("Starting to plot %s" % name)
             if sample.isMC:
                 hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
                 hist.Scale(sample.lumiScaleFactor(lumi))
@@ -118,7 +122,7 @@ if __name__=="__main__":
                 if proc == 'ele':
                     cv='el_iso'
                     lb=0.1
-                qcd_cut = cut*Cut('deltaR_lj>0.3 && deltaR_bj>0.3 && '+cv+'>'+str(lb)+' & '+cv+'<0.5')
+                qcd_cut = cut*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
                 hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
                 hists_mc["QCD"+sample.name] = hist_qcd
@@ -135,9 +139,9 @@ if __name__=="__main__":
 
         #Combine the subsamples to physical processes
         hist_data = sum(hists_data.values())
-        logging.info("hists=%s" % hists_mc)
         merge_cmds['QCD']=["QCD"+merge_cmds['data'][0]]
-        merged_hists = merge_hists(hists_mc, merge_cmds).values()
+        order=['QCD']+PhysicsProcess.desired_plot_order
+        merged_hists = merge_hists(hists_mc, merge_cmds, order=order).values()
         leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
         #Create the dir if it doesn't exits
@@ -172,8 +176,6 @@ if __name__=="__main__":
         stacks_d = OrderedDict()
         stacks_d["mc"] = merged_hists 
         stacks_d["data"] = [hist_data]
-        #xlab = 'cos #theta'
-        #ylab = 'N / 0.1'
         xlab = plot_defs[pd]['xlab']
         ylab = 'N / '+str((1.*(plot_range[2]-plot_range[1])/plot_range[0]))
         if plot_defs[pd]['gev']:

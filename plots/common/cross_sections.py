@@ -86,4 +86,4 @@ lumis["83a02e9_Jul22"]["iso"] = dict()
 lumis["83a02e9_Jul22"]["antiiso"] = dict()
 lumis["83a02e9_Jul22"]["iso"]["mu"] = 6784+6398+5277
 lumis["83a02e9_Jul22"]["iso"]["ele"] = 12410+6144
-lumis["83a02e9_Jul22"]["antiiso"] = dict()
+lumis["83a02e9_Jul22"]["antiiso"] = lumis["83a02e9_Jul22"]["iso"]
