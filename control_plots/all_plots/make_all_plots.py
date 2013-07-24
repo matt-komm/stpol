@@ -3,7 +3,7 @@ import sys
 import os
 
 import logging
-logging.basicConfig(level=logging.WARNING)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("make_all_plots")
 logger.setLevel(logging.INFO)
 
@@ -91,7 +91,10 @@ if __name__=="__main__":
         samples[f] = Sample.fromFile(f, tree_name=tree)
 
     for pd in args.plots:
+        logger.info('Plot in progress %s' % pd)
         if not plot_defs[pd]['enabled'] and len(args.plots) > 1:
+            continue
+        if 'mva' in pd and not 'MVA' in tree:
             continue
         var = plot_defs[pd]['var']
         cut = None
@@ -123,9 +126,14 @@ if __name__=="__main__":
                     cv='el_iso'
                     lb=0.1
                 qcd_cut = cut*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
+                qcd_loose_cut = cutlist[plot_defs[pd]['estQcd']]*cutlist['presel_'+proc]*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
+                logger.info('QCD loose cut: %s' % str(qcd_loose_cut))
                 hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
+                hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
-                hists_mc["QCD"+sample.name] = hist_qcd
+                if hist_qcd_loose.Integral():
+                    hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
+                hists_mc["QCD"+sample.name] = hist_qcd_loose
                 hists_mc["QCD"+sample.name].SetTitle('QCD')
                 Styling.mc_style(hists_mc["QCD"+sample.name], 'QCD')
             elif not "antiiso" in name:
