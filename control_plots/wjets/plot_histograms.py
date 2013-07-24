@@ -14,6 +14,7 @@ from plots.common.tdrstyle import tdrstyle
 from plots.common.hist_plots import *
 from plots.common.sample_style import *
 from plots.common.odict import OrderedDict
+from plots.common.cross_sections import lumi_iso
 import pdb
 
 from plot_utils import *
@@ -45,7 +46,7 @@ def make_metadata(histname):
 def filter_hists(pat, hists):
 	return filter(lambda x: re.match(k))
 
-LUMI=19739
+LUMI=lumi_iso["mu"]
 
 def load_hists(dirname):
 	files = map(File, glob.glob(dirname+"/*.root"))
@@ -97,6 +98,7 @@ def merge_flavours(hists):
 
 if __name__=="__main__":
 	logging.basicConfig(level=logging.INFO)
+	logging.getLogger("utils").setLevel(level=logging.DEBUG)
 
 
 	tdrstyle()
@@ -127,7 +129,7 @@ if __name__=="__main__":
 
 	merged_wjets = NestedDict()
 	wjets_merges = OrderedDict()
-	wjets_merges["sherpa"] = ["WJets_sherpa_nominal"]
+	wjets_merges["sherpa"] = ["WJets_sherpa"]
 	wjets_merges["madgraph"] = ["W[1-4]Jets_exclusive"]
 	hists_ratio = NestedDict()
 
@@ -171,7 +173,7 @@ if __name__=="__main__":
 	merges["WJets W+g"] = ["W[1-4]Jets_exclusive/W_gluon"]
 	merges["WJets W+l"] = ["W[1-4]Jets_exclusive/W_light"]
 
-	sherpa_merged = merge_flavours(histsA["cos_theta"][N_jets][N_tags]["unweighted"]["WJets_sherpa_nominal"].values())
+	sherpa_merged = merge_flavours(histsA["cos_theta"][N_jets][N_tags]["unweighted"]["WJets_sherpa"].values())
 
 	merged_final = NestedDict()
 	weights = ["weighted_wjets_mg_flavour_nominal", "weighted_wjets_mg_flavour_up", "weighted_wjets_mg_flavour_down"]
@@ -256,7 +258,10 @@ if __name__=="__main__":
 	map(lambda x: x.Rebin(2), hists.values())
 	map(lambda x: norm(x), hists.values())
 	canv = plot_hists_dict(hists, do_chi2=False, **plot_args)
-	canv.SaveAs(out_dir + "mg_weighting_data.eps")
+	canv.SaveAs(out_dir + "mg_weighting_data.png")
+
+
+	#
 
 
 
