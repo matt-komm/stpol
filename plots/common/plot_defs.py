@@ -127,6 +127,20 @@ plot_defs['met']={
     'mucut': cutlist['2j1t']*cutlist['nomt_mu']
 }
 
+plot_defs['mt_mu']={
+    'enabled': True,
+    'var': 'mt_mu',
+    'range': [40,0,200],
+    'iso': True,
+    'estQcd': 'nomet',
+    'gev': True,
+    'log': False,
+    'xlab': 'M_{t}(W) [GeV]',
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['nomet_ele'],
+    'mucut': cutlist['2j1t']*cutlist['nomt_mu']
+}
+
 plot_defs['abs_eta_lj']={
     'enabled': True,
     'var': 'abs(eta_lj)',
