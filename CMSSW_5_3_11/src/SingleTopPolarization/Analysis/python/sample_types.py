@@ -1,7 +1,5 @@
 import re
 
-
-
 def is_wjets_mg(sample_name):
     if re.match("w[0-9]jets_exclusive.*", sample_name.lower()):
     	return True
