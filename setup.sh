@@ -62,3 +62,10 @@ source setenv.sh
 
 $STPOL_DIR/setup/install_tunfold.sh
 $STPOL_DIR/setup/install_theta.sh
+
+#Download common CMSSW module for single top
+cd $CMSSW_BASE/src/SingleTopPolarization
+git clone https://github.com/andrey-popov/single-top.git single-top-CMS
+git checkout sync_electrons single-top-CMS/plugins/BuildFile.xml
+scram b
+cd $STPOL_DIR
