@@ -20,4 +20,7 @@ wjets_rew:
 	$(ROOTCC) $(BOOSTLIBS) $(SRC_DIR)/histograms.cc -o bin/histograms
 
 pytest:
-	c++ --std=c++0x -I$(PYTHON_INC_DIR) -lboost_python-mt -lpython $(SRC_DIR)/pytest.cc -o bin/pytest
+	c++ -std=c++0x -I$(PYTHON_INC_DIR) -lboost_python-mt -lpython $(SRC_DIR)/pytest.cc -o bin/pytest
+
+cuts:
+	c++ -std=c++0x $(SRC_DIR)/histograms2.cc -o bin/histograms2
