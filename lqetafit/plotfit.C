@@ -25,7 +25,7 @@ void plotfit()
 	Float_t scale, unc;
 
 	ifstream ifs;
-	ifs.open("results.txt");
+	ifs.open("results/nominal.txt");
 	while (ifs >> name >> scale >> unc) {
 		if(name == "beta_signal") name = "tchan";
 		//cout << name << endl;
@@ -40,7 +40,10 @@ void plotfit()
 	
 	TCanvas *c = new TCanvas("c","canvas",1024,768);
 	THStack *hstack = new THStack("hstack","stack plot");
-	TFile *f = new TFile("histos/lqeta.root");
+	// FIXME
+	TFile *f = new TFile("histos/andres3.root");
+	//TFile *f = new TFile("histos/lqeta.root");
+	//TFile *f = new TFile("histos/pseudo_data.root");
 	hsignal = (TH1F*)f->Get(var_y+"__tchan");
 	hsignal->Scale(scales[0]);
 	hsignal->SetLineColor(kBlack);
@@ -89,8 +92,8 @@ void plotfit()
 	gPad->RedrawAxis();
 
 
-	c->Print("stack.png");
-	c->Print("stack.pdf");
+	c->Print("plots/stack.png");
+	c->Print("plots/stack.pdf");
 }
 
 int main()
