@@ -5,11 +5,12 @@
 !*.h
 !*.hpp
 !Makefile
+!*.py
 
 *.swp
 *.swo
 *.root
-plots
-unfold
-tunfold
+./plots
+./unfold
+./tunfold
 
