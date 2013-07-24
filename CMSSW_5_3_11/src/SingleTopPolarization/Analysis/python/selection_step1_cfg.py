@@ -169,7 +169,7 @@ def SingleTopStep1(
   # UserCode/EGamma/EGammaAnalysisTools. General outline of configuration is inspired by [2].
   # [1] http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/UserCode/EGamma/EGammaAnalysisTools/python/electronIsolatorFromEffectiveArea_cfi.py?hideattic=0&revision=1.1.2.2&view=markup
   # [2] https://twiki.cern.ch/twiki/bin/viewauth/CMS/TwikiTopRefHermeticTopProjections?rev=4#Electrons
-  # 
+  #
   # In both real data and simulation an effective area derived from real data (2012 HCP dataset)
   # is applied. Possible difference between data and simulation is belived to be small [3-4]
   # [3] https://hypernews.cern.ch/HyperNews/CMS/get/top/1607.html
@@ -180,8 +180,8 @@ def SingleTopStep1(
       rhoIso = cms.InputTag('kt6PFJets', 'rho'),
       EffectiveAreaType = cms.string('kEleGammaAndNeutralHadronIso03'),
       EffectiveAreaTarget = cms.string('kEleEAData2012'))
-  
-  
+
+
   # Change the isolation cone used in pfIsolatedElectrons to 0.3, as recommended in [1] and [2].
   # The parameter for the delta-beta correction is initialized with the map for the rho correction
   # [1] https://twiki.cern.ch/twiki/bin/view/CMS/EgammaCutBasedIdentification?rev=17#Particle_Flow_Isolation
@@ -194,11 +194,11 @@ def SingleTopStep1(
       cms.InputTag('elPFIsoValueNeutral03PFId'), cms.InputTag('elPFIsoValueGamma03PFId')
   )
   process.pfIsolatedElectrons.deltaBetaIsolationValueMap = cms.InputTag('elPFIsoValueEA03')
-  
-  PFRecoSequence.replace(process.pfIsolatedElectrons,
+
+  process.patPF2PATSequence.replace(process.pfIsolatedElectrons,
    process.elPFIsoValueEA03 * process.pfIsolatedElectrons)
-  
-  
+
+
   # Adjust parameters for the rho correction [1]. The cut on the isolation value is set in
   # accordance with [2]
   # [1] https://twiki.cern.ch/twiki/bin/viewauth/CMS/TwikiTopRefHermeticTopProjections?rev=4#Electrons
@@ -206,7 +206,7 @@ def SingleTopStep1(
   process.pfIsolatedElectrons.doDeltaBetaCorrection = True
   process.pfIsolatedElectrons.deltaBetaFactor = -1.
   process.pfIsolatedElectrons.isolationCut = 0.15
-  
+
   # Insert a module to filter electrons based on their ID. See [1] as an example
   # [1] https://twiki.cern.ch/twiki/bin/viewauth/CMS/TwikiTopRefHermeticTopProjections?rev=4#Electrons
   process.pfIdentifiedElectrons = cms.EDFilter('ElectronIDPFCandidateSelector',
@@ -214,8 +214,8 @@ def SingleTopStep1(
       electronIdMap = cms.InputTag('mvaTrigV0'),
       electronIdCut = cms.double(0.),
       src = cms.InputTag('pfIsolatedElectrons'))
-  
-  
+
+
 
   # Load electron MVA ID modules. See an example in [1], which is referenced from [2]
   # [1] http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/CMSSW/EgammaAnalysis/ElectronTools/test/patTuple_electronId_cfg.py?view=markup&pathrev=SE_PhotonIsoProducer_MovedIn
@@ -454,21 +454,6 @@ def SingleTopStep1(
       tag = cms.string("TrackProbabilityCalibration_3D_Data53X_v2"),
       connect = cms.untracked.string("frontier://FrontierPrep/CMS_COND_BTAU"))
     )
-
-    #Filters added by a separate method
-    #process.load('RecoMET.METFilters.ecalLaserCorrFilter_cfi')
-    #process.ecalLaserCorrFilter.taggingMode=True
-
-    # https://twiki.cern.ch/twiki/bin/viewauth/CMS/TWikiTopRefEventSel#Cleaning_Filters
-    #process.scrapingFilter = cms.EDFilter("FilterOutScraping"
-    #  , applyfilter = cms.untracked.bool(True)
-    #  , debugOn = cms.untracked.bool(False)
-    #  , numtrack = cms.untracked.uint32(10)
-    #  , thresh = cms.untracked.double(0.25)
-    #)
-
-    #process.singleTopSequence += process.scrapingFilter
-    #process.singleTopSequence += process.ecalLaserCorrFilter
 
   if options.doSkimming:
     process.out.fileName.setValue(process.out.fileName.value().replace(".root", "_Skim.root"))
