@@ -474,7 +474,7 @@ plot_defs['final_topMass']={
     'tags': ["an", "control.tex"],
     'enabled': True,
     'var': 'top_mass',
-    'range': [nbins_final, 50, 350],
+    'range': [nbins_final, 130, 220],
     'iso': True,
     'estQcd': 'final',
     'gev': True,
@@ -490,7 +490,7 @@ plot_defs['final_etaLj']={
     'tags': ["an", "control.tex"],
     'enabled': True,
     'var': 'abs(eta_lj)',
-    'range': [nbins_final, 0, 5],
+    'range': [nbins_final, 2.5, 5],
     'iso': True,
     'estQcd': 'final',
     'gev': False,
@@ -500,6 +500,11 @@ plot_defs['final_etaLj']={
     'elecut': cutlist['2j1t']*cutlist['final_ele'],
     'mucut': cutlist['2j1t']*cutlist['final_mu'],
     'dir': "control"
+}
+extranges = {
+    "cosTheta": [nbins_final, -1, 1],
+    "topMass": [nbins_final, 50, 350],
+    "etaLj": [nbins_final, 0, 5],
 }
 
 #Generate all the control plots
@@ -516,6 +521,7 @@ for v in ["cosTheta", "topMass", "etaLj"]:
             s = "%dj%dt" % (nj, nt)
 
             plot_defs[s + "_" + v] = cp(plot_defs['final_' + v])
+            plot_defs[s + "_" + v]["range"] = extranges[v]
             plot_defs[s + "_" + v]['elecut'] = cutlist["presel_ele"]*cutlist[s]*Cuts.met#*cutlist['final_ele']
             plot_defs[s + "_" + v]['mucut'] = cutlist["presel_mu"]*cutlist[s]*Cuts.mt_mu#*cutlist['final_mu']
             plot_defs[s + "_" + v]['estQcd'] = "final_" + s

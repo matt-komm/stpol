@@ -239,7 +239,7 @@ if __name__=="__main__":
 
         #Make the stacks
         stacks_d = OrderedDict()
-        stacks_d["mc"] = merged_hists 
+        stacks_d["mc"] = merged_hists
         stacks_d["data"] = [hist_data]
 
         #label
@@ -265,7 +265,7 @@ if __name__=="__main__":
         p1.cd()
 
         stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_defs[pd]['log'])
-       
+
         #Put the the lumi box where the legend is not
         boxloc = 'top-right'
         if plot_defs[pd]['labloc'] == 'top-right':
@@ -280,18 +280,21 @@ if __name__=="__main__":
         leg.Draw()
         canv.Draw()
 
-        #Draw the ratio plot with 
+        #Draw the ratio plot with
         ratio_pad, hratio = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
 
         #This is adopted in the AN
         if proc=="ele":
-            proc="el"
-            
-        if "dir" in plot_def.keys():
-            out_dir = plot_def["dir"]
+            _proc = "el"
         else:
-            out_dir = "out_{0}".format(proc)
-        fname = "{0}/{1}_{2}.png".format(out_dir, pd, proc)
+            _proc = "mu"
+
+        out_dir = "figures/"
+        if "dir" in plot_def.keys():
+            out_dir = out_dir + plot_def["dir"]
+        else:
+            out_dir = out_dir + "out_{0}".format(proc)
+        fname = "{0}/{1}_{2}.png".format(out_dir, pd, _proc)
         try:
             os.makedirs(out_dir)
         except:
