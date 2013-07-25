@@ -4,7 +4,7 @@ import MVA2.common
 from plots.common import cuts
 import numpy as np
 
-qs = np.linspace(0.02, 1.02, 50)
+qs = np.linspace(0.02, .98, 49)
 Ns = np.logspace(0, 3.5, 100)
 
 lept = "mu"
