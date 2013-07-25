@@ -1,16 +1,20 @@
-#include "helpers.hpp"
 #include "binnings.h"
 #include "info.h"
 #include "xsec.h"
 
 #include <TChain.h>
+#include <TFile.h>
 #include <TString.h>
 #include <TH1F.h>
+
+#include <iostream>
 
 //Int_t MAXBIN = 100000;
 //Int_t MAXBIN = 10000;
 
 #define MAXBIN 10000
+
+using namespace std;
 
 TH1F* gethisto(TString variable)
 {	
@@ -38,10 +42,36 @@ TH1F* gethisto(TString variable)
 	Float_t muonIso = 0;
 	Float_t jetrms = 0;
 	Float_t mtw = 0;
-	chain->SetBranchAddress("mu_iso", &muonIso);
-	chain->SetBranchAddress("rms_lj", &jetrms);
-	chain->SetBranchAddress("mt_mu", &mtw);
-	chain->SetBranchAddress("eta_lj", &eta_lj);
+    Int_t HLT_v11 = 0;
+    Int_t HLT_v12 = 0;
+    Int_t HLT_v13 = 0;
+    Int_t HLT_v14 = 0;
+    Int_t HLT_v15 = 0;
+    Int_t HLT_v16 = 0;
+    Int_t HLT_v17 = 0;
+
+	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v11", &HLT_v11);
+	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v12", &HLT_v12);
+	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v13", &HLT_v13);
+	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v14", &HLT_v14);
+	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v15", &HLT_v15);
+	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v16", &HLT_v16);
+	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v17", &HLT_v17);
+
+	Int_t n_jets = 0;
+	Int_t n_tags = 0;
+	Int_t n_veto_ele = -1;
+	Int_t n_veto_mu = -1;
+	Float_t pt_lj = 0;
+	Float_t pt_bj = 0;
+	Float_t top_mass = 0;
+	chain->SetBranchAddress("n_jets", &n_jets);
+	chain->SetBranchAddress("n_tags", &n_tags);
+	chain->SetBranchAddress("n_veto_ele", &n_veto_ele);
+	chain->SetBranchAddress("n_veto_mu", &n_veto_mu);
+	chain->SetBranchAddress("pt_lj", &pt_lj);
+	chain->SetBranchAddress("pt_bj", &pt_bj);
+	chain->SetBranchAddress("top_mass", &top_mass);
 
 	Float_t var = 0;
 	chain->SetBranchAddress(variable, &var);
@@ -68,7 +98,14 @@ TH1F* gethisto(TString variable)
 		if(TMath::Abs(eta_lj) < 2.5) continue;
 		if(jetrms >= 0.025) continue;
 		if(mtw <= 50) continue;
-
+        if(!(HLT_v11 == 1 || HLT_v12 == 1 || HLT_v13 == 1 || HLT_v14 == 1 || HLT_v15 == 1 || HLT_v16 == 1 || HLT_v17)) continue;
+        if(n_jets != 2) continue;
+        if(n_tags != 1) continue;
+        if(n_veto_ele != 0) continue;
+        if(n_veto_mu != 0) continue;
+        if(pt_lj <= 40) continue;
+        if(pt_bj <= 40) continue;
+        if(top_mass <= 130 || top_mass >= 220) continue;
 		// weight depending on sample 
 		weight = pu_weight*btag_weight*muonID_weight*muonIso_weight*muonTrigger_weight;
 		weight *= lumi;
@@ -97,11 +134,11 @@ void getbinning(const TH1F* histo, const Int_t bins)
 	cout << "Events: " << totint << endl;
 	cout << "Events per bin: " << evbin << endl;
 
-	Float_t edges[bins+1];
+	//Float_t edges[bins+1];
 	
 	cout << "{" << var_min << ", ";
-	edges[0] = var_min;
-	Int_t iedge = 1;
+	//edges[0] = var_min;
+	//Int_t iedge = 1;
 
 	Int_t prevbin = 0;
 	for(Long_t k=1; k<=MAXBIN; k++)
@@ -111,11 +148,11 @@ void getbinning(const TH1F* histo, const Int_t bins)
 		if(integral>=evbin)
 		{
         		Float_t newedge = histo->GetXaxis()->GetBinUpEdge(k);
-			
+
 			// Set bin edge to 0 in order to calculate the asymmetry
         		if(TMath::Abs(newedge)<0.01) newedge = 0;
         
-			edges[iedge++] = newedge;
+			//edges[iedge++] = newedge;
 			cout << newedge << ", ";
         		
 			prevbin = k;
@@ -124,7 +161,7 @@ void getbinning(const TH1F* histo, const Int_t bins)
 	//cout << integral << " ";
 
 	Float_t lastedge = histo->GetXaxis()->GetBinUpEdge(MAXBIN);
-	edges[bins] = lastedge;
+	//edges[bins] = lastedge;
 	cout << lastedge << "};" << endl;
 }
 
@@ -143,14 +180,14 @@ void findbinning()
 	//getbinning(histo_rec, 10);
 	
 	// generated
-//	getbinning(histo_gen, 7);
+	getbinning(histo_gen, 7);
 	// reconstructed
-//	getbinning(histo_rec, 14);
+	getbinning(histo_rec, 14);
 	
 	// generated
-	getbinning(histo_gen, 3);
+	//getbinning(histo_gen, 3);
 	// reconstructed
-	getbinning(histo_rec, 6);
+	//getbinning(histo_rec, 6);
 
 }
 

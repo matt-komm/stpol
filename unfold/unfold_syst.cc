@@ -19,7 +19,8 @@ using namespace std;
 const double scaleBias = 1.0;
 
 // Number of pseudo experiments
-#define NPSEUDO 50000
+//#define NPSEUDO 50000
+#define NPSEUDO 5000 // FIXME
 
 TUnfoldSys* myUnfold1d_TUnfoldGlobalPointerForTMinuit;
 TH1F* myUnfold1d_hdataGlobalPointerForTMinuit;
@@ -59,7 +60,7 @@ void minimizeRhoAverage(TUnfoldSys *unfold, TH1F *hdata, int nsteps, double log1
   
 }
 
-void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
+void unfold_syst(TString syst, TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 {
 	// only show errors
 	// gErrorIgnoreLevel = kError;
@@ -74,11 +75,8 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 
 	TH1::SetDefaultSumw2(true);
 
-	TFile *fo = new TFile("histos/unfolded.root","RECREATE");
+	TFile *fo = new TFile("histos/unfolded_syst_"+syst+".root","RECREATE");
 	
-	//bool subtractData = true;
-	bool subtractData = false;
-
 	// Background subtraction
 	vector<TString> names;
 	vector<Float_t> scales;
@@ -93,110 +91,97 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 	Int_t nbkgs = 0;
 	Float_t sum_nonrot = 0;
 
-	if(subtractData) {
+	// Order of fit results must be the same as in covariance matrix:
+	// first entry beta_signal, rest alphabetic
+	read_fitres("syst_"+syst,names,scales,uncs);
+	
+	nbkgs = names.size()-1;
+
+	hsignal = (TH1F*)f->Get(var_y+"__tchan");
+	hsignal->Scale(scales[0]);
+
+	// Read in background histograms
+	for(int i = 0; i < nbkgs ; i++) {
+		TString name = names.at(i+1);
+		TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
 		
-		// Order of fit results must be the same as in covariance matrix:
-		// first entry beta_signal, rest alphabetic
-		read_fitres("nominal",names,scales,uncs);
-				
-		nbkgs = names.size()-1;
+		// Scale histos
+		histo->Scale(scales[i+1]);
+		preds.push_back(histo->Integral());
+		
+		sum_nonrot += histo->Integral();
+		bkghistos.push_back((TH1F*)histo);
 
-		hsignal = (TH1F*)f->Get(var_y+"__tchan");
-		hsignal->Scale(scales[0]);
+	}
+	cout << "background events: " << sum_nonrot << endl;
+	
+	// Decorrelate background templates
+	// Read in covariance matrix
+	// use systematic covariance matrix
+	TFile *fcov = new TFile("fitresults/cov_syst_"+syst+".root");
+	TH2D *hcov = (TH2D*)fcov->Get("covariance");
+	
+	TMatrixD covmatrix(nbkgs,nbkgs);
 
-		// Read in background histograms
-		for(int i = 0; i < nbkgs ; i++) {
-			TString name = names.at(i+1);
-			TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
-			
-			// Scale histos
-			histo->Scale(scales[i+1]);
-			preds.push_back(histo->Integral());
-			
-			sum_nonrot += histo->Integral();
-			bkghistos.push_back((TH1F*)histo);
-
+	// Fill cov matrix, skip first entry with beta_signal
+	for(int i = 0; i < nbkgs ; i++) {
+		for(int j = 0; j < nbkgs; j++) {
+			covmatrix[i][j] = hcov->GetBinContent(i+2,j+2);
 		}
-		cout << "background events: " << sum_nonrot << endl;
-		
-		// Decorrelate background templates
-		// Read in covariance matrix
-		TFile *fcov = new TFile("cov.root");
-		TH2D *hcov = (TH2D*)fcov->Get("covariance");
-		
-		TMatrixD covmatrix(nbkgs,nbkgs);
-
-		// Fill cov matrix, skip first entry with beta_signal
-		for(int i = 0; i < nbkgs ; i++) {
-			//TString name = hcov->GetXaxis()->GetBinLabel(i+2);
-			//cout << name << endl;
-			//cout << names.at(i+1) << endl;
-			for(int j = 0; j < nbkgs; j++) {
-				covmatrix[i][j] = hcov->GetBinContent(i+2,j+2);
-			}
-		}
-
-		fcov->Close();
-
-		TVectorD eigenvalues(nbkgs);
-		TMatrixD eigenvectors = covmatrix.EigenVectors(eigenvalues);
-		
-		// Unit vector
-		TVectorD unitvec(nbkgs);
-		for(int i = 0; i < nbkgs; i++) unitvec[i] = 1;
-		
-		// Inverted eigenvectors
-		TMatrixD inv_eigenvectors(eigenvectors);
-		inv_eigenvectors.Invert();
-
-		unitvec *= inv_eigenvectors;
-		// Scale vector to keep norm
-		TVectorD scale_vector(unitvec);
-		
-		// Apply scale factors to eigenvectors
-		for(int i = 0; i < nbkgs; i++)
-		{
-			for(int j = 0; j < nbkgs; j++)
-			{
-				eigenvectors[i][j] *= scale_vector[j];
-			}
-		}
-		
-
-		Float_t sum_rot = 0;
-		// Rotate backgrounds
-		for(int i = 0; i < nbkgs; i++)
-		{
-			TH1F *eigenhisto = (TH1F*)bkghistos[i]->Clone();
-			eigenhisto->Reset();
-
-			// Add up eigenhistos
-			for(int j = 0; j < nbkgs; j++)
-			{
-				// First index: row, element of vector
-				// Second index: column, index of vector
-				eigenhisto->Add(bkghistos[j], eigenvectors(j,i));
-			}
-			eigenhistos.push_back((TH1F*)eigenhisto);
-			sum_rot += eigenhisto->Integral();
-			//cout << "eigenhisto" << i << " " << eigenhisto->Integral() << endl;
-			//eigenerrors.push_back(sqrt(eigenvalues[i]) / eigenhisto->Integral());
-			eigenerrors.push_back(sqrt(eigenvalues[i]));
-			// eigenerrors
-			//cout << eigenerrors[i] << endl;
-		}
-		//cout << "background events rotated: " << sum_rot << endl;
 	}
 
-	// Current samples are normalized to one
-	Float_t expected = 4617; // Events expected in data: approx at 20/fb
-	if(!subtractData) hrec->Scale(expected/hrec->Integral());
+	fcov->Close();
+
+	TVectorD eigenvalues(nbkgs);
+	TMatrixD eigenvectors = covmatrix.EigenVectors(eigenvalues);
+	
+	// Unit vector
+	TVectorD unitvec(nbkgs);
+	for(int i = 0; i < nbkgs; i++) unitvec[i] = 1;
+	
+	// Inverted eigenvectors
+	TMatrixD inv_eigenvectors(eigenvectors);
+	inv_eigenvectors.Invert();
+
+	unitvec *= inv_eigenvectors;
+	// Scale vector to keep norm
+	TVectorD scale_vector(unitvec);
+	
+	// Apply scale factors to eigenvectors
+	for(int i = 0; i < nbkgs; i++)
+	{
+		for(int j = 0; j < nbkgs; j++)
+		{
+			eigenvectors[i][j] *= scale_vector[j];
+		}
+	}
+	
+
+	Float_t sum_rot = 0;
+	// Rotate backgrounds
+	for(int i = 0; i < nbkgs; i++)
+	{
+		TH1F *eigenhisto = (TH1F*)bkghistos[i]->Clone();
+		eigenhisto->Reset();
+
+		// Add up eigenhistos
+		for(int j = 0; j < nbkgs; j++)
+		{
+			// First index: row, element of vector
+			// Second index: column, index of vector
+			eigenhisto->Add(bkghistos[j], eigenvectors(j,i));
+		}
+		eigenhistos.push_back((TH1F*)eigenhisto);
+		sum_rot += eigenhisto->Integral();
+		//cout << "eigenhisto" << i << " " << eigenhisto->Integral() << endl;
+		eigenerrors.push_back(sqrt(eigenvalues[i]));
+		// eigenerrors
+		//cout << eigenerrors[i] << endl;
+	}
+	//cout << "background events rotated: " << sum_rot << endl;
 
 	// Number of expected events
-	if(subtractData)
-		expected = (hrec->Integral() - sum_nonrot);
-	else
-		expected = hrec->Integral();
+	Float_t expected = (hrec->Integral() - sum_nonrot);
 
 	// Scale generated and migration matrix to expected
 	hgen->Scale(expected/hgen->Integral()); // for bias
@@ -209,7 +194,6 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 		Float_t bin_eff = heff->GetBinContent(i);
 		hgen_produced->SetBinContent(i,hgen->GetBinContent(i)/bin_eff);
 		Float_t nonsel = hgen_produced->GetBinContent(i)*(1-bin_eff);
-		cout << nonsel << endl;
 		hgenrec->SetBinContent(i,0,nonsel);
 	}
 	
@@ -231,19 +215,17 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 	unfold.SetInput(hrec);
 	
 	// set bias dist
+	// FIXME strange results since bias has peaks at zero
 	unfold.SetBias(hgen);
 
 	// subtract backgrounds
-	if(subtractData) {
-		for(int i = 0; i < nbkgs; i++)
-		{
-			// FIXME
-			unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
-			// FIXME renomieren
-			//unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]);
-		}
+	for(int i = 0; i < nbkgs; i++)
+	{
+		// FIXME
+		unfold.SubtractBackground(eigenhistos[i],names[i+1],1.0, eigenerrors[i]);
+		// FIXME renomieren
+		//unfold.SubtractBackground(bkghistos[i],names[i+1],1.0, uncs[i+1]);
 	}
-
 
 	// find minimal global correlation
 	minimizeRhoAverage(&unfold, hrec, 1000, -6, 0);
@@ -291,7 +273,29 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 		hPull[i-1] = new TH1F(pname,pname,60,-3.0,3.0);
 		hBin[i-1] = new TH1F(bname,bname,100,-1.0,1.0);
 	}
-	
+
+	// READ in systematically modified histos to dice PEs
+	TH1F *hpesignal =  NULL;
+	hpesignal = (TH1F*)f->Get(var_y+"__tchan__"+syst);
+	if(hpesignal == NULL) {
+		hpesignal = (TH1F*)f->Get(var_y+"__tchan");
+	}
+	vector<TH1F*> pehistos;
+	for(int i = 0; i < nbkgs ; i++) {
+		TString name = names.at(i+1);
+		TH1F *histo = NULL;
+		// Try to read in systematic sample
+		histo = (TH1F*)f->Get(var_y+"__"+name+"__"+syst);
+		if(histo == NULL) {
+			cout << "did not suceed: " << name << endl;
+			histo = (TH1F*)f->Get(var_y+"__"+name);
+			// FIXME Scale histos?
+			//histo->Scale(scales[i+1]);
+		}
+		
+		pehistos.push_back((TH1F*)histo);
+
+	}
 	// do PEs
 	cout << "Dicing " << NPSEUDO << " pseudo events..." << endl;
 	Float_t genasy = asymmetry(hgen_produced);
@@ -301,49 +305,46 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 		if(p%5000 == 0) cout << p << endl;
 		
 		hpseudo->Reset();
-		if(subtractData) {
-			for(int i = 0; i < nbkgs ; i++) {
-				//TH1F *heigen = (TH1F*)eigenhistos[i];
-				// FIXME
-				TH1F *heigen = (TH1F*)bkghistos[i];
-				TH1F *hclone = (TH1F*)heigen->Clone();
-				
-				//Float_t bla = random.Gaus(heigen->Integral(),eigenerrors[i]*heigen->Integral());
-				Float_t bla = random.Gaus(heigen->Integral(),uncs[i+1]*heigen->Integral());
-				
-				int n = random.Poisson(bla);
-				
-				/*
-				for(int ibin = 1; ibin <= bin_y; ibin++) {
-					Float_t val = hclone->GetBinContent(ibin);
-					Float_t err = hclone->GetBinError(ibin);
-					hclone->SetBinContent(ibin, random.Gaus(val, err));
-				}
-				*/
 
-				for(int j = 0; j < n; j++) {
-					hpseudo->Fill(hclone->GetRandom());
-				}
-				delete hclone;
-			}
-			int n = random.Poisson(hsignal->Integral());
-			TH1F *hclone = (TH1F*)hsignal->Clone();
+		for(int i = 0; i < nbkgs ; i++) {
+			//TH1F *heigen = (TH1F*)eigenhistos[i];
+			// FIXME have to use bkg histos
+			//TH1F *heigen = (TH1F*)bkghistos[i];
+			// FIXME use syst mod. histos
+			TH1F *heigen = (TH1F*)pehistos[i];
+			TH1F *hclone = (TH1F*)heigen->Clone();
+			
+			//Float_t bla = random.Gaus(heigen->Integral(),eigenerrors[i]*heigen->Integral());
+			Float_t bla = random.Gaus(heigen->Integral(),uncs[i+1]*heigen->Integral());
+			
+			int n = random.Poisson(bla);
+
+			/*
 			for(int ibin = 1; ibin <= bin_y; ibin++) {
-					Float_t val = hclone->GetBinContent(ibin);
-					Float_t err = hclone->GetBinError(ibin);
-					hclone->SetBinContent(ibin, random.Gaus(val, err));
+				Float_t val = hclone->GetBinContent(ibin);
+				Float_t err = hclone->GetBinError(ibin);
+				hclone->SetBinContent(ibin, random.Gaus(val, err));
 			}
+			*/
+
 			for(int j = 0; j < n; j++) {
 				hpseudo->Fill(hclone->GetRandom());
 			}
 			delete hclone;
-		} else {
-			int n = random.Poisson(hrec->Integral());
-			for(int j = 0; j < n; j++) {
-				hpseudo->Fill(hrec->GetRandom());
-			}
 		}
-		
+		// FIXME PE signal
+		int n = random.Poisson(hpesignal->Integral());
+		TH1F *hclone = (TH1F*)hpesignal->Clone();
+		for(int ibin = 1; ibin <= bin_y; ibin++) {
+				Float_t val = hclone->GetBinContent(ibin);
+				Float_t err = hclone->GetBinError(ibin);
+				hclone->SetBinContent(ibin, random.Gaus(val, err));
+		}
+		for(int j = 0; j < n; j++) {
+			hpseudo->Fill(hclone->GetRandom());
+		}
+		delete hclone;
+
 		unfold.SetInput(hpseudo);
 
 		unfold.DoUnfold(tau,hpseudo,scaleBias);
@@ -404,32 +405,41 @@ void unfold(TH1F *hrec, TH2F *hgenrec, TH1F *heff, TH1F *hgen, TFile *f)
 
 	fo->Close();
 
+	delete c1;
+
 }
 
 int main()
 {	
 	// load histograms
 	TFile *f = new TFile("histos/rebinned.root");
-	//TFile *f = new TFile("histos/rebinned_test2.root");
-	//TFile *f_comp = new TFile("histos/rebinned_comphep.root");
-	//TFile *f2 = new TFile("histos/data.root");
-	TFile *f2 = new TFile("histos/pseudo_data.root");
-	// FIXME
+	//TFile *f2 = new TFile("histos/pseudo_data2.root");
+	TFile *f2 = new TFile("histos/data.root");
 	TFile *feff = new TFile("histos/efficiency.root");
-	//TFile *feff = new TFile("histos/efficiency_test2.root");
-	//TFile *feff_comp = new TFile("histos/efficiency_comphep.root");
-	
-	//TH2F *hgenrec = (TH2F*)f_comp->Get("matrix");
-	//TH1F *heff = (TH1F*)feff_comp->Get("efficiency");
+	//
 	TH1F *heff = (TH1F*)feff->Get("efficiency");
 	TH2F *hgenrec = (TH2F*)f->Get("matrix");
 	TH1F *hgen = (TH1F*)f->Get(var_x+"_rebin");
-
-	// Test for not subtracting background
-	TH1F *hrec = (TH1F*)f->Get(var_y+"_rebin");
 	// DATA
-	//TH1F *hrec = (TH1F*)f2->Get(var_y+"__DATA");
+	TH1F *hrec = (TH1F*)f2->Get(var_y+"__DATA");
 
-	// reconstructed, subtracted, matrix, efficiency, bias
-	unfold(hrec,hgenrec,heff,hgen,f2);
+	vector<TString> systematics;
+	systematics.push_back("en__down");
+	systematics.push_back("en__up");
+	systematics.push_back("mass__down");
+	systematics.push_back("mass__up");
+	systematics.push_back("matching__down");
+	systematics.push_back("matching__up");
+	systematics.push_back("tchan_scale__down");
+	systematics.push_back("tchan_scale__up");
+	systematics.push_back("top_scale__down");
+	systematics.push_back("top_scale__up");
+	systematics.push_back("unclusen__down");
+	systematics.push_back("unclusen__up");
+
+        for(vector<TString>::iterator it = systematics.begin(); it != systematics.end(); it++) {
+		// systematic reconstructed, subtracted, matrix, efficiency, bias
+		cout << (*it) << endl;
+		unfold_syst(*it,hrec,hgenrec,heff,hgen,f2);
+	}
 }
