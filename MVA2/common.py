@@ -5,7 +5,7 @@ from plots.common import cuts
 import array
 import random
 
-rootfilepath = os.path.join(os.path.dirname(__file__), '..', 'step3_latest')
+rootfilepath = os.path.join(os.path.dirname(__file__), 'step3_latest')
 
 vartypes = {
 	"bdiscr_bj" : "F",
