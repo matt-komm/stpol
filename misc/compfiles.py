@@ -13,13 +13,28 @@ if __name__=="__main__":
 			print it1, it2
 
 			i = 0
+			ov1 = it1.overflow()
+			ov2 = it2.overflow()
+
+			un1 = it1.underflow()
+			un2 = it2.underflow()
+
+			if ov1+ov2>0 and abs(ov1-ov2)/(ov1+ov2):
+				s += "ooo"
+			if un1+un2>0 and abs(un1-un2)/(un1+un2):
+				s += "uuu"
+			print ov1, ov2, un1, un2
 			for a, b, c, d in zip(list(it1.y()), list(it2.y()), list(it1.yerravg()), list(it2.yerravg()), ):
 				s = ""
-				if (a+b)>0 and abs(a-b)/(a+b)>0.01:
-					s += "***"
-				if (c+d)>0 and abs(c-d)/(c+d)>0.01:
-					s += "+++"
-				print s, i, a, b, c, d
+				
+				x1=0
+				x2=0
+				if (a+b)>0:
+					x1 = abs(a-b)/(a+b)
+				if (c+d)>0:
+					x2 = abs(c-d)/(c+d)
+
+				print i, a, b, c, d, x1, x2
 				i += 1
 			chi2 = it1.Chi2Test(it2, "WW CHI2/NDF")
 			ks = it1.KolmogorovTest(it2)
