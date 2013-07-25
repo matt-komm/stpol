@@ -97,9 +97,9 @@ class MVA_trainer:
 		else:
 			if not ofName:
 				ofName_dir  = os.path.dirname(fName)
-				ofName_base = '{}_{}'.format(jobname,os.path.basename(fName))
+				ofName_base = '{0}_{1}'.format(jobname,os.path.basename(fName))
 				ofName = os.path.join(ofName_dir, ofName_base)
-			print 'Copy from `{}` to `{}`'.format(fName, ofName)
+			print 'Copy from `{0}` to `{1}`'.format(fName, ofName)
 			shutil.copyfile(fName, ofName)
 		self.tfName = ofName
 		print 'Output file name:', ofName
