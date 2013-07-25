@@ -90,6 +90,7 @@ def legend(hists, **kwargs):
 
     #Expand the array using the wildcard
     leg = ROOT.TLegend(*leg_coords)
+    leg.SetFillStyle(0)
 
     if "names" in kwargs:
         rnames = names[::-1]
