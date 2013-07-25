@@ -16,12 +16,12 @@ void pseudodata()
 	vector<Float_t> uncs;
 	vector<TH1F*> histos;
 
-	read_fitres(names,scales,uncs);
+	read_fitres("nominal",names,scales,uncs);
 	Int_t nbkgs = names.size()-1;
 	
 	TH1::SetDefaultSumw2(true);
 	TH1F *hsignal = (TH1F*)f->Get(var_y+"__tchan");
-	hsignal->Scale(scales[0]);
+	//hsignal->Scale(scales[0]);
 	// Artificially enhance signal fraction
 	// FIXME
 	//hsignal->Scale(2);
@@ -34,12 +34,12 @@ void pseudodata()
 		TH1F *histo = (TH1F*)f->Get(var_y+"__"+name);
 				
 		// Scale histos
-		histo->Scale(scales[i+1]);
+		//histo->Scale(scales[i+1]);
 		added->Add(histo);
 		histo->Write();
 	}
 
-	cout << added->Integral() << endl;
+	//cout << added->Integral() << endl;
 	fo->cd();
 	added->Write();
 	fo->Close();

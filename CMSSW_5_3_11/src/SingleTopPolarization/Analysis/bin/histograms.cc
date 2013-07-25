@@ -1,3 +1,5 @@
+#define CLANG
+
 #include <TTree.h>
 #include <TEventList.h>
 #include <TFile.h>
@@ -12,7 +14,12 @@
 #include <vector>
 #include <map>
 #include <memory>
+
+#ifdef CLANG
+#include <tr1/tuple>
+#else
 #include <tuple>
+#endif
 
 #include <boost/any.hpp>
 #include <boost/program_options.hpp>
@@ -27,8 +34,10 @@ void get_branch(const char *name, T *address, TTree *tree)
     tree->AddBranchToCache(name);
 }
 using namespace std;
-//using namespace std::tr1;
 
+#ifdef CLANG
+using namespace std::tr1;
+#endif
 
 typedef tuple <
 int, int, int,
@@ -133,30 +142,31 @@ int main(int argc, char **argv)
         events->AddFriend("trees/WJets_weights");
     events->SetCacheSize(10000000);
 
+    vector<const char *> vars_to_enable;
     events->SetBranchStatus("*", 0);
-    events->SetBranchStatus("n_muons", 1);
-    events->SetBranchStatus("n_eles", 1);
-    events->SetBranchStatus("n_veto_mu", 1);
-    events->SetBranchStatus("n_veto_ele", 1);
-    events->SetBranchStatus("n_jets", 1);
-    events->SetBranchStatus("top_mass", 1);
-    events->SetBranchStatus("eta_lj", 1);
-    events->SetBranchStatus("rms_lj", 1);
-    events->SetBranchStatus("mt_mu", 1);
 
-    events->SetBranchStatus("*weight*", 1);
+    vars_to_enable.push_back("n_muons");
+    vars_to_enable.push_back("n_eles");
+    vars_to_enable.push_back("n_veto_mu");
+    vars_to_enable.push_back("n_veto_ele");
+    vars_to_enable.push_back("n_jets");
+    vars_to_enable.push_back("top_mass");
+    vars_to_enable.push_back("eta_lj");
+    vars_to_enable.push_back("rms_lj");
+    vars_to_enable.push_back("mt_mu");
+    vars_to_enable.push_back("deltaR_bj");
+    vars_to_enable.push_back("deltaR_lj");
+    vars_to_enable.push_back("mu_iso");
+    vars_to_enable.push_back("*weight*");
+    vars_to_enable.push_back("*Weight*");
 
-    events->AddBranchToCache("n_muons");
-    events->AddBranchToCache("n_eles");
-    events->AddBranchToCache("n_veto_mu");
-    events->AddBranchToCache("n_veto_ele");
-    events->AddBranchToCache("n_jets");
-    events->AddBranchToCache("top_mass");
-    events->AddBranchToCache("eta_lj");
-    events->AddBranchToCache("rms_lj");
-    events->AddBranchToCache("mt_mu");
+    for (auto & v : vars_to_enable)
+    {
+        events->SetBranchStatus(v, 1);
+        events->AddBranchToCache(v);
+    }
 
-    TFile *ofi = new TFile(outfile.c_str(), "UPDATE");
+    TFile *ofi = new TFile(outfile.c_str(), "RECREATE");
     std::cout << "Output file is " << outfile << std::endl;
     ofi->cd();
 
@@ -202,12 +212,18 @@ int main(int argc, char **argv)
 
     int jet_flavour_classification = -1;
 
-
-
-    std::map<hist_ident, TH1 *> hists;
-    TH1::AddDirectory(false);
-
     vector<string> weights;
+
+    vector<string> shape_weight_names;
+    shape_weight_names.push_back("wjets_mg_flavour_shape_weight");
+    shape_weight_names.push_back("wjets_mg_flavour_shape_weight_up");
+    shape_weight_names.push_back("wjets_mg_flavour_shape_weight_down");
+
+    vector<string> yield_weight_names;
+    yield_weight_names.push_back("wjets_mg_flavour_flat_weight");
+    yield_weight_names.push_back("wjets_mg_flavour_flat_weight_up");
+    yield_weight_names.push_back("wjets_mg_flavour_flat_weight_down");
+
     weights.push_back("unweighted");
 
     map<string, float> wjets_weight_branches;
@@ -233,16 +249,14 @@ int main(int argc, char **argv)
     {
         get_branch<int>("wjets_flavour_classification0", &jet_flavour_classification, events);
 
+        for (auto & e : shape_weight_names)
+            getbranch(e.c_str());
+        for (auto & e : yield_weight_names)
+            getbranch(e.c_str());
+
         weights.push_back("weighted_wjets_mg_flavour_nominal");
         weights.push_back("weighted_wjets_mg_flavour_up");
         weights.push_back("weighted_wjets_mg_flavour_down");
-
-        getbranch("wjets_mg_flavour_flat_weight");
-        getbranch("wjets_mg_flavour_flat_weight_up");
-        getbranch("wjets_mg_flavour_flat_weight_down");
-        getbranch("wjets_mg_flavour_shape_weight");
-        getbranch("wjets_mg_flavour_shape_weight_up");
-        getbranch("wjets_mg_flavour_shape_weight_down");
     }
 
     int min_flavour = -1;
@@ -253,11 +267,13 @@ int main(int argc, char **argv)
         max_flavour = 7;
     }
 
+    std::map<hist_ident, TH1 *> hists;
+    TH1::AddDirectory(false);
     for (auto & weight : weights)
     {
         for (int i = min_flavour; i <= max_flavour; i++)
         {
-            for (int n_jets = 2; n_jets < 3; n_jets++)
+            for (int n_jets = 2; n_jets <= 3; n_jets++)
             {
                 for (int n_tags = 0; n_tags < 3; n_tags++)
                 {
@@ -268,6 +284,8 @@ int main(int argc, char **argv)
             }
         }
     }
+
+    TH1::AddDirectory(true);
 
     for (auto & e : hists)
     {
@@ -287,19 +305,29 @@ int main(int argc, char **argv)
             cerr << "Couldn't make directory " << dirname << endl;
             throw 1;
         }
-        //std::cout << "Making directory " << dirname << std::endl;
-        //std::cout << "TDir=" << dir->GetPath() << endl;
         e.second->SetDirectory(dir);
         e.second->Sumw2();
     }
 
+
     //cos_theta_hists[]
     long Nbytes = 0;
     cout << "Beginning event loop." << endl;
+
+    map<string, float> sum_weights;
+    for (auto & e : yield_weight_names)
+        sum_weights[e] = 0.0;
+
     for (int n = 0; n < Nentries; n++)
     {
         long idx = elist->GetEntry(n);
         Nbytes += events->GetEntry(idx);
+
+        //Calculate the sum of the shape weights for normalization
+        for (auto & e : yield_weight_names)
+            sum_weights[e] += wjets_weight_branches[e];
+
+
         if (n_jets == 2)
         {
             if (n_tags == 1 || n_tags == 0)
@@ -355,11 +383,11 @@ int main(int argc, char **argv)
                     );
                     hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "abs_eta_lj")]->Fill(
                         fabs(eta_lj),
-                        w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]
+                        w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_shape_weight_down"]
                     );
                     hists[make_tuple(n_jets, n_tags, jet_flavour_classification, weights[3], "eta_lj")]->Fill(
                         eta_lj,
-                        w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]
+                        w * wjets_weight_branches["wjets_mg_flavour_flat_weight_down"]*wjets_weight_branches["wjets_mg_flavour_shape_weight_down"]
                     );
 
 
@@ -370,9 +398,22 @@ int main(int argc, char **argv)
     }
     std::cout << "Read " << Nbytes << " bytes" << std::endl;
 
+    for (auto & e : sum_weights)
+    {
+        e.second = e.second / (float)Nentries;
+        cout << "Mean weight " << e.first << " " << e.second << endl;
+    }
+    /*
+        for (auto & e : hists)
+        {
+            if (get<3>(e.first) == weights[1])
+            {
+                e.second->Scale(sum_weights["wjets_mg_flavour_shape_weight"]);
+            }
+        }
+    */
     events->SetCacheSize(0);
 
-    //fi->Write();
     TObject *count_hist = (fi->Get("trees/count_hist;1"));
     float ngen = 1.0;
     if (count_hist && isMC)
@@ -382,21 +423,19 @@ int main(int argc, char **argv)
     std::cout << "ngen=" << ngen << endl;
     for (auto & e : hists)
     {
-        std::cout << e.second->GetDirectory()->GetPath() << endl;
         if (ngen > 0.0)
         {
             e.second->Scale(1.0 / ngen);
         }
-
-        //e.second->Print();
-        //cout << "Writing histogram " << e.second->GetDirectory()->GetPath() << ":" << e.second->GetName() << endl;
     }
+
+    fi->Close();
+    delete fi;
 
     cout << "Writing file" << endl;
     ofi->Write();
-    fi->Close();
-    delete fi;
     ofi->Close();
     delete ofi;
+
     return 0;
 }

@@ -1,8 +1,8 @@
 #CVS crud
 *CVS*
-
-testing*
-log*
+/analysis_notes
+/testing*
+/log*
 
 *__init__.py
 CMSSW_5_3_11/.SCRAM
@@ -62,3 +62,8 @@ CMSSW_5_3_11/tmp
 /theta
 
 /stpol.xcodeproj/xcuserdata
+
+*.pdf
+*.yield
+
+*.txt

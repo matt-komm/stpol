@@ -90,7 +90,7 @@ class Weight:
         return Weight(weight_str)
 
     def __str__(self):
-        return "(%s)" % self.weight_str
+        return self.weight_str
 
 class Weights:
     @staticmethod
@@ -103,7 +103,7 @@ class Weights:
         if lepton in ["mu", "ele"]:
             w *= getattr(Weights, lepton)
         else:
-            raise ValueError("Lepton channel %s not defined" % channel)
+            raise ValueError("Lepton channel %s not defined" % lepton)
 
         if systematic=="nominal":
             w*= Weight("b_weight_nominal")
