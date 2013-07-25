@@ -104,7 +104,7 @@ plot_defs['dr_bj']={
 plot_defs['n_jets']={
     'enabled': True,
     'var': 'n_jets',
-    'range': [5,-0.5,4.5],
+    'range': [3,0.5,3.5],
     'iso': True,
     'estQcd': False,
     'gev': False,
@@ -127,6 +127,20 @@ plot_defs['n_tags']={
         'labloc': 'top-right',
         'elecut': cutlist['presel_ele']*Cut('n_jets==2'),
         'mucut': cutlist['presel_mu']*Cut('n_jets==2')
+}
+
+plot_defs['n_tags_3j']={
+        'enabled': True,
+        'var': 'n_tags',
+        'range': [4,-0.5,3.5],
+        'iso': True,
+        'estQcd': False,
+        'gev': False,
+        'log': True,
+        'xlab': 'N_{tags}',
+        'labloc': 'top-right',
+        'elecut': cutlist['presel_ele']*Cut('n_jets==3'),
+        'mucut': cutlist['presel_mu']*Cut('n_jets==3')
 }
 
 plot_defs['cos_th_2j0t']={
