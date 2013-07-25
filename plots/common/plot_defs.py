@@ -44,6 +44,20 @@ plot_defs['top_mass']={
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu
 }
 
+plot_defs['top_mass_final']={
+    'enabled': True,
+    'var': 'top_mass',
+    'range': [20, 50, 500],
+    'iso': True,
+    'estQcd': 'final',
+    'gev': True,
+    'log': False,
+    'xlab': 'M_{b l #nu}',
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met*Cuts.eta_lj,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu*Cuts.eta_lj
+}
+
 
 plot_defs['lep_pt']={
     'enabled': True,
@@ -185,6 +199,20 @@ plot_defs['met']={
     'mucut': cutlist['2j1t']*cutlist['presel_mu']
 }
 
+plot_defs['met_final']={
+    'enabled': True,
+    'var': 'met',
+    'range': [40,0,200],
+    'iso': True,
+    'estQcd': 'presel',
+    'gev': True,
+    'log': False,
+    'xlab': 'E_{T}^{miss} [GeV]',
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.top_mass_sig*Cuts.eta_lj,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.eta_lj
+}
+
 plot_defs['mtW']={
     'enabled': True,
     'var': ['mt_el','mt_mu'],
@@ -199,18 +227,18 @@ plot_defs['mtW']={
     'mucut': cutlist['2j1t']*cutlist['presel_mu']
 }
 
-plot_defs['mt_mu_final']={
+plot_defs['mtW_final']={
     'enabled': True,
-    'var': 'mt_mu',
-    'range': [40,50,200],
+    'var': ['mt_el','mt_mu'],
+    'range': [40,0,200],
     'iso': True,
-    'estQcd': 'final',
+    'estQcd': 'presel',
     'gev': True,
     'log': False,
     'xlab': 'M_{t}(W) [GeV]',
     'labloc': 'top-right',
-    'elecut': cutlist['2j1t']*cutlist['final_ele'],
-    'mucut': cutlist['2j1t']*cutlist['final_mu']
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.top_mass_sig*Cuts.eta_lj,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.eta_lj
 }
 
 plot_defs['abs_eta_lj']={
