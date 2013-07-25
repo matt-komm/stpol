@@ -35,7 +35,6 @@ if __name__=="__main__":
     print cmdline_args
     print "Input directory is %s" % cmdline_args.indir
 
-    data_samples = ["SingleMu", "SingleEle"]
     if not cmdline_args.ofdir:
         cmdline_args.ofdir = "out_step3_%s_%s" % (os.getlogin(), datetime.datetime.now().strftime("%d_%m_%H_%M"))
     leptons = ["mu", "ele"]
@@ -54,9 +53,9 @@ if __name__=="__main__":
                     continue
                 if sampn.startswith("SingleEle") and lep=="mu":
                     continue
-                args = "--lepton=%s" % lep
+                args = " --doControlVars --lepton=%s" % lep
                 if isMC:
-                    args += " --doControlVars --isMC"
+                    args += " --isMC"
 
                 #Apply the processing cuts
                 if not is_signal or (is_signal and cmdline_args.applyCutsToSignal):
