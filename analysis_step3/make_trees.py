@@ -47,7 +47,8 @@ if __name__=="__main__":
                 continue
             sampn = get_sample_name(fi)
             is_signal = sample_types.is_signal(sampn)
-            isMC = not sampn in data_samples
+            isMC = sample_types.is_mc(sampn)
+
             for lep in leptons:
                 if sampn.startswith("SingleMu") and lep=="ele":
                     continue
