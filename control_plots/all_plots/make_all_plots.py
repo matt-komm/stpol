@@ -97,6 +97,12 @@ if __name__=="__main__":
         if 'mva' in pd and not 'MVA' in tree:
             continue
         var = plot_defs[pd]['var']
+        if not isinstance(var, basestring):
+            if proc == 'ele':
+                var = var[0]
+            else:
+                var = var[1]
+
         cut = None
         if proc == 'ele':
             cut = plot_defs[pd]['elecut']
@@ -104,6 +110,7 @@ if __name__=="__main__":
             cut = plot_defs[pd]['mucut']
 
         cut_str = str(cut)
+        #weight_str = "1.0"
         weight_str = str(Weights.total(proc) *
             Weights.wjets_madgraph_shape_weight() *
             Weights.wjets_madgraph_flat_weight())
@@ -188,10 +195,18 @@ if __name__=="__main__":
         stacks_d["mc"] = merged_hists 
         stacks_d["data"] = [hist_data]
         xlab = plot_defs[pd]['xlab']
+        if not isinstance(xlab, basestring):
+            if proc == 'ele':
+                xlab = xlab[0]
+            else:
+                xlab = xlab[1]
         ylab = 'N / '+str((1.*(plot_range[2]-plot_range[1])/plot_range[0]))
         if plot_defs[pd]['gev']:
             ylab+=' GeV'
-        stacks = plot_hists_stacked(canv, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = 1.5, do_log_y = plot_defs[pd]['log'])
+        fact = 1.5
+        if plot_defs[pd]['log']:
+            fact = 10
+        stacks = plot_hists_stacked(canv, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_defs[pd]['log'])
         boxloc = 'top-right'
         if plot_defs[pd]['labloc'] == 'top-right':
             boxloc = 'top-left'
@@ -199,5 +214,5 @@ if __name__=="__main__":
         lbox.Draw()
         leg.Draw()
         canv.Draw()
-
+        print 'Saving output to out_'+proc+'/'+pd+'.png'
         canv.SaveAs('out_'+proc+'/'+pd+'.png')
