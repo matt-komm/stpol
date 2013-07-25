@@ -11,8 +11,8 @@ cutlist['3j2t']=Cuts.n_jets(3)*Cuts.n_tags(2)
 
 
 #Needed for RMS cut validation
-cutlist['presel_ele_no_rms']=Cuts.hlt_isoele*Cuts.lepton_veto*Cuts.pt_jet*Cuts.one_electron
-cutlist['presel_mu_no_rms']=Cuts.hlt_isomu*Cuts.lepton_veto*Cuts.pt_jet*Cuts.one_muon
+cutlist['presel_ele_no_rms']=Cuts.lepton_veto*Cuts.pt_jet*Cuts.one_electron
+cutlist['presel_mu_no_rms']=Cuts.lepton_veto*Cuts.pt_jet*Cuts.one_muon
 
 cutlist['presel_ele'] = cutlist['presel_ele_no_rms']*Cuts.rms_lj
 cutlist['presel_mu'] = cutlist['presel_mu_no_rms']*Cuts.rms_lj
@@ -394,7 +394,7 @@ plot_defs['2j1t_etaLj']={
 
 #2j0t rms lj
 plot_defs['2j0t_rmsLj_rmsOff']={
-    'tags': ["rms_jet", "selection.tex"],  
+    'tags': ["rms_jet", "selection.tex"],
     'enabled': True,
     'var': 'rms_lj',
     'range': [nbins_selection, 0, 0.1],
