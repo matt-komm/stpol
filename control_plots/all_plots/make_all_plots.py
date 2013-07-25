@@ -210,7 +210,10 @@ if __name__=="__main__":
         boxloc = 'top-right'
         if plot_defs[pd]['labloc'] == 'top-right':
             boxloc = 'top-left'
-        lbox = lumi_textbox(lumi,boxloc)
+        chan = 'Electron'
+        if proc == "mu":
+            chan = 'Muon'
+        lbox = lumi_textbox(lumi,boxloc,'preliminary',chan+' channel')
         lbox.Draw()
         leg.Draw()
         canv.Draw()
