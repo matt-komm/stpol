@@ -90,8 +90,8 @@ plot_defs['rms_lj_2j0t']={
     'mucut': cutlist['2j0t']*cutlist['presel_mu_no_rms'],
 }
 plot_defs['rms_lj_2j1t'] = cp(plot_defs['rms_lj_2j0t'])
-plot_defs['rms_lj_2j1t']['elecut'] = cutlist['2j1t']*cutlist['presel_ele_no_rms']*Cuts.top_mass
-plot_defs['rms_lj_2j1t']['mucut'] = cutlist['2j1t']*cutlist['presel_mu_no_rms']*Cuts.top_mass
+plot_defs['rms_lj_2j1t']['elecut'] = cutlist['2j1t']*cutlist['presel_ele_no_rms']*Cuts.top_mass_sig
+plot_defs['rms_lj_2j1t']['mucut'] = cutlist['2j1t']*cutlist['presel_mu_no_rms']*Cuts.top_mass_sig
 plot_defs['rms_lj_2j1t']['estQcd'] = '2j1t'
 
 
@@ -116,8 +116,8 @@ plot_defs['abs_eta_lj_2j0t_with_rms_lj']['estQcd'] = '2j0t'
 
 #2J1T
 plot_defs['abs_eta_lj_2j1t_no_rms_lj'] = cp(plot_defs['abs_eta_lj_2j0t_no_rms_lj'])
-plot_defs['abs_eta_lj_2j1t_no_rms_lj']['elecut'] = cutlist['2j1t']*cutlist['presel_ele_no_rms']*Cuts.top_mass
-plot_defs['abs_eta_lj_2j1t_no_rms_lj']['mucut'] = cutlist['2j1t']*cutlist['presel_mu_no_rms']*Cuts.top_mass
+plot_defs['abs_eta_lj_2j1t_no_rms_lj']['elecut'] = cutlist['2j1t']*cutlist['presel_ele_no_rms']*Cuts.top_mass_sig
+plot_defs['abs_eta_lj_2j1t_no_rms_lj']['mucut'] = cutlist['2j1t']*cutlist['presel_mu_no_rms']*Cuts.top_mass_sig
 plot_defs['abs_eta_lj_2j1t_no_rms_lj']['estQcd'] = '2j1t'
 plot_defs['abs_eta_lj_2j1t_with_rms_lj'] = cp(plot_defs['abs_eta_lj_2j1t_no_rms_lj'])
 plot_defs['abs_eta_lj_2j1t_with_rms_lj']['mucut'] *= Cuts.rms_lj
