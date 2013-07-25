@@ -1,6 +1,7 @@
 from sample_style import ColorStyleGen
 import ROOT
 from utils import get_max_bin
+import math
 
 def plot_hists(hists, name="canv", **kwargs):
     canv = ROOT.TCanvas(name, name)
@@ -15,6 +16,7 @@ def plot_hists(hists, name="canv", **kwargs):
     max_bin_mult = kwargs.get("max_bin_mult", 1.5)
     styles = kwargs.get("styles", {})
     do_chi2 = kwargs.get("do_chi2", False)
+    do_ks = kwargs.get("do_ks", False)
 
     max_bin_val = get_max_bin([hist for hist in hists])
 
@@ -38,6 +40,11 @@ def plot_hists(hists, name="canv", **kwargs):
         for h in hists[1:]:
             chi2 = hists[0].Chi2Test(h, "WW CHI2/NDF")
             h.SetTitle(h.GetTitle() + " #chi^{2}/ndf=%.2f" % chi2)
+
+    if do_ks:
+        for h in hists[1:]:
+            ks = hists[0].KolmogorovTest(h, "")
+            h.SetTitle(h.GetTitle() + " log p=%.1f" % math.log(ks))
 
     if do_log_y:
         canv.SetLogy()
