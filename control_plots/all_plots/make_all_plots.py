@@ -67,10 +67,11 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     #Check if any of the provided hashtags matches any of the (optional) hashtags of the plot defs
-    args.plots += [v for k, v in plot_defs.items() if 'tags' in v.keys() and len(set(args.tags).intersection(set(v['tags'])))>0]
-    
+    args.plots += [k for (k, v) in plot_defs.items() if 'tags' in v.keys() and len(set(args.tags).intersection(set(v['tags'])))>0]
+    print args.plots
+
     #If there are no plots defined, do all of them
-    if len(args.plots)>0:
+    if len(args.plots)==0:
         args.plots = plot_defs.keys()
 
     proc=args.channel
@@ -260,7 +261,7 @@ if __name__=="__main__":
         p1.SetFillStyle(0);
         p1.cd()
 
-        stacks = plot_hists_stacked(canv, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_defs[pd]['log'])
+        stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_defs[pd]['log'])
        
         #Put the the lumi box where the legend is not
         boxloc = 'top-right'
@@ -279,7 +280,9 @@ if __name__=="__main__":
         #Draw the ratio plot with 
         ratio_pad, hratio = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
 
-        print 'Saving output to out_'+proc+'/'+pd+'.png'
-        canv.SaveAs('out_'+proc+'/'+pd+'.pdf')
-        canv.SaveAs('out_'+proc+'/'+pd+'.png')
+        fname = "out_{0}/{1}_{0}.png".format(proc, pd)
+        print fname
+        canv.SaveAs(fname)
+        canv.SaveAs(fname.replace(".png", ".pdf"))
+
         canv.Close() #Need to Close to prevent hang from ROOT because of multiple TPads etc
