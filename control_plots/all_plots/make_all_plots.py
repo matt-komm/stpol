@@ -73,6 +73,7 @@ if __name__=="__main__":
     #If there are no plots defined, do all of them
     if len(args.plots) == 0:
         args.plots = plot_defs.keys()
+        logging.info("No plots specified, plotting everything")
 
     proc=args.channel
     tree = args.tree
@@ -165,7 +166,7 @@ if __name__=="__main__":
                 if plot_def['estQcd'] == '2j0t': region='2j0t'
                 if plot_def['estQcd'] == '3j1t': region='3j1t'
                 qcd_loose_cut = cutlist[region]*cutlist['presel_'+proc]*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
-                logger.info('QCD loose cut: %s' % str(qcd_loose_cut))
+                logger.debug('QCD loose cut: %s' % str(qcd_loose_cut))
                 hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd.Scale(qcdScale[proc][plot_def['estQcd']])
@@ -202,7 +203,7 @@ if __name__=="__main__":
                 pass
 
         merged_hists = merged_hists.values()
-        leg = legend([hist_data]+merged_hists, legend_pos=plot_def['labloc'], style=['p','f'])
+        leg = legend([hist_data] + list(reversed(merged_hists)), legend_pos=plot_def['labloc'], style=['p','f'])
 
         #Create the dir if it doesn't exits
         try:
@@ -282,8 +283,17 @@ if __name__=="__main__":
         #Draw the ratio plot with 
         ratio_pad, hratio = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
 
-        fname = "out_{0}/{1}_{0}.png".format(proc, pd)
-        print fname
+        if "dir" in plot_def.keys():
+            out_dir = plot_def["dir"]
+        else:
+            out_dir = "out_{0}".format(proc)
+        fname = "{0}/{1}_{2}.png".format(out_dir, pd, proc)
+        try:
+            os.makedirs(out_dir)
+        except:
+            pass
+
+        logging.info("Saving %s" % fname)
         canv.SaveAs(fname)
         canv.SaveAs(fname.replace(".png", ".pdf"))
 
