@@ -7,7 +7,7 @@ import os
 import re
 import glob
 from copy import deepcopy
-
+import pdb
 from rootpy.plotting.hist import Hist, Hist2D
 
 
@@ -56,7 +56,7 @@ class PhysicsProcess:
             self.pretty_name = name
 
     @classmethod
-    def get_dict(self, lepton_channel, systematic_channel="nominal"):
+    def get_proc_dict(self, lepton_channel, systematic_channel="nominal"):
         """
         Returns the collection of PhysicsProcesses, that contain samples to be merged for the
         particular lepton channel and systematic scenario.
@@ -78,14 +78,13 @@ class PhysicsProcess:
         return out_d
 
     @classmethod
-    def get_merge_dict(self, lepton_channel="mu", **kwargs):
+    def get_merge_dict(self, in_d):
         """
         Returns a dictionary with
         {physic_process: [list, of, subsamples], ...}
         where all elements are strings.
         Used for merging.
         """
-        in_d = self.get_dict(lepton_channel, **kwargs)
         out_d = OrderedDict()
         for name, process in in_d.items():
             out_d[name] = process.subprocesses
@@ -94,14 +93,13 @@ class PhysicsProcess:
 
 PhysicsProcess.SingleMu = PhysicsProcess("SingleMu", ["SingleMu.*"], pretty_name="data")
 PhysicsProcess.SingleEle = PhysicsProcess("SingleEle", ["SingleEle.*"], pretty_name="data")
-PhysicsProcess.diboson = PhysicsProcess("diboson", ["[WZ][WZ]"])
-PhysicsProcess.WJets_mg_exc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"], pretty_name="W(#rightarrow l #nu) + j (mg)")
-#PhysicsProcess.WJets_mg_inc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"], pretty_name="W(#rightarrow l #nu,qq) + j (mg)")
-PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"], pretty_name="DY-jets")
-PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"], pretty_name="t#bar{t} (#rightarrow ll, lq) (mg)")
-PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW-channel")
-PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"], pretty_name="s-channel")
-PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name="t-channel")
+PhysicsProcess.diboson = PhysicsProcess("diboson", ["[WZ][WZ]"], pretty_name="diboson")
+PhysicsProcess.WJets_mg_exc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"], pretty_name="W(#rightarrow l #nu) + jets")
+PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"], pretty_name="DY")
+PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"], pretty_name="t#bar{t} (#rightarrow ll, lq)")
+PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW")
+PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"], pretty_name="s")
+PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name="signal")
 
 #for syst in ["scaleup", "scaledown"]:
 #    for nominal in [PhysicsProcess.tchan]:
@@ -109,9 +107,11 @@ PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name=
 #        proc.subprocesses = [x+"_%s" % syst for x in proc.subprocesses]
 #        PhysicsProcess.systematic[syst][proc.name] = proc
 
-merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel="mu")
+merge_cmds = PhysicsProcess.get_merge_dict(
+    PhysicsProcess.get_proc_dict(lepton_channel="mu")
+)
 
-def lumi_textbox(lumi, pos="top-left"):
+def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):
     """
     This method creates and draws the "CMS Preliminary" luminosity box,
     displaying the lumi in 1/fb and the COM energy.
@@ -122,6 +122,10 @@ def lumi_textbox(lumi, pos="top-left"):
     **Optional arguments:
     pos - a string specifying the position of the lumi box.
 
+    state - which analysis state is it: preliminary, internal, or '' for final publication
+
+    line2 - optional line 2 to show for example if this is e-channel or mu-channel
+
     **returns:
     A TPaveText instance with the lumi information
     """
@@ -130,8 +134,13 @@ def lumi_textbox(lumi, pos="top-left"):
     if pos=="top-right":
         coords = [0.5, 0.86, 0.96, 0.91]
 
+    if line2:
+        coords[1]-=0.05
+
     text = ROOT.TPaveText(coords[0], coords[1], coords[2], coords[3], "NDC")
-    text.AddText("CMS preliminary #sqrt{s} = 8 TeV, #int L dt = %.1f fb^{-1}" % (float(lumi)/1000.0))
+    text.AddText("CMS %s #sqrt{s} = 8 TeV, #int L dt = %.1f fb^{-1}" % (state, float(lumi)/1000.0))
+    if line2:
+        text.AddText(line2)
     text.SetShadowColor(ROOT.kWhite)
     text.SetLineColor(ROOT.kWhite)
     text.SetFillColor(ROOT.kWhite)
@@ -157,13 +166,12 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
     out_d = OrderedDict()
     logging.debug("merge_hists: input histograms %s" % str(hists_d))
     
-    
-    for name in order:
-        if name in merge_groups.keys():
-            merge_name=name
-            items=merge_groups[name]
-        else:
-            continue
+    for merge_name, items in merge_groups.items():
+        # if name in merge_groups.keys():
+        #     merge_name=name
+        #     items=merge_groups[name]
+        # else:
+        #     continue
         logger.debug("Merging %s to %s" % (items, merge_name))
 
         matching_keys = []
@@ -181,7 +189,23 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
         out_d[merge_name] = hist
         out_d[merge_name].SetTitle(merge_name)
         out_d[merge_name].SetName(merge_name)
-    return out_d
+
+    out_d_ordered = OrderedDict()
+    for elem in order:
+        #pdb.set_trace()
+        try:
+            out_d_ordered[elem] = out_d.pop(elem)
+            if hasattr(PhysicsProcess, merge_name):
+                out_d_ordered[elem].SetTitle(getattr(PhysicsProcess, elem).pretty_name)
+        except KeyError: #We don't care if there was an element in the order which was not present in the merge output
+            pass
+    for k, v in out_d.items():
+        out_d_ordered[k] = v
+    # if len(out_d_ordered.keys())!= len(merge_groups.keys()):
+    #     raise Exception("Ordered output does not contain all the merged keys")
+    #     pdb.set_trace()
+
+    return out_d_ordered
 
 
 def filter_alnum(s):
