@@ -3,6 +3,7 @@ from plots.common.stack_plot import *
 from plots.common.hist_plots import *
 from plots.common.legend import *
 from plots.common.cuts import *
+from plots.common.histogram import HistCollection, HistMetaData
 import copy
 from rootpy.extern.progressbar import *
 from SingleTopPolarization.Analysis import sample_types
@@ -34,20 +35,15 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
         nSamp = 1
         for sample in samples:
             hname = sample.name
-            weight_ = copy.deepcopy(weight)
             if sample.isMC:
-
-                for weight_name, weight_str in weight_strs:
-                    for cut_name, cut_str in cut_strs:
-                        logger.debug("Drawing with %s, %s" % (weight_str, cut_str))
-                        hname_ = weight_name + "/" + cut_name + "/" + hname
-                        hist = sample.drawHistogram(var, cut_str, weight=weight_str, **kwargs)
-                        hist.Scale(sample.lumiScaleFactor(lumi))
-                        hists[hname_] = hist.hist
-                        metadata[hname_] = HistMetaData(
-                            sample_name = sample.name,
-                            process_name = sample.process_name,
-                        )
+                hname_ = sample.name
+                hist = sample.drawHistogram(var, str(cut), weight=str(weight), **kwargs)
+                hist.Scale(sample.lumiScaleFactor(lumi))
+                hists[hname_] = hist
+                metadata[hname_] = HistMetaData(
+                    sample_name = sample.name,
+                    process_name = sample.process_name,
+                )
             else:
                 hist = sample.drawHistogram(var, str(cut), **kwargs)
                 hists[hname] = hist
@@ -57,7 +53,6 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
                 )
             pbar.update(nSamp)
             nSamp += sample.getEventCount()
-            #metadata[sample.name] = HistMetaData()
 
         hist_coll = HistCollection(hists, metadata, plot_name)
         hist_coll.save(out_dir)
