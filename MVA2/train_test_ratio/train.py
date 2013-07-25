@@ -4,7 +4,7 @@ import MVA2.common
 from plots.common import cuts
 import numpy as np
 
-qs = np.linspace(0.02, 1.02, 50)
+qs = np.linspace(0.02, .98, 49)
 Ns = np.logspace(0, 3.5, 100)
 
 def train(q, Ns):
@@ -21,7 +21,7 @@ def train(q, Ns):
 	train.add_variable("rms_lj")
 
 	for N in Ns:
-		train.book_method(ROOT.TMVA.Types.kBDT, '{0:.2f}_BDT_{1}'.format(q, N), "!H:!V:NTrees={0:d}".format(N))
+		train.book_method(ROOT.TMVA.Types.kBDT, '{0:.2f}_BDT_{1}'.format(q, N), "!H:!V:NTrees={0:d}".format(int(N)))
 
 	train.get_factory().TrainAllMethods()
 	train.evaluate()
