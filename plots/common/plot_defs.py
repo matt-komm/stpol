@@ -360,7 +360,7 @@ plot_defs['cos_th_mva_tight']={
 #-----------------------------------------------
 nbins_selection = 20
 plot_defs['2j1t_topMass']={
-    'tags': ["selection.tex"],
+    'tags': ["an", "selection.tex"],
     'enabled': True,
     'var': 'top_mass',
     'range': [nbins_selection, 50, 500],
@@ -375,7 +375,7 @@ plot_defs['2j1t_topMass']={
     'dir': "selection"
 }
 plot_defs['2j1t_etaLj']={
-    'tags': ["selection.tex"],
+    'tags': ["an", "selection.tex"],
     'enabled': True,
     'var': 'abs(eta_lj)',
     'range': [nbins_selection, 0, 5],
@@ -394,7 +394,7 @@ plot_defs['2j1t_etaLj']={
 
 #2j0t rms lj
 plot_defs['2j0t_rmsLj_rmsOff']={
-    'tags': ["rms_jet", "selection.tex"],  
+    'tags': ["an", "rms_jet", "selection.tex"],  
     'enabled': True,
     'var': 'rms_lj',
     'range': [nbins_selection, 0, 0.1],
@@ -411,7 +411,7 @@ plot_defs['2j0t_rmsLj_rmsOff']={
 
 #2j0t eta lj
 plot_defs['2j0t_etaLj_rmsOff']={
-    'tags': ["rms_jet", "selection.tex"],
+    'tags': ["an", "rms_jet", "selection.tex"],
     'enabled': True,
     'var': 'abs(eta_lj)',
     'range': [nbins_selection, 0, 4.5],
@@ -454,7 +454,7 @@ plot_defs['2j1t_etaLj_rmsOn']['elecut'] *= Cuts.rms_lj
 #-----------------------------------------------
 nbins_final = 20
 plot_defs['final_cosTheta']={
-    'tags': ["control.tex"],
+    'tags': ["an", "control.tex"],
     'enabled': True,
     'var': 'cos_theta',
     'range': [nbins_final, -1, 1],
@@ -471,7 +471,7 @@ plot_defs['final_cosTheta']={
 
 
 plot_defs['final_topMass']={
-    'tags': ["control.tex"],
+    'tags': ["an", "control.tex"],
     'enabled': True,
     'var': 'top_mass',
     'range': [nbins_final, 130, 220],
@@ -487,7 +487,7 @@ plot_defs['final_topMass']={
 }
 
 plot_defs['final_etaLj']={
-    'tags': ["control.tex"],
+    'tags': ["an", "control.tex"],
     'enabled': True,
     'var': 'abs(eta_lj)',
     'range': [nbins_final, 2.5, 5],
