@@ -59,21 +59,6 @@ varnames["n_tags"] = 'N_{tags}'
 varnames["n_jets"] = 'N_{jets}'
 varnames["rms_lj"] = 'RMS_{lj}'
 
-plot_defs['top_mass']={
-    'enabled': True,
-    'var': 'top_mass',
-    'range': [20, 50, 500],
-    'iso': True,
-    'estQcd': 'final',
-    'gev': True,
-    'log': False,
-    'xlab': varnames["top_mass"],
-    'labloc': 'top-right',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu
-}
-
-
 #For the RMS cut validation
 plot_defs['rms_lj_2j0t']={
     'tags': ["rms_jet"],  
@@ -124,7 +109,8 @@ plot_defs['abs_eta_lj_2j1t_with_rms_lj']['mucut'] *= Cuts.rms_lj
 plot_defs['abs_eta_lj_2j1t_with_rms_lj']['elecut'] *= Cuts.rms_lj
 
 
-plot_defs['top_mass_final']={
+
+plot_defs['top_mass']={
     'enabled': True,
     'var': 'top_mass',
     'range': [20, 50, 500],
@@ -134,8 +120,8 @@ plot_defs['top_mass_final']={
     'log': False,
     'xlab': varnames["top_mass"],
     'labloc': 'top-right',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met*Cuts.eta_lj,
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu*Cuts.eta_lj
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu
 }
 
 
@@ -153,19 +139,6 @@ plot_defs['lep_pt']={
     'mucut': cutlist['presel_mu']
 }
 
-plot_defs['cos_th_final']={
-    'enabled': True,
-    'var': 'cos_theta',
-    'range': [20,-1,1],
-    'iso': True,
-    'estQcd': 'final',
-    'gev': False,
-    'log': False,
-    'xlab': varnames["cos_theta"],
-    'labloc': 'top-left',
-    'elecut': cutlist['2j1t']*cutlist['final_ele'],
-    'mucut': cutlist['2j1t']*cutlist['final_mu']
-}
 
 plot_defs['dr_bj']={
     'enabled': True,
@@ -433,4 +406,50 @@ plot_defs['cos_th_mva_tight']={
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.7'),
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.5')
 }
+
+#control.tex
+nbins_final = 20
+plot_defs['final_cosTheta']={
+    'tags': ["final"],
+    'enabled': True,
+    'var': 'cos_theta',
+    'range': [nbins_final, -1, 1],
+    'iso': True,
+    'estQcd': 'final',
+    'gev': False,
+    'log': False,
+    'xlab': varnames["cos_theta"],
+    'labloc': 'top-left',
+    'elecut': cutlist['2j1t']*cutlist['final_ele'],
+    'mucut': cutlist['2j1t']*cutlist['final_mu']
+}
+plot_defs['final_topMass']={
+    'tags': ["final"],
+    'enabled': True,
+    'var': 'top_mass',
+    'range': [nbins_final, 130, 220],
+    'iso': True,
+    'estQcd': 'final',
+    'gev': True,
+    'log': False,
+    'xlab': varnames["top_mass"],
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['final_ele'],
+    'mucut': cutlist['2j1t']*cutlist['final_mu']
+}
+plot_defs['final_etaLj']={
+    'tags': ["final"],
+    'enabled': True,
+    'var': 'abs(eta_lj)',
+    'range': [nbins_final, 2.5, 5],
+    'iso': True,
+    'estQcd': 'final',
+    'gev': False,
+    'log': False,
+    'xlab': varnames["eta_lj"],
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['final_ele'],
+    'mucut': cutlist['2j1t']*cutlist['final_mu']
+}
+
 
