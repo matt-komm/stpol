@@ -10,6 +10,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/ou
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_6_2_Vco.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_11_3_gPv.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_7_2_TPr.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_13_4_FZx.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_8_2_DMe.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_15_3_tEW.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_9_2_CcO.root
@@ -46,6 +47,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/ou
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_48_3_xBp.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_26_2_VRk.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_50_3_IcR.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_51_2_8Wj.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_27_2_UnC.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_53_3_a49.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_MassiveBinDECAY/output_28_2_8HQ.root

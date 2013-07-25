@@ -150,6 +150,7 @@ def make_histograms(var, MC_groups, data_group, open_files, syst, iso, lumis, cu
             tdir = f.Get("trees")
             #print ds.getName()+" "+ds.getTree()+"_"+syst
             mytree = tdir.Get("Events")
+            mytree.AddFriend("trees/WJets_weights")
             if group.getName()=="QCD":
                 weight = cutsQCD            
             elif group.isMC():

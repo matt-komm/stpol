@@ -23,6 +23,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_22
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_23_2_hU1.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_24_2_u5N.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_25_2_VXQ.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_26_2_47p.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_27_2_izQ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_28_2_AHs.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_29_2_x1b.root
@@ -46,6 +47,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_46
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_47_2_22c.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_48_2_VXw.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_49_2_Ru2.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_50_3_T0X.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_51_2_jTD.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_52_2_J10.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_53_2_PVe.root
@@ -83,6 +85,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_84
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_85_2_aZ2.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_86_2_Rlm.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_87_2_7HL.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_88_3_T7O.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_89_2_qaI.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_90_2_FDs.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_91_2_bNe.root
@@ -105,6 +108,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_10
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_108_2_to3.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_109_2_WqU.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_110_2_F7J.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_111_2_ryI.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_112_2_icF.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_113_2_vzM.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/TTJets_FullLept/output_114_2_IrD.root

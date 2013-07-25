@@ -1,11 +1,13 @@
 import ROOT
 import logging
-from plots.common.utils import filter_alnum
+from plots.common.utils import filter_alnum, NestedDict
 from plots.common.histogram import *
 import numpy
 from cross_sections import xs as sample_xs_map
 import rootpy
-from rootpy.plotting import Hist
+from rootpy.plotting import Hist, Hist2D
+
+import os
 
 class HistogramException(Exception):
     pass
@@ -52,7 +54,7 @@ class Sample:
         except Exception as e:
             raise e
         try:
-            self.tree = self.tfile.Get("trees/"+tree_name)
+            self.tree = self.tfile.Get("trees/"+tree_name)            
         except Exception as e:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.file_name, self.tfile))
 
@@ -110,7 +112,7 @@ class Sample:
         ROOT.gROOT.cd()
         if plot_range:
             hist = Hist(*plot_range, type=dtype, name="htemp")
-        elif binning:
+        elif binning is not None:
             hist = Hist(binning, type=dtype)
         else:
             raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=(nbins, numpy.array(..))")
@@ -118,6 +120,55 @@ class Sample:
         hist.Sumw2()
 
         draw_cmd = var + ">>%s" % hist.GetName()
+
+        if weight_str:
+            cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
+        else:
+            cutweight_cmd = "(" + cut_str + ")"
+
+        logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
+
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
+        logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
+
+        if n_entries<0:
+            raise HistogramException("Could not draw histogram: %s" % self.name)
+
+        if hist.Integral() != hist.Integral():
+            raise HistogramException("Histogram had 'nan' Integral(), probably weight was 'nan'")
+        if not hist:
+            raise TObjectOpenException("Could not get histogram: %s" % hist)
+        if hist.GetEntries() != n_entries:
+            raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        hist_new = hist.Clone(filter_alnum(name))
+
+        return hist_new
+
+    def drawHistogram2D(self, var, var2, cut_str, **kwargs):
+        logger.debug("drawHistogram: var=%s, var2=%s, cut_str=%sm kwargs=%s" % (str(var), str(var2), str(cut_str), str(kwargs)))
+        name = self.name + "_" + unique_name(var+"_"+var2, cut_str, kwargs.get("weight"))
+
+        plot_range_x = kwargs.get("plot_range_x", None)
+        plot_range_y = kwargs.get("plot_range_y", None)
+        binning_x = kwargs.get("binning_x", None)
+        binning_y = kwargs.get("binning_y", None)
+
+        weight_str = kwargs.get("weight", None)
+        dtype = kwargs.get("dtype", "F")
+
+        ROOT.gROOT.cd()
+        if plot_range_x and plot_range_y:
+            pass
+            #TODO: make it work if needed
+            #hist = Hist2D(*plot_range_x, *plot_range_y, type=dtype, name="htemp")
+        elif binning_x is not None and binning_y is not None:
+            hist = Hist2D(binning_x, binning_y, type=dtype)
+        else:
+            raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
+
+        hist.Sumw2()
+
+        draw_cmd = var+":"+var2 + ">>%s" % hist.GetName()
 
         if weight_str:
             cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
@@ -163,7 +214,7 @@ class Sample:
         return sample
 
     @staticmethod
-    def fromDirectory(directory, out_type="list", prefix="", tree_name="Events"):
+    def fromDirectory(directory, out_type="dict", prefix="", tree_name="Events"):
         import glob
         file_names = glob.glob(directory + "/*.root")
         logging.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
@@ -184,19 +235,44 @@ class Sample:
 def is_mc(name):
     return not "SingleMu" in name
 
-def load_samples(basedir=None):
+def get_paths(basedir=None, samples_dir="step3_latest"):
+    """
+    basedir - the path where your STPOL directory is located
+    samples_dir - the subdirectory in STPOL/...
+
+    Returns a dictionary with the path structure of the samples in the format of
+    out[dataset_name][mc/data][mu/ele][systematic_scenario][isolation] = "/path/to/samples"
+    where dataset_name is the name/tag of the reprocessing
+    """
     if not basedir:
         basedir = os.environ["STPOL_DIR"]
     datadirs = dict()
-    datadirs["iso"] = "/".join((basedir, "step3_latest", "mu" ,"iso", "nominal"))
-    #Use the anti-isolated data for QCD $STPOL_DIR/step3_latest/mu/antiiso/nominal/SingleMu.root
-    # datadirs["antiiso"] = "/".join((basedir, "step3_latest", "mu" ,"antiiso", "nominal"))
+    fnames = NestedDict()
+    for root, paths, files in os.walk(basedir + "/" + samples_dir):
+        rootfiles = filter(lambda x: x.endswith(".root"), files)
+        for fi in rootfiles:
+            fn = root + "/" + fi
 
-    #Load all the samples in the isolated directory
-    samples = Sample.fromDirectory(datadirs["iso"], out_type="dict", prefix="iso/")
+            spl = fn.split("/")
+            try:
+                idx = spl.index("mu")
+            except ValueError:
+                idx = spl.index("ele")
 
-    for name, sample in samples.items():
-            sample.process_name = get_process_name(sample.name)
-    # samples["antiiso/SingleMu"] = Sample.fromFile(datadirs["antiiso"] + "/SingleMu.root")
+            spl = spl[idx:]
+            lepton = spl[0]
+            sample_type = spl[1]
+            iso = spl[2]
 
-    return samples
+            if len(spl)==6:
+                systematic=spl.pop(3)
+            elif len(spl)==5:
+                systematic="NONE"
+            else:
+                raise ValueError("Couldn't parse filename: %s" % fn)
+            dataset = spl[3]
+            fname = spl[4]
+
+            fnames[dataset][sample_type][lepton][systematic][iso] = root
+            break
+    return fnames.as_dict()
