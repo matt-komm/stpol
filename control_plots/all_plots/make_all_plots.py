@@ -283,6 +283,10 @@ if __name__=="__main__":
         #Draw the ratio plot with 
         ratio_pad, hratio = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
 
+        #This is adopted in the AN
+        if proc=="ele":
+            proc="el"
+            
         if "dir" in plot_def.keys():
             out_dir = plot_def["dir"]
         else:

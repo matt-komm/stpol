@@ -516,8 +516,8 @@ for v in ["cosTheta", "topMass", "etaLj"]:
             s = "%dj%dt" % (nj, nt)
 
             plot_defs[s + "_" + v] = cp(plot_defs['final_' + v])
-            plot_defs[s + "_" + v]['elecut'] = cutlist[s]*cutlist['final_ele']
-            plot_defs[s + "_" + v]['mucut'] = cutlist[s]*cutlist['final_mu']
+            plot_defs[s + "_" + v]['elecut'] = cutlist[s]*Cuts.met#*cutlist['final_ele']
+            plot_defs[s + "_" + v]['mucut'] = cutlist[s]*Cuts.mt_mu#*cutlist['final_mu']
             plot_defs[s + "_" + v]['estQcd'] = "final_" + s
 
 
