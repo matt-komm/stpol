@@ -70,7 +70,8 @@ class HistCollection:
         if not fi:
             raise Exception("Couldn't open file for writing")
         logger.info("Saving histograms to ROOT file %s" % histo_file)
-        for hn, h in self.hists.items():
+        hists = copy.deepcopy(self.hists)
+        for hn, h in hists.items():
             dirn = "/".join(hn.split("/")[:-1])
             fi.cd()
             try:
@@ -121,6 +122,9 @@ def calc_int_err(hist):
     err = ROOT.Double()
     integral = hist.IntegralAndError(1, hist.GetNbinsX(), err)
     return (integral, err)
+
+def sum_err(hist):
+    return sum([y for y in hist.yerravg()])
 
 def unique_name(var, cut, weight):
     cut_str = cut if cut is not None else "NOCUT"
