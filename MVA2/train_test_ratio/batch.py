@@ -21,12 +21,13 @@ if args.bulk_batch:
 
 	qs = np.linspace(0.02, .98, 49)
 	for q in qs:
-		cmdstring = ' '.join(cmd + [str(q)])
+		subcmd = cmd + [str(q)]
+		cmdstring = ' '.join(subcmd)
 		print 'Submitting:', cmdstring
 		
 		submitted = False
 		while not submitted:
-			submitted = (subprocess.call(cmd) == 0)
+			submitted = (subprocess.call(subcmd) == 0)
 			submitted = True
 			if not submitted:
 				print 'Error submitting. Trying again...'
