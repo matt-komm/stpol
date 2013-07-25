@@ -49,34 +49,6 @@ TH1F* gethisto(TString variable)
     Int_t HLT_v15 = 0;
     Int_t HLT_v16 = 0;
     Int_t HLT_v17 = 0;
-	chain->SetBranchAddress("mu_iso", &muonIso);
-	chain->SetBranchAddress("rms_lj", &jetrms);
-	chain->SetBranchAddress("mt_mu", &mtw);
-	chain->SetBranchAddress("eta_lj", &eta_lj);
-    chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v11", &HLT_v11);
-    chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v12", &HLT_v12);
-    chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v13", &HLT_v13);
-    chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v14", &HLT_v14);
-    chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v15", &HLT_v15);
-    chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v16", &HLT_v16);
-    chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v17", &HLT_v17);
-
-    Int_t n_jets = 0;
-    Int_t n_tags = 0;
-    Int_t n_veto_ele = -1;
-    Int_t n_veto_mu = -1;
-    Float_t pt_lj = 0;
-    Float_t pt_bj = 0;
-    Float_t top_mass = 0;
-    chain->SetBranchAddress("n_jets", &n_jets);
-    chain->SetBranchAddress("n_tags", &n_tags);
-    chain->SetBranchAddress("n_veto_ele", &n_veto_ele);
-    chain->SetBranchAddress("n_veto_mu", &n_veto_mu);
-    chain->SetBranchAddress("pt_lj", &pt_lj);
-    chain->SetBranchAddress("pt_bj", &pt_bj);
-    chain->SetBranchAddress("top_mass", &top_mass);
-	
-    
 
 	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v11", &HLT_v11);
 	chain->SetBranchAddress("HLT_IsoMu24_eta2p1_v12", &HLT_v12);
