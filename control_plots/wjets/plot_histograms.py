@@ -98,8 +98,15 @@ def merge_flavours(hists):
 	return ret
 
 qcd_yields = NestedDict()
-qcd_yields[2][1]["SR"] = 38.582
+qcd_yields[2][1]["SR"] = 0
+qcd_yields[2][1]["cut1"] = 9941.61250642
 qcd_yields = qcd_yields.as_dict()
+
+def get_flavour_fractions(merged_hists, key):
+	fracs = dict()
+	for k in merged_wjets.keys():
+		fracs[k] = merged_hists[k][key].Integral() / sum([x[key].Integral() for x in merged_hists.values()])
+	return fracs
 
 if __name__=="__main__":
 	logging.basicConfig(level=logging.INFO)
@@ -118,14 +125,14 @@ if __name__=="__main__":
 	plot_order.insert(4, "WJets W+g")
 	logging.info("Plotting order: %s" % str(plot_order))
 
-	N_jets = 2
+	N_jets = 3
 	N_tags = 1
 	cut_region = "SR"
 
 
 	cut_name = "%dJ%dT %s" % (N_jets, N_tags, cut_region)
-	cos_theta = "cos #theta"
-	plot_args = {"legend_text_size":0.015, "legend_pos":"top-left", "x_label":cos_theta}
+	varnames = {"abs_eta_lj": "|#eta_{j'}|", "cos_theta":"cos #theta"}
+	plot_args = {"legend_text_size":0.015, "legend_pos":"top-left"}
 
 #Load the histograms
 	out_dir = "out/plots/wjets/%dJ%dT_%s/" % (N_jets, N_tags, cut_region)
@@ -145,6 +152,7 @@ if __name__=="__main__":
 		if re.match("W.*Jets.*", k):
 			for flavour, hist in v.items():
 				wjets_hists[flavour][k] = hist
+	wjets_hists = wjets_hists.as_dict()
 
 	merged_wjets = NestedDict()
 	wjets_merges = OrderedDict()
@@ -177,14 +185,19 @@ if __name__=="__main__":
 		hists_ratio["ratio__" + fname] = dc(cloned["sherpa"].Clone("ratio__%s" % fname))
 		hists_ratio["ratio__" + fname].Divide(cloned["madgraph"])
 		hists_ratio["ratio__" + fname].SetTitle(fname)
-		canv = plot_hists_dict(cloned, do_chi2=True, legend_pos="top-left", x_label=cos_theta)
+		canv = plot_hists_dict(cloned, do_chi2=True, legend_pos="top-left", x_label=varnames["cos_theta"])
 		cloned["sherpa"].SetTitle("cos #theta %s %s" % (cut_name, fname))
 		canv.SaveAs(out_dir+"sherpa_madgraph_%s.png" % flavour)
 
 
 	ratios_coll = HistCollection(hists_ratio, name="hists__costheta_flavours_merged_scenario0")
-	canv = plot_hists_dict(hists_ratio, max_bin=2.0, min_bin=0.5, x_label=cos_theta)
-	hists_ratio.values()[0].SetTitle("sherpa to madgraph ratios")
+	hists_ratio_small_error = dict(filter(lambda x: sum_err(x[1])<1, hists_ratio.items()))
+	if len(hists_ratio_small_error.items())>0:
+		canv = plot_hists_dict(
+			hists_ratio_small_error,
+			max_bin=2.0, min_bin=0.5, x_label=varnames["cos_theta"]
+		)
+		hists_ratio_small_error.values()[0].SetTitle("sherpa to madgraph ratios")
 	ratios_coll.save(out_dir)
 
 	canv.SaveAs(out_dir + "/ratios.png")
@@ -202,13 +215,13 @@ if __name__=="__main__":
 	for var in ["cos_theta", "abs_eta_lj"]:
 		for weight in ["unweighted"] + weights:
 			for sample_name, hists in histsA[var][N_jets][N_tags][weight].items():
-
 				if is_wjets(sample_name):
 					for merge_name, hist in merge_flavours(hists.values()).items():
 						merged_flavours[var][weight][sample_name + "/" + merge_name] = hist
 				else:
 					merged_flavours[var][weight][sample_name] = hists[-1]
-
+			_plot_args = copy.deepcopy(plot_args)
+			_plot_args.update({"x_label": varnames[var]})
 
 			merged_final[var][weight] = merge_hists(merged_flavours[var][weight], merges, merges.keys())
 
@@ -232,7 +245,10 @@ if __name__=="__main__":
 					merged_final[var][weight]["QCD"] = hist
 				else:
 					merged_final[var][weight]["QCD"] += hist
-			merged_final[var][weight]["QCD"].Scale(qcd_yields[N_jets][N_tags][cut_region])
+			norm(merged_final[var][weight]["QCD"])
+			merged_final[var][weight]["QCD"].Scale(
+				qcd_yields[N_jets][N_tags][cut_region]
+			)
 			Styling.mc_style(merged_final[var][weight]["QCD"], "QCD")
 
 		print "Normalizations"
@@ -240,19 +256,18 @@ if __name__=="__main__":
 			print "%s %s" % (process, hist.Integral())
 
 		canv = ROOT.TCanvas()
-		r = plot(canv, "2J_%s" % var, merged_final[var]["unweighted"], out_dir, desired_order=plot_order, **plot_args)
+		r = plot(canv, "2J_%s" % var, merged_final[var]["unweighted"], out_dir, desired_order=plot_order, **_plot_args)
 
 		canv = ROOT.TCanvas()
-		r = plot(canv, "2J_rew_up_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_up"], out_dir, desired_order=plot_order, **plot_args)
+		r = plot(canv, "2J_rew_up_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_up"], out_dir, desired_order=plot_order, **_plot_args)
 
 		canv = ROOT.TCanvas()
-		r = plot(canv, "2J_rew_down_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_down"], out_dir, desired_order=plot_order, **plot_args)
+		r = plot(canv, "2J_rew_down_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_down"], out_dir, desired_order=plot_order, **_plot_args)
 
 		tot_mc = sum([v for (k, v) in merged_final[var]["weighted_wjets_mg_flavour_nominal"].items() if k!="data"])
 		tot_syst_error = ROOT.TGraphAsymmErrors(tot_mc)
 		syst_up = sum([v for (k, v) in merged_final[var]["weighted_wjets_mg_flavour_up"].items() if k!="data"])
 		syst_down = sum([v for (k, v) in merged_final[var]["weighted_wjets_mg_flavour_down"].items() if k!="data"])
-
 
 		bins_x = numpy.array([x for x in tot_mc.x()])
 		errs_x = numpy.array(len(bins_x)*[0])
@@ -263,6 +278,9 @@ if __name__=="__main__":
 			len(bins_x), bins_x, bins_center,
 			errs_x, errs_x,
 			err_low, err_high)
+
+		print "Total stat. error (avg. sum): %.2f" % sum_err(tot_mc)
+		print "Total syst. error (avg. sum): %.2f" % numpy.sum((err_low + err_high)/2)
 
 		print "mc | data | syst up | syst down"
 		for i in range(1, len(bins_up)+1):

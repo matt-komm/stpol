@@ -33,8 +33,11 @@ if __name__=="__main__":
 
 		("cut0", "n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025"),
 		("cut1", "n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025 && mt_mu>50"),
+		
 		("cut1_qcd", "n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025 && mt_mu>50 && deltaR_bj>0.3 && deltaR_lj>0.3 && mu_iso>0.3 && mu_iso<0.5"),
+
 		("cut2", "n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025 && mt_mu>50 && top_mass<220 && top_mass>130"),
+		("cut2_SB", "n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025 && mt_mu>50 && top_mass>220 && top_mass<130"),
 		("cut3", "n_muons==1 && n_eles==0 && n_veto_mu==0 && n_jets>0 && n_veto_ele==0 && rms_lj<0.025 && mt_mu>50 && top_mass<220 && top_mass>130 && abs(eta_lj)>2.5"),
 	]
 
