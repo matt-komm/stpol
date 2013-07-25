@@ -126,7 +126,10 @@ if __name__=="__main__":
                     cv='el_iso'
                     lb=0.1
                 qcd_cut = cut*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
-                qcd_loose_cut = cutlist[plot_defs[pd]['estQcd']]*cutlist['presel_'+proc]*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
+                region = '2j1t'
+                if plot_defs[pd]['estQcd'] == '2j0t': region='2j0t'
+                if plot_defs[pd]['estQcd'] == '3j1t': region='3j1t'
+                qcd_loose_cut = cutlist[region]*cutlist['presel_'+proc]*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
                 logger.info('QCD loose cut: %s' % str(qcd_loose_cut))
                 hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
