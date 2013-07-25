@@ -14,6 +14,7 @@ from plots.common.tdrstyle import tdrstyle
 from plots.common.hist_plots import *
 from plots.common.sample_style import *
 from plots.common.odict import OrderedDict
+from plots.common.cross_sections import lumi_iso
 import pdb
 
 from plot_utils import *
@@ -45,12 +46,14 @@ def make_metadata(histname):
 def filter_hists(pat, hists):
 	return filter(lambda x: re.match(k))
 
-LUMI=19739
+LUMI=lumi_iso["mu"]
 
-def load_hists(dirname):
+def load_hists(dirname, histsA=None, histsB=None):
 	files = map(File, glob.glob(dirname+"/*.root"))
-	histsA = NestedDict()
-	histsB = NestedDict()
+	if not histsA:
+		histsA = NestedDict()
+	if not histsB:
+		histsB = NestedDict()
 
 	for fi in files:
 		sample_name = get_sample_name(fi.name)
@@ -94,9 +97,21 @@ def merge_flavours(hists):
 		v.SetName(k)
 	return ret
 
+qcd_yields = NestedDict()
+qcd_yields[2][1]["SR"] = 0
+qcd_yields[2][1]["cut1"] = 9941.61250642
+qcd_yields = qcd_yields.as_dict()
+
+def get_flavour_fractions(merged_hists, key):
+	fracs = dict()
+	for k in merged_wjets.keys():
+		fracs[k] = merged_hists[k][key].Integral() / sum([x[key].Integral() for x in merged_hists.values()])
+	return fracs
 
 if __name__=="__main__":
 	logging.basicConfig(level=logging.INFO)
+	logger.setLevel(logging.DEBUG)
+	#logging.getLogger("utils").setLevel(level=logging.DEBUG)
 
 
 	tdrstyle()
@@ -104,34 +119,50 @@ if __name__=="__main__":
 
 	plot_order = PhysicsProcess.desired_plot_order
 	plot_order.pop(plot_order.index("WJets"))
-	plot_order.insert(1, "WJets W+hf")
-	plot_order.insert(2, "WJets W+l")
-	plot_order.insert(3, "WJets W+g")
-	N_jets = 2
+	plot_order.insert(1,"QCD")
+	plot_order.insert(2, "WJets W+hf")
+	plot_order.insert(3, "WJets W+l")
+	plot_order.insert(4, "WJets W+g")
+	logging.info("Plotting order: %s" % str(plot_order))
+
+	N_jets = 3
 	N_tags = 1
 	cut_region = "SR"
-	cut_name = "%dJ%dT %s" % (N_jets, N_tags, cut_region)
-	cos_theta = "cos #theta"
-	plot_args = {"legend_text_size":0.015, "legend_pos":"top-left", "x_label":cos_theta}
 
+
+	cut_name = "%dJ%dT %s" % (N_jets, N_tags, cut_region)
+	varnames = {"abs_eta_lj": "|#eta_{j'}|", "cos_theta":"cos #theta"}
+	plot_args = {"legend_text_size":0.015, "legend_pos":"top-left"}
+
+#Load the histograms
 	out_dir = "out/plots/wjets/%dJ%dT_%s/" % (N_jets, N_tags, cut_region)
 	mkdir_p(out_dir)
-	histsA, histsB = load_hists("hists/%s" % cut_region)
+	histsA, histsB = load_hists("hists/mu/mc/iso/%s" % cut_region)
+	histsA, histsB = load_hists("hists/mu/data/iso/%s" % cut_region, histsA=histsA, histsB=histsB)
+
+	histsA = histsA.as_dict()
+	histsB = histsB.as_dict()
+
+	histsA_qcd, histsB_qcd = load_hists("hists/mu/data/antiiso/cut1_qcd")
+	histsA_qcd = histsA_qcd.as_dict()
+	histsB_qcd = histsB_qcd.as_dict()
 
 	wjets_hists = NestedDict()
-
 	for k, v in histsA["cos_theta"][N_jets][N_tags]["unweighted"].items():
 		if re.match("W.*Jets.*", k):
 			for flavour, hist in v.items():
 				wjets_hists[flavour][k] = hist
+	wjets_hists = wjets_hists.as_dict()
 
 	merged_wjets = NestedDict()
 	wjets_merges = OrderedDict()
-	wjets_merges["sherpa"] = ["WJets_sherpa_nominal"]
+	wjets_merges["sherpa"] = ["WJets_sherpa"]
 	wjets_merges["madgraph"] = ["W[1-4]Jets_exclusive"]
 	hists_ratio = NestedDict()
 
+	logger.info("Merging histograms")
 	for flavour, hists in wjets_hists.items():
+		logger.debug("Merging flavour %s: %s" % (flavour, str(hists)))
 		merged_wjets[flavour] = merge_hists(hists, wjets_merges, order=wjets_merges.keys())
 
 		madgraph_rew_hists = dict(
@@ -145,6 +176,7 @@ if __name__=="__main__":
 		madgraph_rew = sum(madgraph_rew_hists)
 
 		cloned = dc(merged_wjets[flavour])
+		logger.debug("Merge output %s" % str(cloned))
 		norm(cloned["sherpa"])
 		norm(cloned["madgraph"])
 		madgraph_rew.Scale(cloned["madgraph"].Integral() / madgraph_rew.Integral())
@@ -153,14 +185,19 @@ if __name__=="__main__":
 		hists_ratio["ratio__" + fname] = dc(cloned["sherpa"].Clone("ratio__%s" % fname))
 		hists_ratio["ratio__" + fname].Divide(cloned["madgraph"])
 		hists_ratio["ratio__" + fname].SetTitle(fname)
-		canv = plot_hists_dict(cloned, do_chi2=True, legend_pos="top-left", x_label=cos_theta)
+		canv = plot_hists_dict(cloned, do_chi2=True, legend_pos="top-left", x_label=varnames["cos_theta"])
 		cloned["sherpa"].SetTitle("cos #theta %s %s" % (cut_name, fname))
 		canv.SaveAs(out_dir+"sherpa_madgraph_%s.png" % flavour)
 
 
 	ratios_coll = HistCollection(hists_ratio, name="hists__costheta_flavours_merged_scenario0")
-	canv = plot_hists_dict(hists_ratio, max_bin=2.0, min_bin=0.5, x_label=cos_theta)
-	hists_ratio.values()[0].SetTitle("sherpa to madgraph ratios")
+	hists_ratio_small_error = dict(filter(lambda x: sum_err(x[1])<1, hists_ratio.items()))
+	if len(hists_ratio_small_error.items())>0:
+		canv = plot_hists_dict(
+			hists_ratio_small_error,
+			max_bin=2.0, min_bin=0.5, x_label=varnames["cos_theta"]
+		)
+		hists_ratio_small_error.values()[0].SetTitle("sherpa to madgraph ratios")
 	ratios_coll.save(out_dir)
 
 	canv.SaveAs(out_dir + "/ratios.png")
@@ -171,20 +208,20 @@ if __name__=="__main__":
 	merges["WJets W+g"] = ["W[1-4]Jets_exclusive/W_gluon"]
 	merges["WJets W+l"] = ["W[1-4]Jets_exclusive/W_light"]
 
-	sherpa_merged = merge_flavours(histsA["cos_theta"][N_jets][N_tags]["unweighted"]["WJets_sherpa_nominal"].values())
+	sherpa_merged = merge_flavours(histsA["cos_theta"][N_jets][N_tags]["unweighted"]["WJets_sherpa"].values())
 
 	merged_final = NestedDict()
 	weights = ["weighted_wjets_mg_flavour_nominal", "weighted_wjets_mg_flavour_up", "weighted_wjets_mg_flavour_down"]
 	for var in ["cos_theta", "abs_eta_lj"]:
 		for weight in ["unweighted"] + weights:
 			for sample_name, hists in histsA[var][N_jets][N_tags][weight].items():
-
 				if is_wjets(sample_name):
 					for merge_name, hist in merge_flavours(hists.values()).items():
 						merged_flavours[var][weight][sample_name + "/" + merge_name] = hist
 				else:
 					merged_flavours[var][weight][sample_name] = hists[-1]
-
+			_plot_args = copy.deepcopy(plot_args)
+			_plot_args.update({"x_label": varnames[var]})
 
 			merged_final[var][weight] = merge_hists(merged_flavours[var][weight], merges, merges.keys())
 
@@ -201,20 +238,36 @@ if __name__=="__main__":
 						continue
 					merged_final[var][weight][k] = dc(v)
 
-		canv = ROOT.TCanvas()
-		r = plot(canv, "2J_%s" % var, merged_final[var]["unweighted"], out_dir, desired_order=plot_order, **plot_args)
+			merged_final[var][weight]["QCD"] = None
+			for k, v in histsA_qcd[var][N_jets][N_tags]["unweighted"].items():
+				hist = v[-1] #Get the histogram with unsplit flavour
+				if not merged_final[var][weight]["QCD"]:
+					merged_final[var][weight]["QCD"] = hist
+				else:
+					merged_final[var][weight]["QCD"] += hist
+			norm(merged_final[var][weight]["QCD"])
+			merged_final[var][weight]["QCD"].Scale(
+				qcd_yields[N_jets][N_tags][cut_region]
+			)
+			Styling.mc_style(merged_final[var][weight]["QCD"], "QCD")
+
+		print "Normalizations"
+		for process, hist in merged_final[var]["unweighted"].items():
+			print "%s %s" % (process, hist.Integral())
 
 		canv = ROOT.TCanvas()
-		r = plot(canv, "2J_rew_up_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_up"], out_dir, desired_order=plot_order, **plot_args)
+		r = plot(canv, "2J_%s" % var, merged_final[var]["unweighted"], out_dir, desired_order=plot_order, **_plot_args)
 
 		canv = ROOT.TCanvas()
-		r = plot(canv, "2J_rew_down_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_down"], out_dir, desired_order=plot_order, **plot_args)
+		r = plot(canv, "2J_rew_up_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_up"], out_dir, desired_order=plot_order, **_plot_args)
+
+		canv = ROOT.TCanvas()
+		r = plot(canv, "2J_rew_down_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_down"], out_dir, desired_order=plot_order, **_plot_args)
 
 		tot_mc = sum([v for (k, v) in merged_final[var]["weighted_wjets_mg_flavour_nominal"].items() if k!="data"])
 		tot_syst_error = ROOT.TGraphAsymmErrors(tot_mc)
 		syst_up = sum([v for (k, v) in merged_final[var]["weighted_wjets_mg_flavour_up"].items() if k!="data"])
 		syst_down = sum([v for (k, v) in merged_final[var]["weighted_wjets_mg_flavour_down"].items() if k!="data"])
-
 
 		bins_x = numpy.array([x for x in tot_mc.x()])
 		errs_x = numpy.array(len(bins_x)*[0])
@@ -225,6 +278,9 @@ if __name__=="__main__":
 			len(bins_x), bins_x, bins_center,
 			errs_x, errs_x,
 			err_low, err_high)
+
+		print "Total stat. error (avg. sum): %.2f" % sum_err(tot_mc)
+		print "Total syst. error (avg. sum): %.2f" % numpy.sum((err_low + err_high)/2)
 
 		print "mc | data | syst up | syst down"
 		for i in range(1, len(bins_up)+1):
@@ -256,7 +312,10 @@ if __name__=="__main__":
 	map(lambda x: x.Rebin(2), hists.values())
 	map(lambda x: norm(x), hists.values())
 	canv = plot_hists_dict(hists, do_chi2=False, **plot_args)
-	canv.SaveAs(out_dir + "mg_weighting_data.eps")
+	canv.SaveAs(out_dir + "mg_weighting_data.png")
+
+
+	#
 
 
 
