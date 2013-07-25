@@ -47,6 +47,7 @@ def get_file_list(merge_cmds, dir, fullpath=True):
 
 class PhysicsProcess:
     desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan"]
+    desired_plot_order_log = ["data", "schan", "diboson", "tchan", "tWchan", "DYJets", "TTJets", "WJets" ]
     def __init__(self, name, subprocesses, pretty_name=None):
         self.name = name
         self.subprocesses = subprocesses
@@ -111,7 +112,7 @@ PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name=
 
 merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel="mu")
 
-def lumi_textbox(lumi, pos="top-left"):
+def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):
     """
     This method creates and draws the "CMS Preliminary" luminosity box,
     displaying the lumi in 1/fb and the COM energy.
@@ -122,6 +123,10 @@ def lumi_textbox(lumi, pos="top-left"):
     **Optional arguments:
     pos - a string specifying the position of the lumi box.
 
+    state - which analysis state is it: preliminary, internal, or '' for final publication
+
+    line2 - optional line 2 to show for example if this is e-channel or mu-channel
+
     **returns:
     A TPaveText instance with the lumi information
     """
@@ -130,8 +135,13 @@ def lumi_textbox(lumi, pos="top-left"):
     if pos=="top-right":
         coords = [0.5, 0.86, 0.96, 0.91]
 
+    if line2:
+        coords[1]-=0.05
+
     text = ROOT.TPaveText(coords[0], coords[1], coords[2], coords[3], "NDC")
-    text.AddText("CMS preliminary #sqrt{s} = 8 TeV, #int L dt = %.1f fb^{-1}" % (float(lumi)/1000.0))
+    text.AddText("CMS %s #sqrt{s} = 8 TeV, #int L dt = %.1f fb^{-1}" % (state, float(lumi)/1000.0))
+    if line2:
+        text.AddText(line2)
     text.SetShadowColor(ROOT.kWhite)
     text.SetLineColor(ROOT.kWhite)
     text.SetFillColor(ROOT.kWhite)
