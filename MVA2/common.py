@@ -1,11 +1,11 @@
-import pickle, shutil, os
+import pickle, shutil, os, os.path
 import ROOT
 from plots.common import cross_sections
 from plots.common import cuts
 import array
 import random
 
-rootfilepath = __file__.rsplit("/", 1)[0] + "/step3_latest/"
+rootfilepath = os.path.join(os.path.dirname(__file__), '..', 'step3_latest')
 
 vartypes = {
 	"bdiscr_bj" : "F",
@@ -271,7 +271,8 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 	
 	
 	for ch in signals.keys() + backgrounds.keys():
-		ifname = rootfilepath + lept + "/iso/nominal/" + ch + ".root"
+		ifname = os.path.join(rootfilepath, lept, 'mc', 'iso', 'nominal', 'Jul15', ch+'.root')
+		print 'ifname:', ifname
 		ifile = ROOT.TFile(ifname)
 		meta["initial_events"][ch] = ifile.Get("trees/count_hist").GetBinContent(1)
 		ofile.cd()
