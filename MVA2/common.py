@@ -262,10 +262,10 @@ def prepare_files(signals, backgrounds, ofname = "prepared.root", cutstring = st
 	
 	
 	ofile = ROOT.TFile(ofname, "RECREATE")
-	ofile.mkdir("train/signal")
-	ofile.mkdir("train/background")
-	ofile.mkdir("test/signal")
-	ofile.mkdir("test/background")
+	_dir = ofile.mkdir("train")
+	_dir.mkdir("signal"); _dir.mkdir("background")
+	_dir = ofile.mkdir("test")
+	_dir.mkdir("signal"); _dir.mkdir("background")
 	
 	meta = {"lept": lept, "initial_events": {}, "fractions": {}, "cutstring": cutstring}
 	
