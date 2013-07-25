@@ -15,7 +15,10 @@ void efficiency()
 	chain->Add(file_t_presel);
 	chain2->Add(file_tbar_presel);
 	
+//	chain->Add("trees_8TeV/08_07_2013/mu/presel/TToBMuNu_comphep_t-channel.root");
+	
 	TFile *fo = new TFile("histos/efficiency.root","RECREATE");
+	//TFile *fo = new TFile("histos/efficiency_comphep.root","RECREATE");
 
 	// Enable correct errors
 	TH1::SetDefaultSumw2(true);
@@ -40,21 +43,28 @@ void efficiency()
 	
 	Float_t xsec_t = get_xsec("T_t_ToLeptons");
 	Float_t xsec_tbar = get_xsec("Tbar_t_ToLeptons");
-	// divdide # events and mult. xsec, BR
-	// FIXME scale hgen_presel_rebin
-	//hgen_presel_rebin->Scale(xsec*0.108/hgen_presel_rebin->Integral());
 	
-	hgen_presel_t->Scale(xsec_t);
-	hgen_presel_tbar->Scale(xsec_tbar);
+	// Add up t and tbar
+	// divdide # events and mult. xsec, BR
+	
+
+	// Add up t and tbar correctly
+	hgen_presel_t->Scale(xsec_t/hgen_presel_t->Integral());
+	hgen_presel_tbar->Scale(xsec_tbar/hgen_presel_tbar->Integral());
 
 	TH1F *hgen_presel = (TH1F*)hgen_presel_t->Clone("hgen_presel");
 	hgen_presel->Add(hgen_presel_tbar);
 	
+	hgen_presel->Scale((xsec_t+xsec_tbar)*lumi/hgen_presel->Integral());
+	std::cout << hgen_presel->Integral() << std::endl;
+	
+	// Add up t and tbar correctly
 	hgen_presel_t_rebin->Scale(xsec_t/hgen_presel_t_rebin->Integral());
 	hgen_presel_tbar_rebin->Scale(xsec_tbar/hgen_presel_tbar_rebin->Integral());
 
 	TH1F *hgen_presel_rebin = (TH1F*)hgen_presel_t_rebin->Clone("hgen_presel_rebin");
 	hgen_presel_rebin->Add(hgen_presel_tbar_rebin);
+	// Scale with xsec and lumi to get total number of events
 	hgen_presel_rebin->Scale((xsec_t+xsec_tbar)*lumi/hgen_presel_rebin->Integral());
 	std::cout << hgen_presel_rebin->Integral() << std::endl;
 	
