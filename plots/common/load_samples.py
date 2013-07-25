@@ -101,9 +101,9 @@ def load_samples(systematic="nominal"):
 def get_qcd_scale_factor(var):
     #FIXME - automate, take from some "central" file
     if var == "cos_theta":    
-        return 38.582
+        return 2.577
     elif var == "abs(eta_lj)":
-        return 19.395
+        return 13.766
 
 def create_histogram_for_fit(sample_name, sample, weight_str, cut_str_iso, cut_str_antiiso, var="abs(eta_lj)", plot_range=None, binning=None):
     #Create histogram with sample metadata
