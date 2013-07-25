@@ -16,4 +16,4 @@ def is_signal(sample_name):
     return sample_name.lower() in ["t_t_toleptons", "tbar_t_toleptons", "t_t", "tbar_t"] or sample_name.lower().startswith("ttob")
 
 def is_mc(name):
-    return not "SingleMu" in name or "SingleEle" in name
+    return not ("SingleMu" in name or "SingleEle" in name)
