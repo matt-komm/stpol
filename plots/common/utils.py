@@ -47,6 +47,7 @@ def get_file_list(merge_cmds, dir, fullpath=True):
 
 class PhysicsProcess:
     desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan"]
+    desired_plot_order_log = ["data", "schan", "diboson", "tchan", "tWchan", "DYJets", "TTJets", "WJets" ]
     def __init__(self, name, subprocesses, pretty_name=None):
         self.name = name
         self.subprocesses = subprocesses
