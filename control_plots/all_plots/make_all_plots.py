@@ -159,6 +159,8 @@ if __name__=="__main__":
         hist_data = sum(hists_data.values())
         merge_cmds['QCD']=["QCD"+merge_cmds['data'][0]]
         order=['QCD']+PhysicsProcess.desired_plot_order
+        if plot_defs[pd]['log']:
+            order = PhysicsProcess.desired_plot_order_log+['QCD']
         merged_hists = merge_hists(hists_mc, merge_cmds, order=order).values()
         leg = legend([hist_data]+merged_hists, legend_pos=plot_defs[pd]['labloc'], style=['p','f'])
 
