@@ -1,6 +1,7 @@
 #!/bin/env python
 from ROOT import TFile,TTree
 from plots.common.utils import *
+from plots.common.plot_defs import cutlist
 import sys
 
 if len(sys.argv) < 2:
@@ -22,12 +23,9 @@ if len(sys.argv) == 3:
 else:
     flist=get_file_list(merge_cmds,sys.argv[1])
 
-basecut = 'n_jets == 2 & n_tags == 1 & n_veto_ele == 0 & n_veto_mu == 0 & rms_lj < 0.025 & pt_lj > 40 & pt_bj > 40'
-mucut = basecut+' & n_muons == 1 '
-elecut = basecut+' & n_eles == 1 '
-cut = elecut
+cut = str(cutlist['2j1t']*cutlist['presel_ele'])
 if '/mu/' in dir:
-    cut = mucut
+    cut = str(cutlist['2j1t']*cutlist['presel_mu'])
 
 for f in flist:
     print "Starting:",f
