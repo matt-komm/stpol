@@ -10,8 +10,10 @@ import os.path
 from plots.common.utils import mkdir_p
 
 MAXBIN = 10000
-cuts =  "n_jets==2 && n_tags==1 && top_mass>130 && top_mass<220 && rms_lj<0.025 && mt_mu>50"
+cuts =  "n_jets==2 && n_tags==1 && top_mass>130 && top_mass<220 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5"
 weight = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
+var_min = -1
+var_max = 1
 
 def get_signal_samples(proc="mu", step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"])):
     samples={}
@@ -30,12 +32,17 @@ def get_signal_histo(var, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest
     plot_range = [MAXBIN, var_min, var_max]
     hists_mc = {}
     samples = get_signal_samples(proc, step3)
+    print cuts
+    print weight
+            
+    print samples    
     for name, sample in samples.items():
         if sample.isMC:
             hist = sample.drawHistogram(var, cuts, weight=weight, plot_range=plot_range)
             hist.Scale(sample.lumiScaleFactor(lumi))
             hists_mc[sample.name] = hist
     merged_hists = merge_hists(hists_mc, merge_cmds).values()
+    print merged_hists
     assert len(merged_hists) == 1
     return merged_hists[0]
 
@@ -59,11 +66,11 @@ def getbinning(histo, bins):
             newedge = histo.GetXaxis().GetBinUpEdge(k)
             #print "edge", newedge, math.fabs(newedge)<0.1
             # Set bin edge to 0 in order to calculate the asymmetry
-            if(math.fabs(newedge)<0.1):
+            if(math.fabs(newedge)<0.06):
                 newedge = 0
 
             edges[iedge] = newedge
-            iedge+=1
+            iedge += 1
             prevbin = k
     
     lastedge = histo.GetXaxis().GetBinUpEdge(MAXBIN)
@@ -71,8 +78,8 @@ def getbinning(histo, bins):
     return edges
 
 def findbinning(bins_generated):
-    histo_gen = get_signal_histo(var_x)
-    histo_rec = get_signal_histo(var_y)
+    histo_gen = get_signal_histo(var_x, cuts=cuts)
+    histo_rec = get_signal_histo(var_y, cuts=cuts)
 
     # generated
     binning_gen = getbinning(histo_gen, bins_generated)
@@ -100,6 +107,7 @@ def rebin(bins_x, bin_list_x, bins_y, bin_list_y, proc = "mu"):
         hist_rec = sample.drawHistogram(var_y, cuts, weight=weight, binning=binning_y)
         hist_rec.Scale(sample.lumiScaleFactor(lumi))
         hists_rec[sample.name] = hist_rec
+        print "WEIGHTS", cuts, weight
         hist_gen = sample.drawHistogram(var_x, cuts, weight=weight, binning=binning_x)
         hist_gen.Scale(sample.lumiScaleFactor(lumi))
         hists_gen[sample.name] = hist_gen
@@ -136,13 +144,13 @@ def efficiency(cuts, binning_x, proc="mu"):
     hists_presel = {}
     hists_presel_rebin = {}
     samples = get_signal_samples()
-    cuts = "abs(true_lepton_pdgId)==13"
+    cuts_presel = "abs(true_lepton_pdgId)==13"
     for name, sample in samples.items():
-        hist_presel = sample.drawHistogram(var_x, cuts, weight="1", plot_range=plot_range)
+        hist_presel = sample.drawHistogram(var_x, cuts_presel, weight="1", plot_range=plot_range)
         hist_presel.Scale(sample.lumiScaleFactor(lumi))
         hists_presel[sample.name] = hist_presel
         
-        hist_presel_rebin = sample.drawHistogram(var_x, cuts, weight="1", binning=binning_x)
+        hist_presel_rebin = sample.drawHistogram(var_x, cuts_presel, weight="1", binning=binning_x)
         hist_presel_rebin.Scale(sample.lumiScaleFactor(lumi))
         hists_presel_rebin[sample.name] = hist_presel_rebin
         
