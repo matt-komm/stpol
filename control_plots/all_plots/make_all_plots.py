@@ -130,6 +130,9 @@ if __name__=="__main__":
                 logger.info('QCD loose cut: %s' % str(qcd_loose_cut))
                 hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
+                region = '2j1t'
+                if plot_defs[pd]['estQcd'] == '2j0t': region='2j0t'
+                if plot_defs[pd]['estQcd'] == '3j1t': region='3j1t'
                 hist_qcd.Scale(qcdScale[proc][plot_defs[pd]['estQcd']])
                 if hist_qcd_loose.Integral():
                     hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
