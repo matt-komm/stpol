@@ -208,7 +208,7 @@ if __name__=="__main__":
             os.mkdir(yield_out_dir)
         except OSError:
             pass
-        yf = open(yield_out_dir+'/%s.yield' % pd, 'w')
+        yf = open(yield_out_dir+'/%s_%s.yield' % (pd, proc), 'w')
         #htot = ROOT.TH1F('htot'+pd,'htot'+pd,plot_range[0],plot_range[1],plot_range[2])
         #htot.Sumw2()
 
