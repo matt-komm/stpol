@@ -24,6 +24,12 @@ cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
 cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
+cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.7')
+cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.5')
+cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.32')
+cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.38')
+
+
 qcdScale={}
 qcdScale['ele']={}
 qcdScale['mu']={}
@@ -504,14 +510,50 @@ plot_defs['final_etaLj']={
     'mucut': cutlist['2j1t']*cutlist['final_mu'],
     'dir': "control"
 }
+
+plot_defs['final_BDT']={
+    'tags': ["an", "control.tex"],
+    'enabled': True,
+    'var': 'mva_BDT',
+    'range': [40, -1, 1],
+    'iso': True,
+    'estQcd': 'final_2j1t',
+    'gev': False,
+    'log': False,
+    'xlab': varnames["BDT_uncat"],
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['final_ele'],
+    'mucut': cutlist['2j1t']*cutlist['final_mu'],
+    'dir': "control"
+}
+
+plot_defs['final_cosTheta_mva_loose']={
+    'tags': ["an", "control.tex"],
+    'enabled': True,
+    'var': 'cos_theta',
+    'range': [20,-1,1],
+    'iso': True,
+    'estQcd': 'final_2j1t',
+    'gev': False,
+    'log': False,
+    'xlab': varnames["cos_theta"],
+    'labloc': 'top-left',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
+}
+plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_tight']
+plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_mu_tight']
+
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
     "topMass": [nbins_final, 100, 350],
     "etaLj": [nbins_final, 0, 5],
+    "BDT": [40, -1, 1],
 }
 
 #Generate all the control plots
-for v in ["cosTheta", "topMass", "etaLj"]:
+for v in ["cosTheta", "topMass", "etaLj", "BDT"]:
     for nj in [2, 3]:
         for nt in [0,1,2]:
 
