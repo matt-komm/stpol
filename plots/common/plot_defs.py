@@ -32,17 +32,17 @@ qcdScale['mu']={}
 qcdScale['ele']['final_2j1t']    =   0.83
 qcdScale['mu']['final_2j1t']     =   40.694555
 
-qcdScale['ele']['final_2j0t']    =   1.33
-qcdScale['mu']['final_2j0t']     =   27.9
+qcdScale['ele']['final_2j0t']    =   0#1.33
+qcdScale['mu']['final_2j0t']     =   0#27.9
 
-qcdScale['ele']['final_3j0t']    =   1.33
-qcdScale['mu']['final_3j0t']     =   27.9
+qcdScale['ele']['final_3j0t']    =   0#1.33
+qcdScale['mu']['final_3j0t']     =   0#27.9
 
-qcdScale['ele']['final_3j1t']    =   1.33
-qcdScale['mu']['final_3j1t']     =   27.9
+qcdScale['ele']['final_3j1t']    =   0#1.33
+qcdScale['mu']['final_3j1t']     =   0#27.9
 
-qcdScale['ele']['final_3j2t']    =   1.33
-qcdScale['mu']['final_3j2t']     =   27.9
+qcdScale['ele']['final_3j2t']    =   0
+qcdScale['mu']['final_3j2t']     =   0
 
 qcdScale['ele']['nomet']         =   1.33
 qcdScale['mu']['nomet']          =   28
@@ -50,10 +50,10 @@ qcdScale['mu']['nomet']          =   28
 qcdScale['ele']['presel']        =   1.33
 qcdScale['mu']['presel']         =   27.9
 
-qcdScale['ele']['2j0t']          =   0#1.37
-qcdScale['mu']['2j0t']           =   0#2.46
+qcdScale['ele']['2j0t']          =   0
+qcdScale['mu']['2j0t']           =   0
 
-qcdScale['ele']['2j1t']          =   0#1.33
+qcdScale['ele']['2j1t']          =   0
 qcdScale['mu']['2j1t']           =   40.694555
 
 qcdScale['ele']['3j1t']          =   0.26
