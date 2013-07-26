@@ -118,13 +118,15 @@ class Sample:
         ROOT.gROOT.cd()
         ROOT.TH1F.AddDirectory(True)
         if plot_range:
-            hist = Hist(*plot_range, type=dtype, name="htemp")
+            hist = Hist(*plot_range, type=dtype)
         elif binning is not None:
             hist = Hist(binning, type=dtype)
         else:
-            raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=(nbins, numpy.array(..))")
+            raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=numpy.array(..)")
 
         hist.Sumw2()
+        name += "_" + hist.GetName()
+        hist.SetName(name)
 
         draw_cmd = var + ">>%s" % hist.GetName()
 
@@ -150,6 +152,7 @@ class Sample:
         ROOT.TH1F.AddDirectory(False)
 
         hist_new = hist.Clone(filter_alnum(name))
+        logger.debug(list(hist_new.y()))
 
         return hist_new
 
@@ -244,7 +247,7 @@ class Sample:
 def is_mc(name):
     return not "SingleMu" in name
 
-def get_paths(basedir=None, samples_dir="step3_latest"):
+def get_paths(basedir=None, samples_dir="step3_latest", dataset=None):
     """
     basedir - the path where your STPOL directory is located
     samples_dir - the subdirectory in STPOL/...
@@ -279,9 +282,14 @@ def get_paths(basedir=None, samples_dir="step3_latest"):
                 systematic="NONE"
             else:
                 raise ValueError("Couldn't parse filename: %s" % fn)
-            dataset = spl[3]
+            _dataset = spl[3]
             fname = spl[4]
 
-            fnames[dataset][sample_type][lepton][systematic][iso] = root
+            fnames[_dataset][sample_type][lepton][systematic][iso] = root
             break
-    return fnames.as_dict()
+    if not dataset:
+        return fnames.as_dict()
+    elif dataset == "latest":
+        return fnames["Jul15"].as_dict()
+    else:
+        return fnames[dataset].as_dict()
