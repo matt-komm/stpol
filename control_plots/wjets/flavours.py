@@ -1,4 +1,5 @@
 import ROOT
+ROOT.gROOT.SetBatch(True)
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts
 from root_numpy import tree2rec

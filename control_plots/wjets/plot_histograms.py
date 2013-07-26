@@ -114,7 +114,7 @@ if __name__=="__main__":
 	logging.basicConfig(level=logging.WARNING)
 
 	tdrstyle()
-	ROOT.gStyle.SetOptTitle(True)
+	ROOT.gStyle.SetOptTitle(False)
 
 	physics_processes = PhysicsProcess.get_proc_dict("mu")
 	plot_order = PhysicsProcess.desired_plot_order
@@ -190,6 +190,8 @@ if __name__=="__main__":
 		canv = plot_hists_dict(cloned, do_chi2=True, legend_pos="top-left", x_label=varnames["cos_theta"])
 		cloned["sherpa"].SetTitle("cos #theta %s %s" % (cut_name, fname))
 		canv.SaveAs(out_dir+"sherpa_madgraph_%s.png" % flavour)
+		canv.SaveAs(out_dir+"sherpa_madgraph_%s.pdf" % flavour)
+		#canv.Close()
 
 
 	ratios_coll = HistCollection(hists_ratio, name="hists__costheta_flavours_merged_scenario0")
@@ -220,6 +222,7 @@ if __name__=="__main__":
 
 	sherpa_merged = merge_flavours(histsA["cos_theta"][N_jets][N_tags]["unweighted"]["WJets_sherpa"].values())
 
+	#Draw data vs MC
 	merged_final = NestedDict()
 	weights = ["weighted_wjets_mg_flavour_nominal", "weighted_wjets_mg_flavour_up", "weighted_wjets_mg_flavour_down"]
 	for var in ["cos_theta", "abs_eta_lj"]:
@@ -266,9 +269,9 @@ if __name__=="__main__":
 			Styling.mc_style(merged_final[var][weight]["QCD"], "QCD")
 			merged_final[var][weight]["QCD"].SetTitle("QCD")
 
-		print "Normalizations"
+		logger.info("Normalizations")
 		for process, hist in merged_final[var]["unweighted"].items():
-			print "%s %s" % (process, hist.Integral())
+			logger.info("%s %s" % (process, hist.Integral()))
 
 		canv = ROOT.TCanvas()
 		r = plot(canv, "2J_%s" % var, merged_final[var]["unweighted"], out_dir, desired_order=plot_order, **_plot_args)
@@ -294,12 +297,12 @@ if __name__=="__main__":
 			errs_x, errs_x,
 			err_low, err_high)
 
-		print "Total stat. error (avg. sum): %.2f" % sum_err(tot_mc)
-		print "Total syst. error (avg. sum): %.2f" % numpy.sum((err_low + err_high)/2)
+		logger.info("Total stat. error (avg. sum): %.2f" % sum_err(tot_mc))
+		logger.info("Total syst. error (avg. sum): %.2f" % numpy.sum((err_low + err_high)/2))
 
-		print "mc | data | syst up | syst down"
+		logger.info("mc | data | syst up | syst down")
 		for i in range(1, len(bins_up)+1):
-			print "%.2f | %.2f | %.2f | %.2f" % (tot_mc.GetBinContent(i), merged_final[var]["weighted_wjets_mg_flavour_nominal"]["data"].GetBinContent(i), syst_up.GetBinContent(i), syst_down.GetBinContent(i))
+			logger.info("%.2f | %.2f | %.2f | %.2f" % (tot_mc.GetBinContent(i), merged_final[var]["weighted_wjets_mg_flavour_nominal"]["data"].GetBinContent(i), syst_up.GetBinContent(i), syst_down.GetBinContent(i)))
 
 		canv = ROOT.TCanvas()
 		r = plot(canv, "2J_rew_%s" % var, merged_final[var]["weighted_wjets_mg_flavour_nominal"], out_dir, desired_order=plot_order, hist_tot_syst_error=tot_syst_error, **plot_args)

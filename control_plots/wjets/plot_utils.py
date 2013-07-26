@@ -115,7 +115,7 @@ def plot(canv, name, hists_merged, out_dir, desired_order=PhysicsProcess.desired
     )
 
     chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM")
-    ks = tot_mc.KolmogorovTest(tot_data, "N D")
+    ks = tot_mc.KolmogorovTest(tot_data, "N")
     stacks["mc"].SetTitle(stacks["mc"].GetTitle() + " #chi^{2}/#nu=%.2f" % (chi2))
     r[1].GetXaxis().SetTitle(x_title)
     canv.cd()
@@ -131,19 +131,3 @@ def plot(canv, name, hists_merged, out_dir, desired_order=PhysicsProcess.desired
     canv.Close() #Must close canvas to prevent hang in ROOT upon GC
     logger.debug("Returning from plot()")
     return
-
-def plot_hists_dict(hist_dict, doNorm=False, **kwargs):
-    items = hist_dict.items()
-    for hn, h in items:
-        h.SetName(hn)
-        h.SetTitle(hn)
-    hists = [x[1] for x in items]
-    names = [x[0] for x in items]
-    if doNorm:
-        map(norm, hists)
-    ColorStyleGen.style_hists(hists)
-    canv = plot_hists(hists, **kwargs)
-
-    leg = legend(hists, styles=["f", "f"], **kwargs)
-    canv.LEGEND = leg
-    return canv

@@ -2,6 +2,8 @@ from sample_style import ColorStyleGen
 import ROOT
 from utils import get_max_bin
 import math
+from plots.common.legend import legend
+
 
 def plot_hists(hists, name="canv", **kwargs):
     canv = ROOT.TCanvas(name, name)
@@ -107,3 +109,20 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
     hist_line.Draw("lsame")
 
     return p2, hist_ratio, hist_line
+
+
+def plot_hists_dict(hist_dict, doNorm=False, **kwargs):
+    items = hist_dict.items()
+    for hn, h in items:
+        h.SetName(hn)
+        h.SetTitle(hn)
+    hists = [x[1] for x in items]
+    names = [x[0] for x in items]
+    if doNorm:
+        map(norm, hists)
+    ColorStyleGen.style_hists(hists)
+    canv = plot_hists(hists, **kwargs)
+
+    leg = legend(hists, styles=["f", "f"], **kwargs)
+    canv.LEGEND = leg
+    return canv
