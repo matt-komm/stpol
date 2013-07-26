@@ -114,18 +114,20 @@ def plot(canv, name, hists_merged, out_dir, desired_order=PhysicsProcess.desired
         tot_mc
     )
 
-    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM P")
+    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM")
     ks = tot_mc.KolmogorovTest(tot_data, "N D")
     stacks["mc"].SetTitle(stacks["mc"].GetTitle() + " #chi^{2}/#nu=%.2f" % (chi2))
     r[1].GetXaxis().SetTitle(x_title)
     canv.cd()
 
     logger.debug("Drawing legend")
-    leg = legend(hists["data"] + hists["mc"], styles=["p", "f"], **kwargs)
+    leg = legend(hists["data"] + list(reversed(hists["mc"])), styles=["p", "f"], **kwargs)
     #canv.store = [leg, r, tot_mc, tot_data]
 
     canv.Update()
     canv.SaveAs(out_dir + "/%s.png" % name)
+    canv.SaveAs(out_dir + "/%s.pdf" % name)
+    canv.SaveAs(out_dir + "/%s.eps" % name)
     canv.Close() #Must close canvas to prevent hang in ROOT upon GC
     logger.debug("Returning from plot()")
     return

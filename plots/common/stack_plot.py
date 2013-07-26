@@ -109,23 +109,23 @@ if __name__=="__main__":
     h_d1.SetTitle("data")
 
     #Make some test MC histograms
-    h_mc1 = ROOT.TH1F("h_mc1", "TTJets", 20, -5, 5)
+    h_mc1 = ROOT.TH1F("h_mc1", "A", 20, -5, 5)
     for i in range(1500):
         h_mc1.Fill(random.normalvariate(0, 1))
 
-    h_mc2 = ROOT.TH1F("h_mc2", "t-channel", 20, -5, 5)
+    h_mc2 = ROOT.TH1F("h_mc2", "B", 20, -5, 5)
     for i in range(900):
         h_mc2.Fill(random.normalvariate(0, 0.9))
 
-    h_mc3 = ROOT.TH1F("h_mc3", "W+Jets", 20, -5, 5)
+    h_mc3 = ROOT.TH1F("h_mc3", "C", 20, -5, 5)
     for i in range(5000):
         h_mc3.Fill(random.normalvariate(0,  1.2))
 
     #Set the histogram styles and colors
     from sample_style import Styling
     Styling.mc_style(h_mc1, "TTJets_FullLept")
-    Styling.mc_style(h_mc2, "T_t")
-    Styling.mc_style(h_mc3, "W1Jets_exclusive")
+    Styling.mc_style(h_mc2, "WJets_sherpa")
+    Styling.mc_style(h_mc3, "WW")
     Styling.data_style(h_d1)
 
     #Create the canvas
@@ -154,3 +154,5 @@ if __name__=="__main__":
         width=0.2
     )
     canv.Update()
+    canv.SaveAs("test.pdf")
+    canv.SaveAs("test.png")
