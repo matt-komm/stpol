@@ -168,21 +168,21 @@ if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
         raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py`")
 
-    cuts_final = FitConfig( "final_selection", trigger="1.0")
+    cuts_final = FitConfig( "final_selection")
 
-    cuts_2j0t = FitConfig( "2j0t_selection", trigger="1.0")
+    cuts_2j0t = FitConfig( "2j0t_selection")
     cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0 && n_veto_mu==0 && n_veto_ele==0 && rms_lj<0.025")
-    cuts_2j1t = FitConfig( "2j1t_selection", trigger="1.0")
+    cuts_2j1t = FitConfig( "2j1t_selection")
     cuts_2j1t.setBaseCuts("n_jets == 2 && n_tags == 1 && n_veto_mu==0 && n_veto_ele==0 && rms_lj<0.025")
     cuts_2j1t.setFinalCuts("1.0")
 
 
 
-    cuts_3j1t = FitConfig( "3j1t_selection", trigger="1.0")
+    cuts_3j1t = FitConfig( "3j1t_selection")
     cuts_3j1t.setBaseCuts("n_jets == 3 && n_tags == 1 && n_veto_mu==0 && n_veto_ele==0 && rms_lj<0.025")
-    cuts_mva = FitConfig( "mva_selection", trigger="1.0")
+    cuts_mva = FitConfig( "mva_selection")
     cuts_mva.setFinalCuts("1")
-    cuts_final_without_eta = FitConfig( "final_selection_without_eta_cut", trigger="1.0")
+    cuts_final_without_eta = FitConfig( "final_selection_without_eta_cut")
     cuts_final_without_eta.setFinalCuts("top_mass < 220 && top_mass > 130")
 
 
