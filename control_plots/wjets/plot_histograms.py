@@ -111,10 +111,7 @@ def get_flavour_fractions(merged_hists, key):
 	return fracs
 
 if __name__=="__main__":
-	logging.basicConfig(level=logging.INFO)
-	logger.setLevel(logging.DEBUG)
-	#logging.getLogger("utils").setLevel(level=logging.DEBUG)
-
+	logging.basicConfig(level=logging.WARNING)
 
 	tdrstyle()
 	ROOT.gStyle.SetOptTitle(True)

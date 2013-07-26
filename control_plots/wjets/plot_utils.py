@@ -114,7 +114,7 @@ def plot(canv, name, hists_merged, out_dir, desired_order=PhysicsProcess.desired
         tot_mc
     )
 
-    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM P")
+    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM")
     ks = tot_mc.KolmogorovTest(tot_data, "N D")
     stacks["mc"].SetTitle(stacks["mc"].GetTitle() + " #chi^{2}/N=%.2f ks=%.2E" % (chi2, ks))
     r[1].GetXaxis().SetTitle(x_title)
