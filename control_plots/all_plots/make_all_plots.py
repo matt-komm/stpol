@@ -67,11 +67,13 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     #Check if any of the provided hashtags matches any of the (optional) hashtags of the plot defs
-    args.plots += [v for k, v in plot_defs.items() if 'tags' in v.keys() and len(set(args.tags).intersection(set(v['tags'])))>0]
-    
+    args.plots += [k for (k, v) in plot_defs.items() if 'tags' in v.keys() and len(set(args.tags).intersection(set(v['tags'])))>0]
+    print args.plots
+
     #If there are no plots defined, do all of them
     if len(args.plots) == 0:
         args.plots = plot_defs.keys()
+        logging.info("No plots specified, plotting everything")
 
     proc=args.channel
     tree = args.tree
@@ -164,7 +166,7 @@ if __name__=="__main__":
                 if plot_def['estQcd'] == '2j0t': region='2j0t'
                 if plot_def['estQcd'] == '3j1t': region='3j1t'
                 qcd_loose_cut = cutlist[region]*cutlist['presel_'+proc]*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
-                logger.info('QCD loose cut: %s' % str(qcd_loose_cut))
+                logger.debug('QCD loose cut: %s' % str(qcd_loose_cut))
                 hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
                 hist_qcd.Scale(qcdScale[proc][plot_def['estQcd']])
@@ -201,7 +203,7 @@ if __name__=="__main__":
                 pass
 
         merged_hists = merged_hists.values()
-        leg = legend([hist_data]+merged_hists, legend_pos=plot_def['labloc'], style=['p','f'])
+        leg = legend([hist_data] + list(reversed(merged_hists)), legend_pos=plot_def['labloc'], style=['p','f'])
 
         #Create the dir if it doesn't exits
         try:
@@ -237,7 +239,7 @@ if __name__=="__main__":
 
         #Make the stacks
         stacks_d = OrderedDict()
-        stacks_d["mc"] = merged_hists 
+        stacks_d["mc"] = merged_hists
         stacks_d["data"] = [hist_data]
 
         #label
@@ -263,7 +265,7 @@ if __name__=="__main__":
         p1.cd()
 
         stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_defs[pd]['log'])
-       
+
         #Put the the lumi box where the legend is not
         boxloc = 'top-right'
         if plot_defs[pd]['labloc'] == 'top-right':
@@ -278,10 +280,28 @@ if __name__=="__main__":
         leg.Draw()
         canv.Draw()
 
-        #Draw the ratio plot with 
+        #Draw the ratio plot with
         ratio_pad, hratio = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
 
-        print 'Saving output to out_'+proc+'/'+pd+'.png'
-        canv.SaveAs('out_'+proc+'/'+pd+'.pdf')
-        canv.SaveAs('out_'+proc+'/'+pd+'.png')
+        #This is adopted in the AN
+        if proc=="ele":
+            _proc = "el"
+        else:
+            _proc = "mu"
+
+        out_dir = "figures/"
+        if "dir" in plot_def.keys():
+            out_dir = out_dir + plot_def["dir"]
+        else:
+            out_dir = out_dir + "out_{0}".format(proc)
+        fname = "{0}/{1}_{2}.png".format(out_dir, pd, _proc)
+        try:
+            os.makedirs(out_dir)
+        except:
+            pass
+
+        logging.info("Saving %s" % fname)
+        canv.SaveAs(fname)
+        canv.SaveAs(fname.replace(".png", ".pdf"))
+
         canv.Close() #Need to Close to prevent hang from ROOT because of multiple TPads etc

@@ -65,6 +65,10 @@ TH1F* gethisto(TString variable)
 	Float_t pt_lj = 0;
 	Float_t pt_bj = 0;
 	Float_t top_mass = 0;
+	chain->SetBranchAddress("eta_lj", &eta_lj);
+	chain->SetBranchAddress("mu_iso", &muonIso);
+	chain->SetBranchAddress("rms_lj", &jetrms);
+	chain->SetBranchAddress("mt_mu", &mtw);
 	chain->SetBranchAddress("n_jets", &n_jets);
 	chain->SetBranchAddress("n_tags", &n_tags);
 	chain->SetBranchAddress("n_veto_ele", &n_veto_ele);
@@ -91,14 +95,14 @@ TH1F* gethisto(TString variable)
 	Float_t xsec_t = get_xsec("T_t_ToLeptons");
 	Float_t xsec_tbar = get_xsec("Tbar_t_ToLeptons");
 	
-	Long_t nentries = chain->GetEntries();
-	for(Long_t i = 0; i < nentries; i++) {
+    Long_t nentries = chain->GetEntries();
+    for(Long_t i = 0; i < nentries; i++) {
 		chain->GetEntry(i);
 		 		
-		if(TMath::Abs(eta_lj) < 2.5) continue;
+		if(TMath::Abs(eta_lj) <= 2.5) continue;
 		if(jetrms >= 0.025) continue;
 		if(mtw <= 50) continue;
-        if(!(HLT_v11 == 1 || HLT_v12 == 1 || HLT_v13 == 1 || HLT_v14 == 1 || HLT_v15 == 1 || HLT_v16 == 1 || HLT_v17)) continue;
+        if(!(HLT_v11 == 1 || HLT_v12 == 1 || HLT_v13 == 1 || HLT_v14 == 1 || HLT_v15 == 1 || HLT_v16 == 1 || HLT_v17==1)) continue;
         if(n_jets != 2) continue;
         if(n_tags != 1) continue;
         if(n_veto_ele != 0) continue;
@@ -108,8 +112,9 @@ TH1F* gethisto(TString variable)
         if(top_mass <= 130 || top_mass >= 220) continue;
 		// weight depending on sample 
 		weight = pu_weight*btag_weight*muonID_weight*muonIso_weight*muonTrigger_weight;
+		if(weight < 0.00000000001) continue;
 		weight *= lumi;
-		if(i <= nentries_t) {
+        if(i <= nentries_t) {
 			weight *= xsec_t;
 			weight /= (Float_t)count_t;
 		} else {
@@ -131,7 +136,7 @@ void getbinning(const TH1F* histo, const Int_t bins)
 	Float_t totint = histo->Integral(0, MAXBIN);
 	Float_t evbin = totint/bins;
 
-	cout << "Events: " << totint << endl;
+	cout << "Events: " << totint << " " << histo->GetEntries() << endl;
 	cout << "Events per bin: " << evbin << endl;
 
 	//Float_t edges[bins+1];

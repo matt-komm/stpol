@@ -122,7 +122,7 @@ void rebin()
 		if(TMath::Abs(eta_lj) < 2.5) continue;
 		if(jetrms >= 0.025) continue;
 		if(mtw <= 50) continue;
-		if(!(HLT_v11 == 1 || HLT_v12 == 1 || HLT_v13 == 1 || HLT_v14 == 1 || HLT_v15 == 1 || HLT_v16 == 1 || HLT_v17)) continue;
+		if(!(HLT_v11 == 1 || HLT_v12 == 1 || HLT_v13 == 1 || HLT_v14 == 1 || HLT_v15 == 1 || HLT_v16 == 1 || HLT_v17==1)) continue;
 		if(n_jets != 2) continue;
 		if(n_tags != 1) continue;
 		if(n_veto_ele != 0) continue;
@@ -134,7 +134,8 @@ void rebin()
 
 		// weight depending on sample 
 		weight = pu_weight*btag_weight*muonID_weight*muonIso_weight*muonTrigger_weight;
-		weight *= lumi;
+		if(weight < 0.00000000001) continue;
+        weight *= lumi;
 
 		//weight *= xsec_t+xsec_tbar;
 		//weight /= (Float_t)count;

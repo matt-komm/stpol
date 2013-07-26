@@ -153,9 +153,9 @@ class Sample:
 
         return hist_new
 
-    def drawHistogram2D(self, var, var2, cut_str, **kwargs):
-        logger.debug("drawHistogram: var=%s, var2=%s, cut_str=%sm kwargs=%s" % (str(var), str(var2), str(cut_str), str(kwargs)))
-        name = self.name + "_" + unique_name(var+"_"+var2, cut_str, kwargs.get("weight"))
+    def drawHistogram2D(self, var_x, var_y, cut_str, **kwargs):
+        logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
+        name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
 
         plot_range_x = kwargs.get("plot_range_x", None)
         plot_range_y = kwargs.get("plot_range_y", None)
@@ -166,6 +166,7 @@ class Sample:
         dtype = kwargs.get("dtype", "F")
 
         ROOT.gROOT.cd()
+        ROOT.TH2F.AddDirectory(True)
         if plot_range_x and plot_range_y:
             pass
             #TODO: make it work if needed
@@ -177,7 +178,7 @@ class Sample:
 
         hist.Sumw2()
 
-        draw_cmd = var+":"+var2 + ">>%s" % hist.GetName()
+        draw_cmd = var_y+":"+var_x + ">>%s" % hist.GetName()
 
         if weight_str:
             cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
@@ -198,6 +199,8 @@ class Sample:
             raise TObjectOpenException("Could not get histogram: %s" % hist)
         if hist.GetEntries() != n_entries:
             raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        ROOT.TH2F.AddDirectory(False)
+
         hist_new = hist.Clone(filter_alnum(name))
 
         return hist_new

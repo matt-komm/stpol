@@ -6,5 +6,7 @@ files=`find $1 -name "*.root" -exec dirname {} \; | sort | uniq`
 
 for f in $files
 do
-    hadd $f.root $f/out*.root
+    if [[ ! -f $f.root ]]; then
+        hadd $f.root $f/out*.root
+    fi
 done
