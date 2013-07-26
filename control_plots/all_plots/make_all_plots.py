@@ -202,38 +202,37 @@ if __name__=="__main__":
             except KeyError: #QCD does not have a defined PhysicsProcess but that's fine because we take it separately
                 pass
 
-        merged_hists = merged_hists.values()
-        leg = legend([hist_data] + list(reversed(merged_hists)), legend_pos=plot_def['labloc'], style=['p','f'])
-
+        yield_out_dir = "out_" + proc
         #Create the dir if it doesn't exits
         try:
-            os.mkdir("out_"+proc)
+            os.mkdir(yield_out_dir)
         except OSError:
             pass
-
-        yf = open('out_'+proc+'/'+pd+'.yield','w')
-        htot = ROOT.TH1F('htot'+pd,'htot'+pd,plot_range[0],plot_range[1],plot_range[2])
-        htot.Sumw2()
+        yf = open(yield_out_dir+'/%s.yield' % pd, 'w')
+        #htot = ROOT.TH1F('htot'+pd,'htot'+pd,plot_range[0],plot_range[1],plot_range[2])
+        #htot.Sumw2()
 
         if hist_data.Integral()<=0:
             raise Exception("Histogram for data was empty. Something went wrong, please check.")
         #Some printout
-        for h in merged_hists + [hist_data]:
-            print h.GetName(), h.GetTitle(), h.Integral()
+        for hn, h in (merged_hists.items() + [("data", hist_data)]):
+            #print h.GetName(), h.GetTitle(), h.Integral()
             error = array('d',[0])
-            tot=h.IntegralAndError(0,plot_range[0]+2,error)
-            err=error[0]
-            outtxt='{0}\t{1:.2f} +- {2:.2f}\n'.format(h.GetTitle(),tot,err)
+            tot, err = calc_int_err(h)
+            outtxt='{0} | {1:.2f} | {2:.2f}\n'.format(hn, tot, err)
             yf.write(outtxt)
-            if h.GetTitle() != 'Data':
-                htot.Add(h)
+            #if hn != 'data':
+            #    htot.Add(h)
+        htot = sum(merged_hists.values())
 
         #We have a separate method for the error
         tot, err = calc_int_err(htot)
-
-        outtxt='MC total\t{0:.2f} +- {1:.2f}\n'.format(tot,err)
+        outtxt='MC | {0:.2f} | {1:.2f}\n'.format(tot,err)
         yf.write(outtxt)
         yf.close()
+
+        merged_hists = merged_hists.values()
+        leg = legend([hist_data] + list(reversed(merged_hists)), legend_pos=plot_def['labloc'], style=['p','f'])
 
         canv = ROOT.TCanvas()
 
