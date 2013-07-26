@@ -16,7 +16,8 @@ if '/mu/' in dir:
     prt = 'mu'
     proc = 'mu'
 
-merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel=proc)
+physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=proc)
+merge_cmds = PhysicsProcess.get_merge_dict(physics_processes)
 
 if len(sys.argv) == 3:
     flist=[dir+'/'+sys.argv[2]]
