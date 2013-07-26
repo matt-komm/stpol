@@ -44,3 +44,11 @@ git clone git://github.com/rootpy/rootpy.git > /dev/null
 cd rootpy
 python setup.py install --prefix=$STPOL_DIR/local > /dev/null
 python -c 'import rootpy;print "rootpy version=",rootpy.__version__'
+cd ..
+
+echo "Installing shortuuid"
+git clone https://github.com/stochastic-technologies/shortuuid.git > /dev/null
+cd shortuuid
+python setup.py install --prefix=$STPOL_DIR/local > /dev/null
+python -c 'import shortuuid;print "shortuuid version=",shortuuid.__version__'
+cd ..
