@@ -233,7 +233,7 @@ if __name__=="__main__":
         of = open(ofdir + "/%s.txt" % cut.name, "w")
         of.write("%f %f %f\n" % (qcd_sf, fit.qcd, fit.qcd_uncert))
         of.close()
-    print "Failed to converge: " % str(failed)
+    print "Failed to converge: ", str(failed)
 
     # print "Selection: %s" % cut.name
     # print "QCD yield in selected region: %.2f +- %.2f, ratio to template from ONLY data %.3f" % (y, error, y/fit.orig["qcd_no_mc_sub"])
