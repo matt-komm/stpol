@@ -336,8 +336,8 @@ plot_defs['cos_th_mva_loose']={
     'log': False,
     'xlab': varnames["cos_theta"],
     'labloc': 'top-left',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.38'),
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.32')
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cut('mva_BDT>0.28'),
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cut('mva_BDT>0.24')
 }
 
 
