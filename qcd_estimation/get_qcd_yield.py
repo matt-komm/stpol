@@ -98,7 +98,7 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$S
     #Use Default cuts for final selection. See FitConfig for details on how to change the cuts.
 
     if channel == "ele":
-        cuts.setTrigger("(HLT_Ele27_WP80_v8 == 1 || HLT_Ele27_WP80_v9 == 1 || HLT_Ele27_WP80_v10 || HLT_Ele27_WP80_v11")
+        cuts.setTrigger("(HLT_Ele27_WP80_v8 == 1 || HLT_Ele27_WP80_v9 == 1 || HLT_Ele27_WP80_v10 || HLT_Ele27_WP80_v11)")
         cuts.setIsolationCut("el_iso < 0.1")
         cuts.setAntiIsolationCut("el_iso > 0.1 & el_iso < 0.5")
         cuts.setAntiIsolationCutUp("el_iso > 0.11 & el_iso < 0.55") # check +-10% variation
@@ -106,8 +106,9 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$S
         lepton_weight = "*electron_TriggerWeight*electron_IDWeight"
     elif channel == "mu":
         lepton_weight = "*muon_TriggerWeight*muon_IsoWeight*muon_IDWeight"
-        cuts.setFinalCutsAntiIso("1") #remove top mass and eta cuts from template
         #cuts.setTrigger("1")
+    
+    cuts.setFinalCutsAntiIso("1") #remove top mass and eta cuts from template
 
     cuts.setWeightMC("pu_weight*b_weight_nominal*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"+lepton_weight)
     #Recreate all necessary cuts after manual changes
