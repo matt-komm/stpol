@@ -18,10 +18,11 @@ if len(sys.argv) < 2:
 proc = sys.argv[1]
 # Choose between electron / muon channel fitting
 step3_ver="83a02e9_Jul22"
-step3 = "/home/mario/Summer13/stpol/step3_new"
+step3 = "/home/mario/Summer13/stpol/step3_jul25"
 lumi=lumis[step3_ver]["iso"][proc]
 
-merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel=proc)
+physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=proc)
+merge_cmds = PhysicsProcess.get_merge_dict(physics_processes)
 flist = get_file_list(
    merge_cmds,
    step3 + "/%s/mc/iso/nominal/Jul15/" % proc
@@ -73,12 +74,12 @@ factory.AddVariable("met",'D')
 factory.AddVariable("mt_"+prt,'D')
 factory.AddVariable("mass_bj",'D')
 factory.AddVariable("mass_lj",'D')
-factory.AddVariable("bdiscr_bj",'D')
-factory.AddVariable("bdiscr_lj",'D')
+#factory.AddVariable("bdiscr_bj",'D')
+#factory.AddVariable("bdiscr_lj",'D')
 factory.AddVariable(prt+"_pt",'D')
-factory.AddVariable(prt+"_charge",'I')
+#factory.AddVariable(prt+"_charge",'I')
 factory.AddVariable("pt_bj",'D')
-factory.AddSpectator("cos_theta",'D')
+#factory.AddSpectator("cos_theta",'D')
 
 # Now let's add signal and background trees with proper weights
 for k in t.keys():

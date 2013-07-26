@@ -16,7 +16,8 @@ if '/mu/' in dir:
     prt = 'mu'
     proc = 'mu'
 
-merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel=proc)
+physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=proc)
+merge_cmds = PhysicsProcess.get_merge_dict(physics_processes)
 
 if len(sys.argv) == 3:
     flist=[dir+'/'+sys.argv[2]]
@@ -25,8 +26,8 @@ else:
 
 # Create reader and relate variables
 reader = TMVA.Reader()
-varlist = ['top_mass','eta_lj','C','met','mt_'+prt,'mass_bj','mass_lj','bdiscr_bj','bdiscr_lj',prt+'_pt',prt+'_charge','pt_bj']
-speclist = ['cos_theta']
+varlist = ['top_mass','eta_lj','C','met','mt_'+prt,'mass_bj','mass_lj',prt+'_pt','pt_bj']
+speclist = []
 vars={}
 for v in varlist:
     vars[v] = array('f',[0])
