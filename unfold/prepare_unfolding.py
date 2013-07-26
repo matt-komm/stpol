@@ -10,7 +10,8 @@ import os.path
 from plots.common.utils import mkdir_p
 
 MAXBIN = 10000
-cuts = "n_jets==2 && n_tags==1 && top_mass>130 && top_mass<220 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1)"
+cuts = "n_muons==1 && n_eles==0 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && pt_bj>40 && pt_lj>40 && n_veto_mu == 0 && n_veto_ele==0 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1)"
+
 weight = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
 var_min = -1
 var_max = 1
@@ -32,17 +33,12 @@ def get_signal_histo(var, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest
     plot_range = [MAXBIN, var_min, var_max]
     hists_mc = {}
     samples = get_signal_samples(proc, step3)
-    print cuts
-    print weight
-            
-    print samples    
     for name, sample in samples.items():
         if sample.isMC:
             hist = sample.drawHistogram(var, cuts, weight=weight, plot_range=plot_range)
             hist.Scale(sample.lumiScaleFactor(lumi))
             hists_mc[sample.name] = hist
     merged_hists = merge_hists(hists_mc, merge_cmds).values()
-    print merged_hists
     assert len(merged_hists) == 1
     return merged_hists[0]
 
@@ -50,10 +46,7 @@ def get_signal_histo(var, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest
 def getbinning(histo, bins):
     totint = histo.Integral(0, MAXBIN)
     evbin = totint/bins
-
-    print "Events: ", totint
-    print "Events per bin: ", evbin
-
+    
     edges = [0.]*(bins+1)
     edges[0] = var_min
     iedge = 1
@@ -66,8 +59,8 @@ def getbinning(histo, bins):
             newedge = histo.GetXaxis().GetBinUpEdge(k)
             #print "edge", newedge, math.fabs(newedge)<0.1
             # Set bin edge to 0 in order to calculate the asymmetry
-            if(math.fabs(newedge)<0.06):
-                newedge = 0
+            #if(math.fabs(newedge)<0.06):
+            #    newedge = 0
 
             edges[iedge] = newedge
             iedge += 1
@@ -88,7 +81,7 @@ def findbinning(bins_generated):
     return (numpy.array(binning_gen), numpy.array(binning_rec))
 
 
-def rebin(bins_x, bin_list_x, bins_y, bin_list_y, proc = "mu"):
+def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, proc = "mu"):
     mkdir_p('/'.join([os.environ["STPOL_DIR"], "unfold", "histos"]))
     fo = ROOT.TFile('/'.join([os.environ["STPOL_DIR"], "unfold", "histos"])+"/rebinned.root","RECREATE")
     
@@ -107,11 +100,11 @@ def rebin(bins_x, bin_list_x, bins_y, bin_list_y, proc = "mu"):
         hist_rec = sample.drawHistogram(var_y, cuts, weight=weight, binning=binning_y)
         hist_rec.Scale(sample.lumiScaleFactor(lumi))
         hists_rec[sample.name] = hist_rec
-        print "WEIGHTS", cuts, weight
         hist_gen = sample.drawHistogram(var_x, cuts, weight=weight, binning=binning_x)
         hist_gen.Scale(sample.lumiScaleFactor(lumi))
         hists_gen[sample.name] = hist_gen
         matrix = sample.drawHistogram2D(var_x, var_y, cuts, weight=weight, binning_x=binning_x, binning_y=binning_y)
+        matrix.Scale(sample.lumiScaleFactor(lumi))
         matrices[sample.name] = matrix
 
     merged_rec = merge_hists(hists_rec, merge_cmds).values()
@@ -139,29 +132,34 @@ def efficiency(cuts, binning_x, proc="mu"):
     fo = ROOT.TFile('/'.join([os.environ["STPOL_DIR"], "unfold", "histos"])+"/efficiency.root","RECREATE")
     fo.cd()
     
+    ROOT.TH1.SetDefaultSumw2(True)
     lumi = lumi_iso[proc]
     plot_range = [100,-1,1]
     hists_presel = {}
     hists_presel_rebin = {}
     samples = get_signal_samples()
     cuts_presel = "abs(true_lepton_pdgId)==13"
+    scales = {}
     for name, sample in samples.items():
         hist_presel = sample.drawHistogram(var_x, cuts_presel, weight="1", plot_range=plot_range)
         hist_presel.Scale(sample.lumiScaleFactor(lumi))
         hists_presel[sample.name] = hist_presel
-        
         hist_presel_rebin = sample.drawHistogram(var_x, cuts_presel, weight="1", binning=binning_x)
         hist_presel_rebin.Scale(sample.lumiScaleFactor(lumi))
+        #scales[sample.name]= sample.unfoldingLumiScaleFactor(lumi)
         hists_presel_rebin[sample.name] = hist_presel_rebin
-        
-    merged_gen_presel = merge_hists(hists_presel, merge_cmds).values()[0]
-    merged_gen_presel_rebin = merge_hists(hists_presel_rebin, merge_cmds).values()[0]
+     
+	
     
+    merged_gen_presel = merge_hists(hists_presel, merge_cmds).values()[0]#hists_presel["T_t_ToLeptons"]#
+    merged_gen_presel_rebin = merge_hists(hists_presel_rebin, merge_cmds).values()[0]#hists_presel_rebin["T_t_ToLeptons"]
+    #total_scale = scales["T_t_ToLeptons"] + scales["Tbar_t_ToLeptons"]
+    #merged_gen_presel.Scale(total_scale/merged_gen_presel.Integral())
+    #merged_gen_presel_rebin.Scale(total_scale/merged_gen_presel_rebin.Integral())
+
     assert len(merge_hists(hists_presel, merge_cmds).values()) == 1
     assert len(merge_hists(hists_presel_rebin, merge_cmds).values()) == 1
     
-    print merged_gen_presel_rebin.Integral()
-	
     hists_gen= {}
     hists_gen_rebin = {}
     hists_rec= {}
@@ -178,10 +176,16 @@ def efficiency(cuts, binning_x, proc="mu"):
         hist_rec = sample.drawHistogram(var_y, cuts, weight=weight, plot_range=plot_range)
         hist_rec.Scale(sample.lumiScaleFactor(lumi))
         hists_rec[sample.name] = hist_rec
-        
-    merged_gen = merge_hists(hists_gen, merge_cmds).values()[0]
-    merged_gen_rebin = merge_hists(hists_gen_rebin, merge_cmds).values()[0]
-    merged_rec = merge_hists(hists_rec, merge_cmds).values()[0]
+    
+    
+    
+    merged_gen = merge_hists(hists_gen, merge_cmds).values()[0] #hists_gen["T_t_ToLeptons"]
+    merged_gen_rebin = merge_hists(hists_gen_rebin, merge_cmds).values()[0]#hists_gen_rebin["T_t_ToLeptons"]
+    merged_rec = merge_hists(hists_rec, merge_cmds).values()[0]#hists_rec["T_t_ToLeptons"]#
+    
+    print merged_gen.GetEntries(), merged_gen.Integral()
+    print merged_gen_rebin.GetEntries(), merged_gen_rebin.Integral()
+    print merged_rec.GetEntries(), merged_rec.Integral()
     
     merged_gen.SetNameTitle("hgen", "hgen")
     merged_gen_rebin.SetNameTitle("hgen_rebin", "hgen_rebin")
@@ -189,12 +193,9 @@ def efficiency(cuts, binning_x, proc="mu"):
     
     heff = merged_gen_rebin.Clone("efficiency")
     heff.SetTitle("efficiency")
-    print heff.Integral()
     heff.Divide(merged_gen_presel_rebin)
-    print heff.Integral()
-
-    fo.cd()
     
+    fo.cd()
     merged_gen_presel.SetNameTitle("hgen_presel", "hgen_presel")
     merged_gen_presel.Write()
     merged_gen_presel_rebin.SetNameTitle("hgen_presel_rebin", "hgen_presel_rebin")
@@ -207,9 +208,10 @@ def efficiency(cuts, binning_x, proc="mu"):
 
     fo.Close()
 
-def make_histos(binning):
-    cut_str = "n_jets==2 && n_tags==1 && top_mass>130 && top_mass<220 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1)"
-    cut_str_antiiso = "n_jets==2 && n_tags==1 && rms_lj<0.025 && mt_mu>50 && mu_iso>0.3 && mu_iso<0.5 && deltaR_lj>0.3 && deltaR_bj>0.3"
+def make_histos(binning, cut_str, cut_str_antiiso):
+    
+    #cut_str = "n_muons==1 && n_eles==0 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && pt_bj>40 && pt_lj>40 && n_veto_mu == 0 && n_veto_ele==0 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1)"
+    cut_str_antiiso = "n_muons==1 && n_eles==0 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && pt_bj>40 && pt_lj>40 && n_veto_mu == 0 && n_veto_ele==0 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1) && mu_iso>0.3 && mu_iso<0.5 && deltaR_lj>0.3 && deltaR_bj>0.3"
     systematics = generate_systematics()
     var = "cos_theta"
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input"])
@@ -217,10 +219,15 @@ def make_histos(binning):
     shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input"])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos"])+"/data.root")
 
 if __name__ == "__main__":
+    cut_str = cuts
+    cut_str_antiiso = "n_muons==1 && n_eles==0 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && pt_bj>40 && pt_lj>40 && n_veto_mu == 0 && n_veto_ele==0 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1) && mu_iso>0.3 && mu_iso<0.5 && deltaR_lj>0.3 && deltaR_bj>0.3"
     bins_gen = 7
     bins_rec = bins_gen * 2
     (bin_list_gen, bin_list_rec) = findbinning(bins_gen)
+    bin_list_gen = numpy.array([-1.,    -0.2632, 0.0,   0.19,    0.3528,  0.5062,  0.6652,  1.    ])
+    bin_list_rec = numpy.array([-1.,     -0.4496, -0.2254, -0.069,   0.0,   0.1478,  0.2346,  0.3174,  0.3956,
+  0.4738,  0.545,   0.6112,  0.6866,  0.7714,  1.    ])
     print "found binning: ", bin_list_gen, ";", bin_list_rec
-    rebin(bins_gen, bin_list_gen, bins_rec, bin_list_rec)
-    efficiency(cuts, bin_list_gen, proc="mu")
-    make_histos(bin_list_rec)
+    rebin(cut_str, bins_gen, bin_list_gen, bins_rec, bin_list_rec)
+    efficiency(cut_str, bin_list_gen, proc="mu")
+    make_histos(bin_list_rec, cut_str, cut_str_antiiso)

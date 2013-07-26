@@ -48,19 +48,18 @@ void efficiency()
 	// divdide # events and mult. xsec, BR
 	
 
-	// Add up t and tbar correctly
-	hgen_presel_t->Scale(xsec_t/hgen_presel_t->Integral());
-	hgen_presel_tbar->Scale(xsec_tbar/hgen_presel_tbar->Integral());
-
-	TH1F *hgen_presel = (TH1F*)hgen_presel_t->Clone("hgen_presel");
+	// Add up t and tbar correctly - FIXME
+    
+	//hgen_presel_t->Scale(xsec_t/hgen_presel_t->Integral());
+	//hgen_presel_tbar->Scale(xsec_tbar/hgen_presel_tbar->Integral());
+    TH1F *hgen_presel = (TH1F*)hgen_presel_t->Clone("hgen_presel");
 	hgen_presel->Add(hgen_presel_tbar);
-	
 	hgen_presel->Scale((xsec_t+xsec_tbar)*lumi/hgen_presel->Integral());
-	std::cout << hgen_presel->Integral() << std::endl;
+	std::cout << hgen_presel->GetEntries() << " " << (Float_t)hgen_presel->Integral() << std::endl;
 	
 	// Add up t and tbar correctly
-	hgen_presel_t_rebin->Scale(xsec_t/hgen_presel_t_rebin->Integral());
-	hgen_presel_tbar_rebin->Scale(xsec_tbar/hgen_presel_tbar_rebin->Integral());
+	//hgen_presel_t_rebin->Scale(xsec_t/hgen_presel_t_rebin->Integral());
+	//hgen_presel_tbar_rebin->Scale(xsec_tbar/hgen_presel_tbar_rebin->Integral());
 
 	TH1F *hgen_presel_rebin = (TH1F*)hgen_presel_t_rebin->Clone("hgen_presel_rebin");
 	hgen_presel_rebin->Add(hgen_presel_tbar_rebin);
@@ -68,7 +67,7 @@ void efficiency()
 	hgen_presel_rebin->Scale((xsec_t+xsec_tbar)*lumi/hgen_presel_rebin->Integral());
 	std::cout << hgen_presel_rebin->Integral() << std::endl;
 	
-	TH1F *hgen = new TH1F("hgen","hgen",100, var_min, var_max);
+    TH1F *hgen = new TH1F("hgen","hgen",100, var_min, var_max);
 	TH1F *hgen_rebin = new TH1F("hgen_rebin","hgen_rebin",bin_x,list_x);
 	TH1F *hrec = new TH1F("hrec","hrec",100, var_min, var_max);
 	fillhisto(var_x,hgen);
@@ -82,7 +81,7 @@ void efficiency()
 	std::cout << heff->Integral() << std::endl;
 
 	fo->cd();
-	hgen_presel->Write();
+    hgen_presel->Write();
 	hgen_presel_rebin->Write();
 	hgen->Write();
 	hgen_rebin->Write();

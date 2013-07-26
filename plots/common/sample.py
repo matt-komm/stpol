@@ -166,6 +166,7 @@ class Sample:
         dtype = kwargs.get("dtype", "F")
 
         ROOT.gROOT.cd()
+        ROOT.TH2F.AddDirectory(True)
         if plot_range_x and plot_range_y:
             pass
             #TODO: make it work if needed
@@ -198,6 +199,8 @@ class Sample:
             raise TObjectOpenException("Could not get histogram: %s" % hist)
         if hist.GetEntries() != n_entries:
             raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        ROOT.TH2F.AddDirectory(False)
+
         hist_new = hist.Clone(filter_alnum(name))
 
         return hist_new
