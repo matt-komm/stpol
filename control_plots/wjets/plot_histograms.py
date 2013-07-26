@@ -100,8 +100,8 @@ def merge_flavours(hists):
 qcd_yields = NestedDict()
 qcd_yields[2][1]["SR"] = 0
 qcd_yields[2][1]["cut1"] = 0#9941.61250642
-qcd_yields[2][0]["SR"] = 0
-qcd_yields[2][0]["cut1"] = 0#9941.61250642
+qcd_yields[2][0]["SR"] = 2003.791656
+qcd_yields[2][0]["cut1"] = 0.586562
 qcd_yields = qcd_yields.as_dict()
 
 def get_flavour_fractions(merged_hists, key):
