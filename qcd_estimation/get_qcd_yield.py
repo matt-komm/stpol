@@ -36,7 +36,7 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     #QCDRATE = fit_result.qcd
     hQCD = f.Get(var.shortName+"__qcd")
     hQCDShapeOrig = dataGroup.getHistogram(var, "Nominal", "antiiso")
-    print "QCD scale factor:", hQCD.Integral()/hQCDShapeOrig.Integral(), hQCD.Integral(), hQCDShapeOrig.Integral()
+    print "QCD scale factor:", hQCD.Integral()/fit_result.orig["qcd_no_mc_sub"], "from", fit_result.orig["qcd_no_mc_sub"], "to ", hQCD.Integral()
     hQCDShapeOrig.Scale(hQCD.Integral()/hQCDShapeOrig.Integral())
     #print fit_result
     err = array('d',[0.])
@@ -98,7 +98,7 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$S
     #Use Default cuts for final selection. See FitConfig for details on how to change the cuts.
 
     if channel == "ele":
-        cuts.setTrigger("1") #  || HLT_Ele27_WP80_v9==1 || HLT_Ele27_WP80_v8==1")
+        cuts.setTrigger("(HLT_Ele27_WP80_v8 == 1 || HLT_Ele27_WP80_v9 == 1 || HLT_Ele27_WP80_v10 || HLT_Ele27_WP80_v11")
         cuts.setIsolationCut("el_iso < 0.1")
         cuts.setAntiIsolationCut("el_iso > 0.1 & el_iso < 0.5")
         cuts.setAntiIsolationCutUp("el_iso > 0.11 & el_iso < 0.55") # check +-10% variation
@@ -106,6 +106,7 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$S
         lepton_weight = "*electron_TriggerWeight*electron_IDWeight"
     elif channel == "mu":
         lepton_weight = "*muon_TriggerWeight*muon_IsoWeight*muon_IDWeight"
+        cuts.setFinalCutsAntiIso("1") #remove top mass and eta cuts from template
         #cuts.setTrigger("1")
 
     cuts.setWeightMC("pu_weight*b_weight_nominal*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"+lepton_weight)
@@ -205,6 +206,7 @@ if __name__=="__main__":
     parser.add_argument('-c', '--cut',
         dest='cuts', choices=cuts.keys(), required=False, default=None,
         help="The cut region to use in the fit", action='append')
+    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=True)
     parser.add_argument('--doSystematics', action="store_true", default=False)
     parser.add_argument('--mtcut',dest='mtcut',action='store_true', default=True, help="Apply the corresponding MET/MtW cut")
     parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
@@ -224,7 +226,7 @@ if __name__=="__main__":
     for cutn in args.cuts:
         cut = cuts[cutn]
         try:
-            ((y, error), fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, do_systematics=args.doSystematics)
+            ((y, error), fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, base_path=args.path, do_systematics=args.doSystematics)
         except rootpy.ROOTError:
             failed += [cutn]
             continue

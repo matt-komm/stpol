@@ -139,7 +139,7 @@ def make_histos_with_cuts(var,
       bin1 = hQCD.FindBin(mtMinValue)
       bin2 = hQCD.GetNbinsX() + 1
       
-      fit.orig["qcd_no_mc_sub"] = hQCD.Integral(bin1,bin2)
+      fit.orig["qcd_no_mc_sub"] = hQCD.Integral()
       #Subtract MC-s from QCD data template
       stack = stacks[var.name+"Nominalantiiso"]
       for h in stack.GetHists():
@@ -152,6 +152,8 @@ def make_histos_with_cuts(var,
       stack = stacks[var.name+"Nominalantiiso_iso_down"]                
       for h in stack.GetHists():
          hQCDisoDown.Add(h, -1)
+      
+      print "QCD integral", hQCD.Integral()   
           
       #Scale template to a large are (then fitted multiplier will be small, which theta likes
       if hQCD.Integral() > 0:
@@ -163,8 +165,6 @@ def make_histos_with_cuts(var,
          hQCDisoUp.Scale(QCD_FACTOR/hQCDisoUp.Integral())
       if hQCDisoDown.Integral() > 0:
          hQCDisoDown.Scale(QCD_FACTOR/hQCDisoDown.Integral())
-            
-      print "QCD integral", hQCD.Integral()   
       hQCD.Write()
       hQCDisoUp.SetName(var.shortName+"__qcd__ISO__plus")
       hQCDisoDown.SetName(var.shortName+"__qcd__ISO__minus")

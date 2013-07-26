@@ -58,9 +58,10 @@ def plot_fit(var, fitConf, hData, fit_result, lumi):
     hWJets.SetLineColor(kGreen+4)
 
     hWJetsp=TH1D(hWJets)
-    hWJetsp.Scale(WJETS_UP/WJETS)
     hWJetsm=TH1D(hWJets)
-    hWJetsm.Scale(WJETS_DOWN/WJETS)
+    if WJETS>0:
+        hWJetsp.Scale(WJETS_UP/WJETS)
+        hWJetsm.Scale(WJETS_DOWN/WJETS)
 
     hWJetsp.SetLineColor(kGreen+8)
     hWJetsp.SetTitle("W+Jets #pm 1 #sigma")
