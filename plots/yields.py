@@ -42,7 +42,7 @@ if __name__ == "__main__":
 	vals = dict()
 
 	inf1 = open(sys.argv[1])
-	inf2 = open(sys.argv[1])
+	inf2 = open(sys.argv[2])
 
 	for line1, line2 in zip(inf1.readlines(), inf2.readlines()):
 		samp, first_tot, first_err = parse_line(line1)
