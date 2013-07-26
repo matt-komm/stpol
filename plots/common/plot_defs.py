@@ -71,7 +71,7 @@ varnames["top_mass"] = 'M_{b l #nu} [GeV]'
 varnames["mt_mu"] = 'M_{t}(W) [GeV]'
 varnames["met"] = 'E_{T}^{miss} [GeV]'
 varnames["pt_lep"] = ['e p_{T} [GeV]', '#mu p_{T} [GeV]']
-varnames["BDT_uncat"] = 'Uncategorized BDT'
+varnames["BDT_uncat"] = 'BDT'
 varnames["n_tags"] = 'N_{tags}'
 varnames["n_jets"] = 'N_{jets}'
 varnames["rms_lj"] = 'RMS_{lj}'
@@ -323,6 +323,20 @@ plot_defs['mva_bdt']={
     'estQcd': 'presel',
     'gev': False,
     'log': True,
+    'xlab': varnames["BDT_uncat"],
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele'],
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']
+}
+
+plot_defs['mva_bdt_zoom']={
+    'enabled': True,
+    'var': 'mva_BDT',
+    'range': [50,0,1],
+    'iso': True,
+    'estQcd': 'presel',
+    'gev': False,
+    'log': False,
     'xlab': varnames["BDT_uncat"],
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele'],
