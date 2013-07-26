@@ -81,15 +81,16 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
     hist_ratio.SetMarkerColor(ROOT.kBlack)
 
     hist_ratio.SetStats(False)
-    hist_ratio.SetMarkerStyle(23)
-    hist_ratio.SetTitle("ratio (exp.-meas.)/meas.")
-    hist_ratio.SetTitleSize(0.08)
-    hist_ratio.SetTitleOffset(-1)
+    hist_ratio.SetMarkerStyle(20)
+    hist_ratio.SetMarkerSize(0.35)
+    hist_ratio.SetMarkerColor(ROOT.kBlue)
 
     xAxis = hist_ratio.GetXaxis()
     yAxis = hist_ratio.GetYaxis()
-    hist_ratio.SetMarkerStyle(20)
     yAxis.CenterTitle()
+    yAxis.SetTitle("(exp.-meas.)/meas.")
+    yAxis.SetTitleOffset(0.5)
+    yAxis.SetTitleSize(0.08)
 
     xAxis.SetLabelSize(0.08)
     xAxis.SetTitleSize(0.15)
@@ -99,6 +100,10 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
     #xAxis.SetTickLength(xAxis->GetTickLength() * (1. - 2. * margin - bottomSpacing) / bottomSpacing);
     #xAxis.SetNdivisions(histStack.GetXaxis().GetNdivisions());
     yAxis.SetNdivisions(405)
+
     hist_ratio.Draw("p0e1")
 
-    return p2, hist_ratio
+    hist_line = ROOT.TH1F("0line","0line",hist_mc.GetNbinsX(),hist_mc.GetBinLowEdge(1),hist_mc.GetBinLowEdge(hist_mc.GetNbinsX()+1))
+    hist_line.Draw("lsame")
+
+    return p2, hist_ratio, hist_line

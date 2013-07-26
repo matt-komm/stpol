@@ -281,7 +281,7 @@ if __name__=="__main__":
         canv.Draw()
 
         #Draw the ratio plot with
-        ratio_pad, hratio = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
+        ratio_pad, hratio, hline = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
 
         #This is adopted in the AN
         if proc=="ele":
