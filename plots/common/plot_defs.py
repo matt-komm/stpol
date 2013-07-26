@@ -29,32 +29,35 @@ qcdScale['ele']={}
 qcdScale['mu']={}
 
 #Better to organize like this, so logical cutstrings are close by
-qcdScale['ele']['final']         =   0.83
-qcdScale['mu']['final']          =   28
+qcdScale['ele']['final_2j1t']    =   0.83
+qcdScale['mu']['final_2j1t']     =   40.694555
 
-qcdScale['ele']['final_2j0t']    =   0
-qcdScale['mu']['final_2j0t']     =   0
+qcdScale['ele']['final_2j0t']    =   1.33
+qcdScale['mu']['final_2j0t']     =   27.9
 
-qcdScale['ele']['final_3j0t']    =   0
-qcdScale['mu']['final_3j0t']     =   0
+qcdScale['ele']['final_3j0t']    =   1.33
+qcdScale['mu']['final_3j0t']     =   27.9
 
-qcdScale['ele']['final_3j1t']    =   0
-qcdScale['mu']['final_3j1t']     =   0
+qcdScale['ele']['final_3j1t']    =   1.33
+qcdScale['mu']['final_3j1t']     =   27.9
 
-qcdScale['ele']['final_3j2t']    =   0
-qcdScale['mu']['final_3j2t']     =   0
+qcdScale['ele']['final_3j2t']    =   1.33
+qcdScale['mu']['final_3j2t']     =   27.9
 
 qcdScale['ele']['nomet']         =   1.33
 qcdScale['mu']['nomet']          =   28
+
 qcdScale['ele']['presel']        =   1.33
 qcdScale['mu']['presel']         =   27.9
 
-qcdScale['ele']['2j0t']          =   1.37
-qcdScale['mu']['2j0t']           =   2.46
-qcdScale['ele']['2j1t']          =   0 #FIXME
-qcdScale['mu']['2j1t']           =   0 #FIXME
+qcdScale['ele']['2j0t']          =   0#1.37
+qcdScale['mu']['2j0t']           =   0#2.46
+
+qcdScale['ele']['2j1t']          =   0#1.33
+qcdScale['mu']['2j1t']           =   40.694555
+
 qcdScale['ele']['3j1t']          =   0.26
-qcdScale['mu']['3j1t']           =   0.28
+qcdScale['mu']['3j1t']           =   0.616972
 
 plot_defs={}
 
@@ -93,7 +96,7 @@ plot_defs['dr_bj']={
     'var': 'deltaR_bj',
     'range': [20,0,5],
     'iso': True,
-    'estQcd': 'final',
+    'estQcd': 'final_2j1t',
     'gev': False,
     'log': False,
     'xlab': '#delta R(l,b)',
@@ -261,7 +264,7 @@ plot_defs['abs_eta_lj']={
     'var': 'abs(eta_lj)',
     'range': [50,0,5],
     'iso': True,
-    'estQcd': 'final',
+    'estQcd': 'final_2j1t',
     'gev': False,
     'log': False,
     'xlab': varnames["eta_lj"],
@@ -331,7 +334,7 @@ plot_defs['cos_th_mva_loose']={
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
-    'estQcd': 'final',
+    'estQcd': 'final_2j1t',
     'gev': False,
     'log': False,
     'xlab': varnames["cos_theta"],
@@ -346,7 +349,7 @@ plot_defs['cos_th_mva_tight']={
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
-    'estQcd': 'final',
+    'estQcd': 'final_2j1t',
     'gev': False,
     'log': False,
     'xlab': varnames["cos_theta"],
@@ -459,7 +462,7 @@ plot_defs['final_cosTheta']={
     'var': 'cos_theta',
     'range': [nbins_final, -1, 1],
     'iso': True,
-    'estQcd': 'final',
+    'estQcd': 'final_2j1t',
     'gev': False,
     'log': False,
     'xlab': varnames["cos_theta"],
@@ -476,7 +479,7 @@ plot_defs['final_topMass']={
     'var': 'top_mass',
     'range': [nbins_final, 130, 220],
     'iso': True,
-    'estQcd': 'final',
+    'estQcd': 'final_2j1t',
     'gev': True,
     'log': False,
     'xlab': varnames["top_mass"],
@@ -492,7 +495,7 @@ plot_defs['final_etaLj']={
     'var': 'abs(eta_lj)',
     'range': [nbins_final, 2.5, 5],
     'iso': True,
-    'estQcd': 'final',
+    'estQcd': 'final_2j1t',
     'gev': False,
     'log': False,
     'xlab': varnames["eta_lj"],
@@ -503,7 +506,7 @@ plot_defs['final_etaLj']={
 }
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
-    "topMass": [nbins_final, 50, 350],
+    "topMass": [nbins_final, 100, 350],
     "etaLj": [nbins_final, 0, 5],
 }
 

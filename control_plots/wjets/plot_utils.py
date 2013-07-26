@@ -114,34 +114,20 @@ def plot(canv, name, hists_merged, out_dir, desired_order=PhysicsProcess.desired
         tot_mc
     )
 
-    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM P")
-    ks = tot_mc.KolmogorovTest(tot_data, "N D")
-    stacks["mc"].SetTitle(stacks["mc"].GetTitle() + " #chi^{2}/N=%.2f ks=%.2E" % (chi2, ks))
+    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM")
+    ks = tot_mc.KolmogorovTest(tot_data, "N")
+    stacks["mc"].SetTitle(stacks["mc"].GetTitle() + " #chi^{2}/#nu=%.2f" % (chi2))
     r[1].GetXaxis().SetTitle(x_title)
     canv.cd()
 
     logger.debug("Drawing legend")
-    leg = legend(hists["data"] + hists["mc"], styles=["p", "f"], **kwargs)
+    leg = legend(hists["data"] + list(reversed(hists["mc"])), styles=["p", "f"], **kwargs)
     #canv.store = [leg, r, tot_mc, tot_data]
 
     canv.Update()
     canv.SaveAs(out_dir + "/%s.png" % name)
+    canv.SaveAs(out_dir + "/%s.pdf" % name)
+    canv.SaveAs(out_dir + "/%s.eps" % name)
     canv.Close() #Must close canvas to prevent hang in ROOT upon GC
     logger.debug("Returning from plot()")
     return
-
-def plot_hists_dict(hist_dict, doNorm=False, **kwargs):
-    items = hist_dict.items()
-    for hn, h in items:
-        h.SetName(hn)
-        h.SetTitle(hn)
-    hists = [x[1] for x in items]
-    names = [x[0] for x in items]
-    if doNorm:
-        map(norm, hists)
-    ColorStyleGen.style_hists(hists)
-    canv = plot_hists(hists, **kwargs)
-
-    leg = legend(hists, styles=["f", "f"], **kwargs)
-    canv.LEGEND = leg
-    return canv

@@ -95,12 +95,26 @@ class PhysicsProcess:
 PhysicsProcess.SingleMu = PhysicsProcess("SingleMu", ["SingleMu.*"], pretty_name="data")
 PhysicsProcess.SingleEle = PhysicsProcess("SingleEle", ["SingleEle.*"], pretty_name="data")
 PhysicsProcess.diboson = PhysicsProcess("diboson", ["[WZ][WZ]"], pretty_name="diboson")
-PhysicsProcess.WJets_mg_exc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"], pretty_name="W(#rightarrow l #nu) + jets")
-PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"], pretty_name="DY")
-PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"], pretty_name="t#bar{t} (#rightarrow ll, lq)")
+PhysicsProcess.WJets_mg_exc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"],
+#    pretty_name="W(#rightarrow l #nu) + jets"
+    pretty_name="W"
+)
+PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"],
+    pretty_name="DY"
+)
+PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"],
+#    pretty_name="t#bar{t} (#rightarrow ll, lq)"
+    pretty_name="t#bar{t}"
+)
 PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW")
-PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"], pretty_name="s")
-PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name="signal")
+PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"],
+#    pretty_name="s"
+    pretty_name="s-channel"
+)
+PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"],
+#    pretty_name="signal"
+    pretty_name="signal (t-channel)"
+)
 
 #for syst in ["scaleup", "scaledown"]:
 #    for nominal in [PhysicsProcess.tchan]:
@@ -109,7 +123,7 @@ PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"], pretty_name=
 #        PhysicsProcess.systematic[syst][proc.name] = proc
 
 merge_cmds = PhysicsProcess.get_merge_dict(
-    PhysicsProcess.get_proc_dict(lepton_channel="mu")
+    PhysicsProcess.get_proc_dict("mu")
 )
 
 def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):

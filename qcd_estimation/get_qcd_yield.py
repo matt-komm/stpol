@@ -18,6 +18,11 @@ from plot_fit import *
 from FitConfig import FitConfig
 from util_scripts import *
 from DataLumiStorage import *
+from plots.common.cuts import Cuts
+import logging
+import rootpy
+
+logger = logging.getLogger("get_qcd_yield")
 
 try:
     from plots.common.cross_sections import lumi_iso, lumi_antiiso
@@ -168,31 +173,25 @@ if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
         raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py`")
 
-    cuts_final = FitConfig( "final_selection")
-
-    cuts_2j0t = FitConfig( "2j0t_selection")
-    cuts_2j0t.setBaseCuts("n_jets == 2 && n_tags == 0 && n_veto_mu==0 && n_veto_ele==0 && rms_lj<0.025")
-    cuts_2j1t = FitConfig( "2j1t_selection")
-    cuts_2j1t.setBaseCuts("n_jets == 2 && n_tags == 1 && n_veto_mu==0 && n_veto_ele==0 && rms_lj<0.025")
-    cuts_2j1t.setFinalCuts("1.0")
-
-
-
-    cuts_3j1t = FitConfig( "3j1t_selection")
-    cuts_3j1t.setBaseCuts("n_jets == 3 && n_tags == 1 && n_veto_mu==0 && n_veto_ele==0 && rms_lj<0.025")
-    cuts_mva = FitConfig( "mva_selection")
-    cuts_mva.setFinalCuts("1")
-    cuts_final_without_eta = FitConfig( "final_selection_without_eta_cut")
-    cuts_final_without_eta.setFinalCuts("top_mass < 220 && top_mass > 130")
-
-
     cuts = {}
-    cuts["final"] = cuts_final
-    cuts["2j0t"] = cuts_2j0t
-    cuts["2j1t"] = cuts_2j1t
-    cuts["3j1t"] = cuts_3j1t
-    cuts["final_without_eta"] = cuts_final_without_eta
-    cuts["mva"] = cuts_mva
+    for nj in [2,3]:
+        for nt in [0,1,2]:
+
+            #Final cut in Njets, Ntags
+            c = "%dj%dt" % (nj, nt)
+            cuts[c] = FitConfig(c)
+            bc = str(Cuts.n_jets(nj)*Cuts.n_tags(nt)*Cuts.rms_lj)
+            cuts[c].setBaseCuts(bc)
+            cuts[c].setFinalCuts("1")
+
+            #Final cut in Njets, Ntags
+            c1 = "final_" + c
+            cuts[c1] = FitConfig(c1)
+            cuts[c1].setBaseCuts(bc)
+            cuts[c1].setFinalCuts(
+                str(Cuts.top_mass_sig * Cuts.eta_lj)
+            )
+
 
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
     try:
@@ -202,30 +201,54 @@ if __name__=="__main__":
     import argparse
 
     parser = argparse.ArgumentParser(description='Does the QCD fit using theta-auto')
-    parser.add_argument('--lepton', dest='lepton', choices=["mu", "ele"], required=True, help="The lepton channel used for the fit")
-    parser.add_argument('--cut', dest='cut', choices=cuts.keys(), required=True, help="The cut region to use in the fit")
+    parser.add_argument('--channel', dest='channel', choices=["mu", "ele"], required=True, help="The lepton channel used for the fit")
+    parser.add_argument('-c', '--cut',
+        dest='cuts', choices=cuts.keys(), required=False, default=None,
+        help="The cut region to use in the fit", action='append')
     parser.add_argument('--doSystematics', action="store_true", default=False)
     parser.add_argument('--mtcut',dest='mtcut',action='store_true', default=True, help="Apply the corresponding MET/MtW cut")
     parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
     args = parser.parse_args()
 
-    cut = cuts[args.cut]
-    ((y, error), fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.lepton, do_systematics=args.doSystematics)
-    print "Selection: %s" % cut.name
-    print "QCD yield in selected region: %.2f +- %.2f, ratio to template from ONLY data %.3f" % (y, error, y/fit.orig["qcd_no_mc_sub"])
-    print "Total: QCD: %.2f +- %.2f, ratio to template from data %.3f" % (fit.qcd, fit.qcd_uncert, fit.qcd/fit.orig["qcd"])
-    print "W+Jets: %.2f +- %.2f, ratio to template: %.2f" % (fit.wjets, fit.wjets_uncert, fit.wjets/fit.wjets_orig)
-    print "Other MC: %.2f +- %.2f, ratio to template: %.2f" % (fit.nonqcd, fit.nonqcd_uncert, fit.nonqcd/fit.nonqcd_orig)
+    if not args.cuts:
+        args.cuts = cuts.keys()
 
-    print "Fit info:"
-    print fit
-    print "doMTCut=",args.mtcut
-    print "cut=",args.cut
+    ofdir = "fitted/" + args.channel
+    try:
+        os.makedirs(ofdir)
+    except:
+        pass
 
-    #output to file
-    of = open("QCD_yield_%s.txt" % args.cut, "w")
-    of.write("%f %f" % (fit.qcd, fit.qcd_uncert))
-    of.write("\n")
-    of.close()
 
-    plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.lepton])
+    failed = []
+    for cutn in args.cuts:
+        cut = cuts[cutn]
+        try:
+            ((y, error), fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, do_systematics=args.doSystematics)
+        except rootpy.ROOTError:
+            failed += [cutn]
+            continue
+        qcd_sf = y/fit.orig["qcd_no_mc_sub"]
+        plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
+        of = open(ofdir + "/%s.txt" % cut.name, "w")
+        of.write("%f %f %f\n" % (qcd_sf, fit.qcd, fit.qcd_uncert))
+        of.close()
+    print "Failed to converge: ", str(failed)
+
+    # print "Selection: %s" % cut.name
+    # print "QCD yield in selected region: %.2f +- %.2f, ratio to template from ONLY data %.3f" % (y, error, y/fit.orig["qcd_no_mc_sub"])
+    # print "Total: QCD: %.2f +- %.2f, ratio to template from data %.3f" % (fit.qcd, fit.qcd_uncert, fit.qcd/fit.orig["qcd"])
+    # print "W+Jets: %.2f +- %.2f, ratio to template: %.2f" % (fit.wjets, fit.wjets_uncert, fit.wjets/fit.wjets_orig)
+    # print "Other MC: %.2f +- %.2f, ratio to template: %.2f" % (fit.nonqcd, fit.nonqcd_uncert, fit.nonqcd/fit.nonqcd_orig)
+
+    # print "Fit info:"
+    # print fit
+    # print "doMTCut=",args.mtcut
+    # print "cut=",args.cut
+
+    # #output to file
+    # of = open("QCD_yield_%s.txt" % args.cut, "w")
+    # of.write("%f %f" % (fit.qcd, fit.qcd_uncert))
+    # of.write("\n")
+    # of.close()
+
