@@ -19,6 +19,8 @@ proc = sys.argv[1]
 # Choose between electron / muon channel fitting
 step3_ver="83a02e9_Jul22"
 step3 = "/home/mario/Summer13/stpol/step3_jul25"
+if len(sys.argv) == 3:
+    step3 = sys.argv[2]
 lumi=lumis[step3_ver]["iso"][proc]
 
 physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=proc)
@@ -38,9 +40,11 @@ for f in flist:
     samples[f] = Sample.fromFile(f, tree_name="Events_MVA")
 
 # To compute accurate weight we need to load from the tree also the weights in question
-#weightString = str(Weights.total(proc))
+weightString = str(Weights.total(proc) *
+                   Weights.wjets_madgraph_shape_weight() *
+                   Weights.wjets_madgraph_flat_weight())
 # Temporary patch until proper step3 is available
-weightString = "1.0"
+#weightString = "1.0"
 
 t={}
 f={}
