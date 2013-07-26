@@ -34,25 +34,34 @@ s3 = "\n"+r"""
 \end{tabular}
 """.strip()
 
+def parse_line(l):
+	samp, tot, err = map(lambda x: x.strip(), l.split("|"))
+	return samp, float(tot), float(err)
+
 if __name__ == "__main__":
 	vals = dict()
-	for line1, line2 in zip(inf1.readlines(), inf2.readlines()):
-		first_tot, first_err = parse_line(line1)
-		second_tot, second_err = parse_line(line2)
 
-	s2 = print_proc(r"\ttbar    ", 1.345, 2.34, 3.532, 4.345)
-	s2 += print_proc(r"\wjets    ", 1.345, 2.34, 3.532, 4.345)
-	s2 += print_proc(r"\zjets    ", 1.345, 2.34, 3.532, 4.345)
-	s2 += print_proc(r"\QCD      ", 1.345, 2.34, 3.532, 4.345)
-	s2 += print_proc(r"Diboson   ", 1.345, 2.34, 3.532, 4.345)
-	s2 += print_proc(r"tW        ", 1.345, 2.34, 3.532, 4.345)
-	s2 += print_proc(r"s-channel ", 1.345, 2.34, 3.532, 4.345)
+	inf1 = open(sys.argv[1])
+	inf2 = open(sys.argv[1])
+
+	for line1, line2 in zip(inf1.readlines(), inf2.readlines()):
+		samp, first_tot, first_err = parse_line(line1)
+		samp, second_tot, second_err = parse_line(line2)
+		vals[samp] = first_tot, first_err, second_tot, second_err
+
+	s2 = print_proc(r"\ttbar    " , *vals["TTJets"])
+	s2 += print_proc(r"\wjets    ", *vals["WJets"])
+	s2 += print_proc(r"\zjets    ", *vals["DYJets"])
+	s2 += print_proc(r"\QCD      ", *vals["QCD"])
+	s2 += print_proc(r"Diboson   ", *vals["diboson"])
+	s2 += print_proc(r"tW        ", *vals["tWchan"])
+	s2 += print_proc(r"s-channel ", *vals["schan"])
 	s2 += "\n" + r"\hline"
-	s2 += print_proc(r"t-channel ", 1.345, 2.34, 3.532, 4.345)
+	s2 += print_proc(r"t-channel ", *vals["tchan"])
 	s2 += "\n" + r"\hline"
-	s2 += print_proc(r"Total MC  ", 1.345, 2.34, 3.532, 4.345)
+	s2 += print_proc(r"Total MC  ", *vals["MC"])
 	s2 += "\n" + r"\hline"
-	s2 += "\n" + r"Data       & %.1f  & %.1f \\" % (1.345, 2.34)
+	s2 += "\n" + r"Data       & %.1f  & %.1f \\" % (vals["data"][0], vals["data"][2])
 
 
 	print s1+s2+s3
