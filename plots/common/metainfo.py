@@ -32,7 +32,7 @@ class PlotMetaInfo:
 			check_call(" ".join(cmd), shell=True, stdout=TemporaryFile())
 		os.remove(fi+"_original")
 
-	def __init__(self, title, cut, weight, infiles, subpath):
+	def __init__(self, title, cut, weight, infiles, subpath, comments=""):
 		"""
 		title - the title of the plot
 		cut - the Cut object used to draw the plot
@@ -44,10 +44,12 @@ class PlotMetaInfo:
 		self.infiles = map(os.path.realpath, infiles)
 		self.subpath = subpath
 		self.weight = weight
+		self.comments = comments
 
 	def update(self, fn):
 		"""
-		Updates the tags in a given file
+		Updates the tags in a given file. Anything done here must be reflected in the config file
+		exif_cfg.
 		fn - a path to the file to update
 		"""
 		xmp = XMPMeta()
@@ -56,6 +58,7 @@ class PlotMetaInfo:
 		xmp.set_property("XMP-stpol", "title", str(self.title))
 		xmp.set_property("XMP-stpol", "cut", str(self.cut))
 		xmp.set_property("XMP-stpol", "weight", str(self.weight))
+		xmp.set_property("XMP-stpol", "comments", str(self.comments))
 		self.update_tags(xmp, fn)
 
 if __name__=="__main__":
