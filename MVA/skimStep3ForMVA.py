@@ -1,5 +1,5 @@
 #!/bin/env python
-from ROOT import TFile,TTree
+from ROOT import TFile,TTree,TObject
 from plots.common.utils import *
 from plots.common.plot_defs import cutlist
 import sys
@@ -33,8 +33,11 @@ for f in flist:
     tf=TFile(f,'UPDATE')
     t=tf.Get("trees/Events")
     t.AddFriend('trees/WJets_weights')
+    print cut
     ct=t.CopyTree(cut)
+    print t, ct
+    print t.GetEntries(), ct.GetEntries()
     ct.SetName("Events_MVA")
     tf.cd("trees")
-    ct.Write()
+    ct.Write("", TObject.kOverwrite)
     tf.Close()

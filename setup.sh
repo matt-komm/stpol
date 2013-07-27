@@ -62,3 +62,5 @@ source setenv.sh
 
 $STPOL_DIR/setup/install_tunfold.sh
 $STPOL_DIR/setup/install_theta.sh
+$STPOL_DIR/setup/install_exempi.sh
+$STPOL_DIR/setup/install_pylibs.sh

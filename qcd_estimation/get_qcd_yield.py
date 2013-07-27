@@ -36,22 +36,26 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     #QCDRATE = fit_result.qcd
     hQCD = f.Get(var.shortName+"__qcd")
     hQCDShapeOrig = dataGroup.getHistogram(var, "Nominal", "antiiso")
-    print "QCD scale factor:", hQCD.Integral()/fit_result.orig["qcd_no_mc_sub"], "from", fit_result.orig["qcd_no_mc_sub"], "to ", hQCD.Integral()
+    #print "QCD scale factor, no m_t cut:", hQCD.Integral()/fit_result.orig["qcd_no_mc_sub"], "from", fit_result.orig["qcd_no_mc_sub"], "to ", hQCD.Integral()
     hQCDShapeOrig.Scale(hQCD.Integral()/hQCDShapeOrig.Integral())
     #print fit_result
     err = array('d',[0.])
-    if cutMT:
-        bin1 = hQCD.FindBin(mtMinValue)
-        bin2 = hQCD.GetNbinsX() + 1
-        #print hQCD.Integral(), y.Integral()
-        error = array('d',[0.])
-        y = hQCD.IntegralAndError(bin1,bin2,error)
-        print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(bin1,bin2,err), "+-",err, " - use only in fit regions not covering whole mT/MET"
-        return (y, error[0])
-        #return (hQCD.Integral(6,20), hQCD.Integral(6,20)*(fit_result.qcd_uncert/fit_result.qcd))
-    else:
-        print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(0, 100, err), "+-",err, " - use only in fit regions not covering whole mT/MET"
-        return (hQCD.Integral(), hQCD.Integral()*(fit_result.qcd_uncert/fit_result.qcd))
+    
+    bin1 = hQCD.FindBin(mtMinValue)
+    bin2 = hQCD.GetNbinsX() + 1
+    #print hQCD.Integral(), y.Integral()
+    error = array('d',[0.])
+    y = hQCD.IntegralAndError(bin1,bin2,error)
+    #no error??
+    error[0] = math.sqrt(fit_result.qcd_uncert**2 * y /fit_result.qcd)
+    print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(bin1,bin2,err), "+-",err, " - use only in fit regions not covering whole mT/MET"
+    result = {}
+    result["mt"] = (y, error[0])
+    #return (hQCD.Integral(6,20), hQCD.Integral(6,20)*(fit_result.qcd_uncert/fit_result.qcd))
+    
+    print "QCD yield from original shape, no M_T/MET cut,", hQCDShapeOrig.IntegralAndError(0, 100, err), "+-",err, " - use only in fit regions not covering whole mT/MET"
+    result["nomt"] = (fit_result.qcd, fit_result.qcd_uncert)
+    return result
 
 def get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup):
     (y, fit) = get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, mtMinValue, useMCforQCDTemplate, QCDGroup)
@@ -175,7 +179,9 @@ if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
         raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py`")
 
+    #Create the cuts in a programmatic way
     cuts = {}
+    final_cut = Cuts.top_mass_sig * Cuts.eta_lj
     for nj in [2,3]:
         for nt in [0,1,2]:
 
@@ -186,13 +192,25 @@ if __name__=="__main__":
             cuts[c].setBaseCuts(bc)
             cuts[c].setFinalCuts("1")
 
+            #Fit cut in Njets, Ntags
+            c0 = "fit_%dj%dt" % (nj, nt)
+            cuts[c0] = FitConfig(c0)
+            bc = str(Cuts.n_jets(nj)*Cuts.n_tags(nt)*Cuts.rms_lj)
+            cuts[c0].setBaseCuts(bc)
+            cuts[c0].setFinalCuts(str(Cuts.top_mass_sig))
+
             #Final cut in Njets, Ntags
             c1 = "final_" + c
             cuts[c1] = FitConfig(c1)
             cuts[c1].setBaseCuts(bc)
             cuts[c1].setFinalCuts(
-                str(Cuts.top_mass_sig * Cuts.eta_lj)
+                str(final_cut)
             )
+        s = "%dj" % nj
+        cuts[s] = FitConfig(s)
+        bc = str(Cuts.n_jets(nj)*Cuts.rms_lj)
+        cuts[s].setBaseCuts(bc)
+        cuts[s].setFinalCuts("1")
 
 
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
@@ -207,7 +225,7 @@ if __name__=="__main__":
     parser.add_argument('-c', '--cut',
         dest='cuts', choices=cuts.keys(), required=False, default=None,
         help="The cut region to use in the fit", action='append')
-    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=True)
+    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=False)
     parser.add_argument('--doSystematics', action="store_true", default=False)
     parser.add_argument('--mtcut',dest='mtcut',action='store_true', default=True, help="Apply the corresponding MET/MtW cut")
     parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
@@ -227,15 +245,26 @@ if __name__=="__main__":
     for cutn in args.cuts:
         cut = cuts[cutn]
         try:
-            ((y, error), fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, base_path=args.path, do_systematics=args.doSystematics)
+            (results, fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, base_path=args.path, do_systematics=args.doSystematics)
         except rootpy.ROOTError:
             failed += [cutn]
             continue
+        (y, error) = results["mt"]
+        (y_nomtcut, error_nomtcut) = results["nomt"]
+        
         qcd_sf = y/fit.orig["qcd_no_mc_sub"]
+        qcd_sf_nomt = y_nomtcut/fit.orig["qcd_no_mc_sub_nomtcut"]
+        
+        print "QCD scale factor, with m_t/met cut:", qcd_sf, "from", fit.orig["qcd_no_mc_sub"], "to ", y
+        print "QCD scale factor, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_no_mc_sub_nomtcut"], "to ", y_nomtcut
+        
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
-        of = open(ofdir + "/%s.txt" % cut.name, "w")
-        of.write("%f %f %f\n" % (qcd_sf, fit.qcd, fit.qcd_uncert))
-        of.close()
+        
+        with open(ofdir + "/%s.txt" % cut.name, "w") as of:
+            of.write("%f %f %f\n" % (qcd_sf, y, error))
+        with open(ofdir + "/%s_nomtcut.txt" % cut.name, "w") as of:
+            of.write("%f %f %f\n" % (qcd_sf_nomt, y_nomtcut, error_nomtcut))
+
     print "Failed to converge: ", str(failed)
 
     # print "Selection: %s" % cut.name

@@ -101,7 +101,7 @@ qcd_yields = NestedDict()
 qcd_yields[2][1]["SR"] = 0
 qcd_yields[2][1]["cut1"] = 0#9941.61250642
 qcd_yields[2][0]["SR"] = 2003.791656
-qcd_yields[2][0]["cut1"] = 0.586562
+qcd_yields[2][0]["cut1"] = 0.118189
 qcd_yields = qcd_yields.as_dict()
 
 def get_flavour_fractions(merged_hists, key):
@@ -352,8 +352,13 @@ if __name__=="__main__":
 	canv.SaveAs(out_dir + "mg_weighting_data.png")
 
 
-	#
 
-
+	#Estimate the W+light scale factor:
+	mc = sum([merged_final["cos_theta"]["unweighted"][k].Integral()
+		for k in merged_final["cos_theta"]["unweighted"].keys() if not k in ["data", "WJets W+l"]])
+	wlight = merged_final["cos_theta"]["unweighted"]["WJets W+l"].Integral()
+	data = merged_final["cos_theta"]["unweighted"]["data"].Integral()
+	sf = (data - mc)/wlight
+	logger.info("W+light scale factor = %.2f" % sf)
 
 

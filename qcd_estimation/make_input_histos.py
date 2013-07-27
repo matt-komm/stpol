@@ -139,7 +139,8 @@ def make_histos_with_cuts(var,
       bin1 = hQCD.FindBin(mtMinValue)
       bin2 = hQCD.GetNbinsX() + 1
       
-      fit.orig["qcd_no_mc_sub"] = hQCD.Integral()
+      fit.orig["qcd_no_mc_sub"] = hQCD.Integral(bin1, bin2)
+      fit.orig["qcd_no_mc_sub_nomtcut"] = hQCD.Integral()
       #Subtract MC-s from QCD data template
       stack = stacks[var.name+"Nominalantiiso"]
       for h in stack.GetHists():
