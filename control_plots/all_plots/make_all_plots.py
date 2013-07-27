@@ -34,8 +34,9 @@ OLD_PLOTTING = False
 try:
     from plots.common.output import OutputFolder
     from plots.common.metainfo import PlotMetaInfo
-except:
+except Exception as e:
     OLD_PLOTTING=True
+    print "Disabling new plotting: %s" % str(e)
 
 mc_sf=1.
 lumis = {
@@ -85,12 +86,13 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    output_folder = OutputFolder(
-        os.path.join(os.environ["STPOL_DIR"],"out", "plots"),
-        subpath="make_all_plots",
-        overwrite=False,
-        unique_subdir=False
-    )
+    if not OLD_PLOTTING:
+        output_folder = OutputFolder(
+            os.path.join(os.environ["STPOL_DIR"],"out", "plots"),
+            subpath="make_all_plots",
+            overwrite=False,
+            unique_subdir=False
+        )
 
     #Check if any of the provided hashtags matches any of the (optional) hashtags of the plot defs
     args.plots += [k for (k, v) in plot_defs.items() if 'tags' in v.keys() and len(set(args.tags).intersection(set(v['tags'])))>0]
@@ -111,7 +113,7 @@ if __name__=="__main__":
 
     # Declare which data we will use
     step3 = args.indir
-    
+
     for proc in args.channels:
         logger.info("Plotting lepton channel %s" % proc)
 
