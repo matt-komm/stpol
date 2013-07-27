@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+
+
+#Need to do basicConfig before doing any other logger commands in python 2.6
+#to prevent the other loggers from not recognizing levels set here
 import logging
 logging.basicConfig(level=logging.WARNING)
 
@@ -25,8 +29,13 @@ from array import array
 import plots.common.tdrstyle as tdrstyle
 import rootpy
 
-import pdb
-
+#FIXME: remove this when stable
+OLD_PLOTTING = False
+try:
+    from plots.common.output import OutputFolder
+    from plots.common.metainfo import PlotMetaInfo
+except:
+    OLD_PLOTTING=True
 
 mc_sf=1.
 lumis = {
@@ -36,10 +45,12 @@ lumis = {
 if __name__=="__main__":
     logger = logging.getLogger("make_all_plots")
     logger.setLevel(logging.INFO)
+    logger.getLogger("OutputFolder").setLevel("DEBUG")
 
     tdrstyle.tdrstyle()
 
     #rootpy.log.basic_config_colorized()
+    #rootpy.log.setLevel(logging.DEBUG)
 
     parser = argparse.ArgumentParser(
         description='Creates the final plots'
@@ -68,8 +79,20 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
+    output_folder = OutputFolder(
+        os.path.join(os.environ["STPOL_DIR"],"out", "plots"),
+        subpath="make_all_plots",
+        overwrite=False,
+        unique_subdir=False
+    )
+
     #Check if any of the provided hashtags matches any of the (optional) hashtags of the plot defs
     args.plots += [k for (k, v) in plot_defs.items() if 'tags' in v.keys() and len(set(args.tags).intersection(set(v['tags'])))>0]
+    #Remove plots with disabled tags
+    disabled_tags = map(lambda x: x[1:], filter(lambda x: x.startswith("."), args.tags))
+    for n, pd in plot_defs.items():
+        if 'tags' in pd.keys() and len(set(disabled_tags).intersection(set(pd['tags'])))>0:
+            args.plots = filter(lambda x: x!=n, args.plots)
     logger.info("Plotting: %s" % str(args.plots))
 
     #If there are no plots defined, do all of them
@@ -290,12 +313,13 @@ if __name__=="__main__":
         else:
             _proc = "mu"
 
-        out_dir = "figures/"
+        out_dir = "figures"
+        subpath = ""
         if "dir" in plot_def.keys():
-            out_dir = out_dir + plot_def["dir"]
-        else:
-            out_dir = out_dir + "out_{0}".format(proc)
-        fname = "{0}/{1}_{2}.png".format(out_dir, pd, _proc)
+            subpath = plot_def["dir"]
+        out_dir = os.path.join(out_dir, subpath, "out_{0}".format(proc))
+        fname = os.path.join(out_dir, "{0}_{1}.png".format(pd, _proc))
+
         try:
             os.makedirs(out_dir)
         except:
@@ -305,4 +329,15 @@ if __name__=="__main__":
         canv.SaveAs(fname)
         canv.SaveAs(fname.replace(".png", ".pdf"))
 
+        if OLD_PLOTTING:
+            pinfo = PlotMetaInfo(
+                pd + "_" + _proc,
+                cut,
+                weight_str,
+                flist,
+                subpath
+            )
+            output_folder.savePlot(canv, pinfo)
+
         canv.Close() #Need to Close to prevent hang from ROOT because of multiple TPads etc
+        del canv
