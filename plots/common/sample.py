@@ -34,6 +34,7 @@ def get_process_name(sn):
     return sn
 
 logger = logging.getLogger("sample.py")
+logger.setLevel(logging.INFO)
 class Sample:
     def __del__(self):
         logger.debug("Closing sample %s" % self.name)
