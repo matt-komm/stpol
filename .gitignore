@@ -67,3 +67,4 @@ CMSSW_5_3_11/tmp
 *.yield
 
 *.txt
+!/out/step3/latest
