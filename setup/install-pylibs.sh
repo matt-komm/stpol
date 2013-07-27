@@ -33,23 +33,8 @@ cd $STPOL_DIR/local
 
 $STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" shortuuid
 $STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" argparse
-
-#echo "Installing argparse"
-#wget http://argparse.googlecode.com/files/argparse-1.2.1.tar.gz > /dev/null
-#tar xf argparse-1.2.1.tar.gz
-#cd argparse-1.2.1
-#python setup.py install --prefix=$STPOL_DIR/local > /dev/null
-#cd ..
-#
-#python -c 'import argparse;print "Argparse version=",argparse.__version__'
-#
-#echo "Installing sqlalchemy"
-#wget --no-check-certificate https://pypi.python.org/packages/source/S/SQLAlchemy/SQLAlchemy-0.8.1.tar.gz > /dev/null
-#tar xf SQLAlchemy-0.8.1.tar.gz
-#cd SQLAlchemy-0.8.1
-#python setup.py install --prefix=$STPOL_DIR/local > /dev/null
-#cd ..
-#
+$STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" argparse
+$STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" python-xmp-toolkit
 
 echo "Installing rootpy"
 git clone git://github.com/rootpy/rootpy.git > /dev/null
