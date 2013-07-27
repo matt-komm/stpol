@@ -190,7 +190,8 @@ class Weights:
         else:
             raise ValueError("Lepton channel %s not defined" % lepton)
 
-        w *= Weights.b_weight("systematic")
+        w *= Weights.b_weight(systematic)
+        return w
 
     @staticmethod
     def pu():
@@ -253,6 +254,8 @@ class Weights:
             return Weights.muon_weight(systematic, sys_type)
         elif lepton == "ele":
             return Weights.electron_weight(systematic, sys_type)
+        else:
+            raise ValueError("Lepton channel %s not defined" % lepton)
 
     @staticmethod
     def wjets_madgraph_shape_weight(systematic="nominal"):
