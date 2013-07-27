@@ -40,6 +40,7 @@ for m in mvalist:
 print "Starting:",f
 tf=TFile(f,'UPDATE')
 t=tf.Get("trees/Events")
+tf.cd('trees')
 mt=TTree("MVA","MVA")
 t.SetBranchStatus("*",0)
 branch={}
@@ -53,7 +54,7 @@ for i in range(t.GetEntries()):
     for m in mvalist:
         mva[m][0] = reader.EvaluateMVA(m)
         branch[m].Fill()
-tf.cd('trees')
+        mt.Fill()
 mt.Write('',TObject.kOverwrite)
 tf.Close()
 
