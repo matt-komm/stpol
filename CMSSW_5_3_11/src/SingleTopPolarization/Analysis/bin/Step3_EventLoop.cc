@@ -1270,14 +1270,6 @@ int main(int argc, char *argv[])
     LogInfo << "processing speed = " << speed << " events/sec" << std::endl;
     LogInfo << "read " << mb_total << " Mb in total, average speed " << (double)mb_total / time << " Mb/s" << std::endl;
 
-    /*
-    LogInfo << "Copying tree with cut " << cut_str << std::endl;
-    TTree* cut_tree = out_tree->CopyTree(cut_str.c_str());
-    cut_tree->SetName("Events_selected");
-    cut_tree->SetTitle(cut_str.c_str());
-    cut_tree->Write();
-    */
-
     dir.cd();
     TNamed *pdesc = new TNamed("process_desc", builder.processDesc()->dump().c_str());
     pdesc->Write();

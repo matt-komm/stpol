@@ -38,6 +38,12 @@ qcdScale['ele']={}
 qcdScale['mu']={}
 
 #Better to organize like this, so logical cutstrings are close by
+qcdScale['ele']['final_2j']    =   0#0.83
+qcdScale['mu']['final_2j']     =   0#40.694555
+
+qcdScale['ele']['final_3j']    =   0#0.83
+qcdScale['mu']['final_3j']     =   0#40.694555
+
 qcdScale['ele']['final_2j1t']    =   0.83
 qcdScale['mu']['final_2j1t']     =   40.694555
 
@@ -532,7 +538,7 @@ plot_defs['final_etaLj']={
 }
 
 plot_defs['final_BDT']={
-    'tags': ["an", "control.tex"],
+    'tags': ["an", "control.tex", "mva"],
     'enabled': True,
     'var': 'mva_BDT',
     'range': [40, -1, 1],
@@ -548,7 +554,7 @@ plot_defs['final_BDT']={
 }
 
 plot_defs['final_cosTheta_mva_loose']={
-    'tags': ["an", "control.tex"],
+    'tags': ["an", "control.tex", "mva"],
     'enabled': True,
     'var': 'cos_theta',
     'range': [20,-1,1],
