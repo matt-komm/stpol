@@ -53,6 +53,15 @@ class Cuts:
     @staticmethod
     def n_jets(n):
         return Cut("n_jets == %d" % int(n))
+    
+    @staticmethod
+    def hlt(lepton):
+        if lepton=="mu":
+            return Cuts.hlt_isomu
+        elif lepton=="ele":
+            return Cuts.hlt_isoele
+        else:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
 
     @staticmethod
     def hlt(lepton):
@@ -81,6 +90,24 @@ class Cuts:
         return Cut("n_tags == %d" % int(n))
 
     @staticmethod
+    def metmt(lepton):
+        if lepton=="mu":
+            return Cuts.mt_mu
+        elif lepton=="ele":
+            return Cuts.met
+        else:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+    
+    @staticmethod
+    def single_lepton(lepton):
+        if lepton=="mu":
+            return Cuts.one_muon*Cuts.lepton_veto
+        elif lepton=="ele":
+            return Cuts.one_electron*Cuts.lepton_veto
+        else:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+
+    @staticmethod
     def final_jet(n, lepton="mu"):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
@@ -101,14 +128,13 @@ class Cuts:
     @staticmethod
     def final_jet(n, lepton="mu"):
         if lepton=="mu":
-            cut = Cuts.one_muon*Cuts.lepton_veto*Cuts.mt_mu
+            cut = Cuts.one_muon*Cuts.lepton_veto
         elif lepton=="ele":
-            cut = Cuts.one_eletron*Cuts.lepton_veto*Cuts.met
+            cut = Cuts.one_electron*Cuts.lepton_veto
         else:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
 
-        return cut*Cuts.rms_lj*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
-
+        return cut*Cuts.metmt(lepton)*Cuts.rms_lj*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
     @staticmethod
     def final(n, m, lepton="mu"):
         return Cuts.final_jet(n, lepton)*Cuts.n_tags(m)

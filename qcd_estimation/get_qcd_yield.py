@@ -207,8 +207,8 @@ if __name__=="__main__":
         s = "%dj" % nj
         cuts[s] = FitConfig(s)
         bc = str(Cuts.n_jets(nj)*Cuts.rms_lj)
-        cuts[c].setBaseCuts(bc)
-        cuts[c].setFinalCuts("1")
+        cuts[s].setBaseCuts(bc)
+        cuts[s].setFinalCuts("1")
 
 
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
