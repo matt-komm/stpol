@@ -48,7 +48,7 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
             ss_type=main_syst + "__" + sub_systs.keys()[0]
         else:
             ss_type=main_syst
-        (samples, sampnames) = load_samples(ss_type, indir)
+        (samples, sampnames) = load_samples(ss_type, channel, indir)
         outhists = {}
         for sn, samps in sampnames:
             hists = []

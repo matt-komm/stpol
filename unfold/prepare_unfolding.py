@@ -8,15 +8,15 @@ import math
 from plots.common.make_systematics_histos import *
 import os.path
 from plots.common.utils import mkdir_p
+from plots.common.cuts import *
+import argparse
 
 MAXBIN = 10000
-cuts = "n_muons==1 && n_eles==0 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && pt_bj>40 && pt_lj>40 && n_veto_mu == 0 && n_veto_ele==0 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1)"
 
-weight = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
 var_min = -1
 var_max = 1
 
-def get_signal_samples(proc="mu", step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"])):
+def get_signal_samples(step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"]), proc="mu"):
     samples={}
     # Load in the data
     datadir = '/'.join([step3, proc, "mc", "iso", "nominal", "Jul15"])
@@ -25,14 +25,14 @@ def get_signal_samples(proc="mu", step3='/'.join([os.environ["STPOL_DIR"], "step
     for f in flist:
         if f.endswith("ToLeptons.root"):
             samples[f] = Sample.fromFile(datadir+'/'+f, tree_name='Events')
-    #assert len(samples) == 2
+    assert len(samples) == 2
     return samples
 
-def get_signal_histo(var, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"]), cuts="1", proc="mu"):
+def get_signal_histo(var, weight, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"]), cuts="1", proc="mu"):
     lumi = lumi_iso[proc]
     plot_range = [MAXBIN, var_min, var_max]
     hists_mc = {}
-    samples = get_signal_samples(proc, step3)
+    samples = get_signal_samples(step3, proc)
     for name, sample in samples.items():
         if sample.isMC:
             hist = sample.drawHistogram(var, cuts, weight=weight, plot_range=plot_range)
@@ -43,10 +43,10 @@ def get_signal_histo(var, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest
     return merged_hists[0]
 
 
-def getbinning(histo, bins):
+def getbinning(histo, bins, zerobin=None):
     totint = histo.Integral(0, MAXBIN)
     evbin = totint/bins
-    
+    print histo, totint, bins
     edges = [0.]*(bins+1)
     edges[0] = var_min
     iedge = 1
@@ -54,36 +54,37 @@ def getbinning(histo, bins):
     prevbin = 0
     for k in range(1,MAXBIN+1):
         integral = histo.Integral(prevbin+1, k)
-        #print "int",integral,evbin
         if(integral>=evbin):
             newedge = histo.GetXaxis().GetBinUpEdge(k)
             #print "edge", newedge, math.fabs(newedge)<0.1
             # Set bin edge to 0 in order to calculate the asymmetry
             #if(math.fabs(newedge)<0.06):
             #    newedge = 0
-
             edges[iedge] = newedge
             iedge += 1
             prevbin = k
     
     lastedge = histo.GetXaxis().GetBinUpEdge(MAXBIN)
     edges[bins] = lastedge
+    #Set bin #zerobin to zero if parameter set
+    if zerobin is not None:
+        edges[zerobin] = 0.0
     return edges
 
-def findbinning(bins_generated):
-    histo_gen = get_signal_histo(var_x, cuts=cuts)
-    histo_rec = get_signal_histo(var_y, cuts=cuts)
+def findbinning(bins_generated, cuts, weight, indir, zerobin_gen=None, zerobin_rec=None):
+    histo_gen = get_signal_histo(var_x, weight, cuts=cuts, step3=indir)
+    histo_rec = get_signal_histo(var_y, weight, cuts=cuts, step3=indir)
 
     # generated
-    binning_gen = getbinning(histo_gen, bins_generated)
+    binning_gen = getbinning(histo_gen, bins_generated, zerobin_gen)
     # reconstructed
-    binning_rec = getbinning(histo_rec, bins_generated*2)
+    binning_rec = getbinning(histo_rec, bins_generated*2, zerobin_rec)
     return (numpy.array(binning_gen), numpy.array(binning_rec))
 
 
-def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, proc = "mu"):
-    mkdir_p('/'.join([os.environ["STPOL_DIR"], "unfold", "histos"]))
-    fo = ROOT.TFile('/'.join([os.environ["STPOL_DIR"], "unfold", "histos"])+"/rebinned.root","RECREATE")
+def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu"):
+    mkdir_p('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", proc]))
+    fo = ROOT.TFile('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", proc])+"/rebinned.root","RECREATE")
     
     # histograms
     #binning_x=(bins_x, numpy.array(bin_list_x))
@@ -95,7 +96,7 @@ def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, proc = "mu"):
     hists_rec = {}
     hists_gen = {}
     matrices = {}
-    samples = get_signal_samples()
+    samples = get_signal_samples(indir)
     for name, sample in samples.items():
         hist_rec = sample.drawHistogram(var_y, cuts, weight=weight, binning=binning_y)
         hist_rec.Scale(sample.lumiScaleFactor(lumi))
@@ -128,8 +129,8 @@ def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, proc = "mu"):
     merged_matrix[0].Write()
     fo.Close()
 
-def efficiency(cuts, binning_x, proc="mu"):
-    fo = ROOT.TFile('/'.join([os.environ["STPOL_DIR"], "unfold", "histos"])+"/efficiency.root","RECREATE")
+def efficiency(cuts, binning_x, indir, proc="mu"):
+    fo = ROOT.TFile('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", proc])+"/efficiency.root","RECREATE")
     fo.cd()
     
     ROOT.TH1.SetDefaultSumw2(True)
@@ -137,8 +138,11 @@ def efficiency(cuts, binning_x, proc="mu"):
     plot_range = [100,-1,1]
     hists_presel = {}
     hists_presel_rebin = {}
-    samples = get_signal_samples()
-    cuts_presel = "abs(true_lepton_pdgId)==13"
+    samples = get_signal_samples(indir)
+    if proc == "mu":
+        cuts_presel = "abs(true_lepton_pdgId)==13"
+    elif proc == "ele":
+        cuts_presel = "abs(true_lepton_pdgId)==11"
     scales = {}
     for name, sample in samples.items():
         hist_presel = sample.drawHistogram(var_x, cuts_presel, weight="1", plot_range=plot_range)
@@ -208,26 +212,41 @@ def efficiency(cuts, binning_x, proc="mu"):
 
     fo.Close()
 
-def make_histos(binning, cut_str, cut_str_antiiso):
+def make_histos(binning, cut_str, cut_str_antiiso, indir, channel):
     
-    #cut_str = "n_muons==1 && n_eles==0 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && pt_bj>40 && pt_lj>40 && n_veto_mu == 0 && n_veto_ele==0 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1)"
-    cut_str_antiiso = "n_muons==1 && n_eles==0 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && pt_bj>40 && pt_lj>40 && n_veto_mu == 0 && n_veto_ele==0 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1) && mu_iso>0.3 && mu_iso<0.5 && deltaR_lj>0.3 && deltaR_bj>0.3"
-    systematics = generate_systematics()
+    systematics = generate_systematics(channel)
     var = "cos_theta"
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input"])
-    make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, binning=binning)
-    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input"])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos"])+"/data.root")
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", channel])
+    make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, channel, binning=binning)
+    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", channel])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos"])+"/data.root")
 
 if __name__ == "__main__":
-    cut_str = cuts
-    cut_str_antiiso = "n_muons==1 && n_eles==0 && rms_lj<0.025 && mt_mu>50 && abs(eta_lj)>2.5 && top_mass>130 && top_mass<220 && n_jets==2 && n_tags==1 && pt_bj>40 && pt_lj>40 && n_veto_mu == 0 && n_veto_ele==0 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1) && mu_iso>0.3 && mu_iso<0.5 && deltaR_lj>0.3 && deltaR_bj>0.3"
+    parser = argparse.ArgumentParser(description='Makes systematics histograms for final fit')
+    parser.add_argument('--channel', dest='channel', choices=["mu", "ele"], required=True, help="The lepton channel usedt")
+    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=True)
+    args = parser.parse_args()
+
+    indir = args.path    
+    
+    #indir = '/'.join([os.environ["STPOL_DIR"], "step3_latest"])
+    cut_str = str(Cuts.final_iso(args.channel))
+    cut_str_antiiso = str(Cuts.final_antiiso(args.channel))
+    weight = str(Weights.total_weight(args.channel))
+
     bins_gen = 7
     bins_rec = bins_gen * 2
-    (bin_list_gen, bin_list_rec) = findbinning(bins_gen)
-    bin_list_gen = numpy.array([-1.,    -0.2632, 0.0,   0.19,    0.3528,  0.5062,  0.6652,  1.    ])
-    bin_list_rec = numpy.array([-1.,     -0.4496, -0.2254, -0.069,   0.0,   0.1478,  0.2346,  0.3174,  0.3956,
-  0.4738,  0.545,   0.6112,  0.6866,  0.7714,  1.    ])
+    zerobin_gen = 2
+    zerobin_rec = 4
+    (bin_list_gen, bin_list_rec) = findbinning(bins_gen, cut_str, weight, indir, zerobin_gen, zerobin_rec)
+    print (bin_list_gen, bin_list_rec)
+    #bin_list_gen = numpy.array([-1.,    -0.2632, 0.0,   0.19,    0.3528,  0.5062,  0.6652,  1.    ])
+    #bin_list_rec = numpy.array([-1.,     -0.4496, -0.2254, -0.069,   0.0,   0.1478,  0.2346,  0.3174,  0.3956,   0.4738,  0.545,   0.6112,  0.6866,  0.7714,  1.    ])
+    binning_file = open('binning'+args.channel+'.txt', 'w')
+    binning_file.write(bin_list_gen)
+    binning_file.write(bin_list_rec)
+    binning_file.close()
+
     print "found binning: ", bin_list_gen, ";", bin_list_rec
-    rebin(cut_str, bins_gen, bin_list_gen, bins_rec, bin_list_rec)
-    efficiency(cut_str, bin_list_gen, proc="mu")
-    make_histos(bin_list_rec, cut_str, cut_str_antiiso)
+    rebin(cut_str, bins_gen, bin_list_gen, bins_rec, bin_list_rec, indir, args.channel)
+    efficiency(cut_str, bin_list_gen, indir, proc=args.channel)
+    make_histos(bin_list_rec, cut_str, cut_str_antiiso, indir, args.channel)
