@@ -40,18 +40,20 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     hQCDShapeOrig.Scale(hQCD.Integral()/hQCDShapeOrig.Integral())
     #print fit_result
     err = array('d',[0.])
-    if cutMT:
-        bin1 = hQCD.FindBin(mtMinValue)
-        bin2 = hQCD.GetNbinsX() + 1
-        #print hQCD.Integral(), y.Integral()
-        error = array('d',[0.])
-        y = hQCD.IntegralAndError(bin1,bin2,error)
-        print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(bin1,bin2,err), "+-",err, " - use only in fit regions not covering whole mT/MET"
-        return (y, error[0])
-        #return (hQCD.Integral(6,20), hQCD.Integral(6,20)*(fit_result.qcd_uncert/fit_result.qcd))
-    else:
-        print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(0, 100, err), "+-",err, " - use only in fit regions not covering whole mT/MET"
-        return (hQCD.Integral(), hQCD.Integral()*(fit_result.qcd_uncert/fit_result.qcd))
+    
+    bin1 = hQCD.FindBin(mtMinValue)
+    bin2 = hQCD.GetNbinsX() + 1
+    #print hQCD.Integral(), y.Integral()
+    error = array('d',[0.])
+    y = hQCD.IntegralAndError(bin1,bin2,error)
+    print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(bin1,bin2,err), "+-",err, " - use only in fit regions not covering whole mT/MET"
+    result = {}
+    result["mt"] = (y, error[0])
+    #return (hQCD.Integral(6,20), hQCD.Integral(6,20)*(fit_result.qcd_uncert/fit_result.qcd))
+    
+    print "QCD yield from original shape, no M_T/MET cut,", hQCDShapeOrig.IntegralAndError(0, 100, err), "+-",err, " - use only in fit regions not covering whole mT/MET"
+    result["nomt"] = (hQCD.Integral(), hQCD.Integral()*(fit_result.qcd_uncert/fit_result.qcd))
+    return result
 
 def get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup):
     (y, fit) = get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, mtMinValue, useMCforQCDTemplate, QCDGroup)
@@ -241,15 +243,23 @@ if __name__=="__main__":
     for cutn in args.cuts:
         cut = cuts[cutn]
         try:
-            ((y, error), fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, base_path=args.path, do_systematics=args.doSystematics)
+            (results, fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, base_path=args.path, do_systematics=args.doSystematics)
         except rootpy.ROOTError:
             failed += [cutn]
             continue
+        print results
+        (y, error) = results["mt"]
+        (y_nomtcut, error_nomtcut) = results["nomt"]
         qcd_sf = y/fit.orig["qcd_no_mc_sub"]
-        print "QCD scale factor, with m_t cut:", y/fit.orig["qcd_no_mc_sub"], "from", fit.orig["qcd_no_mc_sub"], "to ", y
+        qcd_sf_nomt = y_nomtcut/fit.orig["qcd_no_mc_sub_nomtcut"]
+        print "QCD scale factor, with m_t/met cut:", qcd_sf, "from", fit.orig["qcd_no_mc_sub"], "to ", y
+        print "QCD scale factor, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_no_mc_sub_nomtcut"], "to ", y_nomtcut
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         of = open(ofdir + "/%s.txt" % cut.name, "w")
-        of.write("%f %f %f\n" % (qcd_sf, fit.qcd, fit.qcd_uncert))
+        of.write("%f %f %f\n" % (qcd_sf, y, error))
+        of.close()
+        of = open(ofdir + "/%s_nomtcut.txt" % cut.name, "w")
+        of.write("%f %f %f\n" % (qcd_sf_nomt, y_nomtcut, error_nomtcut))
         of.close()
     print "Failed to converge: ", str(failed)
 

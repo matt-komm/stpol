@@ -46,7 +46,6 @@ def make_histos_with_cuts(var,
          if useMCforQCDTemplate:
             make_histogram(var, QCDGroup, cuts.name, openedFiles, lumis, s, "antiiso", cuts.antiIsoCutsQCD)                    
          make_histogram(var, dataGroup, cuts.name, openedFiles, lumis, s, "antiiso", cuts.antiIsoCutsData)
-         make_histogram(var, dataGroup, cuts.name, openedFiles, lumis, s, "antiiso", cuts.antiIsoCutsData)
 
          stack = make_stack(var, cuts.name+s, MCGroups, dataGroup, openedFiles, s, "antiiso", lumis, cuts.antiIsoCutsMC, cuts.antiIsoCutsData, "", cuts.name)
          stacks[var.name+s+"antiiso"] = stack
@@ -141,6 +140,7 @@ def make_histos_with_cuts(var,
       bin2 = hQCD.GetNbinsX() + 1
       
       fit.orig["qcd_no_mc_sub"] = hQCD.Integral(bin1, bin2)
+      fit.orig["qcd_no_mc_sub_nomtcut"] = hQCD.Integral()
       #Subtract MC-s from QCD data template
       stack = stacks[var.name+"Nominalantiiso"]
       for h in stack.GetHists():
