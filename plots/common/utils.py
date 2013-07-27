@@ -43,7 +43,7 @@ def get_file_list(merge_cmds, dir, fullpath=True):
             out_files += filter(lambda x: re.match(pat, x.split("/")[-1]), files)
     if not fullpath:
         out_files = map(lambda x: x.split("/")[-1], out_files)
-    return out_files
+    return sorted(out_files)
 
 class PhysicsProcess:
     desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan"]

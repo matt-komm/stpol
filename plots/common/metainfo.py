@@ -6,7 +6,7 @@ import glob
 
 import logging
 logger = logging.getLogger("metainfo.py")
-
+logger.setLevel(logging.INFO)
 class PlotMetaInfo:
 	"""
 	This class gathers the metadata information corresponding to a plot,
@@ -22,7 +22,7 @@ class PlotMetaInfo:
 		xmp - an XMPMeta object with the required metadata
 		fi - the path to the file that you want to append to
 		"""
-		logger.info("Updating tags for file %s" % fi)
+		logger.debug("Updating tags for file %s" % fi)
 		outs = xmp.serialize_to_str()
 		with NamedTemporaryFile() as of:
 			of.write(outs)
@@ -32,17 +32,19 @@ class PlotMetaInfo:
 			check_call(" ".join(cmd), shell=True, stdout=TemporaryFile())
 		os.remove(fi+"_original")
 
-	def __init__(self, title, cut, weight, infiles, subpath, comments=""):
+	def __init__(self, title, cut, weight, infiles, subdir="", comments=""):
 		"""
 		title - the title of the plot
 		cut - the Cut object used to draw the plot
 		weight - the weight object (or anything convertible to str) used to draw this plot
 		infiles - a list with the paths to the input files used for this plot. symlinks will be expanded
+		subdir - a subdirectory for this plot
+		comments - any additional comments
 		"""
 		self.title = title
 		self.cut = cut
 		self.infiles = map(os.path.realpath, infiles)
-		self.subpath = subpath
+		self.subdir = subdir
 		self.weight = weight
 		self.comments = comments
 

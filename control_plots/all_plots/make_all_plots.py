@@ -86,8 +86,7 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     output_folder = OutputFolder(
-        os.path.join(os.environ["STPOL_DIR"],"out", "plots"),
-        subpath="make_all_plots",
+        subdir="plots",
         overwrite=False,
         unique_subdir=False
     )
@@ -111,7 +110,7 @@ if __name__=="__main__":
 
     # Declare which data we will use
     step3 = args.indir
-    
+
     for proc in args.channels:
         logger.info("Plotting lepton channel %s" % proc)
 
@@ -331,10 +330,10 @@ if __name__=="__main__":
                 _proc = "mu"
 
             out_dir = "figures"
-            subpath = ""
+            subdir = ""
             if "dir" in plot_def.keys():
-                subpath = plot_def["dir"]
-            out_dir = os.path.join(out_dir, subpath, "out_{0}".format(proc))
+                subdir = plot_def["dir"]
+            out_dir = os.path.join(out_dir, subdir, "out_{0}".format(proc))
             fname = os.path.join(out_dir, "{0}_{1}.png".format(pd, _proc))
 
             try:
@@ -353,7 +352,7 @@ if __name__=="__main__":
                     cut,
                     weight_str,
                     flist,
-                    subpath,
+                    subdir,
                     comments
                 )
                 output_folder.savePlot(canv, pinfo)
