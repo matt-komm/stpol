@@ -251,17 +251,20 @@ if __name__=="__main__":
             continue
         (y, error) = results["mt"]
         (y_nomtcut, error_nomtcut) = results["nomt"]
+        
         qcd_sf = y/fit.orig["qcd_no_mc_sub"]
         qcd_sf_nomt = y_nomtcut/fit.orig["qcd_no_mc_sub_nomtcut"]
+        
         print "QCD scale factor, with m_t/met cut:", qcd_sf, "from", fit.orig["qcd_no_mc_sub"], "to ", y
         print "QCD scale factor, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_no_mc_sub_nomtcut"], "to ", y_nomtcut
+        
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
-        of = open(ofdir + "/%s.txt" % cut.name, "w")
-        of.write("%f %f %f\n" % (qcd_sf, y, error))
-        of.close()
-        of = open(ofdir + "/%s_nomtcut.txt" % cut.name, "w")
-        of.write("%f %f %f\n" % (qcd_sf_nomt, y_nomtcut, error_nomtcut))
-        of.close()
+        
+        with open(ofdir + "/%s.txt" % cut.name, "w") as of:
+            of.write("%f %f %f\n" % (qcd_sf, y, error))
+        with open(ofdir + "/%s_nomtcut.txt" % cut.name, "w") as of:
+            of.write("%f %f %f\n" % (qcd_sf_nomt, y_nomtcut, error_nomtcut))
+
     print "Failed to converge: ", str(failed)
 
     # print "Selection: %s" % cut.name
