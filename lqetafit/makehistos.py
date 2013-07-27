@@ -1,9 +1,19 @@
 from plots.common.make_systematics_histos import *    
+from plots.common.utils import *
+from plots.common.cuts import *
+import argparse
 
 if __name__=="__main__":
-    cut_str = "n_jets==2 && n_tags==1 && top_mass>130 && top_mass<220 && rms_lj<0.025 && mt_mu>50 && (HLT_IsoMu24_eta2p1_v11==1 || HLT_IsoMu24_eta2p1_v12==1 || HLT_IsoMu24_eta2p1_v13==1 || HLT_IsoMu24_eta2p1_v14==1 || HLT_IsoMu24_eta2p1_v15==1 || HLT_IsoMu24_eta2p1_v16==1 || HLT_IsoMu24_eta2p1_v17==1)"
-    cut_str_antiiso = "n_jets==2 && n_tags==1 && rms_lj<0.025 && mt_mu>50 && mu_iso>0.3 && mu_iso<0.5 && deltaR_lj>0.3 && deltaR_bj>0.3"
-    systematics = generate_systematics()
+    parser = argparse.ArgumentParser(description='Makes systematics histograms for final fit')
+    parser.add_argument('--channel', dest='channel', choices=["mu", "ele"], required=True, help="The lepton channel used for the fit")
+    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=True)
+    args = parser.parse_args()
+
+    cut_str = str(Cuts.eta_fit(args.channel))
+    cut_str_antiiso = str(Cuts.eta_fit_antiiso(args.channel))
     var = "eta_lj"
+
+    indir = args.path
     outdir = '/'.join([os.environ["STPOL_DIR"], "lqetafit", "histos"])
-    make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, plot_range=[15, 0, 5])
+    systematics = generate_systematics(args.channel)
+    make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, args.channel, plot_range=[15, 0, 5])
