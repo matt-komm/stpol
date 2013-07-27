@@ -110,10 +110,11 @@ class HistCollection:
                     md = metadata[hname]
         return HistCollection(hists, metadata, name, fi)
 
-def norm(hist):
+def norm(hist, setName=False):
     integral, err = calc_int_err(hist)
     if integral>0:
-        hist.SetTitle(hist.GetTitle() + " I=%.2E #pm %.1E" % (integral, err))
+        if setName:
+            hist.SetTitle(hist.GetTitle() + " I=%.2E #pm %.1E" % (integral, err))
         hist.Scale(1.0/integral)
     else:
         logger.error("Histogram integral was 0: %s" % hist.GetName())

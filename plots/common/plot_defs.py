@@ -38,17 +38,17 @@ qcdScale['mu']={}
 qcdScale['ele']['final_2j1t']    =   0.83
 qcdScale['mu']['final_2j1t']     =   40.694555
 
-qcdScale['ele']['final_2j0t']    =   1.33
-qcdScale['mu']['final_2j0t']     =   27.9
+qcdScale['ele']['final_2j0t']    =   0#1.33
+qcdScale['mu']['final_2j0t']     =   0#27.9
 
-qcdScale['ele']['final_3j0t']    =   1.33
-qcdScale['mu']['final_3j0t']     =   27.9
+qcdScale['ele']['final_3j0t']    =   0#1.33
+qcdScale['mu']['final_3j0t']     =   0#27.9
 
-qcdScale['ele']['final_3j1t']    =   1.33
-qcdScale['mu']['final_3j1t']     =   27.9
+qcdScale['ele']['final_3j1t']    =   0#1.33
+qcdScale['mu']['final_3j1t']     =   0#27.9
 
-qcdScale['ele']['final_3j2t']    =   1.33
-qcdScale['mu']['final_3j2t']     =   27.9
+qcdScale['ele']['final_3j2t']    =   0
+qcdScale['mu']['final_3j2t']     =   0
 
 qcdScale['ele']['nomet']         =   1.33
 qcdScale['mu']['nomet']          =   28
@@ -56,10 +56,10 @@ qcdScale['mu']['nomet']          =   28
 qcdScale['ele']['presel']        =   1.33
 qcdScale['mu']['presel']         =   27.9
 
-qcdScale['ele']['2j0t']          =   0#1.37
-qcdScale['mu']['2j0t']           =   0#2.46
+qcdScale['ele']['2j0t']          =   0
+qcdScale['mu']['2j0t']           =   0
 
-qcdScale['ele']['2j1t']          =   0#1.33
+qcdScale['ele']['2j1t']          =   0
 qcdScale['mu']['2j1t']           =   40.694555
 
 qcdScale['ele']['3j1t']          =   0.26
@@ -77,7 +77,7 @@ varnames["top_mass"] = 'M_{b l #nu} [GeV]'
 varnames["mt_mu"] = 'M_{t}(W) [GeV]'
 varnames["met"] = 'E_{T}^{miss} [GeV]'
 varnames["pt_lep"] = ['e p_{T} [GeV]', '#mu p_{T} [GeV]']
-varnames["BDT_uncat"] = 'Uncategorized BDT'
+varnames["BDT_uncat"] = 'BDT'
 varnames["n_tags"] = 'N_{tags}'
 varnames["n_jets"] = 'N_{jets}'
 varnames["rms_lj"] = 'RMS_{lj}'
@@ -329,6 +329,20 @@ plot_defs['mva_bdt']={
     'estQcd': 'presel',
     'gev': False,
     'log': True,
+    'xlab': varnames["BDT_uncat"],
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele'],
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']
+}
+
+plot_defs['mva_bdt_zoom']={
+    'enabled': True,
+    'var': 'mva_BDT',
+    'range': [50,0,1],
+    'iso': True,
+    'estQcd': 'presel',
+    'gev': False,
+    'log': False,
     'xlab': varnames["BDT_uncat"],
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele'],

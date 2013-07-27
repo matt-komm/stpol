@@ -170,7 +170,7 @@ def make_histograms(var, MC_groups, data_group, open_files, syst, iso, lumis, cu
                his.Scale(ds.preScale())
             h.Add(his)
       error = array('d',[0.])
-      print group.getName(), group.getTitle(), var.shortName, syst, iso, h.GetEntries(), h.IntegralAndError(0,100,error), "+-", error[0]
+      print group.getName(), group.getTitle(), var.shortName, syst, iso, extra, h.GetEntries(), h.IntegralAndError(0,100,error), "+-", error[0]
       #print(str(h.Integral()) + " +- " + str( h.Integral()/(h.GetEntries()**0.5) ) )
       group.addHistogram(h, var, syst, iso, extra)
       if group.isMC():

@@ -3,6 +3,7 @@ import ROOT
 from utils import get_max_bin
 import math
 from plots.common.legend import legend
+from plots.common.histogram import norm
 
 
 def plot_hists(hists, name="canv", **kwargs):
@@ -111,15 +112,14 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
     return p2, hist_ratio, hist_line
 
 
-def plot_hists_dict(hist_dict, doNorm=False, **kwargs):
+def plot_hists_dict(hist_dict, setNames=True, **kwargs):
     items = hist_dict.items()
     for hn, h in items:
         h.SetName(hn)
-        h.SetTitle(hn)
+        if setNames:
+            h.SetTitle(hn)
     hists = [x[1] for x in items]
     names = [x[0] for x in items]
-    if doNorm:
-        map(norm, hists)
     ColorStyleGen.style_hists(hists)
     canv = plot_hists(hists, **kwargs)
 
