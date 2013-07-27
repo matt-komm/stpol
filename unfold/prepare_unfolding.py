@@ -216,9 +216,9 @@ def make_histos(binning, cut_str, cut_str_antiiso, indir, channel):
     
     systematics = generate_systematics(channel)
     var = "cos_theta"
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", channel])
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input"])
     make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, channel, binning=binning)
-    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", channel])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos"])+"/data.root")
+    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", channel])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", channel])+"/data.root")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Makes systematics histograms for final fit')
