@@ -129,6 +129,7 @@ def make_histograms(var, MC_groups, data_group, open_files, syst, iso, lumis, cu
    all_groups = []
    all_groups.extend(MC_groups)
    total = TH1D("total", "total", var.bins, var.lbound, var.ubound)
+   total.Sumw2()
    if data_group is not None:
       all_groups.append(data_group)
    for group in all_groups:

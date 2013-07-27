@@ -46,13 +46,15 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     #print hQCD.Integral(), y.Integral()
     error = array('d',[0.])
     y = hQCD.IntegralAndError(bin1,bin2,error)
+    #no error??
+    error[0] = math.sqrt(fit_result.qcd_uncert**2 * y /fit_result.qcd)
     print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(bin1,bin2,err), "+-",err, " - use only in fit regions not covering whole mT/MET"
     result = {}
     result["mt"] = (y, error[0])
     #return (hQCD.Integral(6,20), hQCD.Integral(6,20)*(fit_result.qcd_uncert/fit_result.qcd))
     
     print "QCD yield from original shape, no M_T/MET cut,", hQCDShapeOrig.IntegralAndError(0, 100, err), "+-",err, " - use only in fit regions not covering whole mT/MET"
-    result["nomt"] = (hQCD.Integral(), hQCD.Integral()*(fit_result.qcd_uncert/fit_result.qcd))
+    result["nomt"] = (fit_result.qcd, fit_result.qcd_uncert)
     return result
 
 def get_qcd_yield(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup):
@@ -247,7 +249,6 @@ if __name__=="__main__":
         except rootpy.ROOTError:
             failed += [cutn]
             continue
-        print results
         (y, error) = results["mt"]
         (y_nomtcut, error_nomtcut) = results["nomt"]
         qcd_sf = y/fit.orig["qcd_no_mc_sub"]
