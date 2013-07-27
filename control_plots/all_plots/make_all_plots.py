@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import logging
+logging.basicConfig(level=logging.WARNING)
+
 import sys
 import os
 
@@ -24,10 +27,6 @@ import rootpy
 
 import pdb
 
-import logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("make_all_plots")
-logger.setLevel(logging.INFO)
 
 mc_sf=1.
 lumis = {
@@ -35,6 +34,9 @@ lumis = {
     "ele":12410+6144
 }
 if __name__=="__main__":
+    logger = logging.getLogger("make_all_plots")
+    logger.setLevel(logging.INFO)
+
     tdrstyle.tdrstyle()
 
     #rootpy.log.basic_config_colorized()
@@ -68,7 +70,7 @@ if __name__=="__main__":
 
     #Check if any of the provided hashtags matches any of the (optional) hashtags of the plot defs
     args.plots += [k for (k, v) in plot_defs.items() if 'tags' in v.keys() and len(set(args.tags).intersection(set(v['tags'])))>0]
-    print args.plots
+    logger.info("Plotting: %s" % str(args.plots))
 
     #If there are no plots defined, do all of them
     if len(args.plots) == 0:
