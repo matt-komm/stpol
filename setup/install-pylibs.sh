@@ -19,14 +19,15 @@ echo "Installing setuptools"
 wget --no-check-certificate https://pypi.python.org/packages/source/s/setuptools/setuptools-0.9.5.tar.gz > /dev/null
 tar xf setuptools-0.9.5.tar.gz
 cd setuptools-0.9.5
-python setup.py install --prefix=$STPOL_DIR/local > /dev/null
+python setup.py install --prefix=$STPOL_DIR/local
 cd $STPOL_DIR/local
 python -c 'import setuptools;print "setuptools version=",setuptools.__version__'
 
 echo "Installing pip"
 wget --no-check-certificate https://pypi.python.org/packages/source/p/pip/pip-1.4.tar.gz
 tar xf pip-1.4.tar.gz 
-python setup.py install --prefix=$STPOL_DIR/local > /dev/null
+cd pip-1.4
+python setup.py install --prefix=$STPOL_DIR/local
 cd $STPOL_DIR/local
 
 
