@@ -186,6 +186,13 @@ if __name__=="__main__":
             cuts[c].setBaseCuts(bc)
             cuts[c].setFinalCuts("1")
 
+            #Fit cut in Njets, Ntags
+            c0 = "fit_%dj%dt" % (nj, nt)
+            cuts[c0] = FitConfig(c0)
+            bc = str(Cuts.n_jets(nj)*Cuts.n_tags(nt)*Cuts.rms_lj)
+            cuts[c0].setBaseCuts(bc)
+            cuts[c0].setFinalCuts(str(Cuts.top_mass_sig))
+
             #Final cut in Njets, Ntags
             c1 = "final_" + c
             cuts[c1] = FitConfig(c1)
