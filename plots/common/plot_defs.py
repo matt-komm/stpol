@@ -3,6 +3,9 @@ import copy
 cp = copy.deepcopy
 
 cutlist={}
+cutlist['2j']=Cuts.n_jets(2)
+cutlist['3j']=Cuts.n_jets(3)
+
 cutlist['2j1t']=Cuts.n_jets(2)*Cuts.n_tags(1)
 cutlist['2j0t']=Cuts.n_jets(2)*Cuts.n_tags(0)
 cutlist['3j0t']=Cuts.n_jets(3)*Cuts.n_tags(0)
@@ -35,6 +38,12 @@ qcdScale['ele']={}
 qcdScale['mu']={}
 
 #Better to organize like this, so logical cutstrings are close by
+qcdScale['ele']['final_2j']    =   0#0.83
+qcdScale['mu']['final_2j']     =   0#40.694555
+
+qcdScale['ele']['final_3j']    =   0#0.83
+qcdScale['mu']['final_3j']     =   0#40.694555
+
 qcdScale['ele']['final_2j1t']    =   0.83
 qcdScale['mu']['final_2j1t']     =   40.694555
 
@@ -67,7 +76,10 @@ qcdScale['mu']['3j1t']           =   0.616972
 
 plot_defs={}
 
-#Set the variable names centrally so that you don't have to do find/replace if you want to change one of them and have them propagate to all the relevant plots
+"""
+Set the variable names centrally so that you don't have to do
+find/replace if you want to change one of them and have them propagate to all the relevant plots
+"""
 varnames = dict()
 varnames["cos_theta"] = 'cos #theta'
 varnames["eta_lj"] = "#eta of the light jet"
@@ -526,7 +538,7 @@ plot_defs['final_etaLj']={
 }
 
 plot_defs['final_BDT']={
-    'tags': ["an", "control.tex"],
+    'tags': ["an", "control.tex", "mva"],
     'enabled': True,
     'var': 'mva_BDT',
     'range': [40, -1, 1],
@@ -542,7 +554,7 @@ plot_defs['final_BDT']={
 }
 
 plot_defs['final_cosTheta_mva_loose']={
-    'tags': ["an", "control.tex"],
+    'tags': ["an", "control.tex", "mva"],
     'enabled': True,
     'var': 'cos_theta',
     'range': [20,-1,1],
@@ -569,15 +581,18 @@ extranges = {
 #Generate all the control plots
 for v in ["cosTheta", "topMass", "etaLj", "BDT"]:
     for nj in [2, 3]:
-        for nt in [0,1,2]:
+        for nt in ["no", 0,1,2]:
 
             #we already have this
             if nj==2 and nt==1:
                 continue
-            if nj==nt: #no need for that
+            if nj==nt: #no need for plots like that
                 continue
 
-            s = "%dj%dt" % (nj, nt)
+            if nt == "no": #without tagging requirement
+                s = "%dj" % nj
+            else:
+                s = "%dj%dt" % (nj, nt)
 
             plot_defs[s + "_" + v] = cp(plot_defs['final_' + v])
             plot_defs[s + "_" + v]["range"] = extranges[v]
