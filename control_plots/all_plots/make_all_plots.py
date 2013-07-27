@@ -28,6 +28,7 @@ import random
 from array import array
 import plots.common.tdrstyle as tdrstyle
 import rootpy
+import numpy
 
 #FIXME: remove this when stable
 OLD_PLOTTING = False
@@ -267,12 +268,12 @@ if __name__=="__main__":
             yf.close()
 
             chi2 = hist_data.Chi2Test(htot, "UW CHI2/NDF")
-            if chi2>10:
-                logger.error("The chi2 between data and MC is large. You may have errors with your samples!")
-                logger.info("MC  : %s" % str(list(htot.y())))
-                logger.info("DATA: %s" % str(list(hist_data.y())))
+            if chi2>20:#FIXME: uglyness
+                logger.error("The chi2 between data and MC is large (chi2=%.2f). You may have errors with your samples!" % chi2)
+                logger.info("MC  : %s" % " ".join(map(lambda x: "%.1f" % x, list(htot.y()))))
+                logger.info("DATA: %s" % " ".join(map(lambda x: "%.1f" % x, list(hist_data.y()))))
                 logger.info("diff: %s" % str(
-                    str(numpy.abs(numpy.array(list(htot.y())) - numpy.array(list(hist_data.y()))))
+                    " ".join(map(lambda x: "%.1f" % x, numpy.abs(numpy.array(list(htot.y())) - numpy.array(list(hist_data.y())))))
                 ))
 
             merged_hists = merged_hists.values()

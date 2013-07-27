@@ -3,7 +3,7 @@ NOEXIF=False
 try:
     from libxmp import *
 except Exception as e:
-    print "ERROR: Couldn't import libxmp. Make sure you've recently done setup/instal-pylibs.sh and setup/install_exempi.sh to install the prerequisite EXIF librarires. Reason: "+str(e)
+    print "ERROR: Couldn't import libxmp. Make sure you've recently done setup/install_pylibs.sh and setup/install_exempi.sh to install the prerequisite EXIF librarires. Reason: "+str(e)
     NOEXIF=True
 
 import os

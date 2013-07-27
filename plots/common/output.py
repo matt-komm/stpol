@@ -1,12 +1,19 @@
 import os,shutil
 
-import shortuuid
+
 import logging
 logger = logging.getLogger("OutputFolder")
 
+try:
+    from shortuuid import uuid
+except:
+    logger.error("Couldn't open shortuuid. Please install using setup/install_pylibs.sh")
+    def uuid():
+        return "FIXME_UUID"
+
 class OutputFolder:
 	"""
-	This class summarizes gathering output in a sytematic way. It is repsonsible for creating and deleting 
+	This class summarizes gathering output in a sytematic way. It is repsonsible for creating and deleting
 	the output folder when necessary, and can create subdirectories with unique names.
 	"""
 
@@ -24,13 +31,13 @@ class OutputFolder:
 			Useful if you have multiple logically
 			separate things going to the same output folder.
 		"""
-		self.out_folder = out_folder 
+		self.out_folder = out_folder
 
 		overwrite = kwargs.get("overwrite", False)
 		subpath = kwargs.get("subpath", "")
 		unique_subdir = kwargs.get("unique_subdir", True)
 		if unique_subdir:
-			self.out_folder += "_" + shortuuid.uuid()
+			self.out_folder += "_" + uuid()
 		self.out_folder = os.path.join(self.out_folder, subpath)
 
 		if overwrite:
@@ -59,7 +66,7 @@ class OutputFolder:
 		except:
 			pass
 		logger.info("Plot subdirectory is " + subd)
-		
+
 		fname = plot_meta.title
 
 		for format in ["pdf", "png"]:
