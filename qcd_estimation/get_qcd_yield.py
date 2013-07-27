@@ -175,7 +175,9 @@ if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
         raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py`")
 
+    #Create the cuts in a programmatic way
     cuts = {}
+    final_cut = Cuts.top_mass_sig * Cuts.eta_lj
     for nj in [2,3]:
         for nt in [0,1,2]:
 
@@ -198,8 +200,13 @@ if __name__=="__main__":
             cuts[c1] = FitConfig(c1)
             cuts[c1].setBaseCuts(bc)
             cuts[c1].setFinalCuts(
-                str(Cuts.top_mass_sig * Cuts.eta_lj)
+                str(final_cut)
             )
+        s = "%dj" % nj
+        cuts[s] = FitConfig(s)
+        bc = str(Cuts.n_jets(nj)*Cuts.rms_lj)
+        cuts[c].setBaseCuts(bc)
+        cuts[c].setFinalCuts("1")
 
 
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
@@ -214,7 +221,7 @@ if __name__=="__main__":
     parser.add_argument('-c', '--cut',
         dest='cuts', choices=cuts.keys(), required=False, default=None,
         help="The cut region to use in the fit", action='append')
-    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=True)
+    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=False)
     parser.add_argument('--doSystematics', action="store_true", default=False)
     parser.add_argument('--mtcut',dest='mtcut',action='store_true', default=True, help="Apply the corresponding MET/MtW cut")
     parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
