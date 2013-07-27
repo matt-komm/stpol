@@ -31,11 +31,10 @@ if '/mu/' in dir:
 for f in flist:
     print "Starting:",f
     tf=TFile(f,'UPDATE')
-    tf.cd("trees")
     t=tf.Get("trees/Events")
     t.AddFriend('trees/WJets_weights')
     ct=t.CopyTree(cut)
     ct.SetName("Events_MVA")
+    tf.cd("trees")
     ct.Write()
     tf.Close()
-
