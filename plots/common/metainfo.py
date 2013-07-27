@@ -1,4 +1,9 @@
-from libxmp import *
+try:
+    from libxmp import *
+except Exception as e:
+    print "Couldn't import libxmp. Make sure you've recently done setup/instal-pylibs.sh and setup/install_exempi.sh to install the prerequisite EXIF librarires"
+    print str(e)
+    raise e
 import os
 from subprocess import check_call
 from tempfile import NamedTemporaryFile, TemporaryFile
