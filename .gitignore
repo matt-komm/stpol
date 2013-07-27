@@ -15,7 +15,6 @@ CMSSW_5_3_11/tmp
 *.pickle
 *.out
 /data
-/out*
 
 # Compiled Object files
 *.slo
@@ -67,4 +66,3 @@ CMSSW_5_3_11/tmp
 *.yield
 
 *.txt
-!/out/step3/latest
