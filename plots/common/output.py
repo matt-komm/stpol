@@ -1,12 +1,19 @@
 import os,shutil
 
-import shortuuid
+
 import logging
 logger = logging.getLogger("OutputFolder")
-logger.setLevel(logging.INFO)
+
+try:
+    from shortuuid import uuid
+except:
+    logger.error("Couldn't open shortuuid. Please install using setup/install_pylibs.sh")
+    def uuid():
+        return "FIXME_UUID"
+
 class OutputFolder:
 	"""
-	This class summarizes gathering output in a sytematic way. It is repsonsible for creating and deleting 
+	This class summarizes gathering output in a sytematic way. It is repsonsible for creating and deleting
 	the output folder when necessary, and can create subdirectories with unique names.
 	"""
 
@@ -32,8 +39,8 @@ class OutputFolder:
 		subdir = kwargs.get("subdir", "")
 		unique_subdir = kwargs.get("unique_subdir", False)
 		if unique_subdir:
-			self.out_folder += "_" + shortuuid.uuid()
-		self.out_folder = os.path.join(self.out_folder, subdir)
+			self.out_folder += "_" + uuid()
+		self.out_folder = os.path.join(self.out_folder, subpath)
 
 		if overwrite:
 			logger.info("Deleting output folder %s" % self.out_folder)

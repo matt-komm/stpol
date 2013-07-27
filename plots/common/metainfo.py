@@ -1,5 +1,9 @@
-from libxmp import *
-import os
+NOEXIF=False
+try:
+    from libxmp import *
+except Exception as e:
+    print "ERROR: Couldn't import libxmp. Make sure you've recently done setup/install_pylibs.sh and setup/install_exempi.sh to install the prerequisite EXIF librarires. Reason: "+str(e)
+    NOEXIF=Trueimport os
 from subprocess import check_call
 from tempfile import NamedTemporaryFile, TemporaryFile
 import glob
@@ -54,6 +58,8 @@ class PlotMetaInfo:
 		exif_cfg.
 		fn - a path to the file to update
 		"""
+		if NOEXIF:
+			return
 		xmp = XMPMeta()
 		ns = xmp.register_namespace("XMP-stpol", "XMP-stpol")
 		xmp.set_property("XMP-stpol", "infiles", " ".join(self.infiles))
@@ -62,16 +68,3 @@ class PlotMetaInfo:
 		xmp.set_property("XMP-stpol", "weight", str(self.weight))
 		xmp.set_property("XMP-stpol", "comments", str(self.comments))
 		self.update_tags(xmp, fn)
-
-if __name__=="__main__":
-	fn = "/Users/joosep/Documents/data.xmp"
-	logging.basicConfig(level=logging.INFO)
-
-	# Read file
-	xmp = XMPMeta()
-	ns = xmp.register_namespace("XMP-stpol", "XMP-stpol")
-	xmp.set_property("XMP-stpol", "infile", "blabla")
-
-	meta = PlotMetaInfo("2j1t", "a a f")
-	meta.update("/Users/joosep/Documents/stpol/out/plots/6/figures/control/3j1t_topMass_mu.pdf")
-

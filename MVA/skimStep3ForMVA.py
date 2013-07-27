@@ -1,5 +1,5 @@
 #!/bin/env python
-from ROOT import TFile,TTree
+from ROOT import TFile,TTree,TObject
 from plots.common.utils import *
 from plots.common.plot_defs import cutlist
 import sys
@@ -31,11 +31,16 @@ if '/mu/' in dir:
 for f in flist:
     print "Starting:",f
     tf=TFile(f,'UPDATE')
-    tf.cd("trees")
     t=tf.Get("trees/Events")
     t.AddFriend('trees/WJets_weights')
+    print cut
     ct=t.CopyTree(cut)
+    print t, ct
+    print t.GetEntries(), ct.GetEntries()
     ct.SetName("Events_MVA")
-    ct.Write()
+    tf.cd("trees")
+    ct.Write("", TObject.kOverwrite)
     tf.Close()
+tf = TFile(f)
+print tf.Get("trees/Events").GetEntries(), tf.Get("trees/Events_MVA").GetEntries()
 
