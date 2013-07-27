@@ -1,4 +1,5 @@
 #!/bin/bash
+#WIll install EXEMPI, but now working at the moment (ld -lexempi fails regardless of fiddling with the LD_LIBRARY_PATH)
 cd $STPOL_DIR/local
 wget http://libopenraw.freedesktop.org/download/exempi-2.2.1.tar.bz2
 tar xf exempi-2.2.1.tar.bz2
