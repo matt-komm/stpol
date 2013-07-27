@@ -7,7 +7,6 @@ case "$choice" in
     * ) exit 0;;
 esac
 
-rm -Rf $STPOL_DIR/local
 mkdir -p $STPOL_DIR/local/lib/python2.6/site-packages/
 
 cd $STPOL_DIR/local
