@@ -2,25 +2,25 @@ import os
 from plots.common.sample import Sample
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
 
-def load_samples(systematic="nominal"):
+def load_samples(systematic="nominal", path="/".join((os.environ["STPOL_DIR"], "step3_latest"))):
     #datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "iso", "nominal"))
     #FIXME: make independent of machine (no reference to specific directories like out_step3_06_01)
     
     
     samples2 = None
     if systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
-        datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "mc", "iso", systematic, "Jul15"))
+        datadir = "/".join((path, "mu", "mc", "iso", systematic, "Jul15"))
     elif systematic != "nominal":
-        datadir2 = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "mc_syst", "iso", "SYST", "Jul15"))
+        datadir2 = "/".join((path, "mu", "mc_syst", "iso", "SYST", "Jul15"))
         #datadir = "/".join((os.environ["STPOL_DIR"], "Jul22_partial", "mu", "iso", "nominal"))
-        datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "mc", "iso", "nominal", "Jul15"))
+        datadir = "/".join((path, "mu", "mc", "iso", "nominal", "Jul15"))
         samples2 = Sample.fromDirectory(datadir2, out_type="dict")
     else:
-        datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "mc", "iso", systematic, "Jul15"))
+        datadir = "/".join((path, "mu", "mc", "iso", systematic, "Jul15"))
         #datadir = "/".join((os.environ["STPOL_DIR"], "Jul22_partial", "mu", "iso", "nominal"))
     samples = Sample.fromDirectory(datadir, out_type="dict")
     
-    datadir_data = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "data", "iso", "Jul15"))
+    datadir_data = "/".join((path, "mu", "data", "iso", "Jul15"))
     samples.update(Sample.fromDirectory(datadir_data, out_type="dict"))
     if samples2 is not None:
         samples.update(samples2)
@@ -29,9 +29,9 @@ def load_samples(systematic="nominal"):
     wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
 
     if systematic in "nominal":
-        samples["SingleMu1_aiso"] = Sample.fromFile("/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "data", "antiiso", "Jul15", "SingleMu1.root")))
-        samples["SingleMu2_aiso"] = Sample.fromFile("/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "data", "antiiso", "Jul15", "SingleMu2.root")))
-        samples["SingleMu3_aiso"] = Sample.fromFile("/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "data", "antiiso", "Jul15", "SingleMu3.root")))
+        samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, "mu", "data", "antiiso", "Jul15", "SingleMu1.root")))
+        samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, "mu", "data", "antiiso", "Jul15", "SingleMu2.root")))
+        samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, "mu", "data", "antiiso", "Jul15", "SingleMu3.root")))
         #return
         sampnames = (
             ("tchan", ["T_t_ToLeptons", "Tbar_t_ToLeptons"]),
@@ -98,16 +98,25 @@ def load_samples(systematic="nominal"):
     """
     return (samples, sampnames)
 
-def get_qcd_scale_factor(var):
+def get_qcd_scale_factor(var, channel):
     #FIXME - automate, take from some "central" file
-    if var == "cos_theta":    
-        return 2.577
-    elif var == "abs(eta_lj)":
-        return 13.766
+    if channel == "mu":
+        if var == "cos_theta":    
+            return 0.725338051044
+        elif var == "abs(eta_lj)":
+            return 4.1846044046
+    elif channel == "ele":
+        if var == "cos_theta":    
+            return 0.124929101662
+        elif var == "abs(eta_lj)":
+            return 0.678110491459
 
-def create_histogram_for_fit(sample_name, sample, weight_str, cut_str_iso, cut_str_antiiso, var="abs(eta_lj)", plot_range=None, binning=None):
-    #Create histogram with sample metadata
-    lumi=lumi_iso["mu"] #FIXME: Add electrons later as a parameter
+def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, var="abs(eta_lj)", plot_range=None, binning=None):
+    lumi=lumi_iso[channel]
+    weight_str = str(weight)   
+    print sample_name
+    print weight
+    cut_str_iso = "(1)"
     if sample_name not in ["DATA", "qcd"]:
         if plot_range is not None:
             hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, plot_range=plot_range)
@@ -130,5 +139,5 @@ def create_histogram_for_fit(sample_name, sample, weight_str, cut_str_iso, cut_s
             hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", binning=binning)
         else:
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
-        hist.Scale(get_qcd_scale_factor(var))
+        hist.Scale(get_qcd_scale_factor(var, channel))
     return hist

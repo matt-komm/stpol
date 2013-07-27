@@ -36,7 +36,7 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     #QCDRATE = fit_result.qcd
     hQCD = f.Get(var.shortName+"__qcd")
     hQCDShapeOrig = dataGroup.getHistogram(var, "Nominal", "antiiso")
-    print "QCD scale factor:", hQCD.Integral()/fit_result.orig["qcd_no_mc_sub"], "from", fit_result.orig["qcd_no_mc_sub"], "to ", hQCD.Integral()
+    #print "QCD scale factor, no m_t cut:", hQCD.Integral()/fit_result.orig["qcd_no_mc_sub"], "from", fit_result.orig["qcd_no_mc_sub"], "to ", hQCD.Integral()
     hQCDShapeOrig.Scale(hQCD.Integral()/hQCDShapeOrig.Integral())
     #print fit_result
     err = array('d',[0.])
@@ -188,6 +188,13 @@ if __name__=="__main__":
             cuts[c].setBaseCuts(bc)
             cuts[c].setFinalCuts("1")
 
+            #Fit cut in Njets, Ntags
+            c0 = "fit_%dj%dt" % (nj, nt)
+            cuts[c0] = FitConfig(c0)
+            bc = str(Cuts.n_jets(nj)*Cuts.n_tags(nt)*Cuts.rms_lj)
+            cuts[c0].setBaseCuts(bc)
+            cuts[c0].setFinalCuts(str(Cuts.top_mass_sig))
+
             #Final cut in Njets, Ntags
             c1 = "final_" + c
             cuts[c1] = FitConfig(c1)
@@ -239,6 +246,7 @@ if __name__=="__main__":
             failed += [cutn]
             continue
         qcd_sf = y/fit.orig["qcd_no_mc_sub"]
+        print "QCD scale factor, with m_t cut:", y/fit.orig["qcd_no_mc_sub"], "from", fit.orig["qcd_no_mc_sub"], "to ", y
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         of = open(ofdir + "/%s.txt" % cut.name, "w")
         of.write("%f %f %f\n" % (qcd_sf, fit.qcd, fit.qcd_uncert))
