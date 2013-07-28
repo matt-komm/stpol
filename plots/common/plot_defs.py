@@ -538,6 +538,21 @@ plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
 plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
 plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_met_fit']={
+    'tags': ["an", "control.tex", "mva"],
+    'enabled': True,
+    'var': 'met',
+    'range': [20, 40, 200],
+    'iso': True,
+    'estQcd': 'final_2j1t',
+    'gev': True,
+    'log': False,
+    'xlab': varnames["met"],
+    'labloc': 'top-right',
+    'fitpars': fitpars['final_2j1t'],
+    'elecut': plot_defs['final_etaLj_fit']['elecut'],
+    'mucut': plot_defs['final_etaLj_fit']['mucut']
+}
 
 
 plot_defs['final_BDT']={
@@ -572,7 +587,7 @@ plot_defs['final_cosTheta_mva_loose']={
 }
 
 
-plot_defs['final_MET_mva_loose_fit']={
+plot_defs['final_met_mva_loose_fit']={
     'tags': ["an", "control.tex", "mva"],
     'enabled': True,
     'var': 'met',
@@ -581,8 +596,9 @@ plot_defs['final_MET_mva_loose_fit']={
     'estQcd': 'presel',
     'gev': True,
     'log': False,
-    'xlab': varnames["MET"],
+    'xlab': varnames["met"],
     'labloc': 'top-right',
+    'fitpars': fitpars['final_2j1t'],
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
 }
