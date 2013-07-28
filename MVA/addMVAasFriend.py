@@ -1,5 +1,10 @@
 #!/bin/env python
 from ROOT import *
+
+import logging
+#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
+
 from plots.common.utils import *
 import sys
 from array import array
@@ -52,9 +57,16 @@ for m in mvalist:
 for i in range(t.GetEntries()):
     t.GetEntry(i)
     for m in mvalist:
-        mva[m][0] = reader.EvaluateMVA(m)
-        branch[m].Fill()
-        mt.Fill()
+        calc = True
+        for v in varlist:
+            if not vars[v][0] == vars[v][0]:
+               calc = False 
+        if calc:
+            mva[m][0] = reader.EvaluateMVA(m)
+        else:
+            mva[m][0] = float('nan')
+        logger.debug('i: %d, mva: %1.3f, vars: %s' % (i,mva[m][0],str(vars)))
+    mt.Fill()
 mt.Write('',TObject.kOverwrite)
 tf.Close()
 
