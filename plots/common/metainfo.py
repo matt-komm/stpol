@@ -4,6 +4,7 @@ try:
     from libxmp import *
 except Exception as e:
     print "ERROR: Couldn't import libxmp. Make sure you've recently done setup/install_pylibs.sh and setup/install_exempi.sh to install the prerequisite EXIF librarires. Reason: "+str(e)
+    print "If you're running on *.hep.kbfi.ee, then disregard, I couldn't make the libraries install properly for now. The only thing missing will be EXIF data in the plots"
     NOEXIF=True
 
 import os

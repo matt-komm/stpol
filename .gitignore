@@ -59,6 +59,8 @@ CMSSW_5_3_11/tmp
 /misc/*
 /local
 /theta
+/lqetafit/htmlout*
+/lqetafit/topfit
 
 /stpol.xcodeproj/xcuserdata
 

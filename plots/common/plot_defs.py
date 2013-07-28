@@ -1,7 +1,10 @@
 from plots.common.cuts import Cuts,Cut
 import copy
+from plots.common.utils import PhysicsProcess
+
 cp = copy.deepcopy
 
+#FIXME: these cutlists need to be factorised away badly!
 cutlist={}
 cutlist['2j']=Cuts.n_jets(2)
 cutlist['3j']=Cuts.n_jets(3)
@@ -27,58 +30,47 @@ cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
 cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
-cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.7')
-cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.5')
-cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.32')
-cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.38')
+cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.6')
+cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.7')
+cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.36')
+cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.2')
 
 
-qcdScale={}
-qcdScale['ele']={}
-qcdScale['mu']={}
+#Fit parameters from the final fit
+#Extracted in the muon channel using lqetafit/topfit.py
+#The first element in the tuple is a list of regex patterns to which you want to match this scale factor
+#The second element is the scale factor to apply (flat)
+#FIXME: most likely, one can incorporate the QCD scale factor from the QCD fit here as well
+#-JP
+fitpars = {}
+fitpars['final_2j1t'] = [
+    (
+        PhysicsProcess.tchan.subprocesses,
+        1.202393
+    ),
+    (
+        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
+        1.052675
+    ),
+    (
+        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
+        1.120621
+    ),
+    (
+        ["QCDSingle.*"], #Data-driven QCD
+        1.037131
+    ),
+]
 
-#Better to organize like this, so logical cutstrings are close by
-qcdScale['ele']['final_2j']    =   0#0.83
-qcdScale['mu']['final_2j']     =   0#40.694555
-
-qcdScale['ele']['final_3j']    =   0#0.83
-qcdScale['mu']['final_3j']     =   0#40.694555
-
-qcdScale['ele']['final_2j1t']    =   0.83
-qcdScale['mu']['final_2j1t']     =   40.694555
-
-qcdScale['ele']['final_2j0t']    =   0#1.33
-qcdScale['mu']['final_2j0t']     =   0#27.9
-
-qcdScale['ele']['final_3j0t']    =   0#1.33
-qcdScale['mu']['final_3j0t']     =   0#27.9
-
-qcdScale['ele']['final_3j1t']    =   0#1.33
-qcdScale['mu']['final_3j1t']     =   0#27.9
-
-qcdScale['ele']['final_3j2t']    =   0
-qcdScale['mu']['final_3j2t']     =   0
-
-qcdScale['ele']['nomet']         =   1.33
-qcdScale['mu']['nomet']          =   28
-
-qcdScale['ele']['presel']        =   1.33
-qcdScale['mu']['presel']         =   27.9
-
-qcdScale['ele']['2j0t']          =   0
-qcdScale['mu']['2j0t']           =   0
-
-qcdScale['ele']['2j1t']          =   0
-qcdScale['mu']['2j1t']           =   40.694555
-
-qcdScale['ele']['3j1t']          =   0.26
-qcdScale['mu']['3j1t']           =   0.616972
+#Load the scale factors externally for better factorisation
+from plots.qcd_scale_factors import qcdScale
 
 plot_defs={}
 
 """
 Set the variable names centrally so that you don't have to do
 find/replace if you want to change one of them and have them propagate to all the relevant plots
+FIXME: Migrate to some central place, not only make_all_plots.py needs the nice names!
 """
 varnames = dict()
 varnames["cos_theta"] = 'cos #theta'
@@ -212,7 +204,7 @@ plot_defs['cos_th_nomet']={
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
-    'estQcd': 'nomet',
+    'estQcd': 'final_2j1t_nomtcut',
     'gev': False,
     'log': False,
     'xlab': varnames["cos_theta"],
@@ -537,6 +529,15 @@ plot_defs['final_etaLj']={
     'dir': "control"
 }
 
+#Create the final plots with after fitting
+plot_defs['final_etaLj_fit'] = cp(plot_defs['final_etaLj'])
+plot_defs['final_etaLj_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
+plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
+plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
+
+
 plot_defs['final_BDT']={
     'tags': ["an", "control.tex", "mva"],
     'enabled': True,
@@ -545,7 +546,7 @@ plot_defs['final_BDT']={
     'iso': True,
     'estQcd': 'final_2j1t',
     'gev': False,
-    'log': False,
+    'log': True,
     'xlab': varnames["BDT_uncat"],
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['final_ele'],
@@ -569,7 +570,7 @@ plot_defs['final_cosTheta_mva_loose']={
 }
 plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_tight']
-plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_mu_tight']
+plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
