@@ -569,7 +569,7 @@ plot_defs['final_cosTheta_mva_loose']={
 }
 plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_tight']
-plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_mu_tight']
+plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
