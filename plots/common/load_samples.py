@@ -2,25 +2,25 @@ import os
 from plots.common.sample import Sample
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
 
-def load_samples(systematic="nominal", path="/".join((os.environ["STPOL_DIR"], "step3_latest"))):
+def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["STPOL_DIR"], "step3_latest"))):
     #datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "iso", "nominal"))
     #FIXME: make independent of machine (no reference to specific directories like out_step3_06_01)
     
     
     samples2 = None
     if systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
-        datadir = "/".join((path, "mu", "mc", "iso", systematic, "Jul15"))
+        datadir = "/".join((path, channel, "mc", "iso", systematic, "Jul15"))
     elif systematic != "nominal":
-        datadir2 = "/".join((path, "mu", "mc_syst", "iso", "SYST", "Jul15"))
+        datadir2 = "/".join((path, channel, "mc_syst", "iso", "SYST", "Jul15"))
         #datadir = "/".join((os.environ["STPOL_DIR"], "Jul22_partial", "mu", "iso", "nominal"))
-        datadir = "/".join((path, "mu", "mc", "iso", "nominal", "Jul15"))
+        datadir = "/".join((path, channel, "mc", "iso", "nominal", "Jul15"))
         samples2 = Sample.fromDirectory(datadir2, out_type="dict")
     else:
-        datadir = "/".join((path, "mu", "mc", "iso", systematic, "Jul15"))
+        datadir = "/".join((path, channel, "mc", "iso", systematic, "Jul15"))
         #datadir = "/".join((os.environ["STPOL_DIR"], "Jul22_partial", "mu", "iso", "nominal"))
     samples = Sample.fromDirectory(datadir, out_type="dict")
     
-    datadir_data = "/".join((path, "mu", "data", "iso", "Jul15"))
+    datadir_data = "/".join((path, channel, "data", "iso", "Jul15"))
     samples.update(Sample.fromDirectory(datadir_data, out_type="dict"))
     if samples2 is not None:
         samples.update(samples2)
@@ -29,17 +29,25 @@ def load_samples(systematic="nominal", path="/".join((os.environ["STPOL_DIR"], "
     wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
 
     if systematic in "nominal":
-        samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, "mu", "data", "antiiso", "Jul15", "SingleMu1.root")))
-        samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, "mu", "data", "antiiso", "Jul15", "SingleMu2.root")))
-        samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, "mu", "data", "antiiso", "Jul15", "SingleMu3.root")))
-        #return
+        if channel == "mu":
+            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
+            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
+            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
+            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
+            datasamp = ["SingleMu1", "SingleMu2", "SingleMu3"]#, "SingleMu4"]
+            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
+        elif channel == "ele":
+            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
+            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
+            datasamp = ["SingleEle1", "SingleEle2"]
+            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
+            
         sampnames = (
             ("tchan", ["T_t_ToLeptons", "Tbar_t_ToLeptons"]),
-            #("tchan", ["Tbar_t_ToLeptons"]),
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_FullLept", "TTJets_SemiLept"]),
             ("wzjets", wzjets),
-            ("DATA", ["SingleMu1", "SingleMu2", "SingleMu3"]),
-            ("qcd", ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]),
+            ("DATA", datasamp),
+            ("qcd", datasamp_aiso),
         )
 
     elif systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
@@ -98,25 +106,34 @@ def load_samples(systematic="nominal", path="/".join((os.environ["STPOL_DIR"], "
     """
     return (samples, sampnames)
 
-def get_qcd_scale_factor(var, channel):
+def get_qcd_scale_factor(var, channel, mva=False):
     #FIXME - automate, take from some "central" file
     if channel == "mu":
-        if var == "cos_theta":    
-            return 0.725338051044
+        if var == "cos_theta":
+            if mva is None:
+                return 0.552650999014
+            else:
+                return 5.8350878103
         elif var == "abs(eta_lj)":
-            return 4.1846044046
+            if mva is None:
+                return 3.18487092669
+            else:
+                return 5.8350878103
     elif channel == "ele":
         if var == "cos_theta":    
-            return 0.124929101662
+            if mva is None:
+                return 0.0811718747368
+            else:
+                return 1.2122285254
         elif var == "abs(eta_lj)":
-            return 0.678110491459
+            if mva is None:
+                return 0.433228612048
+            else:
+                return 1.2122285254
 
 def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, var="abs(eta_lj)", plot_range=None, binning=None):
     lumi=lumi_iso[channel]
     weight_str = str(weight)   
-    print sample_name
-    print weight
-    cut_str_iso = "(1)"
     if sample_name not in ["DATA", "qcd"]:
         if plot_range is not None:
             hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, plot_range=plot_range)
@@ -139,5 +156,5 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
             hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", binning=binning)
         else:
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
-        hist.Scale(get_qcd_scale_factor(var, channel))
+        hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso))
     return hist

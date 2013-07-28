@@ -9,10 +9,17 @@ import shutil
 from plots.common.load_samples import *
 from plots.common.cuts import *
 
-def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"]), indir="/".join([os.environ["STPOL_DIR"], "step3_latest"]), channel="mu", binning=None, plot_range=None):
-    #Draw the histograms of eta_lj in the final selection sans the eta cut
+def generate_out_dir(channel, mva_cut, coupling="powheg"):
+    dirname = channel
+    if mva_cut is not None:    
+        mva = "_mva_"+str(mva_cut)
+        mva = mva.replace(".","_")
+        dirname += mva
+    if coupling != "powheg":
+        dirname += "_" + coupling
+    return dirname
 
-    outdir = '/'.join([outdir, channel])
+def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"]), indir="/".join([os.environ["STPOL_DIR"], "step3_latest"]), channel="mu", binning=None, plot_range=None):
     #logging.basicConfig(level="INFO")
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     logging.debug('This message should appear on the console')
@@ -48,7 +55,7 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
             ss_type=main_syst + "__" + sub_systs.keys()[0]
         else:
             ss_type=main_syst
-        (samples, sampnames) = load_samples(ss_type, indir)
+        (samples, sampnames) = load_samples(ss_type, channel, indir)
         outhists = {}
         for sn, samps in sampnames:
             hists = []

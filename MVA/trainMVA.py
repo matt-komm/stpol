@@ -18,7 +18,7 @@ if len(sys.argv) < 2:
 proc = sys.argv[1]
 # Choose between electron / muon channel fitting
 step3_ver="83a02e9_Jul22"
-step3 = "/home/mario/Summer13/stpol/step3_jul25"
+step3 = "/home/mario/Summer13/stpol/step3_latest"
 if len(sys.argv) == 3:
     step3 = sys.argv[2]
 lumi=lumis[step3_ver]["iso"][proc]
@@ -55,7 +55,7 @@ for key in flist:
     t[key]=samples[key].getTree()
     if samples[key].isMC: 
         w[key]=samples[key].lumiScaleFactor(lumi)
-    if 'data' in key and proc=='ele':
+    if 'data' in key:# and proc=='ele':
         w[key]=qcdScale[proc]['presel']
 
 signal=['T_t_ToLeptons','Tbar_t_ToLeptons']
@@ -104,8 +104,8 @@ factory.SetWeightExpression(weightString)
 # Prepare training and testing
 factory.PrepareTrainingAndTestTree(TCut(),TCut(),
                "NormMode=None:"\
-               "NTrain_Signal=20000:"\
-               "NTrain_Background=100000:"\
+               #"NTrain_Signal=20000:"\
+               #"NTrain_Background=100000:"\
                "V")
 
 # Now let's book an MVA method
