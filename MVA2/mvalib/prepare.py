@@ -6,7 +6,8 @@ import os.path
 import shutil
 import tempfile
 from glob import glob
-#from itertools import product
+import array
+import random
 import ROOT
 from plots.common import cuts
 import mvalib.utils
@@ -45,6 +46,7 @@ def prepare(signals, backgrounds, step3_path='step3_latest', odir='prepared',
 
 	for channel in channels:
 		ofname = os.path.join(odir, 'mvaprep_{0}.root'.format(channel))
+		print 'Prepping channel `{0}` to `{1}`'.format(channel, ofname)
 		tfile = ROOT.TFile(ofname, 'RECREATE')
 
 		meta = {
@@ -67,30 +69,44 @@ def prepare(signals, backgrounds, step3_path='step3_latest', odir='prepared',
 				sample_ifname = os.path.join(step3_path, path, '{0}.root'.format(s))
 				if s in signal_and_bg:
 					sigbg = 'signal' if s in signals else 'background'
-					
-					tfile_sample = ROOT.TFile(sample_ifname)
-					meta['initial_events'][s] = tfile_sample.Get('trees/count_hist').GetBinContent(1)
-					tc = _TrainTreeCreator(tfile_sample.Get('trees/Events'),
-					                       cutstring, signal_and_bg[s])
+					fraction = signal_and_bg[s]
 
-					odir = tfile.Get('{0}/{1}'.format('train', sigbg))
-					tc.write_train_tree(odir)
-					odir = tfile.Get('{0}/{1}'.format('test', sigbg))
-					tc.write_test_tree(odir)
-					
+					tfile_sample = ROOT.TFile(sample_ifname)
+					count_hist = tfile_sample.Get('trees/count_hist')
+					meta['initial_events'][s] = count_hist.GetBinContent(1)
+					meta['fractions'][s] = fraction
+
+					tc = _TrainTreeCreator(tfile_sample.Get('trees/Events'),
+					                       cutstring, fraction)
+
+					tdir = tfile.Get('{0}/{1}'.format('train', sigbg))
+					tc.write_train_tree(tdir, name=s)
+					tdir = tfile.Get('{0}/{1}'.format('test', sigbg))
+					tc.write_test_tree(tdir, name=s)
+
 					if copy_trees:
 						sample_ofname = os.path.join(odir, path, '{0}.root'.format(s))
 						tfile_sample_of = ROOT.TFile(sample_ofname, 'RECREATE')
-						odir = tfile_sample_of.mkdir('trees')
-						tc.write_test_tree(odir)
+						tdir = tfile_sample_of.mkdir('trees')
+						tc.write_test_tree(tdir)
+						tdir.cd()
+						count_hist_new = ROOT.TH1I(count_hist)
+						scf = fraction if tc.nentries == 0 else float(tc.nentries-tc.nentries_training)/tc.nentries
+						count_hist_new.Scale(scf)
+						count_hist_new.Write('count_hist')
 						tfile_sample_of.Close()
-						
+
 						sample_ofname = os.path.join(odir, path, '{0}_train.root'.format(s))
 						tfile_sample_of = ROOT.TFile(sample_ofname, 'RECREATE')
-						odir = tfile_sample_of.mkdir('trees')
-						tc.write_train_tree(odir)
+						tdir = tfile_sample_of.mkdir('trees')
+						tc.write_train_tree(tdir)
+						count_hist_new = ROOT.TH1I(count_hist)
+						scf = fraction if tc.nentries == 0 else float(tc.nentries_training)/tc.nentries
+						count_hist_new.Scale(scf)
+						count_hist_new.Write('count_hist2')
 						tfile_sample_of.Close()
-					
+
+					del tc
 					tfile_sample.Close()
 				elif copy_trees:
 					sample_ofname = os.path.join(odir, path, '{0}.root'.format(s))
@@ -140,27 +156,37 @@ def _get_sample_name(fullpath):
 class _TrainTreeCreator:
 	"""Helper class that is used to create and write the training trees."""
 	def __init__(self, intree, cutstring, fraction):
-		print intree
-		
-		self.tmpfile = tempfile.NamedTemporaryFile(mode='r')
+		self.tmpfile = tempfile.NamedTemporaryFile(mode='r', delete=False)
 		self.temp_tfile = ROOT.TFile(self.tmpfile.name, 'RECREATE')
 		self.temp_tfile.cd()
-		
+
 		self.tree = intree.CopyTree(cutstring)
+		self.nentries = self.tree.GetEntries()
+
+		int_training = array.array('i', [0])
+		newbranch = self.tree.Branch('training', int_training, 'training/I')
+
+		self.nentries_training = 0
+		for n in xrange(self.nentries):
+			self.tree.GetEntry(n)
+			int_training[0] = 1 if random.random() >= fraction else 0
+			self.nentries_training += int_training[0]
+			newbranch.Fill()
 
 	def __del__(self):
-		print 'del'
-		temp_tfile.Close()
-		del(self.tmpfile)
+		self.temp_tfile.Close()
+		del self.tmpfile
 
-	def write_train_tree(self, tdir):
-		self._write_tree(tdir, 'training==1')
+	def write_train_tree(self, tdir, name='Events'):
+		self._write_tree(tdir, 'training==1', name)
 
-	def write_test_tree(self, tdir):
-		self._write_tree(tdir, 'training==0')
+	def write_test_tree(self, tdir, name='Events'):
+		self._write_tree(tdir, 'training==0', name)
 
-	def _write_tree(self, tdir, cut):
-		pass
+	def _write_tree(self, tdir, cut, name):
+		print 'Writing `{0}` to `{1}`'.format(cut, str(tdir))
+		tdir.cd()
+		self.tree.CopyTree(cut).Write(name)
 
 # Unit testing...
 if __name__ == '__main__':
@@ -174,10 +200,12 @@ if __name__ == '__main__':
 
 	try: _find_files('step3_latest', 'mu', 'fake')
 	except Exception as e: print e
-	
+
 	_check_default_ratios({'a':2, 'b':3}, 0.3)
 	_check_default_ratios(['a','b'], 9000)
 	try: _check_default_ratios('Woot?', 1337)
 	except Exception as e: print e
 
-	prepare(['T_t_ToLeptons', 'Tbar_t_ToLeptons'], ['WW', 'WZ', 'ZZ'])
+	shutil.rmtree('prep_unit', ignore_errors=True)
+	prepare(['T_t_ToLeptons', 'Tbar_t_ToLeptons'], ['WW', 'WZ', 'ZZ'],
+	        odir='prep_unit', copy_trees=True)
