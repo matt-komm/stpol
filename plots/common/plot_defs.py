@@ -570,6 +570,23 @@ plot_defs['final_cosTheta_mva_loose']={
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
 }
+
+
+plot_defs['final_MET_mva_loose_fit']={
+    'tags': ["an", "control.tex", "mva"],
+    'enabled': True,
+    'var': 'met',
+    'range': [20, 0, 200],
+    'iso': True,
+    'estQcd': 'presel',
+    'gev': True,
+    'log': False,
+    'xlab': varnames["MET"],
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
+}
+
 plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_tight']
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
