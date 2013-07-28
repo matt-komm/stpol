@@ -9,9 +9,9 @@ import shutil
 from plots.common.load_samples import *
 from plots.common.cuts import *
 
-def generate_out_dir(channel, mva_cut, coupling="powheg"):
-    dirname = channel
-    if mva_cut is not None:    
+def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg"):
+    dirname = channel + "_" +var
+    if float(mva_cut) > -1:    
         mva = "_mva_"+str(mva_cut)
         mva = mva.replace(".","_")
         dirname += mva
