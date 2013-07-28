@@ -81,10 +81,18 @@ def findbinning(bins_generated, cuts, weight, indir, zerobin_gen=None, zerobin_r
     binning_rec = getbinning(histo_rec, bins_generated*2, zerobin_rec)
     return (numpy.array(binning_gen), numpy.array(binning_rec))
 
+def generate_out_dir(channel, mva_cut):
+    dirname = channel
+    if mva_cut is not None:    
+        mva = "_mva_"+str(mva_cut)
+        mva.replace(".","_")
+        dirname += mva
+    return dirname
 
-def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu"):
-    mkdir_p('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", proc]))
-    fo = ROOT.TFile('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", proc])+"/rebinned.root","RECREATE")
+def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_cut = None):
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, mva_cut)])
+    mkdir_p(outdir)
+    fo = ROOT.TFile(outdir+"/rebinned.root","RECREATE")
     
     # histograms
     #binning_x=(bins_x, numpy.array(bin_list_x))
@@ -129,8 +137,9 @@ def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu"):
     merged_matrix[0].Write()
     fo.Close()
 
-def efficiency(cuts, binning_x, indir, proc="mu"):
-    fo = ROOT.TFile('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", proc])+"/efficiency.root","RECREATE")
+def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None):
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, mva_cut)])
+    fo = ROOT.TFile(outdir+"/efficiency.root","RECREATE")
     fo.cd()
     
     ROOT.TH1.SetDefaultSumw2(True)
@@ -212,25 +221,32 @@ def efficiency(cuts, binning_x, indir, proc="mu"):
 
     fo.Close()
 
-def make_histos(binning, cut_str, cut_str_antiiso, indir, channel):
-    
+def make_histos(binning, cut_str, cut_str_antiiso, indir, channel, mva_cut):
     systematics = generate_systematics(channel)
     var = "cos_theta"
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input"])
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", generate_out_dir(proc, mva_cut)])
     make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, channel, binning=binning)
-    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", channel])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", channel])+"/data.root")
+    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", generate_out_dir(proc, mva_cut)])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, mva_cut)])+"/data.root")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Makes systematics histograms for final fit')
-    parser.add_argument('--channel', dest='channel', choices=["mu", "ele"], required=True, help="The lepton channel usedt")
+    parser.add_argument('--channel', dest='channel', choices=["mu", "ele"], required=True, help="The lepton channel used")
     parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=True)
+    parser.add_argument('--mva', dest='mva', action='store_true', default=False, help="Use MVA option")
+    parser.add_argument('--mva_cut', dest='mva_cut', type=float, default=0.3, help="MVA cut value")
     args = parser.parse_args()
 
     indir = args.path    
-    
+
+    print "MVA: ",args.mva, args.mva_cut
+
     #indir = '/'.join([os.environ["STPOL_DIR"], "step3_latest"])
-    cut_str = str(Cuts.final_iso(args.channel))
-    cut_str_antiiso = str(Cuts.final_antiiso(args.channel))
+    if(args.mva):
+        cut_str = str(Cuts.mva_iso(args.mva_cut, args.channel))
+        cut_str_antiiso = str(Cuts.mva_antiiso(args.mva_cut, args.channel))
+    else:
+        cut_str = str(Cuts.final_iso(args.channel))
+        cut_str_antiiso = str(Cuts.final_antiiso(args.channel))
     weight = str(Weights.total_weight(args.channel))
 
     bins_gen = 7
@@ -247,6 +263,6 @@ if __name__ == "__main__":
     binning_file.close()
 
     print "found binning: ", bin_list_gen, ";", bin_list_rec
-    rebin(cut_str, bins_gen, bin_list_gen, bins_rec, bin_list_rec, indir, args.channel)
-    efficiency(cut_str, bin_list_gen, indir, proc=args.channel)
-    make_histos(bin_list_rec, cut_str, cut_str_antiiso, indir, args.channel)
+    rebin(cut_str, bins_gen, bin_list_gen, bins_rec, bin_list_rec, indir, args.channel, args.mva_cut)
+    efficiency(cut_str, bin_list_gen, indir, proc=args.channel, args.mva_cut)
+    make_histos(bin_list_rec, cut_str, cut_str_antiiso, indir, args.channel, args.mva_cut)
