@@ -79,9 +79,9 @@ def getbinning(histo, bins, zerobin=None):
         edges[zerobin] = 0.0
     return edges
 
-def findbinning(bins_generated, cuts, weight, indir, coupling, zerobin_gen=None, zerobin_rec=None):
-    histo_gen = get_signal_histo(var_x, weight, cuts=cuts, step3=indir, coupling=coupling)
-    histo_rec = get_signal_histo(var_y, weight, cuts=cuts, step3=indir, coupling=coupling)
+def findbinning(bins_generated, cuts, weight, indir, channel, coupling,  zerobin_gen=None, zerobin_rec=None):
+    histo_gen = get_signal_histo(var_x, weight, cuts=cuts, step3=indir, coupling=coupling, proc=channel)
+    histo_rec = get_signal_histo(var_y, weight, cuts=cuts, step3=indir, coupling=coupling, proc=channel)
 
     # generated
     binning_gen = getbinning(histo_gen, bins_generated, zerobin_gen)
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     bins_rec = bins_gen * 2
     zerobin_gen = 2
     zerobin_rec = 4
-    (bin_list_gen, bin_list_rec) = findbinning(bins_gen, cut_str, weight, indir, args.coupling, zerobin_gen, zerobin_rec)
+    (bin_list_gen, bin_list_rec) = findbinning(bins_gen, cut_str, weight, indir, args.channel, args.coupling, zerobin_gen, zerobin_rec)
     print (bin_list_gen, bin_list_rec)
     #bin_list_gen = numpy.array([-1.,    -0.2632, 0.0,   0.19,    0.3528,  0.5062,  0.6652,  1.    ])
     #bin_list_rec = numpy.array([-1.,     -0.4496, -0.2254, -0.069,   0.0,   0.1478,  0.2346,  0.3174,  0.3956,   0.4738,  0.545,   0.6112,  0.6866,  0.7714,  1.    ])
