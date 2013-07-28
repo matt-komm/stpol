@@ -64,6 +64,8 @@ fitpars['final_2j1t'] = [
 
 #Load the scale factors externally for better factorisation
 from plots.qcd_scale_factors import qcdScale
+qcdScale['ele']['presel'] = 1.33
+qcdScale['mu']['presel'] = 27.9
 
 plot_defs={}
 
@@ -544,7 +546,7 @@ plot_defs['final_BDT']={
     'var': 'mva_BDT',
     'range': [40, -1, 1],
     'iso': True,
-    'estQcd': '2j1t',
+    'estQcd': 'presel',
     'gev': False,
     'log': True,
     'xlab': varnames["BDT_uncat"],
@@ -560,7 +562,7 @@ plot_defs['final_cosTheta_mva_loose']={
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
-    'estQcd': '2j1t',
+    'estQcd': 'presel',
     'gev': False,
     'log': False,
     'xlab': varnames["cos_theta"],
