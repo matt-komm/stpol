@@ -186,6 +186,7 @@ if __name__=="__main__":
         for nt in [0,1,2]:
 
             #Final cut in Njets, Ntags
+            #This is _NOT_ the final cut!! This is only applying good leptons, n_jets/tags and rms_lj! Or is it? -JP
             c = "%dj%dt" % (nj, nt)
             cuts[c] = FitConfig(c)
             bc = str(Cuts.n_jets(nj)*Cuts.n_tags(nt)*Cuts.rms_lj)
@@ -193,6 +194,7 @@ if __name__=="__main__":
             cuts[c].setFinalCuts("1")
 
             #Fit cut in Njets, Ntags
+            #What is a 'Fit cut'? Please be more specific. -JP
             c0 = "fit_%dj%dt" % (nj, nt)
             cuts[c0] = FitConfig(c0)
             bc = str(Cuts.n_jets(nj)*Cuts.n_tags(nt)*Cuts.rms_lj)
@@ -200,18 +202,25 @@ if __name__=="__main__":
             cuts[c0].setFinalCuts(str(Cuts.top_mass_sig))
 
             #Final cut in Njets, Ntags
+            #This is the _FINAL_ cut, where we show cos_theta
             c1 = "final_" + c
             cuts[c1] = FitConfig(c1)
             cuts[c1].setBaseCuts(bc)
             cuts[c1].setFinalCuts(
                 str(final_cut)
             )
+
         s = "%dj" % nj
         cuts[s] = FitConfig(s)
         bc = str(Cuts.n_jets(nj)*Cuts.rms_lj)
         cuts[s].setBaseCuts(bc)
         cuts[s].setFinalCuts("1")
 
+        s = "final_%dj" % nj
+        cuts[s] = FitConfig(s)
+        bc = str(Cuts.n_jets(nj)*Cuts.rms_lj)
+        cuts[s].setBaseCuts(bc)
+        cuts[s].setFinalCuts(str(final_cut))
 
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
     try:
@@ -227,10 +236,13 @@ if __name__=="__main__":
         help="The cut region to use in the fit", action='append')
     parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=False)
     parser.add_argument('--doSystematics', action="store_true", default=False)
+
+    #FIXME: now that the script outputs the fit results both before and after the M_t cut, isn't this a bit redundant? -JP
     parser.add_argument('--mtcut',dest='mtcut',action='store_true', default=True, help="Apply the corresponding MET/MtW cut")
     parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
     args = parser.parse_args()
 
+    #No cuts specified, do them all
     if not args.cuts:
         args.cuts = cuts.keys()
 
