@@ -27,10 +27,10 @@ cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
 cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
-cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.7')
-cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.5')
-cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.32')
-cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.38')
+cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.6')
+cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.7')
+cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.36')
+cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.2')
 
 
 qcdScale={}
@@ -545,7 +545,7 @@ plot_defs['final_BDT']={
     'iso': True,
     'estQcd': 'final_2j1t',
     'gev': False,
-    'log': False,
+    'log': True,
     'xlab': varnames["BDT_uncat"],
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['final_ele'],
