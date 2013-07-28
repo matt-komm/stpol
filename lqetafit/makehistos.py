@@ -9,7 +9,8 @@ if __name__=="__main__":
     parser.add_argument('--channel', dest='channel', choices=["mu", "ele"], required=True, help="The lepton channel used for the fit")
     parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest_kbfi/")
     parser.add_argument('--mva', dest='mva', action='store_true', default=False, help="Use MVA option")
-    parser.add_argument('--mva_cut', dest='mva_cut', type=float, default=0.3, help="MVA cut value")args = parser.parse_args()
+    parser.add_argument('--mva_cut', dest='mva_cut', type=float, default=0.3, help="MVA cut value")
+    args = parser.parse_args()
 
     if(args.mva):
         cut_str = str(Cuts.mva_iso(args.mva_cut, args.channel))

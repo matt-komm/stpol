@@ -9,6 +9,16 @@ import shutil
 from plots.common.load_samples import *
 from plots.common.cuts import *
 
+def generate_out_dir(channel, mva_cut, coupling="powheg"):
+    dirname = channel
+    if mva_cut is not None:    
+        mva = "_mva_"+str(mva_cut)
+        mva = mva.replace(".","_")
+        dirname += mva
+    if coupling != "powheg":
+        dirname += "_" + coupling
+    return dirname
+
 def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"]), indir="/".join([os.environ["STPOL_DIR"], "step3_latest"]), channel="mu", binning=None, plot_range=None):
     #logging.basicConfig(level="INFO")
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)

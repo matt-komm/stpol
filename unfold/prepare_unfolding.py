@@ -16,23 +16,30 @@ MAXBIN = 10000
 var_min = -1
 var_max = 1
 
-def get_signal_samples(step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"]), proc="mu"):
+def get_signal_samples(coupling, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"]), proc="mu"):
     samples={}
     # Load in the data
-    datadir = '/'.join([step3, proc, "mc", "iso", "nominal", "Jul15"])
+    if coupling == "powheg":
+        datadir = '/'.join([step3, proc, "mc", "iso", "nominal", "Jul15"])
+    else:
+        datadir = '/'.join([step3, proc, "mc_syst", "iso", "SYST", "Jul15"])
     flist=get_file_list(merge_cmds, datadir, False)
     #Load signal samples in the isolated directory
     for f in flist:
-        if f.endswith("ToLeptons.root"):
+        if f.endswith("ToLeptons.root") or f.endswith("_t-channel.root"):
             samples[f] = Sample.fromFile(datadir+'/'+f, tree_name='Events')
-    assert len(samples) == 2
+    print coupling    
+    if coupling == "powheg":
+        assert len(samples) == 2
+    else:
+        assert len(samples) == 3
     return samples
 
-def get_signal_histo(var, weight, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"]), cuts="1", proc="mu"):
+def get_signal_histo(var, weight, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"]), cuts="1", proc="mu", coupling="powheg"):
     lumi = lumi_iso[proc]
     plot_range = [MAXBIN, var_min, var_max]
     hists_mc = {}
-    samples = get_signal_samples(step3, proc)
+    samples = get_signal_samples(coupling, step3, proc)
     for name, sample in samples.items():
         if sample.isMC:
             hist = sample.drawHistogram(var, cuts, weight=weight, plot_range=plot_range)
@@ -68,12 +75,13 @@ def getbinning(histo, bins, zerobin=None):
     edges[bins] = lastedge
     #Set bin #zerobin to zero if parameter set
     if zerobin is not None:
+        print "Changing bin %d from %.3f to 0." % (zerobin, edges[zerobin])
         edges[zerobin] = 0.0
     return edges
 
-def findbinning(bins_generated, cuts, weight, indir, zerobin_gen=None, zerobin_rec=None):
-    histo_gen = get_signal_histo(var_x, weight, cuts=cuts, step3=indir)
-    histo_rec = get_signal_histo(var_y, weight, cuts=cuts, step3=indir)
+def findbinning(bins_generated, cuts, weight, indir, coupling, zerobin_gen=None, zerobin_rec=None):
+    histo_gen = get_signal_histo(var_x, weight, cuts=cuts, step3=indir, coupling=coupling)
+    histo_rec = get_signal_histo(var_y, weight, cuts=cuts, step3=indir, coupling=coupling)
 
     # generated
     binning_gen = getbinning(histo_gen, bins_generated, zerobin_gen)
@@ -81,15 +89,7 @@ def findbinning(bins_generated, cuts, weight, indir, zerobin_gen=None, zerobin_r
     binning_rec = getbinning(histo_rec, bins_generated*2, zerobin_rec)
     return (numpy.array(binning_gen), numpy.array(binning_rec))
 
-def generate_out_dir(channel, mva_cut):
-    dirname = channel
-    if mva_cut is not None:    
-        mva = "_mva_"+str(mva_cut)
-        mva.replace(".","_")
-        dirname += mva
-    return dirname
-
-def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_cut = None):
+def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_cut = None, coupling = "powheg"):
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, mva_cut)])
     mkdir_p(outdir)
     fo = ROOT.TFile(outdir+"/rebinned.root","RECREATE")
@@ -104,7 +104,7 @@ def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_
     hists_rec = {}
     hists_gen = {}
     matrices = {}
-    samples = get_signal_samples(indir)
+    samples = get_signal_samples(coupling, indir)
     for name, sample in samples.items():
         hist_rec = sample.drawHistogram(var_y, cuts, weight=weight, binning=binning_y)
         hist_rec.Scale(sample.lumiScaleFactor(lumi))
@@ -137,7 +137,7 @@ def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_
     merged_matrix[0].Write()
     fo.Close()
 
-def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None):
+def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None, coupling="powheg"):
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, mva_cut)])
     fo = ROOT.TFile(outdir+"/efficiency.root","RECREATE")
     fo.cd()
@@ -147,7 +147,7 @@ def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None):
     plot_range = [100,-1,1]
     hists_presel = {}
     hists_presel_rebin = {}
-    samples = get_signal_samples(indir)
+    samples = get_signal_samples(coupling, indir)
     if proc == "mu":
         cuts_presel = "abs(true_lepton_pdgId)==13"
     elif proc == "ele":
@@ -221,19 +221,20 @@ def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None):
 
     fo.Close()
 
-def make_histos(binning, cut_str, cut_str_antiiso, indir, channel, mva_cut):
+def make_histos(binning, cut_str, cut_str_antiiso, indir, channel, mva_cut, coupling):
     systematics = generate_systematics(channel)
     var = "cos_theta"
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", generate_out_dir(proc, mva_cut)])
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", generate_out_dir(channel, mva_cut, coupling)])
     make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, channel, binning=binning)
-    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", generate_out_dir(proc, mva_cut)])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, mva_cut)])+"/data.root")
+    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", generate_out_dir(channel, mva_cut, coupling)])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(channel, mva_cut)])+"/data.root")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Makes systematics histograms for final fit')
     parser.add_argument('--channel', dest='channel', choices=["mu", "ele"], required=True, help="The lepton channel used")
     parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=True)
     parser.add_argument('--mva', dest='mva', action='store_true', default=False, help="Use MVA option")
-    parser.add_argument('--mva_cut', dest='mva_cut', type=float, default=0.3, help="MVA cut value")
+    parser.add_argument('--mva_cut', dest='mva_cut', type=float, default=None, help="MVA cut value")
+    parser.add_argument('--coupling', dest='coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
     args = parser.parse_args()
 
     indir = args.path    
@@ -253,16 +254,17 @@ if __name__ == "__main__":
     bins_rec = bins_gen * 2
     zerobin_gen = 2
     zerobin_rec = 4
-    (bin_list_gen, bin_list_rec) = findbinning(bins_gen, cut_str, weight, indir, zerobin_gen, zerobin_rec)
+    (bin_list_gen, bin_list_rec) = findbinning(bins_gen, cut_str, weight, indir, args.coupling, zerobin_gen, zerobin_rec)
     print (bin_list_gen, bin_list_rec)
     #bin_list_gen = numpy.array([-1.,    -0.2632, 0.0,   0.19,    0.3528,  0.5062,  0.6652,  1.    ])
     #bin_list_rec = numpy.array([-1.,     -0.4496, -0.2254, -0.069,   0.0,   0.1478,  0.2346,  0.3174,  0.3956,   0.4738,  0.545,   0.6112,  0.6866,  0.7714,  1.    ])
-    binning_file = open('binning'+args.channel+'.txt', 'w')
-    binning_file.write(bin_list_gen)
-    binning_file.write(bin_list_rec)
+
+    binning_file = open('binnings/'+generate_out_dir(args.channel, args.mva_cut)+'.txt', 'w')
+    binning_file.write(str(bin_list_gen)+'\n')
+    binning_file.write(str(bin_list_rec))
     binning_file.close()
 
     print "found binning: ", bin_list_gen, ";", bin_list_rec
     rebin(cut_str, bins_gen, bin_list_gen, bins_rec, bin_list_rec, indir, args.channel, args.mva_cut)
-    efficiency(cut_str, bin_list_gen, indir, proc=args.channel, args.mva_cut)
-    make_histos(bin_list_rec, cut_str, cut_str_antiiso, indir, args.channel, args.mva_cut)
+    efficiency(cut_str, bin_list_gen, indir, args.channel, args.mva_cut, args.coupling)
+    make_histos(bin_list_rec, cut_str, cut_str_antiiso, indir, args.channel, args.mva_cut, args.coupling)

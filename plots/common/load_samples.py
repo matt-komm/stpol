@@ -33,8 +33,9 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
             samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
             samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
             samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            datasamp = ["SingleMu1", "SingleMu2", "SingleMu3"]
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]
+            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
+            datasamp = ["SingleMu1", "SingleMu2", "SingleMu3"]#, "SingleMu4"]
+            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
         elif channel == "ele":
             samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
             samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
@@ -105,18 +106,30 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
     """
     return (samples, sampnames)
 
-def get_qcd_scale_factor(var, channel):
+def get_qcd_scale_factor(var, channel, mva=False):
     #FIXME - automate, take from some "central" file
     if channel == "mu":
-        if var == "cos_theta":    
-            return 0.552650999014
+        if var == "cos_theta":
+            if mva is None:
+                return 0.552650999014
+            else:
+                return 5.8350878103
         elif var == "abs(eta_lj)":
-            return 3.18487092669
+            if mva is None:
+                return 3.18487092669
+            else:
+                return 5.8350878103
     elif channel == "ele":
         if var == "cos_theta":    
-            return 0.0811718747368
+            if mva is None:
+                return 0.0811718747368
+            else:
+                return 1.2122285254
         elif var == "abs(eta_lj)":
-            return 0.433228612048
+            if mva is None:
+                return 0.433228612048
+            else:
+                return 1.2122285254
 
 def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, var="abs(eta_lj)", plot_range=None, binning=None):
     lumi=lumi_iso[channel]
@@ -143,5 +156,5 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
             hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", binning=binning)
         else:
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
-        hist.Scale(get_qcd_scale_factor(var, channel))
+        hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso))
     return hist

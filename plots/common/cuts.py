@@ -115,19 +115,19 @@ class Cuts:
         
     @staticmethod
     def mva_cut(cut):
-        return Cut("mva_BDT > " + cut)    
+        return Cut("mva_BDT > %s" % cut)    
 
     @staticmethod
     def mva_iso(mva_cut, lepton):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.mva_cut(mva_cut)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.mva_cut(mva_cut)
 
     @staticmethod
     def mva_antiiso(mva_cut, lepton="mu"):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)*Cuts.mva_cut(mva_cut)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)*Cuts.mva_cut(mva_cut)
 
     @staticmethod
     def eta_fit(lepton, nj=2, nb=1):
