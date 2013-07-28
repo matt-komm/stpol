@@ -390,7 +390,7 @@ plot_defs['2j1t_topMass']={
     'tags': ["an", "selection.tex"],
     'enabled': True,
     'var': 'top_mass',
-    'range': [nbins_selection, 50, 500],
+    'range': [nbins_selection, 100, 500],
     'iso': True,
     'estQcd': '2j1t',
     'gev': True,
