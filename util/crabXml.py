@@ -221,14 +221,9 @@ class Job:
             return -1
 
     def __repr__(self):
-        return "Job(%d,%d): %s %d %d %s %s" % (
+        return "Job(%d, %s)" % (
             self.job_id,
             self.scheduler_id,
-            self.state,
-            self.app_ret_code,
-            self.wrapper_ret_code,
-            self.submission_time,
-            self.get_output_time
         )
 
 def get(node, name, f):
