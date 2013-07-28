@@ -71,6 +71,8 @@ class Sample:
         self.tree.SetCacheSize(100*1024*1024)
         if self.tfile.Get("trees/WJets_weights"):
             self.tree.AddFriend("trees/WJets_weights")
+        if self.tfile.Get("trees/MVA"):
+            self.tree.AddFriend("trees/MVA")
         #self.tree.AddBranchToCache("*", 1)
 
         self.event_count = None

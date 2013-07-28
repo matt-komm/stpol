@@ -41,6 +41,3 @@ for f in flist:
     tf.cd("trees")
     ct.Write("", TObject.kOverwrite)
     tf.Close()
-tf = TFile(f)
-print tf.Get("trees/Events").GetEntries(), tf.Get("trees/Events_MVA").GetEntries()
-

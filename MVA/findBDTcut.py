@@ -27,7 +27,7 @@ for proc in ['ele', 'mu']:
     flist = get_file_list({'signal': merge_cmds['tchan']}, args.indir + "/%s/mc/iso/nominal/Jul15/" % proc)
     samples={}
     for f in flist:
-        samples[f] = Sample.fromFile(f, tree_name='Events_MVA')
+        samples[f] = Sample.fromFile(f)
     yld = 0;
     for k,v in samples.items():
         yld+=v.getEntries(cut[proc])*v.lumiScaleFactor(lumi)
