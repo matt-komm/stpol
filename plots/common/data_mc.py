@@ -1,6 +1,7 @@
 import logging,re
 logger = logging.getLogger("data_mc")
 import ROOT
+import numpy
 
 from plots.common.cuts import Cuts, Weights, Cut, Weight
 from plots.common.sample_style import Styling
