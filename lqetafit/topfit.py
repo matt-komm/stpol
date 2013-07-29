@@ -35,7 +35,7 @@ def get_model():
 
 if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
-        raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py`")
+        raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py %s`" % (sys.argv[0]))
 
     model = get_model()
 
