@@ -47,7 +47,7 @@ def get_file_list(merge_cmds, dir, fullpath=True):
     #If you called this method and got nothing, then probably womething went wrong and you don't want the output
     if len(out_files)==0:
         raise Exception("Couldn't match any files to merge_cmds %s in directory %s" % (str(merge_cmds), dir))
-    return out_files
+    return sorted(out_files)
 
 class PhysicsProcess:
     desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan"]
@@ -79,7 +79,6 @@ class PhysicsProcess:
         out_d["TTJets"] = self.TTJets_exc
         out_d["tWchan"] = self.tWchan
         out_d["schan"] = self.schan
-        print "SYSSST", systematic_channel
         if systematic_channel=="nominal" or systematic_channel=="powheg":
             out_d["tchan"] = self.tchan
         elif systematic_channel=="comphep":

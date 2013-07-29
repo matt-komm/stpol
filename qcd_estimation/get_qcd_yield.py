@@ -87,7 +87,7 @@ def getMtMinValue(channel):
         mtMinValue = 45.01 # MET>45
     return mtMinValue
 
-def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$STPOL_DIR/step3_latest/", do_systematics=False):
+def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path=(os.environ["STPOL_DIR"] + "/step3_latest/"), do_systematics=False):
 #    do_systematics = True
 #
 #    if channel == "ele":
@@ -193,17 +193,19 @@ if __name__=="__main__":
     #Create the cuts in a programmatic way
     cuts = {}
     final_cut = Cuts.top_mass_sig * Cuts.eta_lj
-    for nj in [2]:#,3]:
-        for nt in [1]:#[0,1,2]:
+    for nj in [2, 3]:
+        for nt in [0, 1, 2]:
 
             #Before eta and top mass cuts. Also for MVA
             c = "%dj%dt" % (nj, nt)
             cuts[c] = FitConfig(c)
+            cuts[c].setBaseCuts("n_jets == %d && n_tags == %d && n_veto_ele==0 && n_veto_mu==0" % (nj,nt))
             cuts[c].setFinalCuts("1")
 
             #Eta Fit cut in Njets, Ntags
             c0 = "fit_%dj%dt" % (nj, nt)
             cuts[c0] = FitConfig(c0)
+            cuts[c0].setBaseCuts("n_jets == %d && n_tags == %d && n_veto_ele==0 && n_veto_mu==0" % (nj,nt))
             cuts[c0].setFinalCuts(str(Cuts.top_mass_sig))
 
             #Final cut in Njets, Ntags
@@ -213,10 +215,12 @@ if __name__=="__main__":
             cuts[c1].setFinalCuts(
                 str(final_cut)
             )
+            cuts[c].setBaseCuts("n_jets == %d && n_tags == %d && n_veto_ele==0 && n_veto_mu==0" % (nj,nt))
+            
 
         s = "%dj" % nj
         cuts[s] = FitConfig(s)
-        bc = str(Cuts.n_jets(nj)*Cuts.rms_lj)
+        bc = str(Cuts.n_jets(nj)*Cuts.rms_lj*Cuts.lepton_veto)
         cuts[s].setBaseCuts(bc)
         cuts[s].setFinalCuts("1")
 
@@ -237,7 +241,7 @@ if __name__=="__main__":
     parser.add_argument('-c', '--cut',
         dest='cuts', choices=cuts.keys(), required=False, default=None,
         help="The cut region to use in the fit", action='append')
-    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=False)
+    parser.add_argument('--path', dest='path', default=(os.environ["STPOL_DIR"] + "/step3_latest/"), required=False)
     parser.add_argument('--doSystematics', action="store_true", default=False)
     parser.add_argument('--doSystematicCuts', action="store_true", default=False, help="Various anti-iso regions etc.")
 

@@ -10,8 +10,8 @@ echo "Setting up stpol env..."
 # Extract directories
 CURRENT_DIR=`pwd`
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CMSSW_DIR=$1
-if [ -z "$CMSSW_DIR" ]; then CMSSW_DIR="CMSSW_5_3_11"; fi
+CMSSW_DIR=CMSSW_5_3_11
+#if [ -z "$CMSSW_DIR" ]; then CMSSW_DIR="CMSSW_5_3_11"; fi
 #echo "Current:" $CURRENT_DIR
 #echo "Script:" $SCRIPT_DIR
 
@@ -36,6 +36,7 @@ export PATH=$PATH:$STPOL_DIR/local/bin
 if [[ "`hostname`" == *hep.kbfi.ee ]] || [[ "`hostname`" == comp* ]]
 then
     echo "Detected that we're on hep.kbfi.ee, sourcing CMS-specific stuff"
+    echo ${SCRIPT_DIR}/$CMSSW_DIR 
     cd ${SCRIPT_DIR}/$CMSSW_DIR
     source /cvmfs/cms.cern.ch/cmsset_default.sh
     eval `scramv1 runtime -sh`
