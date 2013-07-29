@@ -193,8 +193,8 @@ if __name__=="__main__":
     #Create the cuts in a programmatic way
     cuts = {}
     final_cut = Cuts.top_mass_sig * Cuts.eta_lj
-    for nj in [2]:#,3]:
-        for nt in [1]:#[0,1,2]:
+    for nj in [2,3]:
+        for nt in [0,1,2]:
 
             #Before eta and top mass cuts. Also for MVA
             c = "%dj%dt" % (nj, nt)
