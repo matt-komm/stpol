@@ -62,7 +62,7 @@ fitpars['final_2j1t_cut'] = [
     ),
 ]
 #FIXME: Andres, is this with the loose or tight WP?
-fitpars['final_2j1t_mva_loose'] = [
+fitpars['final_2j1t_mva'] = [
     (
         PhysicsProcess.tchan.subprocesses,
          1.19366
@@ -567,7 +567,7 @@ plot_defs['final_met_fit']={
     'log': False,
     'xlab': varnames["met"],
     'labloc': 'top-right',
-    'fitpars': fitpars['final_2j1t'],
+    'fitpars': fitpars['final_2j1t_cut'],
     'elecut': plot_defs['final_etaLj_fit']['elecut'],
     'mucut': plot_defs['final_etaLj_fit']['mucut']
 }
@@ -590,6 +590,10 @@ plot_defs['final_BDT']={
     'dir': "control"
 }
 
+plot_defs['final_BDT_fit'] = cp(plot_defs['final_BDT'])
+plot_defs['final_BDT_fit']['dir'] = fitpars['final_2j1t_mva']
+
+
 plot_defs['final_cosTheta_mva_loose']={
     'tags': ["an", "control.tex", "mva"],
     'enabled': True,
@@ -603,6 +607,7 @@ plot_defs['final_cosTheta_mva_loose']={
     'labloc': 'top-left',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
+    'dir': "control"
 }
 
 
@@ -617,9 +622,10 @@ plot_defs['final_met_mva_loose_fit']={
     'log': False,
     'xlab': varnames["met"],
     'labloc': 'top-right',
-    'fitpars': fitpars['final_2j1t'],
+    'fitpars': fitpars['final_2j1t_mva'],
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
+    'dir': "control"
 }
 
 plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
@@ -627,10 +633,10 @@ plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['prese
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
 
 plot_defs['final_cosTheta_mva_tight_fit'] = cp(plot_defs['final_cosTheta_mva_tight'])
-plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva_loose']
+plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 plot_defs['final_cosTheta_mva_loose_fit'] = cp(plot_defs['final_cosTheta_mva_loose'])
-plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva_loose']
+plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
