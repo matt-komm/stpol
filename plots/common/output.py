@@ -93,7 +93,7 @@ class OutputFolder:
             try:
                 canvas.SaveAs(outpath)
                 plot_meta.update(outpath)
-            except e:
+            except Exception as e:
                 logger.error("Couldn't save image: " + str(e))
 
 
