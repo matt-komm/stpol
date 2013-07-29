@@ -79,7 +79,6 @@ class PhysicsProcess:
         out_d["TTJets"] = self.TTJets_exc
         out_d["tWchan"] = self.tWchan
         out_d["schan"] = self.schan
-        print "SYSSST", systematic_channel
         if systematic_channel=="nominal" or systematic_channel=="powheg":
             out_d["tchan"] = self.tchan
         elif systematic_channel=="comphep":

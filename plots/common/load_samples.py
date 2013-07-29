@@ -2,7 +2,7 @@ import os
 from plots.common.sample import Sample
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
 
-def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["STPOL_DIR"], "step3_latest"))):
+def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["STPOL_DIR"], "step3_latest")), coupling="powheg"):
     #datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "iso", "nominal"))
     #FIXME: make independent of machine (no reference to specific directories like out_step3_06_01)
     
@@ -11,15 +11,19 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
     if systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
         datadir = "/".join((path, channel, "mc", "iso", systematic, "Jul15"))
     elif systematic != "nominal":
-        datadir2 = "/".join((path, channel, "mc_syst", "iso", "SYST", "Jul15"))
+        #datadir2 = "/".join((path, channel, "mc_syst", "iso", "SYST", "Jul15"))
+        datadir2 = "/".join(("/home", "andres", "single_top", "stpol", "out", "step3_anomalous", channel, "syst_07_28", "iso", "SYST"))
         #datadir = "/".join((os.environ["STPOL_DIR"], "Jul22_partial", "mu", "iso", "nominal"))
         datadir = "/".join((path, channel, "mc", "iso", "nominal", "Jul15"))
         samples2 = Sample.fromDirectory(datadir2, out_type="dict")
     else:
         datadir = "/".join((path, channel, "mc", "iso", systematic, "Jul15"))
-        #datadir = "/".join((os.environ["STPOL_DIR"], "Jul22_partial", "mu", "iso", "nominal"))
+        datadir2 = "/".join(("/home", "andres", "single_top", "stpol", "out", "step3_anomalous", channel, "syst_07_28", "iso", "SYST"))
+        #datadir2 = "/".join((path, channel, "mc_syst", "iso", "SYST", "Jul15"))
+        samples2 = Sample.fromDirectory(datadir2, out_type="dict")
     samples = Sample.fromDirectory(datadir, out_type="dict")
-    
+    print samples
+    print "dir", datadir
     datadir_data = "/".join((path, channel, "data", "iso", "Jul15"))
     samples.update(Sample.fromDirectory(datadir_data, out_type="dict"))
     if samples2 is not None:
@@ -27,6 +31,15 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
     
     wzjets = ["DYJets", "WW", "WZ", "ZZ"]
     wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
+
+    if coupling == "powheg":
+        tchan = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]
+    elif coupling == "comphep":
+        tchan = ["TToBMuNu_t-channel", "TToBENu_t-channel", "TToBTauNu_t-channel"]
+    elif coupling == "anomWtb-0100":
+        tchan = ["TToBMuNu_anomWtb-0100_t-channel", "TToBENu_anomWtb-0100_t-channel", "TToBTauNu_anomWtb-0100_t-channel"]
+    elif coupling == "anomWtb-unphys":
+        tchan = ["TToBMuNu_anomWtb-unphys_t-channel", "TToBENu_anomWtb-unphys_t-channel", "TToBTauNu_anomWtb-unphys_t-channel"]
 
     if systematic in "nominal":
         if channel == "mu":
@@ -43,7 +56,7 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
             datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
             
         sampnames = (
-            ("tchan", ["T_t_ToLeptons", "Tbar_t_ToLeptons"]),
+            ("tchan", tchan),
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_FullLept", "TTJets_SemiLept"]),
             ("wzjets", wzjets),
             ("DATA", datasamp),
@@ -52,7 +65,7 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
 
     elif systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
         sampnames = (
-            ("tchan", ["T_t_ToLeptons", "Tbar_t_ToLeptons"]),
+            ("tchan", tchan),
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_FullLept", "TTJets_SemiLept"]),
             ("wzjets", wzjets),
         )
@@ -68,14 +81,14 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
         )
     elif systematic == "tchan_scale__up":
         sampnames = (
-            #("tchan", ["TToLeptons_t-channel_scaleup", "TBarToLeptons_t-channel_scaleup"]),
-            ("tchan", ["TToLeptons_t-channel_scaleup", "Tbar_t_scaleup"]),
+            ("tchan", ["TToLeptons_t-channel_scaleup", "TBarToLeptons_t-channel_scaleup"]),
+            #("tchan", ["TToLeptons_t-channel_scaleup", "Tbar_t_scaleup"]),
         )
 
     elif systematic == "tchan_scale__down":
         sampnames = (
-            #("tchan", ["TToLeptons_t-channel_scaledown", "TBarToLeptons_t-channel_scaledown"]),
-            ("tchan", ["TToLeptons_t-channel_scaledown", "Tbar_t_scaledown"]),
+            ("tchan", ["TToLeptons_t-channel_scaledown", "TBarToLeptons_t-channel_scaledown"]),
+            #("tchan", ["TToLeptons_t-channel_scaledown", "Tbar_t_scaledown"]),
         )
     elif systematic == "ttbar_scale__up":
         sampnames = (
@@ -111,25 +124,25 @@ def get_qcd_scale_factor(var, channel, mva=False):
     if channel == "mu":
         if var == "cos_theta":
             if mva is None:
-                return 0.552650999014
+                return 0.400106115551
             else:
-                return 5.8350878103
+                return 3.30901987434
         elif var in ["abs(eta_lj)"]:
-            return 3.18487092669
-        elif var == "mva_BDT":
-            return 5.8350878103
+            return 2.36704374649
+        elif var == "mva_BDT": #with mt cut
+            return 3.30901987434
     elif channel == "ele":
         if var == "cos_theta":    
             if mva is None:
-                return 0.0811718747368
+                return 0.114233714167
             else:
-                return 1.2122285254
+                return 1.20058541057
         elif var == "abs(eta_lj)":
-            return 0.433228612048
+            return 0.445871166531
         elif var == "mva_BDT":
-            return 1.2122285254
+            return 1.20058541057
 
-def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, var="abs(eta_lj)", plot_range=None, binning=None):
+def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, coupling, var="abs(eta_lj)", plot_range=None, binning=None):
     lumi=lumi_iso[channel]
     weight_str = str(weight)   
     if sample_name not in ["DATA", "qcd"]:
