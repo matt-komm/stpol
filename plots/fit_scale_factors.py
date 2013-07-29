@@ -29,6 +29,13 @@ fitpars['final_2j1t_mva_no_mt_cut']['mu'] = [
     (qcd, 0.961991),
 ]
 
+fitpars['final_2j1t_mva']['mu'] = [
+    (tchan, 1.164032),
+    (top, 1.018774),
+    (WZJets, 1.317858),
+    (qcd, 0.975618),
+]
+
 fitpars['final_2j1t']['ele'] = [
     (tchan, 1.082103),
     (top, 1.038168),
@@ -41,6 +48,13 @@ fitpars['final_2j1t_mva_no_mt_cut']['ele'] = [
     (top, 0.989816),
     (WZJets, 1.40333),
     (qcd, 0.977402),
+]
+
+fitpars['final_2j1t_mva']['ele'] = [
+    (tchan, 1.085781),
+    (top, 1.045250),
+    (WZJets, 1.128681),
+    (qcd, 1.018550),
 ]
 
 #Convert to static dict

@@ -30,10 +30,10 @@ cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
 cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
-cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.5')
-cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.5')
-cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.44')
-cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.23')
+cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('mva_BDT>0.5')
+cutlist['bdt_ele_tight'] = Cuts.met*Cut('mva_BDT>0.5')
+cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('mva_BDT>0.44')
+cutlist['bdt_ele_loose'] = Cuts.met*Cut('mva_BDT>0.23')
 
 #Load the scale factors externally for better factorisation
 from plots.fit_scale_factors import fitpars
@@ -561,7 +561,7 @@ plot_defs['final_cosTheta_mva_loose']={
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
-    'estQcd': 'presel',
+    'estQcd': '2j1t',
     'gev': False,
     'log': False,
     'xlab': varnames["cos_theta"],

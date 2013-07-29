@@ -83,11 +83,22 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
             if lepton_channel == 'ele':
                 cv='el_iso'
                 lb=0.1
-            qcd_cut = cut*Cuts.deltaR(0.3)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
+            qcd_extra_cut = Cuts.deltaR(0.3)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
 
-            #FIXME: It would be nice to factorise this part a bit (separate method?) or make it more clear :) -JP
+            # Make loose template
+            region = '2j1t'
+            if '2j0t' in plot_def['estQcd']: region='2j0t'
+            if '3j0t' in plot_def['estQcd']: region='3j0t'
+            if '3j1t' in plot_def['estQcd']: region='3j1t'
+            if '3j2t' in plot_def['estQcd']: region='3j2t'
+            qcd_loose_cut = cutlist[region]*cutlist['presel_'+lepton_channel]*qcd_extra_cut
+            qcd_cut = cut*qcd_extra_cut
+
+            hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
             hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
             hist_qcd.Scale(qcdScale[lepton_channel][plot_def['estQcd']])
+            hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
+            hist_qcd=hist_qcd_loose
             sampn = "QCD"+sample.name
 
             #Rescale the QCD histogram to the eta_lj fit
