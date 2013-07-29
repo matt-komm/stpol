@@ -36,31 +36,7 @@ cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.36')
 cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.2')
 
 
-#Fit parameters from the final fit
-#Extracted in the muon channel using lqetafit/topfit.py
-#The first element in the tuple is a list of regex patterns to which you want to match this scale factor
-#The second element is the scale factor to apply (flat)
-#FIXME: most likely, one can incorporate the QCD scale factor from the QCD fit here as well
-#-JP
-fitpars = {}
-fitpars['final_2j1t'] = [
-    (
-        PhysicsProcess.tchan.subprocesses,
-        1.202393
-    ),
-    (
-        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
-        1.052675
-    ),
-    (
-        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
-        1.120621
-    ),
-    (
-        ["QCDSingle.*"], #Data-driven QCD
-        1.037131
-    ),
-]
+
 
 #Load the scale factors externally for better factorisation
 from plots.qcd_scale_factors import qcdScale
