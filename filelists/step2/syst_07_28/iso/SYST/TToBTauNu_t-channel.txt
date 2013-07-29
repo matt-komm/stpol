@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/TToBTauNu_t-channel/output_1_1_j2t.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/TToBTauNu_t-channel/output_2_1_Frl.root

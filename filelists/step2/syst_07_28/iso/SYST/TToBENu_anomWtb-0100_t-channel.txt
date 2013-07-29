@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/TToBENu_anomWtb-0100_t-channel/output_1_1_JIh.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/TToBENu_anomWtb-0100_t-channel/output_2_1_qmp.root
