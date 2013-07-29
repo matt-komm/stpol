@@ -10,6 +10,7 @@ from SingleTopPolarization.Analysis import sample_types
 import re
 import logging
 logger = logging.getLogger("plot_utils")
+logger.setLevel(logging.INFO)
 
 costheta = {"var":"cos_theta", "varname":"cos #theta", "range":[20,-1,1]}
 mtop = {"var":"top_mass", "varname":"M_{bl#nu}", "range":[20, 130, 220]}
