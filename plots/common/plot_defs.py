@@ -32,8 +32,8 @@ cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
 cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('mva_BDT>0.5')
 cutlist['bdt_ele_tight'] = Cuts.met*Cut('mva_BDT>0.5')
-cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('mva_BDT>0.44')
-cutlist['bdt_ele_loose'] = Cuts.met*Cut('mva_BDT>0.23')
+cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('mva_BDT>0.09')
+cutlist['bdt_ele_loose'] = Cuts.met*Cut('mva_BDT>0.06')
 
 #Load the scale factors externally for better factorisation
 from plots.fit_scale_factors import fitpars
@@ -552,6 +552,8 @@ plot_defs['final_BDT']={
     'dir': "control"
 }
 
+plot_defs['final_BDT_prefit'] = cp(plot_defs['final_BDT'])
+plot_defs['final_BDT_prefit']['log'] = False
 plot_defs['final_BDT_fit'] = cp(plot_defs['final_BDT'])
 plot_defs['final_BDT_fit']['fitpars'] = fitpars['final_2j1t_mva']
 plot_defs['final_BDT_fit']['log'] = False

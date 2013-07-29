@@ -19,7 +19,7 @@ def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg"):
         dirname += "_" + coupling
     return dirname
 
-def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"]), indir="/".join([os.environ["STPOL_DIR"], "step3_latest"]), channel="mu", binning=None, plot_range=None):
+def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"]), indir="/".join([os.environ["STPOL_DIR"], "step3_latest"]), channel="mu", coupling="powheg", binning=None, plot_range=None):
     #logging.basicConfig(level="INFO")
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     logging.debug('This message should appear on the console')
@@ -37,25 +37,25 @@ def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".joi
                 for (k, v) in updown.items():
                     ss = {}
                     ss[k] = v
-                    make_histos_for_syst(var, sub_syst, ss, cuts, cuts_antiiso, outdir, indir, channel, binning=binning, plot_range=plot_range)
+                    make_histos_for_syst(var, sub_syst, ss, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range)
         elif systname != "nominal":
             for sub_syst, path in sub_systs.items():
                 ss = {}
                 ss[sub_syst] = path
-                make_histos_for_syst(var, systname, ss, cuts, cuts_antiiso, outdir, indir, channel, binning=binning, plot_range=plot_range)
+                make_histos_for_syst(var, systname, ss, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range)
         else:
-            make_histos_for_syst(var, systname, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, binning=binning, plot_range=plot_range)
+            make_histos_for_syst(var, systname, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range)
 
     hadd_histos(outdir)
 
-def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, binning=None, plot_range=None):
+def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling, binning=None, plot_range=None):
         if sub_systs.keys()[0] in ["up", "down"] and main_syst in ["Res", "En", "UnclusteredEn"]:
             ss_type=sub_systs[sub_systs.keys()[0]]
         elif sub_systs.keys()[0] in ["up", "down"]:
             ss_type=main_syst + "__" + sub_systs.keys()[0]
         else:
             ss_type=main_syst
-        (samples, sampnames) = load_samples(ss_type, channel, indir)
+        (samples, sampnames) = load_samples(ss_type, channel, indir, coupling)
         outhists = {}
         for sn, samps in sampnames:
             hists = []
@@ -64,25 +64,26 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                     if sys == "nominal":
                         weight_str = sys_types
                         hname = "%s__%s" % (var, sn)
-                        write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, binning=binning, plot_range=plot_range)
+                        write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range)
                     elif sn in ["DATA", "qcd"] and sys != "nominal":
                         #No systematics if data
                         continue
                     elif main_syst in ["Res", "En", "UnclusteredEn"]:
+                        if coupling != "powheg": #these systs not available for comphep (currently)
+                            continue
                         hname = "%s__%s__%s__%s" % (var, sn, main_syst, sys)
-                        write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel,  binning=binning, plot_range=plot_range)
+                        write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range)
                     elif main_syst=="nominal":
                         for st_name, st in sys_types.items():
                             weight_str = st
-                            
                             hname = "%s__%s__%s__%s" % (var, sn, sys, st_name)
-                            write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, binning=binning, plot_range=plot_range)
+                            write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range)
                     else: #main_syst=="partial"
                         hname = "%s__%s__%s" % (var, sn, ss_type)
-                        write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel,  binning=binning, plot_range=plot_range)
+                        write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel,  coupling, binning=binning, plot_range=plot_range)
 
 
-def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, binning=None, plot_range=None):
+def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=None, plot_range=None):
     weight_str = weight
     samp = samples[sampn]
     outfile = ROOT.TFile(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
@@ -91,7 +92,7 @@ def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, 
         weight_str = "1"
     if var == "eta_lj":
         var = "abs("+var+")"
-    hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, var, binning=binning, plot_range=plot_range)
+    hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range)
     outfile.cd() #Must cd after histogram creation
 
     #Write histogram to file
@@ -117,7 +118,7 @@ def generate_file_name(sherpa):
     return name
 
 
-def generate_systematics(channel):
+def generate_systematics(channel, coupling):
     systematics = {}
     systematics["nominal"]={}
     systematics["nominal"]["nominal"] = str(Weights.total_weight(channel))
@@ -126,11 +127,12 @@ def generate_systematics(channel):
         systs_infile = ["btaggingBC", "btaggingL", "leptonID", "leptonIso", "leptonTrigger", "wjets_flat", "wjets_shape"]
     elif channel == "ele":
         systs_infile = ["btaggingBC", "btaggingL", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape"]
-    systs_infile_file=["En", "Res", "UnclusteredEn"]
     for sys in systs_infile:
         systematics["nominal"][sys] = {}
-    for sys in systs_infile_file:
-       systematics[sys] = {}
+    if coupling == "powheg":
+        systs_infile_file=["En", "Res", "UnclusteredEn"]
+        for sys in systs_infile_file:
+           systematics[sys] = {}
 
     #FIXME: add pileup variations?
     #systematics["nominal"]["pileup"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
@@ -166,11 +168,12 @@ def generate_systematics(channel):
     systematics["partial"]["ttbar_matching"] = {}
     systematics["partial"]["ttbar_matching"]["down"] = {}
     systematics["partial"]["ttbar_matching"]["up"] = {}
-        
-    systematics["Res"]["down"]="ResDown"
-    systematics["Res"]["up"]="ResUp"
-    systematics["En"]["down"]="EnDown"
-    systematics["En"]["up"]="EnDown"    
-    systematics["UnclusteredEn"]["down"]="UnclusteredEnDown"
-    systematics["UnclusteredEn"]["up"]="UnclusteredEnUp"    
+    
+    if coupling == "powheg":
+        systematics["Res"]["down"]="ResDown"
+        systematics["Res"]["up"]="ResUp"
+        systematics["En"]["down"]="EnDown"
+        systematics["En"]["up"]="EnDown"    
+        systematics["UnclusteredEn"]["down"]="UnclusteredEnDown"
+        systematics["UnclusteredEn"]["up"]="UnclusteredEnUp"    
     return systematics

@@ -3,13 +3,13 @@ import argparse
 from plots.common.sample import Sample
 from plots.common.plot_defs import cutlist
 from plots.common.utils import *
-from plots.common.cuts import Cut
+from plots.common.cuts import Cut,Cuts
 
 logger.setLevel(logging.ERROR)
 
 cut={}
-cut['ele']=str(cutlist['2j1t']*cutlist['final_ele'])
-cut['mu']=str(cutlist['2j1t']*cutlist['final_mu'])
+cut['ele']=str(cutlist['2j1t']*cutlist['final_ele']*Cuts.met)
+cut['mu']=str(cutlist['2j1t']*cutlist['final_mu']*Cuts.mt_mu)
 
 parser = argparse.ArgumentParser( description='Finds optimal BDT cut' )
 parser.add_argument(
@@ -35,8 +35,11 @@ for proc in ['ele', 'mu']:
     for b in range(100):
         bc=b*1./100
         mvayld = 0
+        mcut = Cuts.met
+        if proc == 'mu':
+            mcut = Cuts.mt_mu
         for k,v in samples.items():
-            mvayld+=v.getEntries(str(cutlist['2j1t']*cutlist['presel_'+proc]*Cut('mva_BDT>'+str(bc))))*v.lumiScaleFactor(lumi)
+            mvayld+=v.getEntries(str(cutlist['2j1t']*cutlist['presel_'+proc]*mcut*Cut('mva_BDT>'+str(bc))))*v.lumiScaleFactor(lumi)
         if not found and mvayld < yld:
             found = True
             break

@@ -79,6 +79,18 @@ xs["Tbar_t_scaledown"] = xs["Tbar_t_ToLeptons"]
 xs["TToLeptons_t-channel_mass166_5"] = xs["T_t_ToLeptons"]
 xs["T_t_ToLeptons_mass178_5"] = xs["T_t_ToLeptons"]
 
+xs["TToBMuNu_t-channel"] = (xs["T_t_ToLeptons"] + xs["Tbar_t_ToLeptons"]) / 3
+xs["TToBENu_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBTauNu_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBENu_anomWtb-0100_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBMuNu_anomWtb-0100_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBTauNu_anomWtb-0100_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBENu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBMuNu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBTauNu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
+
+
+
 #Use this dict to create lumis corresponding to processings. Please don't overwrite old lumis
 lumis = dict()
 lumis["83a02e9_Jul22"] = dict()
