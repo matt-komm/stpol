@@ -1,6 +1,7 @@
 #!/bin/env python
 from ROOT import TFile,TTree,TObject
 from plots.common.utils import *
+from plots.common.cuts import Cuts
 from plots.common.plot_defs import cutlist
 import sys
 
@@ -24,9 +25,9 @@ if len(sys.argv) == 3:
 else:
     flist=get_file_list(merge_cmds,sys.argv[1])
 
-cut = str(cutlist['2j1t']*cutlist['presel_ele'])
+cut = str(cutlist['2j1t']*cutlist['presel_ele']*Cuts.met)
 if '/mu/' in dir:
-    cut = str(cutlist['2j1t']*cutlist['presel_mu'])
+    cut = str(cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu)
 
 for f in flist:
     print "Starting:",f
@@ -37,7 +38,7 @@ for f in flist:
     ct=t.CopyTree(cut)
     print t, ct
     print t.GetEntries(), ct.GetEntries()
-    ct.SetName("Events_MVA")
+    ct.SetName("Events_MVAwQCD")
     tf.cd("trees")
     ct.Write("", TObject.kOverwrite)
     tf.Close()

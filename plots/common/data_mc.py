@@ -79,30 +79,22 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
 
             #FIXME: it'd be nice to move the isolation cut to plots/common/cuts.py for generality :) -JP
             cv='mu_iso'
-            lb=0.3
+            lb=0.2
             if lepton_channel == 'ele':
                 cv='el_iso'
                 lb=0.1
-            qcd_cut = cut*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
+            qcd_cut = cut*Cuts.deltaR(0.3)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
 
             #FIXME: It would be nice to factorise this part a bit (separate method?) or make it more clear :) -JP
-            region = '2j1t'
-            if plot_def['estQcd'] == '2j0t': region='2j0t'
-            if plot_def['estQcd'] == '3j1t': region='3j1t'
-            qcd_loose_cut = cutlist[region]*cutlist['presel_'+lepton_channel]*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
-            logger.debug('QCD loose cut: %s' % str(qcd_loose_cut))
             hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
-            hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
             hist_qcd.Scale(qcdScale[lepton_channel][plot_def['estQcd']])
-            if hist_qcd_loose.Integral():
-                hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
             sampn = "QCD"+sample.name
 
             #Rescale the QCD histogram to the eta_lj fit
             if "fitpars" in plot_def.keys():
-                rescale_to_fit(sampn, hist_qcd_loose, plot_def["fitpars"][lepton_channel])
+                rescale_to_fit(sampn, hist_qcd, plot_def["fitpars"][lepton_channel])
 
-            hists_mc[sampn] = hist_qcd_loose
+            hists_mc[sampn] = hist_qcd
             hists_mc[sampn].SetTitle('QCD')
             Styling.mc_style(hists_mc[sampn], 'QCD')
 
