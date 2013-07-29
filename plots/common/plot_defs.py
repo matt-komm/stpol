@@ -64,6 +64,8 @@ fitpars['final_2j1t'] = [
 
 #Load the scale factors externally for better factorisation
 from plots.qcd_scale_factors import qcdScale
+qcdScale['ele']['presel'] = 1.33
+qcdScale['mu']['presel'] = 27.9
 
 plot_defs={}
 
@@ -536,6 +538,21 @@ plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
 plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
 plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_met_fit']={
+    'tags': ["an", "control.tex", "mva"],
+    'enabled': True,
+    'var': 'met',
+    'range': [20, 40, 200],
+    'iso': True,
+    'estQcd': 'final_2j1t',
+    'gev': True,
+    'log': False,
+    'xlab': varnames["met"],
+    'labloc': 'top-right',
+    'fitpars': fitpars['final_2j1t'],
+    'elecut': plot_defs['final_etaLj_fit']['elecut'],
+    'mucut': plot_defs['final_etaLj_fit']['mucut']
+}
 
 
 plot_defs['final_BDT']={
@@ -544,7 +561,7 @@ plot_defs['final_BDT']={
     'var': 'mva_BDT',
     'range': [40, -1, 1],
     'iso': True,
-    'estQcd': 'final_2j1t',
+    'estQcd': 'presel',
     'gev': False,
     'log': True,
     'xlab': varnames["BDT_uncat"],
@@ -560,7 +577,7 @@ plot_defs['final_cosTheta_mva_loose']={
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
-    'estQcd': 'final_2j1t',
+    'estQcd': 'presel',
     'gev': False,
     'log': False,
     'xlab': varnames["cos_theta"],
@@ -568,9 +585,33 @@ plot_defs['final_cosTheta_mva_loose']={
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
 }
+
+
+plot_defs['final_met_mva_loose_fit']={
+    'tags': ["an", "control.tex", "mva"],
+    'enabled': True,
+    'var': 'met',
+    'range': [20, 0, 200],
+    'iso': True,
+    'estQcd': 'presel',
+    'gev': True,
+    'log': False,
+    'xlab': varnames["met"],
+    'labloc': 'top-right',
+    'fitpars': fitpars['final_2j1t'],
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
+}
+
 plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_tight']
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
+
+plot_defs['final_cosTheta_mva_tight_fit'] = cp(plot_defs['final_cosTheta_mva_tight'])
+plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t']
+
+plot_defs['final_cosTheta_mva_loose_fit'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
