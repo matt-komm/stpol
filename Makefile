@@ -17,6 +17,7 @@ clean:
 all: wjets_rew pytest
 
 wjets_rew:
+	mkdir -p $(STPOL_DIR)/bin
 	$(ROOTCC) $(BOOSTLIBS) $(SRC_DIR)/WJets_reweighting.cc -o bin/WJets_reweighting
 	#FIXME: compile using CMSSW-only libs
 	#$(ROOTCC) $(BOOSTLIBS) $(SRC_DIR)/histograms.cc -o bin/histograms

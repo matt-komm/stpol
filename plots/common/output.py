@@ -53,7 +53,19 @@ class OutputFolder:
 				raise e
 		logger.info("OutputFolder with %s" % self.out_folder)
 
-	def savePlot(self, canvas, plot_meta):
+	def get(self, path):
+		"""
+		Returns a path in this folder, creating it if it doesn't exist.
+		"""
+		_path = os.path.join(self.out_folder, path)
+		try:
+			os.makedirs(_path)
+		except Exception as e:
+			if not os.path.exists(_path):
+				raise e
+		return _path
+
+	def savePlot(self, canvas, plot_meta, printOut=True):
 		"""
 		Saves a ROOT.TCanvas into the folder and sets the metadata.
 		canvas - an ROOT TCanvas
@@ -72,6 +84,10 @@ class OutputFolder:
 		for format in ["pdf", "png"]:
 			outpath = os.path.join(subd, fname + "." + format)
 			logger.info("Saving plot to %s" % outpath)
+			
+			if printOut:
+				print "Saving plot to %s" % outpath
+
 			canvas.SaveAs(outpath)
 			plot_meta.update(outpath)
 

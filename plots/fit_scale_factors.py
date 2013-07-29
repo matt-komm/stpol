@@ -1,84 +1,47 @@
+from plots.common.utils import NestedDict
+from plots.common.utils import PhysicsProcess
+
 #Fit parameters from the final fit
 #Extracted in the muon channel using lqetafit/topfit.py
 #The first element in the tuple is a list of regex patterns to which you want to match this scale factor
 #The second element is the scale factor to apply (flat)
 #FIXME: most likely, one can incorporate the QCD scale factor from the QCD fit here as well
 #-JP
-fitpars = {}
-fitpars["mu"] = {}
-fitpars["ele"] = {}
-fitpars["mu"]['final_2j1t'] = [
-    (
-        PhysicsProcess.tchan.subprocesses,
-        1.227350
-    ),
-    (
-        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
-        1.075594
-    ),
-    (
-        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
-        1.051505
-    ),
-    (
-        ["QCDSingle.*"], #Data-driven QCD
-        1.018268
-    ),
+
+tchan = PhysicsProcess.tchan.subprocesses
+top = PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses
+WZJets = PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses
+qcd = ["QCDSingle.*"]
+
+fitpars = NestedDict()
+
+fitpars['final_2j1t']['mu'] = [
+    (tchan, 1.227350),
+    (top, 1.075594),
+    (WZJets, 1.051505),
+    (qcd, 1.018268),
 ]
 
-fitpars["mu"]['final_2j1t_mva_no_mt_cut'] = [
-    (
-        PhysicsProcess.tchan.subprocesses,
-        1.193656
-    ),
-    (
-        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
-        1.159650
-    ),
-    (
-        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
-        1.026309
-    ),
-    (
-        ["QCDSingle.*"], #Data-driven QCD
-        0.961991
-    ),
+fitpars['final_2j1t_mva_no_mt_cut']['mu'] = [
+    (tchan, 1.193656),
+    (top, 1.159650),
+    (WZJets, 1.026309),
+    (qcd, 0.961991),
 ]
 
-fitpars["mu"]['final_2j1t'] = [
-    (
-        PhysicsProcess.tchan.subprocesses,
-        1.082103
-    ),
-    (
-        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
-        1.038168
-    ),
-    (
-        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
-        1.307381
-    ),
-    (
-        ["QCDSingle.*"], #Data-driven QCD
-        1.008779
-    ),
+fitpars['final_2j1t']['ele'] = [
+    (tchan, 1.082103),
+    (top, 1.038168),
+    (WZJets, 1.307381),
+    (qcd, 1.008779),
 ]
 
-fitpars["ele"]['final_2j1t_mva_no_mt_cut'] = [
-    (
-        PhysicsProcess.tchan.subprocesses,
-        1.113995
-    ),
-    (
-        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
-        0.989816
-    ),
-    (
-        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
-        1.40333
-    ),
-    (
-        ["QCDSingle.*"], #Data-driven QCD
-        0.977402
-    ),
+fitpars['final_2j1t_mva_no_mt_cut']['ele'] = [
+    (tchan, 1.113995),
+    (top, 0.989816),
+    (WZJets, 1.40333),
+    (qcd, 0.977402),
 ]
+
+#Convert to static dict
+fitpars = fitpars.as_dict()

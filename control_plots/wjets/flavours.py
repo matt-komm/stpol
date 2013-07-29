@@ -79,7 +79,7 @@ if __name__=="__main__":
 			"W1Jets_exclusive.root", "W2Jets_exclusive.root", "W3Jets_exclusive.root", "W4Jets_exclusive.root",
 			"WJets_sherpa.root",
 		]
-		make_histos("2J", Cuts.one_muon*Cuts.n_jets(2)*Cuts.n_tags(1), samps, out_dir)
+		make_histos("2J", Cuts.one_muon*Cuts.n_jets(2), samps, out_dir)
 		#make_histos("2J1T", Cuts.final(2, 1), samps, out_dir)
 	if doPlots:
 		cut_name = "2J"
@@ -116,7 +116,5 @@ if __name__=="__main__":
 		hists[0].SetMaximum(10)
 		#hists[0].SetLineColor(ROOT.kGreen+2)
 		c.SetLogy()
-		c.SaveAs(out_dir + "/flavour_%s.png" % cut_name)
 		c.SaveAs(out_dir + "/flavour_%s.pdf" % cut_name)
-		c.SaveAs(out_dir + "/flavour_%s.eps" % cut_name)
 		c.Close()

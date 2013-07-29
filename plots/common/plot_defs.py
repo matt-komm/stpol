@@ -30,16 +30,16 @@ cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
 cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
-cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.6')
-cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.7')
-cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.36')
-cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.2')
-
-
-
+cutlist['bdt_mu_tight'] = Cut('mva_BDT>0.5')
+cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.5')
+cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.44')
+cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.23')
 
 #Load the scale factors externally for better factorisation
+from plots.fit_scale_factors import fitpars
 from plots.qcd_scale_factors import qcdScale
+qcdScale['ele']['presel'] = 1.33
+qcdScale['mu']['presel'] = 27.9
 
 plot_defs={}
 
@@ -194,7 +194,7 @@ plot_defs['met']={
     'var': 'met',
     'range': [40,0,200],
     'iso': True,
-    'estQcd': 'presel',
+    'estQcd': '2j1t_nomtcut',
     'gev': True,
     'log': False,
     'xlab': varnames["met"],
@@ -202,6 +202,13 @@ plot_defs['met']={
     'elecut': cutlist['2j1t']*cutlist['presel_ele'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']
 }
+
+plot_defs['met_BDT']=cp(plot_defs['met'])
+plot_defs['met_BDT']['estQcd']='2j1t'
+plot_defs['met_BDT']['elecut']*=Cuts.met
+plot_defs['met_BDT']['mucut']*=Cuts.mt_mu
+plot_defs['met_BDT']['fitpars'] = fitpars['final_2j1t']
+
 
 plot_defs['met_final']={
     'enabled': True,
@@ -306,13 +313,13 @@ plot_defs['mva_bdt']={
     'var': 'mva_BDT',
     'range': [40,-1,1],
     'iso': True,
-    'estQcd': 'presel',
+    'estQcd': '2j1t',
     'gev': False,
     'log': True,
     'xlab': varnames["BDT_uncat"],
     'labloc': 'top-right',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele'],
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu
 }
 
 plot_defs['mva_bdt_zoom']={
@@ -320,13 +327,13 @@ plot_defs['mva_bdt_zoom']={
     'var': 'mva_BDT',
     'range': [50,0,1],
     'iso': True,
-    'estQcd': 'presel',
+    'estQcd': '2j1t',
     'gev': False,
     'log': False,
     'xlab': varnames["BDT_uncat"],
     'labloc': 'top-right',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele'],
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu
 }
 
 plot_defs['cos_th_mva_loose']={
@@ -511,6 +518,21 @@ plot_defs['final_etaLj_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
 plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
+plot_defs['final_met_fit']={
+    'tags': ["an", "control.tex", "mva"],
+    'enabled': True,
+    'var': 'met',
+    'range': [20, 40, 200],
+    'iso': True,
+    'estQcd': 'final_2j1t',
+    'gev': True,
+    'log': False,
+    'xlab': varnames["met"],
+    'labloc': 'top-right',
+    'elecut': plot_defs['final_etaLj_fit']['elecut'],
+    'mucut': plot_defs['final_etaLj_fit']['mucut']
+}
+
 plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
 
 
@@ -520,7 +542,7 @@ plot_defs['final_BDT']={
     'var': 'mva_BDT',
     'range': [40, -1, 1],
     'iso': True,
-    'estQcd': 'final_2j1t',
+    'estQcd': 'presel',
     'gev': False,
     'log': True,
     'xlab': varnames["BDT_uncat"],
@@ -530,23 +552,52 @@ plot_defs['final_BDT']={
     'dir': "control"
 }
 
+plot_defs['final_BDT_fit'] = cp(plot_defs['final_BDT'])
+
+
 plot_defs['final_cosTheta_mva_loose']={
     'tags': ["an", "control.tex", "mva"],
     'enabled': True,
     'var': 'cos_theta',
     'range': [20,-1,1],
     'iso': True,
-    'estQcd': 'final_2j1t',
+    'estQcd': 'presel',
     'gev': False,
     'log': False,
     'xlab': varnames["cos_theta"],
     'labloc': 'top-left',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose'],
+    'dir': "control"
 }
+
+
+plot_defs['final_met_mva_loose_fit']={
+    'tags': ["an", "control.tex", "mva"],
+    'enabled': True,
+    'var': 'met',
+    'range': [20, 0, 200],
+    'iso': True,
+    'estQcd': 'presel',
+    'gev': True,
+    'log': False,
+    'xlab': varnames["met"],
+    'labloc': 'top-right',
+    'fitpars': fitpars['final_2j1t_mva_no_mt_cut'],
+    'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose'],
+    'dir': "control"
+}
+
 plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_tight']
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
+
+plot_defs['final_cosTheta_mva_tight_fit'] = cp(plot_defs['final_cosTheta_mva_tight'])
+plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva_no_mt_cut']
+
+plot_defs['final_cosTheta_mva_loose_fit'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva_no_mt_cut']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
