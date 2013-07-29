@@ -70,7 +70,7 @@ def save_yield_table(hmerged_mc, hdata, ofdir, name):
         ofi.write(yield_string(hsum, "MC"))
         ofi.write(yield_string(hdata, "data"))
 
-        #Get the pretty names for the processes from the PhysicsProces.pretty_name variable
+        #Get the pretty names for the processes from the PhysicsProcess.pretty_name variable
         for procname, hist in merged_hists.items():
             try:
                 hist.SetTitle(physics_processes[procname].pretty_name)
