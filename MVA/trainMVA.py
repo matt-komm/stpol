@@ -9,7 +9,7 @@ from plots.common.utils import *
 from plots.common.colors import sample_colors_same
 from plots.common.cross_sections import lumis
 from plots.common.cuts import *
-from plots.common.plot_defs import qcdScale
+from plots.qcd_scale_factors import qcdScale
 
 if len(sys.argv) < 2: 
     print "Usage: ./trainMVA.py ele/mu"
@@ -37,7 +37,7 @@ flist += get_file_list(
 # Read in the file list from the output directory
 samples = {}
 for f in flist:
-    samples[f] = Sample.fromFile(f, tree_name="Events_MVA")
+    samples[f] = Sample.fromFile(f, tree_name="Events_MVAwQCD")
 
 # To compute accurate weight we need to load from the tree also the weights in question
 weightString = str(Weights.total(proc) *
@@ -56,7 +56,7 @@ for key in flist:
     if samples[key].isMC: 
         w[key]=samples[key].lumiScaleFactor(lumi)
     if 'data' in key:# and proc=='ele':
-        w[key]=qcdScale[proc]['presel']
+        w[key]=qcdScale[proc]['2j1t']
 
 signal=['T_t_ToLeptons','Tbar_t_ToLeptons']
 
