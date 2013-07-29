@@ -40,7 +40,7 @@ class OutputFolder:
 		unique_subdir = kwargs.get("unique_subdir", False)
 		if unique_subdir:
 			self.out_folder += "_" + uuid()
-		self.out_folder = os.path.join(self.out_folder, subpath)
+		self.out_folder = os.path.join(self.out_folder, subdir)
 
 		if overwrite:
 			logger.info("Deleting output folder %s" % self.out_folder)
