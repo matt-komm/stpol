@@ -30,6 +30,8 @@ class OutputFolder:
         subdir - a path in out_folder_UNIQUEID/subdir which will be used for output.
             Useful if you have multiple logically
             separate things going to the same output folder.
+        skip_png - boolean to determine if you want to remove saving the canvases to PNG, which
+            sadly does not work on the cluster.
         """
         if not out_folder:
             out_folder = os.path.join(os.environ["STPOL_DIR"], "out")
@@ -38,6 +40,7 @@ class OutputFolder:
         overwrite = kwargs.get("overwrite", False)
         subdir = kwargs.get("subdir", "")
         unique_subdir = kwargs.get("unique_subdir", False)
+        self.skip_png = kwargs.get("skip_png", False)
         if unique_subdir:
             self.out_folder += "_" + uuid()
         self.out_folder = os.path.join(self.out_folder, subdir)
@@ -83,7 +86,10 @@ class OutputFolder:
 
         fname = plot_meta.title
 
-        for format in ["pdf", "png"]:
+        formats = ["pdf"]
+        if not self.skip_png:
+            formats += ["png"]
+        for format in formats:
             outpath = os.path.join(subd, fname + "." + format)
             logger.info("Saving plot to %s" % outpath)
 
@@ -95,7 +101,3 @@ class OutputFolder:
                 plot_meta.update(outpath)
             except Exception as e:
                 logger.error("Couldn't save image: " + str(e))
-
-
-
-
