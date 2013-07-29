@@ -4,7 +4,6 @@ __all__ = ['prepare']
 import os
 import os.path
 import shutil
-import tempfile
 from glob import glob
 import array
 import random
@@ -19,7 +18,7 @@ _default_cutstring = str(cuts.Cuts.rms_lj*cuts.Cuts.mt_mu*cuts.Cuts.n_jets(2)*cu
 # ============================
 
 def prepare(signals, backgrounds, step3_path='step3_latest', odir='prepared',
-            default_ratio=0.5, copy_trees=False, cutstring=_default_cutstring,
+            default_ratio=0.5, prep_step3=False, cutstring=_default_cutstring,
             channels=['mu', 'ele'], datatypes=['data', 'mc']):
 	"""Prepares the output files from step3 for usage in the MVA.
 
@@ -30,10 +29,13 @@ def prepare(signals, backgrounds, step3_path='step3_latest', odir='prepared',
 	is used.
 
 	The function looks for the step3 samples in the step3_path and creates
-	a new directory odir where the output is stored. If copy_trees is True
-	then all the trees are copied to the odir (retaining the directory structure
-	of the step3). Events used for training are removed from the signal and
-	background trees.
+	a new directory `odir` where the output is stored. If prep_step3 is True
+	then all the trees are symlinked to the odir (retaining the directory
+	structure of the step3). In addition to that, trees `<sample>_mva.root`
+	are created that contain the `mva_training_weight` branch, which can be
+	used to exclude training events from plotting (`mva_training_weight` is
+	0.0 for training events, weighted appropriately for testing events and
+	1.0 for events that do not pass the cut used to choose training events.
 
 	"""
 	step3_path = os.path.abspath(step3_path)
@@ -62,11 +64,15 @@ def prepare(signals, backgrounds, step3_path='step3_latest', odir='prepared',
 
 		for datatype in datatypes:
 			path, samples = _find_files(step3_path, channel, datatype)
-			if copy_trees and not os.path.isdir(os.path.join(odir, path)):
+			if prep_step3 and not os.path.isdir(os.path.join(odir, path)):
 				os.makedirs(os.path.join(odir, path))
 
 			for s in samples:
 				sample_ifname = os.path.join(step3_path, path, '{0}.root'.format(s))
+				print '> sample `{0}` from `{1}`'.format(s, sample_ifname)
+				if prep_step3:
+					sample_ofname = os.path.join(odir, path, '{0}.root'.format(s))
+					os.symlink(sample_ifname, sample_ofname)
 				if s in signal_and_bg:
 					sigbg = 'signal' if s in signals else 'background'
 					fraction = signal_and_bg[s]
@@ -84,36 +90,16 @@ def prepare(signals, backgrounds, step3_path='step3_latest', odir='prepared',
 					tdir = tfile.Get('{0}/{1}'.format('test', sigbg))
 					tc.write_test_tree(tdir, name=s)
 
-					if copy_trees:
-						sample_ofname = os.path.join(odir, path, '{0}.root'.format(s))
+					if prep_step3:
+						sample_ofname = os.path.join(odir, path, '{0}_mva.root'.format(s))
 						tfile_sample_of = ROOT.TFile(sample_ofname, 'RECREATE')
 						tdir = tfile_sample_of.mkdir('trees')
-						tc.write_test_tree(tdir)
+						tc.write_weight_tree(tdir)
 						tdir.cd()
-						count_hist_new = ROOT.TH1I(count_hist)
-						scf = fraction if tc.nentries == 0 else float(tc.nentries-tc.nentries_training)/tc.nentries
-						count_hist_new.Scale(scf)
-						count_hist_new.Write('count_hist')
-						tfile_sample_of.Close()
-
-						sample_ofname = os.path.join(odir, path, '{0}_train.root'.format(s))
-						tfile_sample_of = ROOT.TFile(sample_ofname, 'RECREATE')
-						tdir = tfile_sample_of.mkdir('trees')
-						tc.write_train_tree(tdir)
-						count_hist_new = ROOT.TH1I(count_hist)
-						scf = fraction if tc.nentries == 0 else float(tc.nentries_training)/tc.nentries
-						count_hist_new.Scale(scf)
-						count_hist_new.Write('count_hist2')
 						tfile_sample_of.Close()
 
 					del tc
 					tfile_sample.Close()
-				elif copy_trees:
-					sample_ofname = os.path.join(odir, path, '{0}.root'.format(s))
-					print 'Direct copy: {0} ({1} -> {2})'.format(s, sample_ifname,
-					                                                sample_ofname)
-					shutil.copyfile(sample_ifname, sample_ofname)
-
 		tfile.Close()
 
 
@@ -155,38 +141,68 @@ def _get_sample_name(fullpath):
 
 class _TrainTreeCreator:
 	"""Helper class that is used to create and write the training trees."""
-	def __init__(self, intree, cutstring, fraction):
-		self.tmpfile = tempfile.NamedTemporaryFile(mode='r', delete=False)
-		self.temp_tfile = ROOT.TFile(self.tmpfile.name, 'RECREATE')
-		self.temp_tfile.cd()
+	def __init__(self, tree, cutstring, fraction):
+		self.tree = tree
 
-		self.tree = intree.CopyTree(cutstring)
-		self.nentries = self.tree.GetEntries()
+		self.elist_all = ROOT.TEntryList('elist_all', '')
+		self.elist_cut = ROOT.TEntryList('elist_cut', '')
+		self.elist_invcut = ROOT.TEntryList('elist_invcut', '')
 
-		int_training = array.array('i', [0])
-		newbranch = self.tree.Branch('training', int_training, 'training/I')
+		self.tree.Draw('>>elist_all', '', 'entrylist')
+		self.tree.Draw('>>elist_cut', cutstring, 'entrylist')
+		self.elist_invcut.Add(self.elist_all)
+		self.elist_invcut.Subtract(self.elist_cut)
 
-		self.nentries_training = 0
-		for n in xrange(self.nentries):
-			self.tree.GetEntry(n)
-			int_training[0] = 1 if random.random() >= fraction else 0
-			self.nentries_training += int_training[0]
-			newbranch.Fill()
+		evids_cutall = list(mvalib.utils.iter_entrylist(self.elist_cut))
+		evids_invcut = list(mvalib.utils.iter_entrylist(self.elist_invcut))
+		random.shuffle(evids_cutall)
+		N_train = int(fraction*len(evids_cutall))
+		#print 'N_train:', N_train
+		evids_train = evids_cutall[:N_train]
+		evids_test  = evids_cutall[N_train:]
+		
+		self.elist_train = ROOT.TEntryList('elist_train', '')
+		self.elist_test  = ROOT.TEntryList('elist_test', '')
+		map(self.elist_train.Enter, evids_train)
+		map(self.elist_test.Enter, evids_test)
 
-	def __del__(self):
-		self.temp_tfile.Close()
-		del self.tmpfile
+		try:
+			weight = float(len(evids_cutall))/float((len(evids_cutall)-N_train))
+			print 'Weight:', weight
+		except ZeroDivisionError as e:
+			print 'Warning: ZeroDivisionError', e
+			print 'len(evids_cutall):', len(evids_cutall)
+			print 'N_train:', N_train
+			weight = 0
+
+		weights_test   = list(map(lambda n:(n,0.0), evids_test))
+		weights_train  = list(map(lambda n:(n,weight), evids_train))
+		weights_invcut = list(map(lambda n:(n,1.0), evids_invcut))
+		self.weights = sorted(weights_test+weights_train+weights_invcut)
+
+	def write_weight_tree(self, tdir, treename='mva'):
+		tdir.cd()
+		otree = ROOT.TTree(treename, treename)
+		var_w = array.array('f', [0])
+		br = otree.Branch('mva_training_weight', var_w, 'mva_training_weight/F')
+
+		for n,var_w[0] in self.weights:
+			otree.Fill()
+		otree.Write()
 
 	def write_train_tree(self, tdir, name='Events'):
-		self._write_tree(tdir, 'training==1', name)
+		self._write_tree(tdir, self.elist_train, name)
 
 	def write_test_tree(self, tdir, name='Events'):
-		self._write_tree(tdir, 'training==0', name)
+		self._write_tree(tdir, self.elist_test, name)
 
-	def _write_tree(self, tdir, cut, name):
-		print 'Writing `{0}` to `{1}`'.format(cut, str(tdir))
+	def _write_tree(self, tdir, elist, name):
+		print 'Writing to `{0}`'.format(tdir)
+		self.tree.SetEntryList(elist)
 		tdir.cd()
-		self.tree.CopyTree(cut).Write(name)
+		otree=self.tree.CopyTree('')
+		otree.Write(name)
+		print 'Events written:',otree.GetEntries()
 
 # Unit testing...
 if __name__ == '__main__':
@@ -208,4 +224,4 @@ if __name__ == '__main__':
 
 	shutil.rmtree('prep_unit', ignore_errors=True)
 	prepare(['T_t_ToLeptons', 'Tbar_t_ToLeptons'], ['WW', 'WZ', 'ZZ'],
-	        odir='prep_unit', copy_trees=True)
+	        odir='prep_unit', prep_step3=True)
