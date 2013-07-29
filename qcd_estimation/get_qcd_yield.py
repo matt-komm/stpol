@@ -21,7 +21,7 @@ from DataLumiStorage import *
 from plots.common.cuts import Cuts
 import logging
 import rootpy
-
+from systematics import *
 logger = logging.getLogger("get_qcd_yield")
 
 try:
@@ -29,6 +29,7 @@ try:
 except Exception as e:
     sys.stderr.write("You need to run `source $STPOL_DIR/setenv.sh` to use the custom python libraries\n")
     raise e
+
 
 def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     infile = "fits/"+var.shortName+"_fit_"+filename+".root"
@@ -81,7 +82,7 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$S
 
     #Specify variable on which to fit
     if channel == "mu":
-        var = Variable("mt_mu", 0, 200, 10, "mtwMass", "m_{T }")
+        var = Variable("mt_mu", 0, 200, 20, "mtwMass", "m_{T }")
     elif channel == "ele":
         var = Variable("met", 0, 200, 40, "MET", "MET")
     else:
@@ -149,7 +150,7 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$S
 
     #Open files
     if do_systematics:
-        systematics = ["Nominal", "En", "Res", "UnclusteredEn"]
+        systematics = ["Nominal", "En"]
     else:
         systematics = ["Nominal"]
 
@@ -221,7 +222,6 @@ if __name__=="__main__":
         bc = str(Cuts.n_jets(nj)*Cuts.rms_lj)
         cuts[s].setBaseCuts(bc)
         cuts[s].setFinalCuts(str(final_cut))
-
     #Remove the name of this script from the argument list in order to not confuse ArgumentParser
     try:
         sys.argv.pop(sys.argv.index("get_qcd_yield.py"))
@@ -236,15 +236,17 @@ if __name__=="__main__":
         help="The cut region to use in the fit", action='append')
     parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=False)
     parser.add_argument('--doSystematics', action="store_true", default=False)
+    parser.add_argument('--doSystematicCuts', action="store_true", default=False, help="Various anti-iso regions etc.")
 
     #FIXME: now that the script outputs the fit results both before and after the M_t cut, isn't this a bit redundant? -JP
     parser.add_argument('--mtcut',dest='mtcut',action='store_true', default=True, help="Apply the corresponding MET/MtW cut")
     parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
     args = parser.parse_args()
 
-    #No cuts specified, do them all
-    if not args.cuts:
-        args.cuts = cuts.keys()
+    if args.doSystematicCuts == True:
+        args.cuts = systematics_cuts()#.keys()
+    elif not args.cuts: #No cuts specified, do them all
+        args.cuts = cuts#.keys()
 
     ofdir = "fitted/" + args.channel
     try:
@@ -255,7 +257,7 @@ if __name__=="__main__":
 
     failed = []
     for cutn in args.cuts:
-        cut = cuts[cutn]
+        cut = args.cuts[cutn]
         try:
             (results, fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, base_path=args.path, do_systematics=args.doSystematics)
         except rootpy.ROOTError:
@@ -269,7 +271,7 @@ if __name__=="__main__":
         
         print "QCD scale factor, with m_t/met cut:", qcd_sf, "from", fit.orig["qcd_no_mc_sub"], "to ", y
         print "QCD scale factor, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_no_mc_sub_nomtcut"], "to ", y_nomtcut
-        
+        print "Fit information", fit
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         
         with open(ofdir + "/%s.txt" % cut.name, "w") as of:
