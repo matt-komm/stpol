@@ -79,7 +79,15 @@ class PhysicsProcess:
         out_d["TTJets"] = self.TTJets_exc
         out_d["tWchan"] = self.tWchan
         out_d["schan"] = self.schan
-        out_d["tchan"] = self.tchan
+        print "SYSSST", systematic_channel
+        if systematic_channel=="nominal" or systematic_channel=="powheg":
+            out_d["tchan"] = self.tchan
+        elif systematic_channel=="comphep":
+            out_d["tchan"] = self.tchan_comphep
+        elif systematic_channel=="anomWtb-0100":
+            out_d["tchan"] = self.tchan_comphep_anomWtb_0100
+        elif systematic_channel=="anomWtb-unphys":
+            out_d["tchan"] = self.tchan_comphep_anomWtb_unphys
         return out_d
 
     @classmethod
@@ -130,6 +138,21 @@ PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"],
 PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"],
 #    pretty_name="signal"
     pretty_name="signal (t-channel)"
+)
+
+PhysicsProcess.tchan_comphep = PhysicsProcess("tchan_comphep", ["TToB(.*)Nu_t-channel"],
+#    pretty_name="signal"
+    pretty_name="signal (t-channel)"
+)
+
+PhysicsProcess.tchan_comphep_anomWtb_0100 = PhysicsProcess("tchan_comphep_anomWtb-0100", ["TToB(.*)Nu_anomWtb-0100_t-channel"],
+#    pretty_name="signal"
+    pretty_name="anomalous Wtb-0100 signal (t-channel)"
+)
+
+PhysicsProcess.tchan_comphep_anomWtb_unphys = PhysicsProcess("tchan_comphep_anomWtb_unphys", ["TToB(.*)Nu_anomWtb-unphys_t-channel"],
+#    pretty_name="signal"
+    pretty_name="anomalous unphys signal (t-channel)"
 )
 
 #for syst in ["scaleup", "scaledown"]:

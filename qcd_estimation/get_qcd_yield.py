@@ -30,6 +30,13 @@ except Exception as e:
     sys.stderr.write("You need to run `source $STPOL_DIR/setenv.sh` to use the custom python libraries\n")
     raise e
 
+def get_yield_withMT(histo, mtMinValue):
+    bin1 = histo.FindBin(mtMinValue)
+    bin2 = histo.GetNbinsX() + 1
+    #print hQCD.Integral(), y.Integral()
+    error = array('d',[0.])
+    y = histo.IntegralAndError(bin1,bin2,error)
+    return y
 
 def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     infile = "fits/"+var.shortName+"_fit_"+filename+".root"
@@ -71,6 +78,14 @@ def get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGro
     fit.dataHisto = dataHisto
     return (get_yield(var, cuts.name, cutMT, mtMinValue, fit, dataGroup), fit)
 
+def getMtMinValue(channel):
+    if channel == "mu":
+        #cutMT = True
+        mtMinValue = 50.01 # M_T>50
+    elif channel == "ele":
+        #cutMT = True
+        mtMinValue = 45.01 # MET>45
+    return mtMinValue
 
 def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$STPOL_DIR/step3_latest/", do_systematics=False):
 #    do_systematics = True
@@ -93,12 +108,7 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$S
     #Remember that the cut should be on the edge of 2 bins, otherwise the result will be inaccurate
 
 
-    if channel == "mu":
-        #cutMT = True
-        mtMinValue = 50.01 # M_T>50
-    elif channel == "ele":
-        #cutMT = True
-        mtMinValue = 45.01 # MET>45
+    mtMinValue = getMtMinValue(channel)
 
     #Use Default cuts for final selection. See FitConfig for details on how to change the cuts.
 
@@ -183,30 +193,23 @@ if __name__=="__main__":
     #Create the cuts in a programmatic way
     cuts = {}
     final_cut = Cuts.top_mass_sig * Cuts.eta_lj
-    for nj in [2,3]:
-        for nt in [0,1,2]:
+    for nj in [2]:#,3]:
+        for nt in [1]:#[0,1,2]:
 
-            #Final cut in Njets, Ntags
-            #This is _NOT_ the final cut!! This is only applying good leptons, n_jets/tags and rms_lj! Or is it? -JP
+            #Before eta and top mass cuts. Also for MVA
             c = "%dj%dt" % (nj, nt)
             cuts[c] = FitConfig(c)
-            bc = str(Cuts.n_jets(nj)*Cuts.n_tags(nt)*Cuts.rms_lj)
-            cuts[c].setBaseCuts(bc)
             cuts[c].setFinalCuts("1")
 
-            #Fit cut in Njets, Ntags
-            #What is a 'Fit cut'? Please be more specific. -JP
+            #Eta Fit cut in Njets, Ntags
             c0 = "fit_%dj%dt" % (nj, nt)
             cuts[c0] = FitConfig(c0)
-            bc = str(Cuts.n_jets(nj)*Cuts.n_tags(nt)*Cuts.rms_lj)
-            cuts[c0].setBaseCuts(bc)
             cuts[c0].setFinalCuts(str(Cuts.top_mass_sig))
 
             #Final cut in Njets, Ntags
             #This is the _FINAL_ cut, where we show cos_theta
-            c1 = "final_" + c
+            c1 = "final__%dj%dt" % (nj, nt)
             cuts[c1] = FitConfig(c1)
-            cuts[c1].setBaseCuts(bc)
             cuts[c1].setFinalCuts(
                 str(final_cut)
             )
@@ -274,10 +277,15 @@ if __name__=="__main__":
         print "Fit information", fit
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         
+        
         with open(ofdir + "/%s.txt" % cut.name, "w") as of:
             of.write("%f %f %f\n" % (qcd_sf, y, error))
+            of.write("Iso data yield %f\n" % (get_yield_withMT(fit.dataHisto, getMtMinValue(args.channel))))
+            of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
         with open(ofdir + "/%s_nomtcut.txt" % cut.name, "w") as of:
             of.write("%f %f %f\n" % (qcd_sf_nomt, y_nomtcut, error_nomtcut))
+            of.write("Iso data yield %f\n" % (fit.dataHisto.Integral()))
+            of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
 
     print "Failed to converge: ", str(failed)
 
