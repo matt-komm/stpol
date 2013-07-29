@@ -507,13 +507,9 @@ plot_defs['final_etaLj']={
 
 #Create the final plots with after fitting
 plot_defs['final_etaLj_fit'] = cp(plot_defs['final_etaLj'])
-<<<<<<< HEAD
-plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
-=======
 plot_defs['final_etaLj_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
 plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t']
->>>>>>> master
 plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
 plot_defs['final_met_fit']={
     'tags': ["an", "control.tex", "mva"],
@@ -529,10 +525,8 @@ plot_defs['final_met_fit']={
     'elecut': plot_defs['final_etaLj_fit']['elecut'],
     'mucut': plot_defs['final_etaLj_fit']['mucut']
 }
-<<<<<<< HEAD
-=======
+
 plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
->>>>>>> master
 
 
 plot_defs['final_BDT']={

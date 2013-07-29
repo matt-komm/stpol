@@ -1,4 +1,4 @@
-import logging
+import logging,re
 logger = logging.getLogger("data_mc")
 import ROOT
 
@@ -11,6 +11,33 @@ from plots.common.legend import legend
 from plots.common.odict import OrderedDict
 from plots.common.stack_plot import plot_hists_stacked
 from plots.common.hist_plots import plot_data_mc_ratio
+
+
+def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
+    """
+    Rescales the histogram from a sample by the corresponding scale factors.
+    Raises a KeyError when there was no match.
+
+    sample_name - the name of the sample, corresponding to the patterns in fitpars
+    hist - the Hist to be scaled
+    fitpars - a list with tuple contents
+        [
+            ([patA1, patA2, ...], sfA),
+            ([patB1, patB2, ...], sfB),
+        ]
+
+    returns - nothing
+    """
+    for patterns, sf in fitpars:
+        for pat in patterns:
+            if re.match(pat, sample_name):
+                logger.debug("Rescaling sample %s to lepton_channeless %s, sf=%.2f" % (sample_name, pat, sf))
+                hist.Scale(sf)
+                #We take the first match
+                return
+    #If we loop through and get here, there was no match
+    if not ignore_missing:
+        raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
 
 def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cmds):
 
@@ -46,7 +73,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
             Styling.mc_style(hists_mc[sample.name], sample.name)
 
             if "fitpars" in plot_def.keys():
-                rescale_to_fit(sample.name, hist, plot_def["fitpars"])
+                rescale_to_fit(sample.name, hist, plot_def["fitpars"][lepton_channel])
         elif "antiiso" in name and plot_def['estQcd']:
 
             #FIXME: it'd be nice to move the isolation cut to plots/common/cuts.py for generality :) -JP
@@ -72,7 +99,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
 
             #Rescale the QCD histogram to the eta_lj fit
             if "fitpars" in plot_def.keys():
-                rescale_to_fit(sampn, hist_qcd_loose, plot_def["fitpars"])
+                rescale_to_fit(sampn, hist_qcd_loose, plot_def["fitpars"][lepton_channel])
 
             hists_mc[sampn] = hist_qcd_loose
             hists_mc[sampn].SetTitle('QCD')

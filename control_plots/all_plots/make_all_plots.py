@@ -50,33 +50,6 @@ lumis = {
     "ele":12410+6144
 }
 
-
-def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
-    """
-    Rescales the histogram from a sample by the corresponding scale factors.
-    Raises a KeyError when there was no match.
-
-    sample_name - the name of the sample, corresponding to the patterns in fitpars
-    hist - the Hist to be scaled
-    fitpars - a list with tuple contents
-        [
-            ([patA1, patA2, ...], sfA),
-            ([patB1, patB2, ...], sfB),
-        ]
-
-    returns - nothing
-    """
-    for patterns, sf in fitpars:
-        for pat in patterns:
-            if re.match(pat, sample_name):
-                logger.debug("Rescaling sample %s to lepton_channeless %s, sf=%.2f" % (sample_name, pat, sf))
-                hist.Scale(sf)
-                #We take the first match
-                return
-    #If we loop through and get here, there was no match
-    if not ignore_missing:
-        raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
-
 def yield_string(h, hn=None):
     if not hn:
         hn = hn.GetTitle()
@@ -243,7 +216,7 @@ if __name__=="__main__":
             if "dir" in plot_def.keys():
                 subpath = plot_def["dir"]
 
-
+            #Set the plot metadata
             comments = ""
             comments = " chi2=%.2f" % htot_data.Chi2Test(htot_mc, "UW CHI2/NDF")
             if "fitpars" in plot_def.keys():
