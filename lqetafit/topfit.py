@@ -156,7 +156,7 @@ if __name__=="__main__":
 
 
 
-    of = OutputFolder(subdir="fit")
+    of = OutputFolder(subdir="plots")
     def plot_data_mc(hists_mc, hist_data, name):
         canv = ROOT.TCanvas()
         p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
