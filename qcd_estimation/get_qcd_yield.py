@@ -199,11 +199,13 @@ if __name__=="__main__":
             #Before eta and top mass cuts. Also for MVA
             c = "%dj%dt" % (nj, nt)
             cuts[c] = FitConfig(c)
+            cuts[c].setBaseCuts("n_jets == %d && n_tags == %d && n_veto_ele==0 && n_veto_mu==0" % (nj,nt))
             cuts[c].setFinalCuts("1")
 
             #Eta Fit cut in Njets, Ntags
             c0 = "fit_%dj%dt" % (nj, nt)
             cuts[c0] = FitConfig(c0)
+            cuts[c0].setBaseCuts("n_jets == %d && n_tags == %d && n_veto_ele==0 && n_veto_mu==0" % (nj,nt))
             cuts[c0].setFinalCuts(str(Cuts.top_mass_sig))
 
             #Final cut in Njets, Ntags
@@ -213,10 +215,12 @@ if __name__=="__main__":
             cuts[c1].setFinalCuts(
                 str(final_cut)
             )
+            cuts[c].setBaseCuts("n_jets == %d && n_tags == %d && n_veto_ele==0 && n_veto_mu==0" % (nj,nt))
+            
 
         s = "%dj" % nj
         cuts[s] = FitConfig(s)
-        bc = str(Cuts.n_jets(nj)*Cuts.rms_lj)
+        bc = str(Cuts.n_jets(nj)*Cuts.rms_lj*Cuts.lepton_veto)
         cuts[s].setBaseCuts(bc)
         cuts[s].setFinalCuts("1")
 
