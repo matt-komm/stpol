@@ -237,7 +237,7 @@ if __name__=="__main__":
                     Styling.mc_style(hists_mc[sample.name], sample.name)
 
                     if "fitpars" in plot_def.keys():
-                        rescale_to_fit(sample.name, hist, plot_def["fitpars"])
+                        rescale_to_fit(sample.name, hist, plot_def["fitpars"][proc])
                 elif "antiiso" in name and plot_def['estQcd']:
 
                     #FIXME: it'd be nice to move the isolation cut to plots/common/cuts.py for generality :) -JP
@@ -264,7 +264,7 @@ if __name__=="__main__":
 
                     #Rescale the QCD histogram to the eta_lj fit
                     if "fitpars" in plot_def.keys():
-                        rescale_to_fit(sampn, hist_qcd_loose, plot_def["fitpars"])
+                        rescale_to_fit(sampn, hist_qcd_loose, plot_def["fitpars"][proc])
 
                     hists_mc[sampn] = hist_qcd_loose
                     hists_mc[sampn].SetTitle('QCD')
@@ -412,7 +412,7 @@ if __name__=="__main__":
 
             comments = " chi2=%.2f" % chi2
             if "fitpars" in plot_def.keys():
-                comments += " fitpars=" + str(plot_def["fitpars"])
+                comments += " fitpars=" + str(plot_def["fitpars"][proc])
             if not OLD_PLOTTING:
                 pinfo = PlotMetaInfo(
                     pd + "_" + _proc,
