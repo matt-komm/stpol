@@ -12,10 +12,7 @@ from plots.common.odict import OrderedDict
 from plots.common.stack_plot import plot_hists_stacked
 from plots.common.hist_plots import plot_data_mc_ratio
 
-def data_mc_plot(samples, plot_def, name, lepton_channel, lumi):
-
-    physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=lepton_channel)#Contains the information about merging samples and proper pretty names for samples
-    merge_cmds = PhysicsProcess.get_merge_dict(physics_processes) #The actual merge dictionary
+def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cmds):
 
     logger.info('Plot in progress %s' % name)
 
@@ -35,9 +32,6 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi):
         cut = plot_def['mucut']
 
     cut_str = str(cut)
-    weight_str = str(Weights.total(lepton_channel) *
-        Weights.wjets_madgraph_shape_weight() *
-        Weights.wjets_madgraph_flat_weight())
 
     plot_range = plot_def['range']
 
@@ -46,7 +40,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi):
     for name, sample in samples.items():
         logger.debug("Starting to plot %s" % name)
         if sample.isMC:
-            hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
+            hist = sample.drawHistogram(var, cut_str, weight=str(weight), plot_range=plot_range)
             hist.Scale(sample.lumiScaleFactor(lumi))
             hists_mc[sample.name] = hist
             Styling.mc_style(hists_mc[sample.name], sample.name)
@@ -62,7 +56,6 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi):
                 cv='el_iso'
                 lb=0.1
             qcd_cut = cut*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
-
 
             #FIXME: It would be nice to factorise this part a bit (separate method?) or make it more clear :) -JP
             region = '2j1t'
@@ -104,31 +97,10 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi):
         order = PhysicsProcess.desired_plot_order_log+['QCD']
     merged_hists = merge_hists(hists_mc, merge_cmds, order=order)
 
-
-    #Get the pretty names for the processes from the PhysicsProces.pretty_name variable
-    for procname, hist in merged_hists.items():
-        try:
-            hist.SetTitle(physics_processes[procname].pretty_name)
-        except KeyError: #QCD does not have a defined PhysicsProcess but that's fine because we take it separately
-            pass
-
     if hist_data.Integral()<=0:
         raise Exception("Histogram for data was empty. Something went wrong, please check.")
-    # #Some printout
-    # for hn, h in (merged_hists.items() + [("data", hist_data)]):
-    #     #print h.GetName(), h.GetTitle(), h.Integral()
-    #     tot, err = calc_int_err(h)
-    #     outtxt='{0} | {1:.2f} | {2:.2f}\n'.format(hn, tot, err)
-    #     yf.write(outtxt)
-    #     #if hn != 'data':
-    #     #    htot.Add(h)
+        
     htot = sum(merged_hists.values())
-
-    # #We have a separate method for the error
-    # tot, err = calc_int_err(htot)
-    # outtxt='MC | {0:.2f} | {1:.2f}\n'.format(tot,err)
-    # yf.write(outtxt)
-    # yf.close()
 
     chi2 = hist_data.Chi2Test(htot, "UW CHI2/NDF")
     if chi2>20:#FIXME: uglyness
@@ -141,14 +113,14 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi):
             " ".join(map(lambda x: "%.1f" % x, numpy.abs(numpy.array(list(htot.y())) - numpy.array(list(hist_data.y())))))
         ))
 
-    merged_hists = merged_hists.values()
-    leg = legend([hist_data] + list(reversed(merged_hists)), legend_pos=plot_def['labloc'], style=['p','f'])
+    merged_hists_l = merged_hists.values()
+    leg = legend([hist_data] + list(reversed(merged_hists_l)), legend_pos=plot_def['labloc'], style=['p','f'])
 
     canv = ROOT.TCanvas()
 
     #Make the stacks
     stacks_d = OrderedDict()
-    stacks_d["mc"] = merged_hists
+    stacks_d["mc"] = merged_hists_l
     stacks_d["data"] = [hist_data]
 
     #label
@@ -200,13 +172,4 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi):
     canv.HRATIO = hratio
     canv.HLINE = hline
 
-    pinfo = PlotMetaInfo(
-        pd + "_" + _proc,
-        cut,
-        weight_str,
-        [x.tfile.GetPath() for x in samples],
-        subpath,
-        comments
-    )
-
-    return canv, merged_hists
+    return canv, merged_hists, htot, hist_data

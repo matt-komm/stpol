@@ -35,52 +35,6 @@ cutlist['bdt_ele_tight'] = Cut('mva_BDT>0.7')
 cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.36')
 cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.2')
 
-
-#Fit parameters from the final fit
-#Extracted in the muon channel using lqetafit/topfit.py
-#The first element in the tuple is a list of regex patterns to which you want to match this scale factor
-#The second element is the scale factor to apply (flat)
-#FIXME: most likely, one can incorporate the QCD scale factor from the QCD fit here as well
-#-JP
-fitpars = {}
-fitpars['final_2j1t_cut'] = [
-    (
-        PhysicsProcess.tchan.subprocesses,
-        1.202393
-    ),
-    (
-        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
-        1.052675
-    ),
-    (
-        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
-        1.120621
-    ),
-    (
-        ["QCDSingle.*"], #Data-driven QCD
-        1.037131
-    ),
-]
-#FIXME: Andres, is this with the loose or tight WP?
-fitpars['final_2j1t_mva'] = [
-    (
-        PhysicsProcess.tchan.subprocesses,
-         1.19366
-    ),
-    (
-        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
-        1.15965
-    ),
-    (
-        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
-        1.02631
-    ),
-    (
-        ["QCDSingle.*"], #Data-driven QCD
-        0.961991
-    ),
-]
-
 #Load the scale factors externally for better factorisation
 from plots.qcd_scale_factors import qcdScale
 qcdScale['ele']['presel'] = 1.33
@@ -552,9 +506,7 @@ plot_defs['final_etaLj']={
 
 #Create the final plots with after fitting
 plot_defs['final_etaLj_fit'] = cp(plot_defs['final_etaLj'])
-plot_defs['final_etaLj_fit']['fitpars'] = fitpars['final_2j1t_cut']
 plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
-plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t_cut']
 plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
 plot_defs['final_met_fit']={
     'tags': ["an", "control.tex", "mva"],
@@ -567,11 +519,9 @@ plot_defs['final_met_fit']={
     'log': False,
     'xlab': varnames["met"],
     'labloc': 'top-right',
-    'fitpars': fitpars['final_2j1t_cut'],
     'elecut': plot_defs['final_etaLj_fit']['elecut'],
     'mucut': plot_defs['final_etaLj_fit']['mucut']
 }
-plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t_cut']
 
 
 plot_defs['final_BDT']={
@@ -591,7 +541,6 @@ plot_defs['final_BDT']={
 }
 
 plot_defs['final_BDT_fit'] = cp(plot_defs['final_BDT'])
-plot_defs['final_BDT_fit']['dir'] = fitpars['final_2j1t_mva']
 
 
 plot_defs['final_cosTheta_mva_loose']={
@@ -622,7 +571,6 @@ plot_defs['final_met_mva_loose_fit']={
     'log': False,
     'xlab': varnames["met"],
     'labloc': 'top-right',
-    'fitpars': fitpars['final_2j1t_mva'],
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose'],
     'dir': "control"
@@ -633,10 +581,7 @@ plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['prese
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
 
 plot_defs['final_cosTheta_mva_tight_fit'] = cp(plot_defs['final_cosTheta_mva_tight'])
-plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva']
-
 plot_defs['final_cosTheta_mva_loose_fit'] = cp(plot_defs['final_cosTheta_mva_loose'])
-plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],

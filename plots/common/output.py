@@ -53,6 +53,18 @@ class OutputFolder:
 				raise e
 		logger.info("OutputFolder with %s" % self.out_folder)
 
+	def get(self, path):
+		"""
+		Returns a path in this folder, creating it if it doesn't exist.
+		"""
+		_path = os.path.join(self.out_folder, path)
+		try:
+			os.makedirs(_path)
+		except Exception as e:
+			if not os.path.exists(_path):
+				raise e
+		return _path
+
 	def savePlot(self, canvas, plot_meta):
 		"""
 		Saves a ROOT.TCanvas into the folder and sets the metadata.

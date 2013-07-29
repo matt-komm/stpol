@@ -30,7 +30,7 @@ def get_file_list(merge_cmds, dir, fullpath=True):
     """
     Returns the file list from the input directory that matches the corresponding merge pattern
     dir - the input directory path
-    merge_cmds - a dict with string, list(regex patterns) pairs specifying the merges
+    merge_cmds - a dict with (string, list(regex patterns)) pairs specifying the merges
     fullpath - return the full path of the file (or only the filename)
     returns - a list with the matched filenames
     """
@@ -43,6 +43,10 @@ def get_file_list(merge_cmds, dir, fullpath=True):
             out_files += filter(lambda x: re.match(pat, x.split("/")[-1]), files)
     if not fullpath:
         out_files = map(lambda x: x.split("/")[-1], out_files)
+
+    #If you called this method and got nothing, then probably womething went wrong and you don't want the output
+    if len(out_files)==0:
+        raise Exception("Couldn't match any files to merge_cmds %s in directory %s" % (str(merge_cmds), dir))
     return out_files
 
 class PhysicsProcess:
@@ -90,6 +94,18 @@ class PhysicsProcess:
         for name, process in in_d.items():
             out_d[name] = process.subprocesses
         return out_d
+
+    @staticmethod
+    def name_histograms(processes_d, hist_d):
+        """
+        Names the histograms in a dicionary according to the 
+        """
+        for procname, hist in hist_d.items():
+            try:
+                hist.SetTitle(processes_d[procname].pretty_name)
+            except KeyError: #QCD does not have a defined PhysicsProcess but that's fine because we take it separately
+                pass
+                
     systematic = {}
 
 PhysicsProcess.SingleMu = PhysicsProcess("SingleMu", ["SingleMu.*"], pretty_name="data")
