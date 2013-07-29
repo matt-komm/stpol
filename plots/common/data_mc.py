@@ -1,30 +1,41 @@
 import logging
 logger = logging.getLogger("data_mc")
+import ROOT
 
+from plots.common.cuts import Cuts, Weights, Cut, Weight
+from plots.common.sample_style import Styling
+from plots.common.plot_defs import *
+from plots.common.utils import PhysicsProcess, merge_hists, lumi_textbox, get_stack_total_hist
+from plots.common.histogram import calc_int_err
+from plots.common.legend import legend
+from plots.common.odict import OrderedDict
+from plots.common.stack_plot import plot_hists_stacked
+from plots.common.hist_plots import plot_data_mc_ratio
 
-def data_mc_plot(samples, plot_def):
-    logger.info('Plot in progress %s' % pd)
+def data_mc_plot(samples, plot_def, name, lepton_channel, lumi):
 
-    if not (plot_def["enabled"]):
-        continue
+    physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=lepton_channel)#Contains the information about merging samples and proper pretty names for samples
+    merge_cmds = PhysicsProcess.get_merge_dict(physics_processes) #The actual merge dictionary
+
+    logger.info('Plot in progress %s' % name)
 
     var = plot_def['var']
 
-
+    #Id var is a list/tuple, assume 
     if not isinstance(var, basestring):
-        if proc == 'ele':
+        if lepton_channel == 'ele':
             var = var[0]
         else:
             var = var[1]
 
     cut = None
-    if proc == 'ele':
+    if lepton_channel == 'ele':
         cut = plot_def['elecut']
-    elif proc == 'mu':
+    elif lepton_channel == 'mu':
         cut = plot_def['mucut']
 
     cut_str = str(cut)
-    weight_str = str(Weights.total(proc) *
+    weight_str = str(Weights.total(lepton_channel) *
         Weights.wjets_madgraph_shape_weight() *
         Weights.wjets_madgraph_flat_weight())
 
@@ -47,7 +58,7 @@ def data_mc_plot(samples, plot_def):
             #FIXME: it'd be nice to move the isolation cut to plots/common/cuts.py for generality :) -JP
             cv='mu_iso'
             lb=0.3
-            if proc == 'ele':
+            if lepton_channel == 'ele':
                 cv='el_iso'
                 lb=0.1
             qcd_cut = cut*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
@@ -57,11 +68,11 @@ def data_mc_plot(samples, plot_def):
             region = '2j1t'
             if plot_def['estQcd'] == '2j0t': region='2j0t'
             if plot_def['estQcd'] == '3j1t': region='3j1t'
-            qcd_loose_cut = cutlist[region]*cutlist['presel_'+proc]*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
+            qcd_loose_cut = cutlist[region]*cutlist['presel_'+lepton_channel]*Cuts.deltaR(0.5)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
             logger.debug('QCD loose cut: %s' % str(qcd_loose_cut))
             hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
             hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
-            hist_qcd.Scale(qcdScale[proc][plot_def['estQcd']])
+            hist_qcd.Scale(qcdScale[lepton_channel][plot_def['estQcd']])
             if hist_qcd_loose.Integral():
                 hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
             sampn = "QCD"+sample.name
@@ -89,7 +100,7 @@ def data_mc_plot(samples, plot_def):
     hist_data = sum(hists_data.values())
     merge_cmds['QCD']=["QCD"+merge_cmds['data'][0]]
     order=['QCD']+PhysicsProcess.desired_plot_order
-    if plot_defs[pd]['log']:
+    if plot_def['log']:
         order = PhysicsProcess.desired_plot_order_log+['QCD']
     merged_hists = merge_hists(hists_mc, merge_cmds, order=order)
 
@@ -100,3 +111,102 @@ def data_mc_plot(samples, plot_def):
             hist.SetTitle(physics_processes[procname].pretty_name)
         except KeyError: #QCD does not have a defined PhysicsProcess but that's fine because we take it separately
             pass
+
+    if hist_data.Integral()<=0:
+        raise Exception("Histogram for data was empty. Something went wrong, please check.")
+    # #Some printout
+    # for hn, h in (merged_hists.items() + [("data", hist_data)]):
+    #     #print h.GetName(), h.GetTitle(), h.Integral()
+    #     tot, err = calc_int_err(h)
+    #     outtxt='{0} | {1:.2f} | {2:.2f}\n'.format(hn, tot, err)
+    #     yf.write(outtxt)
+    #     #if hn != 'data':
+    #     #    htot.Add(h)
+    htot = sum(merged_hists.values())
+
+    # #We have a separate method for the error
+    # tot, err = calc_int_err(htot)
+    # outtxt='MC | {0:.2f} | {1:.2f}\n'.format(tot,err)
+    # yf.write(outtxt)
+    # yf.close()
+
+    chi2 = hist_data.Chi2Test(htot, "UW CHI2/NDF")
+    if chi2>20:#FIXME: uglyness
+        logger.error("The chi2 between data and MC is large (%s, chi2=%.2f). You may have errors with your samples!" %
+            (pd, chi2)
+        )
+        logger.info("MC  : %s" % " ".join(map(lambda x: "%.1f" % x, list(htot.y()))))
+        logger.info("DATA: %s" % " ".join(map(lambda x: "%.1f" % x, list(hist_data.y()))))
+        logger.info("diff: %s" % str(
+            " ".join(map(lambda x: "%.1f" % x, numpy.abs(numpy.array(list(htot.y())) - numpy.array(list(hist_data.y())))))
+        ))
+
+    merged_hists = merged_hists.values()
+    leg = legend([hist_data] + list(reversed(merged_hists)), legend_pos=plot_def['labloc'], style=['p','f'])
+
+    canv = ROOT.TCanvas()
+
+    #Make the stacks
+    stacks_d = OrderedDict()
+    stacks_d["mc"] = merged_hists
+    stacks_d["data"] = [hist_data]
+
+    #label
+    xlab = plot_def['xlab']
+    if not isinstance(xlab, basestring):
+        if lepton_channel == 'ele':
+            xlab = xlab[0]
+        else:
+            xlab = xlab[1]
+    ylab = 'N / '+str((1.*(plot_range[2]-plot_range[1])/plot_range[0]))
+    if plot_def['gev']:
+        ylab+=' GeV'
+    fact = 1.5
+    if plot_def['log']:
+        fact = 10
+
+    #Make a separate pad for the stack plot
+    p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
+    p1.Draw()
+    p1.SetTicks(1, 1);
+    p1.SetGrid();
+    p1.SetFillStyle(0);
+    p1.cd()
+
+    stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_def['log'])
+
+    #Put the the lumi box where the legend is not
+    boxloc = 'top-right'
+    if plot_def['labloc'] == 'top-right':
+        boxloc = 'top-left'
+    chan = 'Electron'
+    if lepton_channel == "mu":
+        chan = 'Muon'
+    lbox = lumi_textbox(lumi,boxloc,'preliminary',chan+' channel')
+
+    #Draw everything
+    lbox.Draw()
+    leg.Draw()
+    canv.Draw()
+
+    #Draw the ratio plot with
+    ratio_pad, hratio, hline = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
+
+    canv.PAD1 = p1
+    canv.STACKS = stacks
+    canv.LEGEND = legend
+    canv.LUMIBOX = lbox
+    canv.PAD2 = ratio_pad
+    canv.HRATIO = hratio
+    canv.HLINE = hline
+
+    pinfo = PlotMetaInfo(
+        pd + "_" + _proc,
+        cut,
+        weight_str,
+        [x.tfile.GetPath() for x in samples],
+        subpath,
+        comments
+    )
+
+    return canv, merged_hists

@@ -606,7 +606,7 @@ plot_defs['final_cosTheta_mva_loose']={
     'xlab': varnames["cos_theta"],
     'labloc': 'top-left',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose'],
     'dir': "control"
 }
 
@@ -624,7 +624,7 @@ plot_defs['final_met_mva_loose_fit']={
     'labloc': 'top-right',
     'fitpars': fitpars['final_2j1t_mva'],
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose']
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose'],
     'dir': "control"
 }
 
