@@ -65,7 +65,7 @@ class OutputFolder:
 				raise e
 		return _path
 
-	def savePlot(self, canvas, plot_meta):
+	def savePlot(self, canvas, plot_meta, printOut=True):
 		"""
 		Saves a ROOT.TCanvas into the folder and sets the metadata.
 		canvas - an ROOT TCanvas
@@ -84,6 +84,10 @@ class OutputFolder:
 		for format in ["pdf", "png"]:
 			outpath = os.path.join(subd, fname + "." + format)
 			logger.info("Saving plot to %s" % outpath)
+			
+			if printOut:
+				print "Saving plot to %s" % outpath
+
 			canvas.SaveAs(outpath)
 			plot_meta.update(outpath)
 
