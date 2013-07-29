@@ -70,7 +70,7 @@ def save_yield_table(hmerged_mc, hdata, ofdir, name):
         ofi.write(yield_string(hsum, "MC"))
         ofi.write(yield_string(hdata, "data"))
 
-        #Get the pretty names for the processes from the PhysicsProces.pretty_name variable
+        #Get the pretty names for the processes from the PhysicsProcess.pretty_name variable
         for procname, hist in merged_hists.items():
             try:
                 hist.SetTitle(physics_processes[procname].pretty_name)
@@ -110,6 +110,11 @@ if __name__=="__main__":
     )
 
     parser.add_argument(
+        "--cluster", required=False, default=False, action="store_true", dest="cluster",
+        help="Do you want to run on the cluster, suppressing PNG output?"
+    )
+
+    parser.add_argument(
         "--new", required=False, default=False, action="store_true", dest="new",
         help="Do you want to create a fresh output directory?"
     )
@@ -134,7 +139,8 @@ if __name__=="__main__":
             os.path.join(os.environ["STPOL_DIR"],"out", "plots"),
             subpath="make_all_plots",
             overwrite=False,
-            unique_subdir=args.new
+            unique_subdir=args.new,
+            skip_png=args.cluster
         )
         logger.info("Output folder is %s" % output_folder.out_folder)
 

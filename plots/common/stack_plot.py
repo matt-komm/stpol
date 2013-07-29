@@ -6,6 +6,8 @@ try:
 except ImportError:
     from odict import OrderedDict
 import logging
+logger = logging.getLogger("stack_plot")
+logger.setLevel(logging.INFO)
 
 def plot_hists_stacked(canv, hist_groups, **kwargs):
     """
@@ -32,6 +34,8 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     method until you print the TCanvas, otherwise the stack references are destroyed.
     """
 
+    logger.debug("plot_hists_stacked: %s %s %s" % (str(canv), str(hist_groups), str(kwargs)))
+
     stacks = OrderedDict()
 
     draw_styles = kwargs.get("draw_styles", {"data": "E1"})
@@ -47,7 +51,10 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     max_bin_mult = kwargs.get("max_bin_mult", 1.8)
 
 
+
     for name, group in hist_groups.items():
+        if len(group)==0:
+            raise ValueError("Stack group %s was empty" % name)
         stacks[name] = ROOT.THStack(name, name)
         for hist in group:
             stacks[name].Add(hist)
@@ -62,7 +69,7 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     #Now draw really
     first = True
     for name, stack in stacks.items():
-        logging.debug("Drawing stack %s" % name)
+        logger.debug("Drawing stack %s" % name)
         if name in draw_styles.keys():
             drawcmd = draw_styles[name]
         else:

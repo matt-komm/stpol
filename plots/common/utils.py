@@ -47,7 +47,7 @@ def get_file_list(merge_cmds, dir, fullpath=True):
     #If you called this method and got nothing, then probably womething went wrong and you don't want the output
     if len(out_files)==0:
         raise Exception("Couldn't match any files to merge_cmds %s in directory %s" % (str(merge_cmds), dir))
-    return out_files
+    return sorted(out_files)
 
 class PhysicsProcess:
     desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan"]

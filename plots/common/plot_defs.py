@@ -627,3 +627,7 @@ for v in ["cosTheta", "topMass", "etaLj", "BDT"]:
             plot_defs[s + "_" + v]['elecut'] = cutlist["presel_ele"]*cutlist[s]*Cuts.met#*cutlist['final_ele']
             plot_defs[s + "_" + v]['mucut'] = cutlist["presel_mu"]*cutlist[s]*Cuts.mt_mu#*cutlist['final_mu']
             plot_defs[s + "_" + v]['estQcd'] = "final_" + s
+
+if __name__=="__main__":
+    for k in  plot_defs.keys():
+        print k
