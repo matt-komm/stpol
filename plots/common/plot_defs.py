@@ -36,6 +36,7 @@ cutlist['bdt_mu_loose'] = Cut('mva_BDT>0.36')
 cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.2')
 
 #Load the scale factors externally for better factorisation
+from plots.fit_scale_factors import fitpars
 from plots.qcd_scale_factors import qcdScale
 qcdScale['ele']['presel'] = 1.33
 qcdScale['mu']['presel'] = 27.9
@@ -506,7 +507,13 @@ plot_defs['final_etaLj']={
 
 #Create the final plots with after fitting
 plot_defs['final_etaLj_fit'] = cp(plot_defs['final_etaLj'])
+<<<<<<< HEAD
 plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
+=======
+plot_defs['final_etaLj_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
+plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t']
+>>>>>>> master
 plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
 plot_defs['final_met_fit']={
     'tags': ["an", "control.tex", "mva"],
@@ -522,6 +529,10 @@ plot_defs['final_met_fit']={
     'elecut': plot_defs['final_etaLj_fit']['elecut'],
     'mucut': plot_defs['final_etaLj_fit']['mucut']
 }
+<<<<<<< HEAD
+=======
+plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
+>>>>>>> master
 
 
 plot_defs['final_BDT']={
@@ -571,6 +582,7 @@ plot_defs['final_met_mva_loose_fit']={
     'log': False,
     'xlab': varnames["met"],
     'labloc': 'top-right',
+    'fitpars': fitpars['final_2j1t_mva_no_mt_cut'],
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose'],
     'dir': "control"
@@ -581,7 +593,10 @@ plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['prese
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
 
 plot_defs['final_cosTheta_mva_tight_fit'] = cp(plot_defs['final_cosTheta_mva_tight'])
+plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva_no_mt_cut']
+
 plot_defs['final_cosTheta_mva_loose_fit'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva_no_mt_cut']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],

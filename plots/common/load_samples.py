@@ -114,11 +114,10 @@ def get_qcd_scale_factor(var, channel, mva=False):
                 return 0.552650999014
             else:
                 return 5.8350878103
-        elif var == "abs(eta_lj)":
-            if mva is None:
-                return 3.18487092669
-            else:
-                return 5.8350878103
+        elif var in ["abs(eta_lj)"]:
+            return 3.18487092669
+        elif var == "mva_BDT":
+            return 5.8350878103
     elif channel == "ele":
         if var == "cos_theta":    
             if mva is None:
@@ -126,10 +125,9 @@ def get_qcd_scale_factor(var, channel, mva=False):
             else:
                 return 1.2122285254
         elif var == "abs(eta_lj)":
-            if mva is None:
-                return 0.433228612048
-            else:
-                return 1.2122285254
+            return 0.433228612048
+        elif var == "mva_BDT":
+            return 1.2122285254
 
 def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, var="abs(eta_lj)", plot_range=None, binning=None):
     lumi=lumi_iso[channel]
