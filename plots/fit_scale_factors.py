@@ -15,25 +15,12 @@ qcd = ["QCDSingle.*"]
 
 fitpars = NestedDict()
 
+#Cut based
 fitpars['final_2j1t']['mu'] = [
     (tchan, 1.227350),
     (top, 1.075594),
     (WZJets, 1.051505),
     (qcd, 1.018268),
-]
-
-fitpars['final_2j1t_mva_no_mt_cut']['mu'] = [
-    (tchan, 1.193656),
-    (top, 1.159650),
-    (WZJets, 1.026309),
-    (qcd, 0.961991),
-]
-
-fitpars['final_2j1t_mva']['mu'] = [
-    (tchan, 1.164032),
-    (top, 1.018774),
-    (WZJets, 1.317858),
-    (qcd, 0.975618),
 ]
 
 fitpars['final_2j1t']['ele'] = [
@@ -43,18 +30,33 @@ fitpars['final_2j1t']['ele'] = [
     (qcd, 1.008779),
 ]
 
-fitpars['final_2j1t_mva_no_mt_cut']['ele'] = [
-    (tchan, 1.113995),
-    (top, 0.989816),
-    (WZJets, 1.40333),
-    (qcd, 0.977402),
-]
 
+#New MVA with cut on MT
+fitpars['final_2j1t_mva']['mu'] = [
+    (tchan, 1.164032),
+    (top, 1.018774),
+    (WZJets, 1.317858),
+    (qcd, 0.975618),
+]
 fitpars['final_2j1t_mva']['ele'] = [
     (tchan, 1.085781),
     (top, 1.045250),
     (WZJets, 1.128681),
     (qcd, 1.018550),
+]
+
+#OLD MVA where MET/MT was not applied
+fitpars['final_2j1t_mva_no_mt_cut']['mu'] = [
+    (tchan, 1.193656),
+    (top, 1.159650),
+    (WZJets, 1.026309),
+    (qcd, 0.961991),
+]
+fitpars['final_2j1t_mva_no_mt_cut']['ele'] = [
+    (tchan, 1.113995),
+    (top, 0.989816),
+    (WZJets, 1.40333),
+    (qcd, 0.977402),
 ]
 
 #Convert to static dict
