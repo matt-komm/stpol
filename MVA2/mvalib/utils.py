@@ -15,3 +15,8 @@ def read_TObject(name, directory):
 
 def scale_factor(channel, sample, eventcount, fraction=1.0):
 	return (cross_sections.xs[sample]*cross_sections.lumi_iso[channel])/(fraction*eventcount)
+
+def iter_entrylist(elist):
+	"""Create an iterator that iterates over TEntryList elements"""
+	for n in xrange(0, elist.GetN()):
+		yield elist.GetEntry(n)
