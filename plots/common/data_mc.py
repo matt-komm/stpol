@@ -45,7 +45,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
 
     var = plot_def['var']
 
-    #Id var is a list/tuple, assume 
+    #Id var is a list/tuple, assume
     if not isinstance(var, basestring):
         if lepton_channel == 'ele':
             var = var[0]
@@ -126,13 +126,13 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
 
     if hist_data.Integral()<=0:
         raise Exception("Histogram for data was empty. Something went wrong, please check.")
-        
+
     htot = sum(merged_hists.values())
 
     chi2 = hist_data.Chi2Test(htot, "UW CHI2/NDF")
     if chi2>20:#FIXME: uglyness
         logger.error("The chi2 between data and MC is large (%s, chi2=%.2f). You may have errors with your samples!" %
-            (pd, chi2)
+            (name, chi2)
         )
         logger.info("MC  : %s" % " ".join(map(lambda x: "%.1f" % x, list(htot.y()))))
         logger.info("DATA: %s" % " ".join(map(lambda x: "%.1f" % x, list(hist_data.y()))))
