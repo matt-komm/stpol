@@ -43,7 +43,7 @@ cutlist['bdt_ele_loose'] = Cut('mva_BDT>0.2')
 #FIXME: most likely, one can incorporate the QCD scale factor from the QCD fit here as well
 #-JP
 fitpars = {}
-fitpars['final_2j1t'] = [
+fitpars['final_2j1t_cut'] = [
     (
         PhysicsProcess.tchan.subprocesses,
         1.202393
@@ -59,6 +59,25 @@ fitpars['final_2j1t'] = [
     (
         ["QCDSingle.*"], #Data-driven QCD
         1.037131
+    ),
+]
+#FIXME: Andres, is this with the loose or tight WP?
+fitpars['final_2j1t_mva_loose'] = [
+    (
+        PhysicsProcess.tchan.subprocesses,
+         1.19366
+    ),
+    (
+        PhysicsProcess.TTJets_exc.subprocesses + PhysicsProcess.schan.subprocesses + PhysicsProcess.tWchan.subprocesses,
+        1.15965
+    ),
+    (
+        PhysicsProcess.WJets_mg_exc.subprocesses + PhysicsProcess.diboson.subprocesses,
+        1.02631
+    ),
+    (
+        ["QCDSingle.*"], #Data-driven QCD
+        0.961991
     ),
 ]
 
@@ -533,11 +552,10 @@ plot_defs['final_etaLj']={
 
 #Create the final plots with after fitting
 plot_defs['final_etaLj_fit'] = cp(plot_defs['final_etaLj'])
-plot_defs['final_etaLj_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_etaLj_fit']['fitpars'] = fitpars['final_2j1t_cut']
 plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
-plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t_cut']
 plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
-plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_met_fit']={
     'tags': ["an", "control.tex", "mva"],
     'enabled': True,
@@ -553,6 +571,7 @@ plot_defs['final_met_fit']={
     'elecut': plot_defs['final_etaLj_fit']['elecut'],
     'mucut': plot_defs['final_etaLj_fit']['mucut']
 }
+plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t_cut']
 
 
 plot_defs['final_BDT']={
@@ -608,10 +627,10 @@ plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['prese
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
 
 plot_defs['final_cosTheta_mva_tight_fit'] = cp(plot_defs['final_cosTheta_mva_tight'])
-plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva_loose']
 
 plot_defs['final_cosTheta_mva_loose_fit'] = cp(plot_defs['final_cosTheta_mva_loose'])
-plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t']
+plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva_loose']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
