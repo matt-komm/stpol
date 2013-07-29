@@ -552,6 +552,8 @@ plot_defs['final_BDT']={
     'dir': "control"
 }
 
+plot_defs['final_BDT_prefit'] = cp(plot_defs['final_BDT'])
+plot_defs['final_BDT_prefit']['log'] = False
 plot_defs['final_BDT_fit'] = cp(plot_defs['final_BDT'])
 plot_defs['final_BDT_fit']['fitpars'] = fitpars['final_2j1t_mva']
 plot_defs['final_BDT_fit']['log'] = False
