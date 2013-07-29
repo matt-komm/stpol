@@ -15,6 +15,8 @@ qcd = ["QCDSingle.*"]
 
 fitpars = NestedDict()
 
+#FIXME! Update number _with_ uncertainty as a 3-tuple
+#FIXME! make this file auto-generating!
 #Cut based
 fitpars['final_2j1t']['mu'] = [
     (tchan, 1.227350),
@@ -61,3 +63,6 @@ fitpars['final_2j1t_mva_no_mt_cut']['ele'] = [
 
 #Convert to static dict
 fitpars = fitpars.as_dict()
+
+if __name__=="__main__":
+    print "Yield tables: TODO latex format"
