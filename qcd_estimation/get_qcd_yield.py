@@ -87,7 +87,7 @@ def getMtMinValue(channel):
         mtMinValue = 45.01 # MET>45
     return mtMinValue
 
-def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path="$STPOL_DIR/step3_latest/", do_systematics=False):
+def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path=(os.environ["STPOL_DIR"] + "/step3_latest/"), do_systematics=False):
 #    do_systematics = True
 #
 #    if channel == "ele":
@@ -193,8 +193,8 @@ if __name__=="__main__":
     #Create the cuts in a programmatic way
     cuts = {}
     final_cut = Cuts.top_mass_sig * Cuts.eta_lj
-    for nj in [2,3]:
-        for nt in [0,1,2]:
+    for nj in [2, 3]:
+        for nt in [0, 1, 2]:
 
             #Before eta and top mass cuts. Also for MVA
             c = "%dj%dt" % (nj, nt)
@@ -241,7 +241,7 @@ if __name__=="__main__":
     parser.add_argument('-c', '--cut',
         dest='cuts', choices=cuts.keys(), required=False, default=None,
         help="The cut region to use in the fit", action='append')
-    parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=False)
+    parser.add_argument('--path', dest='path', default=(os.environ["STPOL_DIR"] + "/step3_latest/"), required=False)
     parser.add_argument('--doSystematics', action="store_true", default=False)
     parser.add_argument('--doSystematicCuts', action="store_true", default=False, help="Various anti-iso regions etc.")
 
