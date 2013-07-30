@@ -19,10 +19,10 @@ fitpars = NestedDict()
 #FIXME! make this file auto-generating!
 #Cut based
 fitpars['final_2j1t']['mu'] = [
-    (tchan, 1.227350),
-    (top, 1.075594),
-    (WZJets, 1.051505),
-    (qcd, 1.018268),
+    (tchan, 1.239592),
+    (top, 1.081600),
+    (WZJets, 1.057218),
+    (qcd, 1.015709),
 ]
 
 fitpars['final_2j1t']['ele'] = [
@@ -40,11 +40,12 @@ fitpars['final_2j1t_mva']['mu'] = [
     (WZJets, 1.317858),
     (qcd, 0.975618),
 ]
-fitpars['final_2j1t_mva']['ele'] = [
-    (tchan, 1.085781),
-    (top, 1.045250),
-    (WZJets, 1.128681),
-    (qcd, 1.018550),
+
+fitpars['final_2j1t']['ele'] = [
+    (tchan, 1.080942),
+    (top, 1.037056),
+    (WZJets, 1.305009),
+    (qcd, 1.008886),
 ]
 
 #OLD MVA where MET/MT was not applied
