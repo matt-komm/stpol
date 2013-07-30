@@ -45,7 +45,7 @@ from sampleList import *
 
 # Import toolkit items for sample reading, scaling, cutting etc
 from plots.common.sample import Sample
-from plots.common.cuts import Cut,Cuts
+from plots.common.cuts import Cut,Cuts,Weights
 from plots.common.cross_sections import lumis
 
 # Import the important parts from ROOT
@@ -65,5 +65,10 @@ logger.debug('Used file list: %s',str(flist))
 samples = {}
 for f in flist:
     samples[f] = Sample.fromFile(args.indir+'/'+f+'.root')
+
+# Set the weight expression
+weightString = str(Weights.total(proc) *
+    Weights.wjets_madgraph_shape_weight() *
+    Weights.wjets_madgraph_flat_weight())
 
 
