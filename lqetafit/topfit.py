@@ -1,4 +1,15 @@
+import sys, os
+from theta_auto import *
+import logging
+logging.basicConfig(level=logging.INFO)
 signal = 'tchan'
+infile = 'histos/lqeta.root'
+outfile = 'histos_fitted.root'
+
+def histofilter(s):
+    if '__up' in s or '__down' in s:
+        return False
+    return True
 
 def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'):
     found_match = False
@@ -17,93 +28,168 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
 
 
 def get_model():
-    #model = build_model_from_rootfile('histos/lqeta.root', include_mc_uncertainties = False)
-    # FIXME Using pseudo data
-    model = build_model_from_rootfile('histos/pseudo_data.root', include_mc_uncertainties = False)
+    model = build_model_from_rootfile(infile, include_mc_uncertainties = False, histogram_filter = histofilter)
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
     return model
 
-model = get_model()
+if __name__=="__main__":
+    if "theta-auto.py" not in sys.argv[0]:
+        raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py %s`" % (sys.argv[0]))
 
-print sorted(model.processes)
+    model = get_model()
 
-# model uncertainties
-#model.add_lognormal_uncertainty('lumi', math.log(1.022), '*')
-#model.add_lognormal_uncertainty('ttbar', math.log(1.15), 'ttbar')
-#model.add_lognormal_uncertainty('wjets', math.log(2.0), 'wjets')
-#model.add_lognormal_uncertainty('wjets', math.log(1.3), 'wjets') # test
-#model.add_lognormal_uncertainty('zjets', math.log(1.3), 'zjets')
-#model.add_lognormal_uncertainty('QCD', math.log(1.03), 'QCD')
+    print sorted(model.processes)
 
-# gaussian uncertainties
-#add_normal_uncertainty(model, 'qcd', 0.5, 'qcd')
-add_normal_uncertainty(model, 'qcd', 0.1, 'qcd')
-add_normal_uncertainty(model, 'top', 0.1, 'top')
-#add_normal_uncertainty(model, 'wzjets', inf, 'wzjets')
-add_normal_uncertainty(model, 'wzjets', 0.3, 'wzjets')
+    # model uncertainties
+    execfile('uncertainties.py')
 
-#
-##add_normal_uncertainty(model, 'wjets_heavy', inf, 'wjets_heavy')
-##add_normal_uncertainty(model, 'wjets_light', 0.3, 'wjets_light')
-#add_normal_uncertainty(model, 'wjets_heavy', inf, 'wjets_light')
-#add_normal_uncertainty(model, 'wjets_light', 0.5, 'wjets_light')
-#add_normal_uncertainty(model, 'zjets', 0.3, 'zjets')
+    options = Options()
+    #options.set("minimizer","strategy","newton_vanilla")
+    #options.set("minimizer","strategy","tminuit")
 
-#print sorted(model.processes)
+    # maximum likelihood estimate
+    # FIXME pseudo data
+    #result = mle(model, input = 'toys-asimov:1.0', n=1, with_covariance = True)
+    # data
+    result = mle(model, input = 'data', n=1, with_covariance = True, options=options)
 
-options = Options()
-#options.set("minimizer","strategy","newton_vanilla")
-#options.set("minimizer","strategy","tminuit")
+    fitresults = {}
+    values = {}
+    for process in result[signal]:
+        if '__' not in process:
+            fitresults[process] = [result[signal][process][0][0], result[signal][process][0][1]]
+            values[process] = fitresults[process][0]
+    # export sorted fit values
+    try:
+        os.makedirs("results")
+    except:
+        pass
+    f = open('results/nominal.txt','w')
+    for key in sorted(fitresults.keys()):
+            line = '%s %f %f\n' % (key, fitresults[key][0], fitresults[key][1])
+            print line,
+            f.write(line)
+    f.close()
 
-# maximum likelihood estimate
-# pseudo data
-#result = mle(model, input = 'toys-asimov:1.0', n=1, with_covariance = True)
-# data
-result = mle(model, input = 'data', n=1, with_covariance = True, options=options)
+    # covariance matrix
+    pars = sorted(model.get_parameters([signal]))
+    n = len(pars)
+    print pars
 
-fitresults = {}
-for process in result[signal]:
-    if '__' not in process:
-        fitresults[process] = [result[signal][process][0][0], result[signal][process][0][1]]
+    cov = result[signal]['__cov'][0]
+    #print cov
 
-# export sorted fit values
-f = open('results.txt','w')
-for key in sorted(fitresults.keys()):
-        line = '%s %f %f\n' % (key, fitresults[key][0], fitresults[key][1])
-        print line,
-        f.write(line)
-f.close()
+    # write out covariance matrix
+    import ROOT
+    ROOT.gStyle.SetOptStat(0)
 
-# covariance matrix
-pars = sorted(model.get_parameters(['tchan']))
-n = len(pars)
-#print pars
+    fcov = ROOT.TFile("cov.root","RECREATE")
+    canvas = ROOT.TCanvas("c1","Covariance")
+    h = ROOT.TH2D("covariance","covariance",n,0,n,n,0,n)
 
-cov = result['tchan']['__cov'][0]
-#print cov
+    for i in range(n):
+        h.GetXaxis().SetBinLabel(i+1,pars[i]);
+        h.GetYaxis().SetBinLabel(i+1,pars[i]);
 
-# write out covariance matrix
-import ROOT
-ROOT.gStyle.SetOptStat(0)
+    for i in range(n):
+        for j in range(n):
+            h.SetBinContent(i+1,j+1,cov[i][j])
 
-fcov = ROOT.TFile("cov.root","RECREATE")
-canvas = ROOT.TCanvas("c1","Covariance")
-h = ROOT.TH2D("covariance","covariance",n,0,n,n,0,n)
+    h.Draw("COLZ TEXT")
+    try:
+        os.makedirs("plots")
+    except:
+        pass
+    canvas.Print("plots/cov.png")
+    canvas.Print("plots/cov.pdf")
+    h.Write()
+    fcov.Close()
 
-for i in range(n):
-    h.GetXaxis().SetBinLabel(i+1,pars[i]);
-    h.GetYaxis().SetBinLabel(i+1,pars[i]);
+    model_summary(model)
+    report.write_html('htmlout_fit')
 
-for i in range(n):
-    for j in range(n):
-        h.SetBinContent(i+1,j+1,cov[i][j])
+    pred = evaluate_prediction(model, values, include_signal = True)
+    write_histograms_to_rootfile(pred, outfile)
 
-h.Draw("COLZ TEXT")
-canvas.Print("cov.png")
-canvas.Print("cov.pdf")
-h.Write()
-fcov.Close()
+    ##Plot the fit before and after
+    from rootpy.io import File
+    from plots.common.sample_style import Styling
+    from plots.common.stack_plot import plot_hists_stacked
+    from plots.common.legend import legend
+    from plots.common.odict import OrderedDict
+    from plots.common.tdrstyle import tdrstyle
+    from plots.common.hist_plots import plot_data_mc_ratio
+    from plots.common.utils import get_stack_total_hist
+    from plots.common.output import OutputFolder
+    from plots.common.metainfo import PlotMetaInfo
+    tdrstyle()
+    procstyles = OrderedDict()
+    procstyles["tchan"] = "T_t"
+    procstyles["wzjets"] = "WJets_inclusive"
+    procstyles["top"] = "TTJets_FullLept"
+    procstyles["qcd"] = "QCD"
 
-model_summary(model)
-report.write_html('htmlout_fit')
+    procnames = OrderedDict()
+    procnames["wzjets"] = "W, Z"
+    procnames["top"] = "t, #bar{t}"
+    procnames["tchan"] = "signal (t-channel)"
+    procnames["qcd"] = "QCD"
+
+    hists_mc_pre = OrderedDict()
+    hists_mc_post = OrderedDict()
+    fi1 = File(infile)
+    fi2 = File(outfile)
+    hist_data = fi1.Get("eta_lj__DATA")
+
+    def loadhists(f):
+        out = OrderedDict()
+        for k in procnames.keys():
+            out[k] = f.Get("eta_lj__" + k)
+            out[k].SetTitle(procnames[k])
+            Styling.mc_style(out[k], procstyles[k])
+        return out
+    hists_mc_pre = loadhists(fi1)
+    hists_mc_post = loadhists(fi2)
+    print hists_mc_pre, hists_mc_post
+    Styling.data_style(hist_data)
+
+
+
+    of = OutputFolder(subdir="plots")
+    def plot_data_mc(hists_mc, hist_data, name):
+        canv = ROOT.TCanvas()
+        p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
+        p1.Draw()
+        p1.SetTicks(1, 1);
+        p1.SetGrid();
+        p1.SetFillStyle(0);
+        p1.cd()
+
+        stacks_d = OrderedDict()
+        stacks_d["mc"] = hists_mc.values()
+        stacks_d["data"] = [hist_data]
+        stacks = plot_hists_stacked(
+            p1,
+            stacks_d,
+            x_label="#eta_{lj}",
+            y_label="",
+            do_log_y=False
+        )
+        leg = legend([hist_data] + list(reversed(hists_mc.values())), styles=["p", "f"])
+        ratio_pad, hratio, hline = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
+
+        plot_info = PlotMetaInfo(
+            name,
+            "CUT",
+            "WEIGHT",
+            [infile],
+            subdir="lqetafit",
+            comments=str(result[signal])
+        )
+        of.savePlot(canv, plot_info)
+        canv.Close()
+    plot_data_mc(hists_mc_post, hist_data, "post_fit")
+    plot_data_mc(hists_mc_pre, hist_data, "pre_fit")
+
+

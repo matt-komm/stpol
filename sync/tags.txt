@@ -1,0 +1,62 @@
+Test Release based on: CMSSW_5_3_7_patch4
+Base Release in: /cvmfs/cms.cern.ch/slc5_amd64_gcc462/cms/cmssw-patch/CMSSW_5_3_7_patch4
+Your Test release in: /home/joosep/singletop/stpol2/CMSSW_5_3_7_patch4
+--- Tag ---    -------- Package --------                        
+V00-02-10      CMGTools/External                                
+V00-01-03      CommonTools/CandAlgos                            
+V00-03-16      CommonTools/ParticleFlow                         
+V00-03-24      CommonTools/RecoAlgos                            
+V00-00-14      CommonTools/RecoUtils                            
+V00-02-07      CommonTools/UtilAlgos                            
+V00-04-04      CommonTools/Utils                                
+NoCVS          data/b_eff_hists                                 
+V15-03-04      DataFormats/ParticleFlowCandidate                
+V06-05-06-05   DataFormats/PatCandidates                        
+V00-02-14      DataFormats/StdDictionaries                      
+V10-02-02      DataFormats/TrackReco                            
+V02-00-04      DataFormats/VertexReco                           
+V00-00-31      EGamma/EGammaAnalysisTools                       
+V00-00-70      FWCore/GuiBrowsers                               
+V08-09-50      PhysicsTools/PatAlgos                            
+V03-09-26      PhysicsTools/PatUtils                            
+V04-01-09      RecoLuminosity/LumiDB                            
+V00-00-09      RecoMET/METFilters                               
+V15-02-05-01   RecoParticleFlow/PFProducer                      
+NoCVS          SingleTopPolarization/Analysis                   
+NoCVS          SingleTopPolarization/BTagSystematicsWeightProducer 
+NoCVS          SingleTopPolarization/CandTransverseMassProducer 
+NoCVS          SingleTopPolarization/CandViewTreemakerAnalyzer  
+NoCVS          SingleTopPolarization/CleanNoPUJetProducer       
+NoCVS          SingleTopPolarization/CollectionSizeProducer     
+NoCVS          SingleTopPolarization/CosThetaProducer           
+NoCVS          SingleTopPolarization/DeltaRProducer             
+NoCVS          SingleTopPolarization/EfficiencyAnalyzer         
+NoCVS          SingleTopPolarization/ElectronEfficiencyProducer 
+NoCVS          SingleTopPolarization/ElectronIDProducer         
+NoCVS          SingleTopPolarization/EventDoubleFilter          
+NoCVS          SingleTopPolarization/EventIDAnalyzer            
+NoCVS          SingleTopPolarization/EventIDProducer            
+NoCVS          SingleTopPolarization/FlavourAnalyzer            
+NoCVS          SingleTopPolarization/GenericCollectionCombiner  
+NoCVS          SingleTopPolarization/GenericOwnVectorAnalyzer   
+NoCVS          SingleTopPolarization/GenericPointerCombiner     
+NoCVS          SingleTopPolarization/GenParticleDecayTreeProducer 
+NoCVS          SingleTopPolarization/GenParticleSelector        
+NoCVS          SingleTopPolarization/GenParticleSelectorCompHep 
+NoCVS          SingleTopPolarization/JetMCSmearProducer         
+NoCVS          SingleTopPolarization/LeptonIsolationProducer    
+NoCVS          SingleTopPolarization/MuonEfficiencyProducer     
+NoCVS          SingleTopPolarization/MuonIDProducer             
+NoCVS          SingleTopPolarization/ParticleComparer           
+NoCVS          SingleTopPolarization/PatObjectOwnRefProducer    
+NoCVS          SingleTopPolarization/PDFweightsProducer         
+NoCVS          SingleTopPolarization/PUWeightProducer           
+NoCVS          SingleTopPolarization/RecoFilter                 
+NoCVS          SingleTopPolarization/ReconstructedNeutrinoProducer 
+NoCVS          SingleTopPolarization/SimpleCompositeCandProducer 
+NoCVS          SingleTopPolarization/SimpleEventAnalyzer        
+NoCVS          SingleTopPolarization/TestProd                   
+NoCVS          SingleTopPolarization/TransferMatrixCreator      
+NoCVS          TopQuarkAnalysis/SingleTop                       
+---------------------------------------
+total packages: 56 (56 displayed)

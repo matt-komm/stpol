@@ -3,7 +3,7 @@ from theta_auto import *
 from Fit import Fit
 
 init_val = 1.2
-init_val_wjets = 3.0
+init_val_wjets = 2.0
 step = 0.0001
 
 def get_model(infile, i=0):

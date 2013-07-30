@@ -23,19 +23,19 @@ def makehisto(sample, varname, cut, weight, binning, lumi=None, **kwargs):
     hist = sample.drawHistogram(varname, cut, binning=[len(binning)-1, binning], weight=weight)
 
     if sample.isMC and lumi:
-        hist.normalize_lumi(lumi)
+        hist.Scale(sample.lumiScaleFactor(lumi))
     hname = varname + "__" + process
 
     fo.cd()
-    hist.hist.SetName(hname)
-    hist.hist.SetTitle(hname)
-    hist.hist.SetDirectory(fo)
-    hist.hist.Write()
-    logging.info("Writing histogram %s to file %s" % (hist.hist.GetName(), fo.GetPath()))
+    hist.SetName(hname)
+    hist.SetTitle(hname)
+    hist.SetDirectory(fo)
+    hist.Write()
+    logging.info("Writing histogram %s to file %s" % (hist.GetName(), fo.GetPath()))
     fo.Write()
     fo.Close()
 
-    return hist.hist
+    return hist
 
 def rebinned(var_reco, binning_reco, var_gen, binning_gen, cut, weight, lumi, sample_T_t, sample_Tbar_t, ofname):
 

@@ -1,20 +1,60 @@
 import ROOT
 import logging
-from plots.common.histogram import Histogram
-from plots.common.utils import filter_alnum
+from plots.common.utils import filter_alnum, NestedDict
+from plots.common.histogram import *
 import numpy
 from cross_sections import xs as sample_xs_map
+import rootpy
+from rootpy.plotting import Hist, Hist2D
+
+import os
 
 class HistogramException(Exception):
     pass
 class TObjectOpenException(Exception):
     pass
-class Sample:
-    def __init__(self, name, file_name):
-        self.name = name
-        self.file_name = file_name
-        self.logger = logging.getLogger(str(self))
 
+
+def get_sample_name(filename):
+    """
+    Returns the sample name from the input file name
+    """
+    return filename.split("/")[-1].split(".")[0]
+
+
+process_names = {
+    "WJets_sherpa.*": "WJets_sherpa",
+    "SingleMu.*": "SingleMu",
+    "SingleEle.*": "SingleEle"
+}
+def get_process_name(sn):
+    for k, v in process_names.items():
+        if re.match(k, sn):
+            return v
+    return sn
+
+logger = logging.getLogger("sample.py")
+logger.setLevel(logging.INFO)
+
+class Sample:
+    def __del__(self):
+        logger.debug("Closing sample %s" % self.name)
+        self.tfile.Close()
+
+    def __init__(self, name, file_name, tree_name = "Events", process_name=None):
+        """
+            name - The name of this sample. Typically the filename of the .root file containing the TTree
+            file_name - The path to the file that you want to open as a TFile
+            process_name - an optional parameter describing the physical process name. Used for e.g. cross-section retrieval
+            tree_name - the name of the events TTree to open in the file
+        """
+        self.name = name
+        if not process_name:
+            self.process_name = name
+        else:
+            self.process_name = process_name
+        self.tree_name = tree_name
+        self.file_name = file_name
         try:
             self.tfile = ROOT.TFile(file_name)
             if not self.tfile:
@@ -22,30 +62,37 @@ class Sample:
         except Exception as e:
             raise e
         try:
-            self.tree = self.tfile.Get("trees").Get("Events")
+            self.tree = self.tfile.Get("trees/"+tree_name)            
         except Exception as e:
-            raise TObjectOpenException("Could not open tree Events from file %s: %s" % (self.file_name, self.tfile))
+            raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.file_name, self.tfile))
 
         if not self.tree:
-            raise TObjectOpenException("Could not open tree Events from file %s: %s" % (self.tfile.GetName(), self.tree))
+            raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
         self.tree.SetCacheSize(100*1024*1024)
+        if self.tfile.Get("trees/WJets_weights"):
+            self.tree.AddFriend("trees/WJets_weights")
+        if self.tfile.Get("trees/MVA"):
+            self.tree.AddFriend("trees/MVA")
         #self.tree.AddBranchToCache("*", 1)
 
         self.event_count = None
         self.event_count = self.getEventCount()
         if self.event_count<=0:
-            self.logger.warning("Sample was empty: %s" % self.name)
+            logger.warning("Sample was empty: %s" % self.name)
             #raise Exception("Sample event count was <= 0: %s" % self.name)
 
         self.isMC = not self.file_name.split("/")[-1].startswith("Single")
 
-        self.logger.debug("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
+        logger.debug("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
 
     def getEventCount(self):
         if self.event_count is None:
             self.event_count = self.tree.GetEntries()
         return self.event_count
+
+    def getTree(self):
+        return self.tree
 
     def getBranches(self):
         return [x.GetName() for x in self.tree.GetListOfBranches()]
@@ -57,50 +104,45 @@ class Sample:
         return count_hist.GetBinContent(1)
 
     def lumiScaleFactor(self, lumi):
-        expected_events = sample_xs_map[self.name] * lumi
+        expected_events = sample_xs_map[self.process_name] * lumi
         total_events = self.getTotalEventCount()
         scale_factor = float(expected_events)/float(total_events)
         return scale_factor
 
     def drawHistogram(self, var, cut_str, **kwargs):
-        name = self.name + "_" + Histogram.unique_name(var, cut_str, kwargs.get("weight"))
+        logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
+        name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)
         binning = kwargs.get("binning", None)
 
         weight_str = kwargs.get("weight", None)
-        dtype = kwargs.get("dtype", "float")
+        dtype = kwargs.get("dtype", "F")
 
         ROOT.gROOT.cd()
-        if plot_range is not None:
-            hist_args = ["htemp", "htemp"] + plot_range
+        ROOT.TH1F.AddDirectory(True)
+        if plot_range:
+            hist = Hist(*plot_range, type=dtype)
         elif binning is not None:
-            hist_args = "htemp", "htemp", binning[0], binning[1]
+            hist = Hist(binning, type=dtype)
         else:
-            raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=(nbins, numpy.array(..))")
-
-        if dtype=="float":
-            histfn = ROOT.TH1F
-        elif dtype=="int":
-            histfn = ROOT.TH1I
-        else:
-            raise ValueError("Unrecognized dtype: %s" % dtype)
-
-        hist = histfn(*hist_args)
+            raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=numpy.array(..)")
 
         hist.Sumw2()
+        name += "_" + hist.GetName()
+        hist.SetName(name)
 
-        draw_cmd = var + ">>htemp"
+        draw_cmd = var + ">>%s" % hist.GetName()
 
         if weight_str:
             cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
         else:
             cutweight_cmd = "(" + cut_str + ")"
 
-        self.logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
+        logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
 
-        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff")
-        self.logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
+        logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
         if n_entries<0:
             raise HistogramException("Could not draw histogram: %s" % self.name)
@@ -111,19 +153,64 @@ class Sample:
             raise TObjectOpenException("Could not get histogram: %s" % hist)
         if hist.GetEntries() != n_entries:
             raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        ROOT.TH1F.AddDirectory(False)
+
+        hist_new = hist.Clone(filter_alnum(name))
+        logger.debug(list(hist_new.y()))
+
+        return hist_new
+
+    def drawHistogram2D(self, var_x, var_y, cut_str, **kwargs):
+        logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
+        name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
+
+        plot_range_x = kwargs.get("plot_range_x", None)
+        plot_range_y = kwargs.get("plot_range_y", None)
+        binning_x = kwargs.get("binning_x", None)
+        binning_y = kwargs.get("binning_y", None)
+
+        weight_str = kwargs.get("weight", None)
+        dtype = kwargs.get("dtype", "F")
+
+        ROOT.gROOT.cd()
+        ROOT.TH2F.AddDirectory(True)
+        if plot_range_x and plot_range_y:
+            pass
+            #TODO: make it work if needed
+            #hist = Hist2D(*plot_range_x, *plot_range_y, type=dtype, name="htemp")
+        elif binning_x is not None and binning_y is not None:
+            hist = Hist2D(binning_x, binning_y, type=dtype)
+        else:
+            raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
+
+        hist.Sumw2()
+
+        draw_cmd = var_y+":"+var_x + ">>%s" % hist.GetName()
+
+        if weight_str:
+            cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
+        else:
+            cutweight_cmd = "(" + cut_str + ")"
+
+        logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
+
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
+        logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
+
+        if n_entries<0:
+            raise HistogramException("Could not draw histogram: %s" % self.name)
+
+        if hist.Integral() != hist.Integral():
+            raise HistogramException("Histogram had 'nan' Integral(), probably weight was 'nan'")
+        if not hist:
+            raise TObjectOpenException("Could not get histogram: %s" % hist)
+        if hist.GetEntries() != n_entries:
+            raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        ROOT.TH2F.AddDirectory(False)
+
         hist_new = hist.Clone(filter_alnum(name))
 
-        hist = hist_new
-        hist.SetTitle(name)
-        hist_ = Histogram()
-        hist_.setHist(hist, histogram_entries=n_entries, var=var,
-            cut=cut_str, weight=kwargs["weight"] if "weight" in kwargs.keys() else None,
-            sample_name=self.name,
-            sample_entries_total=self.getTotalEventCount(),
-            sample_entries_cut=self.getEventCount(),
-
-        )
-        return hist_
+        return hist_new
 
     def getColumn(self, col, cut):
         N = self.tree.Draw(col, cut, "goff")
@@ -132,7 +219,7 @@ class Sample:
             raise Exception("Could not get column %s: N=%d" % (col, N))
         buf = self.tree.GetV1()
         arr = ROOT.TArrayD(N, buf)
-        self.logger.debug("Column retrieved, copying to numpy array")
+        logger.debug("Column retrieved, copying to numpy array")
         out = numpy.copy(numpy.frombuffer(arr.GetArray(), count=arr.GetSize()))
         return out
 
@@ -140,20 +227,20 @@ class Sample:
         return int(self.tree.GetEntries(cut))
 
     @staticmethod
-    def fromFile(file_name):
+    def fromFile(file_name,tree_name="Events"):
         sample_name = (file_name.split(".root")[0]).split("/")[-1]
-        sample = Sample(sample_name, file_name)
+        sample = Sample(sample_name, file_name, tree_name)
         return sample
 
     @staticmethod
-    def fromDirectory(directory, out_type="list"):
+    def fromDirectory(directory, out_type="dict", prefix="", tree_name="Events"):
         import glob
         file_names = glob.glob(directory + "/*.root")
         logging.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
         if out_type=="list":
-            samples = [Sample.fromFile(file_name) for file_name in file_names]
+            samples = [Sample.fromFile(file_name, tree_name) for file_name in file_names]
         elif out_type=="dict":
-            samples = dict((file_name.split("/")[-1].split(".")[0], Sample.fromFile(file_name)) for file_name in file_names)
+            samples = dict((prefix+file_name.split("/")[-1].split(".")[0], Sample.fromFile(file_name, tree_name)) for file_name in file_names)
         else:
             raise ValueError("out_type must be 'list' or 'dict'")
         return samples
@@ -163,3 +250,53 @@ class Sample:
 
     def __str__(self):
         return self.__repr__()
+
+def is_mc(name):
+    return not "SingleMu" in name
+
+def get_paths(basedir=None, samples_dir="step3_latest", dataset=None):
+    """
+    basedir - the path where your STPOL directory is located
+    samples_dir - the subdirectory in STPOL/...
+
+    Returns a dictionary with the path structure of the samples in the format of
+    out[dataset_name][mc/data][mu/ele][systematic_scenario][isolation] = "/path/to/samples"
+    where dataset_name is the name/tag of the reprocessing
+    """
+    if not basedir:
+        basedir = os.environ["STPOL_DIR"]
+    datadirs = dict()
+    fnames = NestedDict()
+    for root, paths, files in os.walk(basedir + "/" + samples_dir):
+        rootfiles = filter(lambda x: x.endswith(".root"), files)
+        for fi in rootfiles:
+            fn = root + "/" + fi
+
+            spl = fn.split("/")
+            try:
+                idx = spl.index("mu")
+            except ValueError:
+                idx = spl.index("ele")
+
+            spl = spl[idx:]
+            lepton = spl[0]
+            sample_type = spl[1]
+            iso = spl[2]
+
+            if len(spl)==6:
+                systematic=spl.pop(3)
+            elif len(spl)==5:
+                systematic="NONE"
+            else:
+                raise ValueError("Couldn't parse filename: %s" % fn)
+            _dataset = spl[3]
+            fname = spl[4]
+
+            fnames[_dataset][sample_type][lepton][systematic][iso] = root
+            break
+    if not dataset:
+        return fnames.as_dict()
+    elif dataset == "latest":
+        return fnames["Jul15"].as_dict()
+    else:
+        return fnames[dataset].as_dict()

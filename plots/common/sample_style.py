@@ -2,6 +2,7 @@ from colors import sample_colors_same as sample_colors
 from colors import sample_colors_separate
 import ROOT
 import itertools
+from SingleTopPolarization.Analysis import sample_types
 
 class Styling:
     @staticmethod
@@ -22,14 +23,23 @@ class Styling:
     def data_style(hist):
         hist.SetMarkerStyle(20)
         hist.SetMarkerColor(ROOT.kBlack)
-        hist.SetFillStyle(4001)
+        hist.SetFillStyle(0)
+
+    @staticmethod
+    def style_collection(coll):
+        for hn, h in coll.hists.items():
+            if sample_types.is_mc(hn):
+                Styling.mc_style(h, hn)
+            else:
+                Styling.data_style(h)
+
 
 class ColorStyleGen:
     col_index = 0
     style_index = 0
 
-    colors = [ROOT.kRed, ROOT.kBlue, ROOT.kGreen, ROOT.kMagenta, ROOT.kYellow, ROOT.kBlack, ROOT.kCyan, ROOT.kOrange]
-    styles = [1001]#, 3005, 3006]
+    colors = [ROOT.kRed, ROOT.kBlue, ROOT.kGreen, ROOT.kMagenta, ROOT.kYellow+2, ROOT.kBlack, ROOT.kCyan, ROOT.kOrange]
+    styles = [1,2,3,4]#, 3005, 3006]
 
     def __init__(self):
         self.colstyles = itertools.product(self.styles, self.colors)
@@ -39,9 +49,11 @@ class ColorStyleGen:
 
     def style_next(self, hist):
         (style, color) = self.next()
-        hist.SetFillColor(ROOT.kWhite)
+        hist.SetFillColor(0)
+        hist.SetLineWidth(1)
         hist.SetLineColor(color)
         hist.SetMarkerStyle(0)
+        hist.SetFillStyle(0)
         hist.SetLineStyle(style)
 
     def reset(self):

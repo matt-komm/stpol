@@ -129,6 +129,7 @@ def make_histograms(var, MC_groups, data_group, open_files, syst, iso, lumis, cu
    all_groups = []
    all_groups.extend(MC_groups)
    total = TH1D("total", "total", var.bins, var.lbound, var.ubound)
+   total.Sumw2()
    if data_group is not None:
       all_groups.append(data_group)
    for group in all_groups:
@@ -150,6 +151,7 @@ def make_histograms(var, MC_groups, data_group, open_files, syst, iso, lumis, cu
             tdir = f.Get("trees")
             #print ds.getName()+" "+ds.getTree()+"_"+syst
             mytree = tdir.Get("Events")
+            mytree.AddFriend("trees/WJets_weights")
             if group.getName()=="QCD":
                 weight = cutsQCD            
             elif group.isMC():
@@ -169,7 +171,7 @@ def make_histograms(var, MC_groups, data_group, open_files, syst, iso, lumis, cu
                his.Scale(ds.preScale())
             h.Add(his)
       error = array('d',[0.])
-      print group.getName(), group.getTitle(), var.shortName, syst, iso, h.GetEntries(), h.IntegralAndError(0,100,error), "+-", error[0]
+      print group.getName(), group.getTitle(), var.shortName, syst, iso, extra, h.GetEntries(), h.IntegralAndError(0,100,error), "+-", error[0]
       #print(str(h.Integral()) + " +- " + str( h.Integral()/(h.GetEntries()**0.5) ) )
       group.addHistogram(h, var, syst, iso, extra)
       if group.isMC():

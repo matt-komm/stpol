@@ -1,5 +1,20 @@
 #CVS crud
 *CVS*
+/analysis_notes
+/testing*
+/log*
+
+*__init__.py
+CMSSW_5_3_11/.SCRAM
+CMSSW_5_3_11/config
+CMSSW_5_3_11/python
+CMSSW_5_3_11/tmp
+
+/bin/*
+*.png
+*.pickle
+*.out
+/data
 
 # Compiled Object files
 *.slo
@@ -17,7 +32,9 @@
 
 #ROOT files
 *.root
-trees
+!CMSSW_*/src/data/*
+!CMSSW_5_3_11/src/data/WJets_reweighting/hists__costheta_flavours_merged_scenario0.root
+/trees
 
 #Logs
 *.log
@@ -25,18 +42,29 @@ trees
 #Xcode files
 *.xcworkspace
 
-#testing stuff
-#test*
-
 #crab jobs
-crabs/step*
+/crabs/step*
 
 #related to documentation
-AN
-pres
+/AN*
+
+/pres
 
 #vim temps
 *.un~
 *~
 
+*.hdf5
 
+/misc/*
+/local
+/theta
+/lqetafit/htmlout*
+/lqetafit/topfit
+
+/stpol.xcodeproj/xcuserdata
+
+*.pdf
+*.yield
+
+*.txt

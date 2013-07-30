@@ -1,0 +1,6 @@
+/store/user/joosep/Jul15_partial/iso/nominal/Tbar_t_ToLeptons/output_1_1_GNj.root
+/store/user/joosep/Jul15_partial/iso/nominal/Tbar_t_ToLeptons/output_2_1_xNo.root
+/store/user/joosep/Jul15_partial/iso/nominal/Tbar_t_ToLeptons/output_3_1_ASk.root
+/store/user/joosep/Jul15_partial/iso/nominal/Tbar_t_ToLeptons/output_4_1_9FV.root
+/store/user/joosep/Jul15_partial/iso/nominal/Tbar_t_ToLeptons/output_5_1_P6h.root
+/store/user/joosep/Jul15_partial/iso/nominal/Tbar_t_ToLeptons/output_6_2_4Oo.root

@@ -10,22 +10,38 @@ if [ ! -f $1 ]; then
     exit 1
 fi
 INFILE=`readlink -f $1`
-OUTDIR=`readlink -f $2`
+OUTDIR=$2
 CONF="${*:3}"
 
 mkdir -p $OUTDIR
+OUTDIR=`readlink -f $OUTDIR`
 cd $OUTDIR
 echo $0 $@ > $OUTDIR/job
 
+if [[ ! -s $INFILE ]]; then
+    echo "Input file is empty, exiting!"
+    exit 0
+fi
+
 #split input file into N-line pieces
-split $INFILE -a4 -l 50 -d
+if [[ "$INFILE" == *T_t* ]] || [[ "$INFILE" == *Tbar_t* ]]; then
+    N=1
+else
+    N=50;
+fi
+
+split $INFILE -a8 -l $N -d
 for file in x*
 do
     echo "Submitting step3 job $CONF on file $file"
-    echo sbatch -x comp-d-[094] -p main $STPOL_DIR/analysis_step3/run_step3_eventloop.sh `readlink -f $file` $OUTDIR $CONF > task_$file
-    until sbatch -x comp-d-[094] -p main $STPOL_DIR/analysis_step3/run_step3_eventloop.sh `readlink -f $file` $OUTDIR $CONF
+
+#save the task
+    CMD="sbatch -p cms,phys,ied,prio $STPOL_DIR/analysis_step3/run_step3_eventloop.sh `readlink -f $file` $OUTDIR $CONF > task_$file"
+
+#try to submit until successfully submitted
+    until `eval $CMD`
     do 
         echo "ERROR!: could not submit slurm job on file $file, retrying after sleep..." >&2
-        sleep 20
+        sleep 0.5
     done 
 done

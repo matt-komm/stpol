@@ -32,11 +32,8 @@ def mc_amount(cut, weight, lumi=12210, ref=None):
     histsD = dict()
     for samp in samples:
         histsD[samp.name] = samp.drawHistogram("mu_pt", str(cut), dtype="float", weight=weight, plot_range=[100, 0, 100000000])
-
-    for name, hist in histsD.items():
-        hist.normalize_lumi(lumi)
-    for name, hist in histsD.items():
-        histsD[name] = hist.hist
+        histsD[samp.name].Scale(samp.lumiScaleFactor(lumi))
+        
     merge_cmd = dict()
     merge_cmd["t-channel incl"] = ["T_t", "Tbar_t"]
     merge_cmd["t-channel excl"] = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]

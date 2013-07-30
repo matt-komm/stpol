@@ -20,66 +20,66 @@ run_samples() {
 }
 
 OUTDIR=$STPOL_DIR/out_b_effs/2J_nocut/mu
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --doNJets --nJ=2,2"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --doNJets --nJ=2,2"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/2J_nocut/ele
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --doNJets --nJ=2,2"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --doNJets --nJ=2,2"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/3J_nocut/mu
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --doNJets --nJ=3,10"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --doNJets --nJ=3,10"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/3J_nocut/ele
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --doNJets --nJ=3,10"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --doNJets --nJ=3,10"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/2J_mtw/mu
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --doNJets --nJ=2,2"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --doNJets --nJ=2,2"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/2J_met/ele
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --doNJets --nJ=2,2"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --doNJets --nJ=2,2"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/3J_mtw/mu
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --doNJets --nJ=3,10"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --doNJets --nJ=3,10"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/3J_met/ele
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --doNJets --nJ=3,10"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --doNJets --nJ=3,10"
 run_samples $OUTDIR "$SCRIPT"
 
 
 OUTDIR=$STPOL_DIR/out_b_effs/2J_mtw_mtop/mu
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --mtop --doNJets --nJ=2,2"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --mtop --doNJets --nJ=2,2"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/2J_met_mtop/ele
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --mtop --doNJets --nJ=2,2"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --mtop --doNJets --nJ=2,2"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/3J_mtw_mtop/mu
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --mtop --doNJets --nJ=3,10"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --mtop --doNJets --nJ=3,10"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/3J_met_mtop/ele
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --mtop --doNJets --nJ=3,10"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --mtop --doNJets --nJ=3,10"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/2J_mtw_mtop_etalj/mu
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --mtop --etalj --doNJets --nJ=2,2"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --mtop --etalj --doNJets --nJ=2,2"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/2J_met_mtop_etalj/ele
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --mtop --etalj --doNJets --nJ=2,2"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --mtop --etalj --doNJets --nJ=2,2"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/3J_mtw_mtop_etalj/mu
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --mtop --etalj --doNJets --nJ=3,10"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=mu --mtw --mtop --etalj --doNJets --nJ=3,10"
 run_samples $OUTDIR "$SCRIPT"
 
 OUTDIR=$STPOL_DIR/out_b_effs/3J_met_mtop_etalj/ele
-SCRIPT="$STPOL_DIR/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --mtop --etalj --doNJets --nJ=3,10"
+SCRIPT="$CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/b_effs/step3_beffs_base.py --isMC --lep=ele --met --mtop --etalj --doNJets --nJ=3,10"
 run_samples $OUTDIR "$SCRIPT"

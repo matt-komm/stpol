@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/QCD_Pt_20_30_BCtoE/output_1_1_Qcr.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/QCD_Pt_20_30_BCtoE/output_2_1_23C.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/QCD_Pt_20_30_BCtoE/output_3_1_lNt.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/nominal/QCD_Pt_20_30_BCtoE/output_4_1_HTT.root

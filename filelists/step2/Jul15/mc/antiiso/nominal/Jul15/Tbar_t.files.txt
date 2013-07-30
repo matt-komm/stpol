@@ -1,0 +1,7 @@
+/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t/output_1_1_vgt.root
+/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t/output_2_2_Cl6.root
+/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t/output_3_1_jDK.root
+/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t/output_4_1_Cbr.root
+/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t/output_5_1_ECi.root
+/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t/output_6_2_Ojd.root
+/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t/output_7_1_Emf.root
