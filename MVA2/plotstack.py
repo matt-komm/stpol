@@ -12,7 +12,7 @@ args = parser.parse_args()
 if args.var=='costheta':
 	var = 'cos_theta'
 	cut = str(plots.common.cuts.Cuts.final(2, 1))
-	histparam = (20, 0, 1)
+	histparam = (20, -1, 1)
 elif args.var=='bdt':
 	cut = '((((rms_lj < 0.025) && (mt_mu > 50)) && (n_jets == 2)) && (n_tags == 1))'
 	var = 'mva_BDT'
