@@ -46,10 +46,10 @@ class HistCollection:
         self.fi = fi
         logger.debug("Created HistCollection with name %s, hists %s" % (name, str(hists)))
 
-    def __del__(self):
-        if self.fi:
-            logger.debug("Closing file %s of HistCollection" % self.fi.GetPath())
-            self.fi.Close()
+    # def __del__(self):
+    #     if self.fi:
+    #         logger.debug("Closing file %s of HistCollection" % self.fi.GetPath())
+    #         self.fi.Close()
 
     def get(self, hname):
         return self.hists[hname], self.metadata[hname]
@@ -70,7 +70,8 @@ class HistCollection:
         if not fi:
             raise Exception("Couldn't open file for writing")
         logger.info("Saving histograms to ROOT file %s" % histo_file)
-        for hn, h in self.hists.items():
+        hists = copy.deepcopy(self.hists)
+        for hn, h in hists.items():
             dirn = "/".join(hn.split("/")[:-1])
             fi.cd()
             try:
@@ -109,10 +110,11 @@ class HistCollection:
                     md = metadata[hname]
         return HistCollection(hists, metadata, name, fi)
 
-def norm(hist):
+def norm(hist, setName=False):
     integral, err = calc_int_err(hist)
     if integral>0:
-        hist.SetTitle(hist.GetTitle() + " I=%.2E #pm %.1E" % (integral, err))
+        if setName:
+            hist.SetTitle(hist.GetTitle() + " I=%.2E #pm %.1E" % (integral, err))
         hist.Scale(1.0/integral)
     else:
         logger.error("Histogram integral was 0: %s" % hist.GetName())
@@ -121,6 +123,9 @@ def calc_int_err(hist):
     err = ROOT.Double()
     integral = hist.IntegralAndError(1, hist.GetNbinsX(), err)
     return (integral, err)
+
+def sum_err(hist):
+    return sum([y for y in hist.yerravg()])
 
 def unique_name(var, cut, weight):
     cut_str = cut if cut is not None else "NOCUT"

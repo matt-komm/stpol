@@ -97,7 +97,7 @@ def get_step(filename):
     return step
 
 def is_signal(sample_name):
-    return sample_name in ["T_t_ToLeptons", "Tbar_t_ToLeptons", "T_t", "Tbar_t"]
+    return sample_name in ["T_t_ToLeptons", "Tbar_t_ToLeptons", "T_t", "Tbar_t"] or sample_name.startswith("TToB")
 
 def is_skimmable(sample_name):
     return  (
@@ -109,7 +109,7 @@ def is_skimmable(sample_name):
             )
 
 def is_comphep(sample_name):
-    return "comphep" in sample_name
+    return ("comphep" in sample_name or "TToB" in sample_name)
 
 def is_sherpa(sample_name):
     return "sherpa" in sample_name

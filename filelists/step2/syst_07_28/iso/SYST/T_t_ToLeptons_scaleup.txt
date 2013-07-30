@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/T_t_ToLeptons_scaleup/output_1_1_goi.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/T_t_ToLeptons_scaleup/output_2_1_97T.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/T_t_ToLeptons_scaleup/output_3_1_H2f.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/T_t_ToLeptons_scaleup/output_4_1_HM4.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/T_t_ToLeptons_scaleup/output_5_1_8po.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/T_t_ToLeptons_scaleup/output_6_1_Gu6.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/T_t_ToLeptons_scaleup/output_7_1_76H.root

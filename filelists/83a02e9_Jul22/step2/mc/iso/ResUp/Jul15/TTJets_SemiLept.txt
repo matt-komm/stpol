@@ -36,6 +36,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_3
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_36_2_mpy.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_37_2_Fio.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_38_2_TRK.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_39_2_5ii.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_40_2_PsJ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_41_2_22Z.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_42_2_Vxn.root
@@ -68,6 +69,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_6
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_69_2_lO6.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_70_2_VxW.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_71_2_uRm.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_72_3_ILu.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_73_2_bUS.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_74_2_4Uz.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_75_2_XCK.root
@@ -80,6 +82,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_8
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_82_2_oIW.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_83_2_ahx.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_84_2_LII.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_85_2_mV3.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_86_2_Cta.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_87_2_KB4.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_88_2_a98.root
@@ -90,6 +93,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_9
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_93_2_iAa.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_94_2_J2Q.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_95_2_Xte.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_96_3_Wjm.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_97_2_RAf.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_98_2_iHX.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_99_2_E9h.root
@@ -97,6 +101,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_1
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_101_2_jZN.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_102_2_0do.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_103_2_IrL.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_104_2_mV8.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_105_2_ErW.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_106_2_tOg.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_107_2_ZKu.root
@@ -213,6 +218,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_2
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_218_2_3Ez.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_219_2_oWE.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_220_2_j2Y.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_221_2_y5E.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_222_2_1RD.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_223_2_bD3.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/TTJets_SemiLept/output_224_2_tSG.root

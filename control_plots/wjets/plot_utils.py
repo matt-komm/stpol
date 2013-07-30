@@ -3,12 +3,14 @@ from plots.common.stack_plot import *
 from plots.common.hist_plots import *
 from plots.common.legend import *
 from plots.common.cuts import *
+from plots.common.histogram import HistCollection, HistMetaData
 import copy
 from rootpy.extern.progressbar import *
 from SingleTopPolarization.Analysis import sample_types
 import re
 import logging
 logger = logging.getLogger("plot_utils")
+logger.setLevel(logging.INFO)
 
 costheta = {"var":"cos_theta", "varname":"cos #theta", "range":[20,-1,1]}
 mtop = {"var":"top_mass", "varname":"M_{bl#nu}", "range":[20, 130, 220]}
@@ -34,20 +36,15 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
         nSamp = 1
         for sample in samples:
             hname = sample.name
-            weight_ = copy.deepcopy(weight)
             if sample.isMC:
-
-                for weight_name, weight_str in weight_strs:
-                    for cut_name, cut_str in cut_strs:
-                        logger.debug("Drawing with %s, %s" % (weight_str, cut_str))
-                        hname_ = weight_name + "/" + cut_name + "/" + hname
-                        hist = sample.drawHistogram(var, cut_str, weight=weight_str, **kwargs)
-                        hist.Scale(sample.lumiScaleFactor(lumi))
-                        hists[hname_] = hist.hist
-                        metadata[hname_] = HistMetaData(
-                            sample_name = sample.name,
-                            process_name = sample.process_name,
-                        )
+                hname_ = sample.name
+                hist = sample.drawHistogram(var, str(cut), weight=str(weight), **kwargs)
+                hist.Scale(sample.lumiScaleFactor(lumi))
+                hists[hname_] = hist
+                metadata[hname_] = HistMetaData(
+                    sample_name = sample.name,
+                    process_name = sample.process_name,
+                )
             else:
                 hist = sample.drawHistogram(var, str(cut), **kwargs)
                 hists[hname] = hist
@@ -57,7 +54,6 @@ def data_mc(var, cut_name, cut, weight, samples, out_dir, recreate, lumi, **kwar
                 )
             pbar.update(nSamp)
             nSamp += sample.getEventCount()
-            #metadata[sample.name] = HistMetaData()
 
         hist_coll = HistCollection(hists, metadata, plot_name)
         hist_coll.save(out_dir)
@@ -119,34 +115,20 @@ def plot(canv, name, hists_merged, out_dir, desired_order=PhysicsProcess.desired
         tot_mc
     )
 
-    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM P")
-    ks = tot_mc.KolmogorovTest(tot_data, "N D")
-    stacks["mc"].SetTitle(stacks["mc"].GetTitle() + " #chi^{2}/N=%.2f ks=%.2E" % (chi2, ks))
+    chi2 = tot_data.Chi2Test(tot_mc, "UW CHI2/NDF NORM")
+    ks = tot_mc.KolmogorovTest(tot_data, "N")
+    stacks["mc"].SetTitle(stacks["mc"].GetTitle() + " #chi^{2}/#nu=%.2f" % (chi2))
     r[1].GetXaxis().SetTitle(x_title)
     canv.cd()
 
     logger.debug("Drawing legend")
-    leg = legend(hists["data"] + hists["mc"], styles=["p", "f"], **kwargs)
+    leg = legend(hists["data"] + list(reversed(hists["mc"])), styles=["p", "f"], **kwargs)
     #canv.store = [leg, r, tot_mc, tot_data]
 
     canv.Update()
     canv.SaveAs(out_dir + "/%s.png" % name)
+    canv.SaveAs(out_dir + "/%s.pdf" % name)
+    canv.SaveAs(out_dir + "/%s.eps" % name)
     canv.Close() #Must close canvas to prevent hang in ROOT upon GC
     logger.debug("Returning from plot()")
     return
-
-def plot_hists_dict(hist_dict, doNorm=False, **kwargs):
-    items = hist_dict.items()
-    for hn, h in items:
-        h.SetName(hn)
-        h.SetTitle(hn)
-    hists = [x[1] for x in items]
-    names = [x[0] for x in items]
-    if doNorm:
-        map(norm, hists)
-    ColorStyleGen.style_hists(hists)
-    canv = plot_hists(hists, **kwargs)
-
-    leg = legend(hists, styles=["f", "f"], **kwargs)
-    canv.LEGEND = leg
-    return canv

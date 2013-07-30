@@ -10,8 +10,8 @@ echo "Setting up stpol env..."
 # Extract directories
 CURRENT_DIR=`pwd`
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CMSSW_DIR=$1
-if [ -z "$CMSSW_DIR" ]; then CMSSW_DIR="CMSSW_5_3_11"; fi
+CMSSW_DIR=CMSSW_5_3_11
+#if [ -z "$CMSSW_DIR" ]; then CMSSW_DIR="CMSSW_5_3_11"; fi
 #echo "Current:" $CURRENT_DIR
 #echo "Script:" $SCRIPT_DIR
 
@@ -29,11 +29,14 @@ PYTHONPATH=$PYTHONPATH:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/local/lib/python
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/qcd_estimation/
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/theta/utils2/
 
-#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/scratch/mario/boost_1_53_0/lib
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$STPOL_DIR/local/lib
+export LD_RUN_PATH=$LD_RUN_PATH:$STPOL_DIR/local/lib
+export PATH=$PATH:$STPOL_DIR/local/bin
 
 if [[ "`hostname`" == *hep.kbfi.ee ]] || [[ "`hostname`" == comp* ]]
 then
     echo "Detected that we're on hep.kbfi.ee, sourcing CMS-specific stuff"
+    echo ${SCRIPT_DIR}/$CMSSW_DIR 
     cd ${SCRIPT_DIR}/$CMSSW_DIR
     source /cvmfs/cms.cern.ch/cmsset_default.sh
     eval `scramv1 runtime -sh`

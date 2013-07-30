@@ -40,7 +40,7 @@ if __name__=="__main__":
             print "ERROR: wrong input line %s % fi"
             continue
         #print "Processing report file %s" % fi
-        
+
         try:
             t = Task(fi)
         except ValueError:
@@ -54,7 +54,9 @@ if __name__=="__main__":
         outfile = open(ofpath + "/" + t.name+".txt", "w")
 
         for job in t.jobs:
-            if job.isCompleted():
+            if job.isCompleted() and job.lfn:
                 outfile.write(prefix+job.lfn + "\n")
+            else:
+                print "Error with %s " % str(job)
         print "Saved output to file %s" % outfile.name
         outfile.close()

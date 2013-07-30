@@ -9,13 +9,15 @@
 
 using namespace std;
 
-void read_fitres(vector<TString> &names, vector<Float_t> &scales, vector<Float_t> &uncs)
+void read_fitres(TString fresult, vector<TString> &names, vector<Float_t> &scales, vector<Float_t> &uncs)
 {
         TString name;
         Float_t scale, unc;
         
+	cout << "reading fit results: " << fresult << endl;
+
         ifstream ifs;
-        ifs.open("results.txt");
+        ifs.open("fitresults/"+fresult+".txt");
         if(!ifs.good()) {
                 cout << "Could not open fit results file!" << endl;
                 exit(1);
@@ -27,6 +29,29 @@ void read_fitres(vector<TString> &names, vector<Float_t> &scales, vector<Float_t
         } 
         ifs.close();
         
+}
+
+void fill_nooverflow_1d(TH1* h, double val, double weight)
+{
+	if(val > h->GetXaxis()->GetXmax()) val = h->GetXaxis()->GetXmax()-0.00001;
+	if(val < h->GetXaxis()->GetXmin()) val = h->GetXaxis()->GetXmin()+0.00001; 
+	h->Fill(val, weight);
+}
+
+void fill_nooverflow_2d(TH2* h, double valx, double valy, double weight)
+{
+	const double xmax = h->GetXaxis()->GetXmax();
+	const double xmin = h->GetXaxis()->GetXmin();
+	const double ymax = h->GetYaxis()->GetXmax();
+	const double ymin = h->GetYaxis()->GetXmin();
+
+	if(valx > xmax) valx =xmax-0.00001;
+	if(valx < xmin) valx = xmin+0.00001; 
+
+	if(valy > ymax) valy = ymax-0.00001;
+	if(valy < ymin) valy = ymin+0.00001; 
+  
+	h->Fill(valx, valy, weight);
 }
 
 Float_t error_naive(Float_t plus, Float_t minus)
@@ -82,17 +107,21 @@ Float_t error_unfold(TH2F* errmat, TH1F* unf)
 	return error;
 }
 
-Float_t asymmetry(TH1F *hist)
-{
+Double_t asymmetry(TH1F *hist)
+{	
+	// Underflow and overflow should not be filled
+	//cout << hist->GetBinContent(0) << endl;
+	//cout << hist->GetBinContent(hist->GetNbinsX()+1) << endl;
+
 	Int_t bin_zero =  hist->FindBin(0.0);
 	Int_t bin_last =  hist->GetXaxis()->GetNbins();
 	//cout << "zero bin: " << bin_zero << endl;
 	//cout << "last bin: " << bin_last << endl;
 
-	Float_t integral_plus = hist->Integral(bin_zero,bin_last);
-	Float_t integral_minus = hist->Integral(1,bin_zero-1);
-	Float_t integral = hist->Integral(1,bin_last);
-	Float_t asym = (integral_plus-integral_minus)/integral;
+	Int_t integral_plus = hist->Integral(bin_zero,bin_last);
+	Int_t integral_minus = hist->Integral(1,bin_zero-1);
+	Int_t integral = hist->Integral(1,bin_last);
+	Double_t asym = (integral_plus-integral_minus)/(Double_t)integral;
 	//cout << "integral+:" << integral_plus << endl;
 	//cout << "integral-:" << integral_minus << endl;
 	//cout << "integral:" << integral << endl;

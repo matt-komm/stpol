@@ -1,5 +1,8 @@
 
 import ROOT
+import logging
+
+logger = logging.getLogger("legend")
 def legend(hists, **kwargs):
     """
         ***Mandatory arguments:
@@ -90,6 +93,7 @@ def legend(hists, **kwargs):
 
     #Expand the array using the wildcard
     leg = ROOT.TLegend(*leg_coords)
+    leg.SetFillStyle(0)
 
     if "names" in kwargs:
         rnames = names[::-1]
@@ -106,6 +110,7 @@ def legend(hists, **kwargs):
         for hist in hists:
             leg_style = styles.pop()
             leg.AddEntry(hist, hist.GetTitle(), leg_style)
+            logger.debug("Add legend entry %s: %s" % (hist.GetTitle(), hist))
 
     leg.Draw()
 

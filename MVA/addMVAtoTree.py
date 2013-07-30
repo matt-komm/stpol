@@ -1,6 +1,6 @@
 #!/bin/env python
 from ROOT import *
-from plots.common.utils import merge_cmds
+from plots.common.utils import *
 import sys
 from array import array
 
@@ -8,31 +8,26 @@ if len(sys.argv) < 2:
         print "Usage: addMVAtoTree.py dir_containing_root_files"
         sys.exit(1)
 
-flist=[]
-del merge_cmds['data']
-
-if len(sys.argv) == 3:
-    flist=[sys.argv[2]]
-else:
-    flist=sum(merge_cmds.values(),[])
-
 dir=sys.argv[1]
-print "Using:",dir
 
 prt = 'el'
-sample = 'ele'
+proc = 'ele'
 if '/mu/' in dir:
     prt = 'mu'
-    sample = 'mu'
-    flist.append('SingleMu')
-else:
-    flist.append('SingleEle')
+    proc = 'mu'
 
+physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=proc)
+merge_cmds = PhysicsProcess.get_merge_dict(physics_processes)
+
+if len(sys.argv) == 3:
+    flist=[dir+'/'+sys.argv[2]]
+else:
+    flist=get_file_list(merge_cmds,sys.argv[1])
 
 # Create reader and relate variables
 reader = TMVA.Reader()
-varlist = ['top_mass','eta_lj','C','met','mt_'+prt,'bdiscr_bj','bdiscr_lj',prt+'_pt',prt+'_charge','pt_bj']
-speclist = ['cos_theta']
+varlist = ['top_mass','eta_lj','C','met','mt_'+prt,'mass_bj','mass_lj',prt+'_pt','pt_bj']
+speclist = []
 vars={}
 for v in varlist:
     vars[v] = array('f',[0])
@@ -43,16 +38,16 @@ for s in speclist:
     reader.AddSpectator( s, vars[s] )
 
 # Book the MVA's
-mvalist = [ 'BDT' ]
+mvalist = [ 'BDT']
 mva={}
 for m in mvalist:
-    reader.BookMVA(m,"weights/stop_"+sample+"_"+m+".weights.xml")
+    reader.BookMVA(m,"weights/stop_"+proc+"_"+m+".weights.xml")
     mva[m] = array('f',[0])
 
 # Run over files and add all the MVA's to the trees
 for f in flist:
     print "Starting:",f
-    tf=TFile(dir+'/'+f+'.root','UPDATE')
+    tf=TFile(f,'UPDATE')
     t=tf.Get("trees/Events_MVA")
     branch={}
     for v in varlist+speclist:

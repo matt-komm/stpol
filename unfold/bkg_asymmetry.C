@@ -18,7 +18,7 @@ void calc_asymmetry()
 	vector<Float_t> scales;
 	vector<Float_t> uncs;
 
-	read_fitres(names,scales,uncs);
+	read_fitres("nominal",names,scales,uncs);
 	TH1F *hsignal = (TH1F*)f->Get(var_y+"__tchan");
 	hsignal->Scale(scales[0]);
 	cout << "Signal:" << endl;

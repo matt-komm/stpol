@@ -6,6 +6,7 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_6_1_mXd.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_7_1_qEy.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_8_1_OiO.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_9_3_D8f.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_10_1_m0L.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_11_1_xhl.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_12_1_OQY.root
@@ -55,4 +56,5 @@ file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_56_1_CfZ.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_57_1_HEb.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_58_1_NcX.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_59_3_3VE.root
 file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/WJetsToLNu_scaleup/output_60_1_Kah.root
