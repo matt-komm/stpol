@@ -30,4 +30,10 @@ mvaFileList['bg']['eval']= [
 
 varList={}
 varList['ele'] = [ 'top_mass','eta_lj','C','met','mt_el','mass_bj','mass_lj','el_pt','pt_bj' ]
-varList['mu']  = [ 'top_mass','eta_lj','C','met','mt_el','mass_bj','mass_lj','mu_pt','pt_bj' ]
+varList['mu']  = [ 'top_mass','eta_lj','C','met','mt_mu','mass_bj','mass_lj','mu_pt','pt_bj' ]
+
+from plots.common.cuts import Cut,Cuts
+
+cuts = {}
+cuts['ele'] = Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.hlt_isoele*Cuts.lepton_veto*Cuts.pt_jet*Cuts.one_electron*Cuts.rms_lj*Cuts.met
+cuts['mu']  = Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.hlt_isomu*Cuts.lepton_veto*Cuts.pt_jet*Cuts.one_muon*Cuts.rms_lj*Cuts.mt_mu
