@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import SingleTopPolarization.Analysis.eventCounting as eventCounting
 import SingleTopPolarization.Analysis.sample_types as sample_types
+from SingleTopPolarization.Analysis.met_step2_cfi import metSequence
 
 def MuonSetup(process, conf = None):
 
@@ -80,18 +81,7 @@ def MuonSetup(process, conf = None):
         maxNumber=cms.uint32(0),
     )
 
-    #produce the muon and MET invariant transverse mass
-    process.muAndMETMT = cms.EDProducer('CandTransverseMassProducer',
-        collections=cms.untracked.vstring([conf.metSource, "goodSignalMuons"])
-    )
-    process.goodMETs = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag(conf.metSource), cut=cms.string("pt>%f" % conf.Muons.transverseMassCut)
-    )
-
-    process.metMuSequence = cms.Sequence(
-        process.muAndMETMT*
-        process.goodMETs
-    )
+    goodMET = metSequence(process, conf, "mu", conf.metSource, "goodSignalLeptons")
 
     process.muonWeightsProducer = cms.EDProducer("MuonEfficiencyProducer",
         src=cms.InputTag("singleIsoMu"),
@@ -101,7 +91,7 @@ def MuonSetup(process, conf = None):
     process.recoNuProducerMu = cms.EDProducer('ClassicReconstructedNeutrinoProducer',
         leptonSrc=cms.InputTag("singleIsoMu"),
         bjetSrc=cms.InputTag("btaggedJets"),
-        metSrc=cms.InputTag("goodMETs" if conf.Muons.transverseMassType == conf.Leptons.WTransverseMassType.MET else conf.metSource),
+        metSrc=cms.InputTag(goodMET)
     )
 
 def MuonPath(process, conf):
@@ -129,7 +119,8 @@ def MuonPath(process, conf):
         process.jetSequence *
         process.nJets *
         #Select mu and MET invariant transverse mass OR the MET
-        process.metMuSequence *
+        process.muMetSequence *
+
         process.mBTags *
         #Reconstruct the neutrino, the top quark and calculate the cosTheta* variable
         process.topRecoSequenceMu

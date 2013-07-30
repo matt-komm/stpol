@@ -530,3 +530,9 @@ def SingleTopStep2():
     print "Step2 configured"
 
     return process
+
+if __name__=="__main__":
+    process = SingleTopStep2()
+    from SingleTopPolarization.Analysis.test_files import testfiles
+
+    process.source.fileNames=cms.untracked.vstring(testfiles["step1"]["signal"])
