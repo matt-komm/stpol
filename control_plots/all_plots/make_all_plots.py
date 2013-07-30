@@ -3,10 +3,17 @@
 
 #Need to do basicConfig before doing any other logger commands in python 2.6
 #to prevent the other loggers from not recognizing levels set here
-import logging
-logging.basicConfig(level=logging.WARNING)
-
 import sys
+
+import logging
+
+#FIXME: make this part nicer
+level = logging.WARNING
+if "--DEBUG" in sys.argv:
+    sys.argv.pop(sys.argv.index("--DEBUG"))
+    level=logging.DEBUG
+logging.basicConfig(level=level)
+
 import os
 
 import argparse
