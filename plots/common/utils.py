@@ -111,7 +111,7 @@ class PhysicsProcess:
             try:
                 hist.SetTitle(processes_d[procname].pretty_name)
             except KeyError: #QCD does not have a defined PhysicsProcess but that's fine because we take it separately
-                pass
+                logger.warning("Process %s not in the process dict %s" % (procname, str(processes_d)))
                 
     systematic = {}
 
