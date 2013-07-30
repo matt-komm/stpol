@@ -40,9 +40,11 @@ def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     if not ignore_missing:
         raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
 
-def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cmds):
+def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_processes):
 
     logger.info('Plot in progress %s' % name)
+
+    merge_cmds = PhysicsProcess.get_merge_dict(physics_processes) #The actual merge dictionary
 
     var = plot_def['var']
 
@@ -146,6 +148,8 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
         ))
 
     merged_hists_l = merged_hists.values()
+
+    PhysicsProcess.name_histograms(physics_processes, merged_hists)
     leg = legend([hist_data] + list(reversed(merged_hists_l)), legend_pos=plot_def['labloc'], style=['p','f'])
 
     canv = ROOT.TCanvas()

@@ -214,10 +214,7 @@ if __name__=="__main__":
 
             plot_def = plot_defs[plotname]
 
-            canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, merge_cmds)
-
-            PhysicsProcess.name_histograms(physics_processes, merged_hists)
-
+            canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
 
             #This is adopted in the AN
             if lepton_channel=="ele":
