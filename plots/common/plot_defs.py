@@ -537,7 +537,23 @@ plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
 
 
 plot_defs['final_BDT']={
-    'tags': ["an", "control.tex", "mva"],
+    'tags': ["an", "control.tex", "mva", "finalBDT"],
+    'enabled': True,
+    'var': 'mva_BDT',
+    'range': [40, -1, 1],
+    'iso': True,
+    'estQcd': '2j1t_nomtcut',
+    'gev': False,
+    'log': True,
+    'xlab': varnames["BDT_uncat"],
+    'labloc': 'top-right',
+    'elecut': cutlist['2j1t']*cutlist['final_ele'],
+    'mucut': cutlist['2j1t']*cutlist['final_mu'],
+    'dir': "control"
+}
+
+plot_defs['final_BDT_sfpresel']={
+    'tags': ["an", "control.tex", "mva", "finalBDT"],
     'enabled': True,
     'var': 'mva_BDT',
     'range': [40, -1, 1],
@@ -552,9 +568,10 @@ plot_defs['final_BDT']={
     'dir': "control"
 }
 
-plot_defs['final_BDT_prefit'] = cp(plot_defs['final_BDT'])
+good_BDT='final_BDT'
+plot_defs['final_BDT_prefit'] = cp(plot_defs[good_BDT])
 plot_defs['final_BDT_prefit']['log'] = False
-plot_defs['final_BDT_fit'] = cp(plot_defs['final_BDT'])
+plot_defs['final_BDT_fit'] = cp(plot_defs[good_BDT])
 plot_defs['final_BDT_fit']['fitpars'] = fitpars['final_2j1t_mva']
 plot_defs['final_BDT_fit']['log'] = False
 
