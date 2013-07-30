@@ -1,7 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 import SingleTopPolarization.Analysis.eventCounting as eventCounting
 import SingleTopPolarization.Analysis.sample_types as sample_types
-
+from SingleTopPolarization.Analysis.met_step2_cfi import metSequence
 import re
 #Remove the excess whitespace from formatting
 def clean_whitespace(s):
@@ -29,7 +29,7 @@ def ElectronSetup(process, conf):
         #Top ref. sel.
         #https://twiki.cern.ch/twiki/bin/view/CMS/TWikiTopRefEventSel
         goodSignalElectronCut += "&& (electronID('mvaTrigV0') > %f)" %conf.Electrons.mvaCut
-        
+
     #Impact parameter dropped because using MVA ID
     #https://hypernews.cern.ch/HyperNews/CMS/get/egamma-elecid/72.html
     #goodSignalElectronCut += " && abs(userFloat('dxy')) < 0.02"
@@ -98,9 +98,6 @@ def ElectronSetup(process, conf):
     #Loose veto electrons must not overlap with good signal electrons
     looseVetoElectronCut += " && !(%s)" % goodSignalElectronCut
 
-    print "goodSignalElectronCut={0}".format(goodSignalElectronCut)
-    print "looseVetoElectronCut={0}".format(looseVetoElectronCut)
-
     process.goodSignalElectrons = cms.EDFilter("CandViewSelector",
       src=cms.InputTag("electronsWithTriggerMatch"), cut=cms.string(goodSignalElectronCut)
     )
@@ -130,42 +127,12 @@ def ElectronSetup(process, conf):
         src = cms.InputTag("singleIsoEle")
     )
 
-    #####################
-    # MET/MtW cutting   #
-    #####################
-    process.goodMETsEle = cms.EDFilter("CandViewSelector",
-      src=cms.InputTag(conf.metSource), cut=cms.string("pt>%f" % conf.Electrons.transverseMassCut)
-    )
-    process.eleAndMETMT = cms.EDProducer('CandTransverseMassProducer',
-        collections=cms.untracked.vstring([conf.metSource, "goodSignalElectrons"])
-    )
-
-    process.metEleSequence = cms.Sequence(
-        process.eleAndMETMT *
-        process.goodMETsEle
-    )
-    #Either use MET cut or MtW cut
-    if conf.Electrons.transverseMassType == conf.Leptons.WTransverseMassType.MET:
-        if conf.Leptons.cutOnTransverseMass:
-            process.hasMETEle = cms.EDFilter("PATCandViewCountFilter",
-                src = cms.InputTag("goodMETsEle"),
-                minNumber = cms.uint32(1),
-                maxNumber = cms.uint32(1)
-            )
-    elif conf.Electrons.transverseMassType == conf.Leptons.WTransverseMassType.MtW:
-        if conf.Leptons.cutOnTransverseMass:
-            process.hasEleMETMT = cms.EDFilter('EventDoubleFilter',
-                src=cms.InputTag("eleAndMETMT"),
-                min=cms.double(conf.Electrons.transverseMassCut),
-                max=cms.double(9999999)
-            )
+    goodMET = metSequence(process, conf, "ele", conf.metSource, "goodSignalLeptons")
 
     process.recoNuProducerEle = cms.EDProducer('ClassicReconstructedNeutrinoProducer',
         leptonSrc=cms.InputTag("singleIsoEle"),
         bjetSrc=cms.InputTag("btaggedJets"),
-
-        #either patMETs if cutting on ele + MET transverse mass or goodMETs if cutting on patMETs->goodMets pt
-        metSrc=cms.InputTag(conf.metSource if conf.Electrons.transverseMassType == conf.Leptons.WTransverseMassType.MET else conf.metSource),
+        metSrc=cms.InputTag(goodMET)
     )
 
     if conf.doDebug:
@@ -192,7 +159,7 @@ def ElectronPath(process, conf):
         process.noIsoMu *
         process.jetSequence *
         process.nJets *
-        process.metEleSequence *
+        process.eleMetSequence *
         process.mBTags *
         process.topRecoSequenceEle
     )
@@ -205,7 +172,7 @@ def ElectronPath(process, conf):
             process.electronAnalyzer
         )
         process.elePath.insert(
-            process.elePath.index(process.metEleSequence),
+            process.elePath.index(process.eleMetSequence),
             process.metAnalyzer
         )
 
