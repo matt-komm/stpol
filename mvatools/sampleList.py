@@ -33,8 +33,8 @@ varList['ele'] = [ 'top_mass','eta_lj','C','met','mt_el','mass_bj','mass_lj','el
 varList['mu']  = [ 'top_mass','eta_lj','C','met','mt_mu','mass_bj','mass_lj','mu_pt','pt_bj' ]
 
 varRank={}
-varRank['ele'] = ['top_mass']
-varRank['mu'] = ['top_mass']
+varRank['ele'] = ['top_mass', 'C', 'eta_lj', 'el_pt', 'mt_el', 'pt_bj', 'mass_bj', 'met', 'mass_lj']
+varRank['mu'] = ['top_mass', 'eta_lj', 'C', 'mu_pt', 'mt_mu', 'met', 'mass_bj', 'pt_bj', 'mass_lj']
 
 from plots.common.cuts import Cut,Cuts
 
