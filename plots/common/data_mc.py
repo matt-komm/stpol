@@ -96,6 +96,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
 
             hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
             hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
+            logger.debug("Using the QCD scale factor %s: %.2f" % (plot_def['estQcd'], qcdScale[lepton_channel][plot_def['estQcd']]))
             hist_qcd.Scale(qcdScale[lepton_channel][plot_def['estQcd']])
             hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
             hist_qcd=hist_qcd_loose
