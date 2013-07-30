@@ -61,6 +61,7 @@ if len(rVars):
 f=TFile('TMVA%s%s.root' % (proc,base))
 
 rej['base']=f.Get('Method_BDT/BDT%s/MVA_BDT%s_rejBvsS' % (base,base)).GetBinContent(bin)
+logger.debug('Base rejection: %1.3f' % rej['base'])
 f.Close()
 
 diff = {}
