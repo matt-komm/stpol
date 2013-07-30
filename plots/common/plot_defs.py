@@ -552,8 +552,11 @@ plot_defs['final_BDT']={
     'dir': "control"
 }
 
+plot_defs['final_BDT_prefit'] = cp(plot_defs['final_BDT'])
+plot_defs['final_BDT_prefit']['log'] = False
 plot_defs['final_BDT_fit'] = cp(plot_defs['final_BDT'])
-
+plot_defs['final_BDT_fit']['fitpars'] = fitpars['final_2j1t_mva']
+plot_defs['final_BDT_fit']['log'] = False
 
 plot_defs['final_cosTheta_mva_loose']={
     'tags': ["an", "control.tex", "mva"],
@@ -583,7 +586,7 @@ plot_defs['final_met_mva_loose_fit']={
     'log': False,
     'xlab': varnames["met"],
     'labloc': 'top-right',
-    'fitpars': fitpars['final_2j1t_mva_no_mt_cut'],
+    'fitpars': fitpars['final_2j1t_mva'],
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose'],
     'dir': "control"
@@ -594,10 +597,10 @@ plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['prese
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
 
 plot_defs['final_cosTheta_mva_tight_fit'] = cp(plot_defs['final_cosTheta_mva_tight'])
-plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva_no_mt_cut']
+plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 plot_defs['final_cosTheta_mva_loose_fit'] = cp(plot_defs['final_cosTheta_mva_loose'])
-plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva_no_mt_cut']
+plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],

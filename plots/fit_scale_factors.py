@@ -15,6 +15,9 @@ qcd = ["QCDSingle.*"]
 
 fitpars = NestedDict()
 
+#FIXME! Update number _with_ uncertainty as a 3-tuple
+#FIXME! make this file auto-generating!
+#Cut based
 fitpars['final_2j1t']['mu'] = [
     (tchan, 1.239592),
     (top, 1.081600),
@@ -22,13 +25,15 @@ fitpars['final_2j1t']['mu'] = [
     (qcd, 1.015709),
 ]
 
-fitpars['final_2j1t_mva_no_mt_cut']['mu'] = [
-    (tchan, 1.193656),
-    (top, 1.159650),
-    (WZJets, 1.026309),
-    (qcd, 0.961991),
+fitpars['final_2j1t']['ele'] = [
+    (tchan, 1.082103),
+    (top, 1.038168),
+    (WZJets, 1.307381),
+    (qcd, 1.008779),
 ]
 
+
+#New MVA with cut on MT
 fitpars['final_2j1t_mva']['mu'] = [
     (tchan, 1.164032),
     (top, 1.018774),
@@ -43,6 +48,13 @@ fitpars['final_2j1t']['ele'] = [
     (qcd, 1.008886),
 ]
 
+#OLD MVA where MET/MT was not applied
+fitpars['final_2j1t_mva_no_mt_cut']['mu'] = [
+    (tchan, 1.193656),
+    (top, 1.159650),
+    (WZJets, 1.026309),
+    (qcd, 0.961991),
+]
 fitpars['final_2j1t_mva_no_mt_cut']['ele'] = [
     (tchan, 1.113995),
     (top, 0.989816),
@@ -50,12 +62,8 @@ fitpars['final_2j1t_mva_no_mt_cut']['ele'] = [
     (qcd, 0.977402),
 ]
 
-fitpars['final_2j1t_mva']['ele'] = [
-    (tchan, 1.085781),
-    (top, 1.045250),
-    (WZJets, 1.128681),
-    (qcd, 1.018550),
-]
-
 #Convert to static dict
 fitpars = fitpars.as_dict()
+
+if __name__=="__main__":
+    print "Yield tables: TODO latex format"
