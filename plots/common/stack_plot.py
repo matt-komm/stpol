@@ -28,7 +28,8 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     min_bin - the lower cutoff on the y axis, which may be necessary for log y scale
     max_bin_mult - the y axis upper limit will be this multipier times the maimal bin height
     ***returns
-    a dictionary with the instances of the drawn TStacks.
+    a dictionary with the instances of the drawn TStacks. NB: you must keep the output of this
+    method until you print the TCanvas, otherwise the stack references are destroyed.
     """
 
     stacks = dict()
