@@ -1,11 +1,11 @@
 #!/bin/bash
 echo "Running step2 test on signal"
 IN=file:~/single_top/stpol/testing_step1_signal/out_step1_numEvent1000_noSkim_noSlim.root
-OFDIR=$CMSSW_BASE/../testing_step2_presel
-#rm -Rf $OFDIR
-mkdir $OFDIR
+OFDIR=$STPOL_DIR/testing/step2/presel
+rm -Rf $OFDIR
+mkdir -p $OFDIR
 
-time cmsRun $CMSSW_BASE/../runconfs/step2_newCmdLine_preSelection_cfg.py doDebug=True inputFiles=$IN subChannel=T_t outputFile=$OFDIR/out.root maxEvents=10000 &> $OFDIR/log_step2.txt
+time cmsRun $CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step2/preselection.py doDebug=True inputFiles=$IN subChannel=T_t outputFile=$OFDIR/out.root maxEvents=10000 &> $OFDIR/log_step2.txt
 EX=$?
 echo "Exit code:"$EX 
 if [ "$EX" -ne 0 ]

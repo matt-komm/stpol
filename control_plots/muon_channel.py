@@ -3,93 +3,78 @@
 import sys
 import os
 
-#Need to add parent dir to python path to import plots
-try:
-    sys.path.append(os.environ["STPOL_DIR"] )
-except KeyError:
-    print "Could not find the STPOL_DIR environment variable, dod you run `source setenv.sh` in the code base directory?"
-    sys.exit(1)
-
 import ROOT
 import plots
 from plots.common.stack_plot import plot_hists_stacked
 from plots.common.odict import OrderedDict
+from plots.common.sample import Sample
+from plots.common.cuts import Cuts
+from plots.common.sample_style import Styling
 import plots.common.pretty_names as pretty_names
+from plots.common.utils import merge_cmds, merge_hists
 import random
 
 if __name__=="__main__":
-    import tdrstyle
-    tdrstyle.tdrstyle()
+    #import plots.common.tdrstyle as tdrstyle
+    #tdrstyle.tdrstyle()
 
-    #Make some test data histograms
-    h_d1 = ROOT.TH1F("h_d1", "data1", 20, -5, 5)
-    for i in range(1000):
-        h_d1.Fill(random.normalvariate(0, 1))
+    datadirs = dict()
 
-    h_d2 = ROOT.TH1F("h_d2", "data2", 20, -5, 5)
-    for i in range(10000):
-        h_d2.Fill(random.normalvariate(0, 0.8))
+    #This symlink is present in the repo for *.hep.kbfi.ee, if running on other machines, you must make it yourself by doing
+    #ln -s /path/to/step3/out $STPOL_DIR/step3_latest
+    #isolated files are by default in $STPOL_DIR/step3_latest/mu/iso/nominal/*.root
+    datadirs["iso"] = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu" ,"iso", "nominal"))
+    #Use the anti-isolated data for QCD $STPOL_DIR/step3_latest/mu/antiiso/nominal/SingleMu.root
+    datadirs["antiiso"] = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu" ,"antiiso", "nominal"))
 
-    #Merge the different data samples
-    h_d1.Add(h_d2)
-    h_d1.SetTitle("single #mu")
+    #Load all the samples in the isolated directory
+    samples = Sample.fromDirectory(datadirs["iso"], out_type="dict")
+    samples["SingleMu_aiso"] = Sample.fromFile(datadirs["antiiso"] + "/SingleMu.root")
 
-    #Make some test MC histograms
-    #In a real use case, you will retrieve them from the samples
-    h_mc1 = ROOT.TH1F("h_mc1", "TTJets", 20, -5, 5)
-    h_mc1.SetTitle(pretty_names.sample_names["TTJets_FullLept"])
-    for i in range(1500):
-        h_mc1.Fill(random.normalvariate(0, 1))
+    hists_mc = dict()
+    hist_data = None
 
-    h_mc2 = ROOT.TH1F("h_mc2", "t-channel", 20, -5, 5)
+    #Define the variable, cut, weight and lumi
+    var = "cos_theta"
+    cut_name = "2j1t"
+    cut_str = str(Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton_veto*Cuts.one_muon*Cuts.mt_mu*Cuts.top_mass_sig*Cuts.eta_lj)
+    weight_str = "1.0"
+    lumi = 20000 #FIXME: take from the step2 output filelists/step2/latest/iso/nominal/luminosity.txt
 
-    for i in range(900):
-        h_mc2.Fill(random.normalvariate(0, 0.9))
+    #nbins, min, max
+    plot_range= [20, -1, 1]
 
-    h_mc3 = ROOT.TH1F("h_mc3", "W+Jets", 20, -5, 5)
-    h_mc3.SetTitle(pretty_names.sample_names["W1Jets_exclusive"])
-    for i in range(5000):
-        h_mc3.Fill(random.normalvariate(0,  1.2))
+    for name, sample in samples.items():
+        if sample.isMC:
+            hist = sample.drawHistogram(var, cut_str, weight=weight_str, plot_range=plot_range)
+            hist.Scale(sample.lumiScaleFactor(lumi)*mc_sf)
+            hists_mc[sample.name] = hist.hist
+            Styling.mc_style(hists_mc[sample.name], sample.name)
+        elif name == "SingleMu":
+            hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
+            Styling.data_style(hist_data)
 
-    #Set the histogram styles and colors
-    from plots.common.sample_style import Styling
-    Styling.mc_style(h_mc1, "TTJets_FullLept")
-    Styling.mc_style(h_mc2, "T_t")
-    Styling.mc_style(h_mc3, "W1Jets_exclusive")
-    Styling.data_style(h_d1)
+        elif name == "SingleMu_aiso":
+            hist_qcd = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
+            #hist_qcd.
+            pass
 
-    #Create the canvas
-    canv = ROOT.TCanvas("c", "c")
-    canv.SetWindowSize(500, 500)
-    canv.SetCanvasSize(600, 600)
+    #Combine the subsamples to physical processes
+    merged_hists = merge_hists(hists_mc, merge_cmds).values()
 
-    #!!!!LOOK HERE!!!!!
-    #----
-    #Draw the stacked histograms
-    #----
-    stacks_d = OrderedDict() #<<< need to use OrderedDict to have data drawn last (dict does not preserve order)
-    stacks_d["mc"] = [h_mc1, h_mc2, h_mc3] # <<< order is important here, mc1 is bottom-most
-    stacks_d["data"] = [h_d1]
-    stacks = plot_hists_stacked(
-        canv,
-        stacks_d,
-        x_label="variable x [GeV]",
-        y_label="",
-        do_log_y=False
-    )
+    #Some printout
+    for h in merged_hists + [hist_data]:
+        print h.GetName(), h.GetTitle(), h.Integral()
 
-    #Draws the lumi box
-    from plots.common.utils import lumi_textbox
-    lumibox = lumi_textbox(19432)
+    canv = ROOT.TCanvas()
 
-    #Draw the legend
-    from plots.common.legend import legend
-    leg = legend(
-        [h_d1, h_mc3, h_mc2, h_mc1], # <<< need to reverse MC order here, mc3 is top-most
-        styles=["p", "f"],
-        width=0.25
-    )
+    stacks_d = OrderedDict()
+    stacks_d["mc"] = merged_hists
+    stacks_d["data"] = [hist_data]
+    stacks = plot_hists_stacked(canv, stacks_d)
+    canv.Draw()
 
+    #Create the dir if it doesn't exits
     try:
         os.mkdir("muon_out")
     except OSError:

@@ -13,7 +13,7 @@ from plots.common.tdrstyle import *
 import os
 import logging
 
-def plot_fit(var, fitConf, hData, fit_result):
+def plot_fit(var, fitConf, hData, fit_result, lumi):
     tdrstyle()
     canvases = []
     infile = "fits/"+var.shortName+"_fit_"+fitConf.name+".root"
@@ -58,9 +58,10 @@ def plot_fit(var, fitConf, hData, fit_result):
     hWJets.SetLineColor(kGreen+4)
 
     hWJetsp=TH1D(hWJets)
-    hWJetsp.Scale(WJETS_UP/WJETS)
     hWJetsm=TH1D(hWJets)
-    hWJetsm.Scale(WJETS_DOWN/WJETS)
+    if WJETS>0:
+        hWJetsp.Scale(WJETS_UP/WJETS)
+        hWJetsm.Scale(WJETS_DOWN/WJETS)
 
     hWJetsp.SetLineColor(kGreen+8)
     hWJetsp.SetTitle("W+Jets #pm 1 #sigma")
@@ -111,7 +112,7 @@ def plot_fit(var, fitConf, hData, fit_result):
     #hData.SetTitle("QCD fit, "+title)
     hData.Draw("E1 same")
 
-    lumibox = lumi_textbox(19739)
+    lumibox = lumi_textbox(lumi)
 
     leg = legend(
          [hData, hQCD, hQCDp, hNonQCD, hNonQCDp, hWJets, hWJetsp, hTotal],

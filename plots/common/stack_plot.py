@@ -2,10 +2,12 @@ import ROOT
 from plots.common.sample_style import Styling
 #Need to import ordereddict from python 2.7
 try:
-    from collections import OrderedDict as dict
+    from collections import OrderedDict
 except ImportError:
-        from odict import OrderedDict as dict
-
+    from odict import OrderedDict
+import logging
+logger = logging.getLogger("stack_plot")
+logger.setLevel(logging.INFO)
 
 def plot_hists_stacked(canv, hist_groups, **kwargs):
     """
@@ -28,10 +30,13 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     min_bin - the lower cutoff on the y axis, which may be necessary for log y scale
     max_bin_mult - the y axis upper limit will be this multipier times the maimal bin height
     ***returns
-    a dictionary with the instances of the drawn TStacks.
+    a dictionary with the instances of the drawn TStacks. NB: you must keep the output of this
+    method until you print the TCanvas, otherwise the stack references are destroyed.
     """
 
-    stacks = dict()
+    logger.debug("plot_hists_stacked: %s %s %s" % (str(canv), str(hist_groups), str(kwargs)))
+
+    stacks = OrderedDict()
 
     draw_styles = kwargs.get("draw_styles", {"data": "E1"})
 
@@ -46,7 +51,10 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     max_bin_mult = kwargs.get("max_bin_mult", 1.8)
 
 
+
     for name, group in hist_groups.items():
+        if len(group)==0:
+            raise ValueError("Stack group %s was empty" % name)
         stacks[name] = ROOT.THStack(name, name)
         for hist in group:
             stacks[name].Add(hist)
@@ -61,6 +69,7 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     #Now draw really
     first = True
     for name, stack in stacks.items():
+        logger.debug("Drawing stack %s" % name)
         if name in draw_styles.keys():
             drawcmd = draw_styles[name]
         else:
@@ -82,6 +91,7 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
         first = False
     if do_log_y:
         canv.SetLogy()
+    canv.Update()
     return stacks
 
 
@@ -89,6 +99,7 @@ if __name__=="__main__":
     import ROOT
     import random
     import tdrstyle
+    logging.basicConfig(level=logging.DEBUG)
     tdrstyle.tdrstyle()
 
     #Make some test data histograms
@@ -105,29 +116,27 @@ if __name__=="__main__":
     h_d1.SetTitle("data")
 
     #Make some test MC histograms
-    h_mc1 = ROOT.TH1F("h_mc1", "TTJets", 20, -5, 5)
+    h_mc1 = ROOT.TH1F("h_mc1", "A", 20, -5, 5)
     for i in range(1500):
         h_mc1.Fill(random.normalvariate(0, 1))
 
-    h_mc2 = ROOT.TH1F("h_mc2", "t-channel", 20, -5, 5)
+    h_mc2 = ROOT.TH1F("h_mc2", "B", 20, -5, 5)
     for i in range(900):
         h_mc2.Fill(random.normalvariate(0, 0.9))
 
-    h_mc3 = ROOT.TH1F("h_mc3", "W+Jets", 20, -5, 5)
+    h_mc3 = ROOT.TH1F("h_mc3", "C", 20, -5, 5)
     for i in range(5000):
         h_mc3.Fill(random.normalvariate(0,  1.2))
 
     #Set the histogram styles and colors
     from sample_style import Styling
     Styling.mc_style(h_mc1, "TTJets_FullLept")
-    Styling.mc_style(h_mc2, "T_t")
-    Styling.mc_style(h_mc3, "W1Jets_exclusive")
+    Styling.mc_style(h_mc2, "WJets_sherpa")
+    Styling.mc_style(h_mc3, "WW")
     Styling.data_style(h_d1)
 
     #Create the canvas
     canv = ROOT.TCanvas("c", "c")
-    canv.SetWindowSize(500, 500)
-    canv.SetCanvasSize(600, 600)
 
     #!!!!LOOK HERE!!!!!
     #----
@@ -151,3 +160,6 @@ if __name__=="__main__":
         styles=["p", "f"],
         width=0.2
     )
+    canv.Update()
+    canv.SaveAs("test.pdf")
+    canv.SaveAs("test.png")

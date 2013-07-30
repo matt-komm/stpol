@@ -1,0 +1,6 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/Tbar_t_ToLeptons/output_1_1_CTl.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/Tbar_t_ToLeptons/output_2_1_btn.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/Tbar_t_ToLeptons/output_3_1_cJU.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/Tbar_t_ToLeptons/output_4_1_d1g.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/Tbar_t_ToLeptons/output_5_1_PuG.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/Tbar_t_ToLeptons/output_6_1_6Iv.root

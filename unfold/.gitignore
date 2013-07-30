@@ -1,4 +1,16 @@
+*
+!*.cc
+!*.cpp
+!*.C
+!*.h
+!*.hpp
+!Makefile
+!*.py
+
 *.swp
 *.swo
 *.root
-plots
+./plots
+./unfold
+./tunfold
+
