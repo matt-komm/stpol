@@ -1,6 +1,6 @@
 from plots.common.cuts import Cuts,Cut
 import copy
-from plots.common.utils import PhysicsProcess
+from plots.common.utils import PhysicsProcess, NestedDict
 
 cp = copy.deepcopy
 
@@ -32,8 +32,13 @@ cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
 cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('mva_BDT>0.5')
 cutlist['bdt_ele_tight'] = Cuts.met*Cut('mva_BDT>0.5')
-cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('mva_BDT>0.09')
-cutlist['bdt_ele_loose'] = Cuts.met*Cut('mva_BDT>0.06')
+
+bdt = NestedDict()
+bdt['mu']['loose'] = 0.09
+bdt['ele']['loose'] = 0.06
+bdt = bdt.as_dict()
+cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('mva_BDT>%f' % bdt['mu']['loose'])
+cutlist['bdt_ele_loose'] = Cuts.met*Cut('mva_BDT>%f' % bdt['ele']['loose'])
 
 #Load the scale factors externally for better factorisation
 from plots.fit_scale_factors import fitpars
@@ -325,6 +330,7 @@ plot_defs['mva_bdt'] = {
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
+    #'cutname': '2J1T',
     'dir': 'BDT'
 }
 plot_defs['mva_bdt_fit'] = cp(plot_defs['mva_bdt'] )
@@ -364,6 +370,7 @@ plot_defs['2j1t_topMass']={
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
+    #'cutname': '2J1T',
     'dir': "selection"
 }
 plot_defs['2j1t_etaLj']={
@@ -379,6 +386,7 @@ plot_defs['2j1t_etaLj']={
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
+    #'cutname': '2J1T',
     'dir': "selection"
 }
 
@@ -398,6 +406,7 @@ plot_defs['2j0t_rmsLj_rmsOff']={
     'labloc': 'top-right',
     'elecut': cutlist['2j0t']*cutlist['presel_ele_no_rms'],
     'mucut': cutlist['2j0t']*cutlist['presel_mu_no_rms'],
+    #'cutname': '2J0T',
     'dir': "selection"
 }
 
@@ -415,6 +424,7 @@ plot_defs['2j0t_etaLj_rmsOff']={
     'labloc': 'top-right',
     'elecut': cutlist['2j0t']*cutlist['presel_ele_no_rms'],
     'mucut': cutlist['2j0t']*cutlist['presel_mu_no_rms'],
+    #'cutname': '2J0T',
     'dir': "selection"
 }
 plot_defs['2j0t_etaLj_rmsOn'] = cp(plot_defs['2j0t_etaLj_rmsOff'])
@@ -458,6 +468,7 @@ plot_defs['final_cosTheta']={
     'labloc': 'top-left',
     'elecut': cutlist['2j1t']*cutlist['final_ele'],
     'mucut': cutlist['2j1t']*cutlist['final_mu'],
+    #'cutname': '2J1T signal region',
     'dir': "control"
 }
 
@@ -531,6 +542,10 @@ plot_defs['final_cosTheta_mva_loose'] = {
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose'],
     'mucut': cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose'],
     'dir': "control",
+    'cutname': {
+        "mu": "BDT > %.2f" % bdt['mu']['loose'],
+        "ele": "BDT > %.2f" % bdt['ele']['loose']
+    }
 }
 
 
@@ -585,6 +600,7 @@ extranges = {
     "BDT": [40, -1, 1],
 }
 
+#PLotting the BDT variable in the cut-based signal region
 plot_defs['final_BDT']={
     'tags': ["an", "control.tex", "mva"],
     'enabled': True,

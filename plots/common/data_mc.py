@@ -150,6 +150,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     merged_hists_l = merged_hists.values()
 
     PhysicsProcess.name_histograms(physics_processes, merged_hists)
+
     leg = legend([hist_data] + list(reversed(merged_hists_l)), legend_pos=plot_def['labloc'], style=['p','f'])
 
     canv = ROOT.TCanvas()
@@ -190,7 +191,15 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     chan = 'Electron'
     if lepton_channel == "mu":
         chan = 'Muon'
-    lbox = lumi_textbox(lumi,boxloc,'preliminary',chan+' channel')
+
+    additional_comments = ""
+    if 'cutname' in plot_def.keys():
+        additional_comments += ", " + plot_def['cutname'][lepton_channel]
+    lbox = lumi_textbox(lumi,
+        boxloc,
+        'preliminary',
+        chan + ' channel' + additional_comments
+    )
 
     #Draw everything
     lbox.Draw()
