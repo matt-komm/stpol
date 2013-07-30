@@ -93,8 +93,6 @@ def SingleTopStep2():
         Config.systematic = options.systematic
         Config.dataRun = options.dataRun
         Config.doSync = options.doSync
-
-        Config.Jets.doPUClean = Config.Jets.doPUClean and not Config.doSync
         Config.doDebug = Config.doDebug or Config.doSync
 
         print "Systematic: ",Config.systematic

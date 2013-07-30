@@ -65,7 +65,8 @@ class Config(C):
         doLightJetRMSClean = False
 
         #Must be switched OFF for the sync!
-        doPUClean = True
+        #Also agreed to switch OFF for the analysis
+        doPUClean = False
 
         #source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
         source = "patJetsWithOwnRef"

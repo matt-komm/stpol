@@ -18,6 +18,8 @@ def JetSetup(process, conf):
     jetCut += ' && (chargedHadronEnergyFraction > 0. || abs(eta) >= 2.4)'
     jetCut += ' && (chargedMultiplicity > 0 || abs(eta) >= 2.4)'
 
+    if conf.doSync:
+        conf.Jets.source = "patJetsWithOwnRef"
     process.noPUJets = cms.EDProducer('CleanNoPUJetProducer',
         jetSrc = cms.InputTag(conf.Jets.source),
         PUidMVA = cms.InputTag("puJetMva", "full53xDiscriminant", "PAT"),
