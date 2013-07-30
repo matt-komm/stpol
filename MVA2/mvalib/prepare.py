@@ -1,5 +1,5 @@
 """Utilities that are used to prepare step3 datasets for MVA."""
-__all__ = ['prepare']
+__all__ = ['MVAPreparer']
 
 import os
 import os.path
@@ -8,52 +8,72 @@ from glob import glob
 import array
 import random
 import ROOT
-from plots.common import cuts
 import mvalib.utils
 
-_default_cutstring = str(cuts.Cuts.rms_lj*cuts.Cuts.mt_mu*cuts.Cuts.n_jets(2)*cuts.Cuts.n_tags(1))
+_datatype_paths = {
+	'mc': 'mc/iso/nominal/Jul15',
+	'data': 'data/iso/Jul15'
+}
 
 # ============================
 # Public prepare API functions
 # ============================
 
-def prepare(signals, backgrounds, step3_path='step3_latest', odir='prepared',
-            default_ratio=0.5, prep_step3=False, cutstring=_default_cutstring,
-            channels=['mu', 'ele'], datatypes=['data', 'mc']):
-	"""Prepares the output files from step3 for usage in the MVA.
-
-	Takes a list of names for signals and backgrounds. They can be either a
-	list or a dictionary and in the case of the latter it is expected that
-	the keys are the names of the samples and the values are the fraction
-	of the sampled used for training. If it is not specified the default_ratio
-	is used.
-
-	The function looks for the step3 samples in the step3_path and creates
-	a new directory `odir` where the output is stored. If prep_step3 is True
-	then all the trees are symlinked to the odir (retaining the directory
-	structure of the step3). In addition to that, trees `<sample>_mva.root`
-	are created that contain the `mva_training_weight` branch, which can be
-	used to exclude training events from plotting (`mva_training_weight` is
-	0.0 for training events, weighted appropriately for testing events and
-	1.0 for events that do not pass the cut used to choose training events.
-
+class MVAPreparer:
+	"""Class that is used to prepare samples for MVA.
+	
+	The class takes the specified step3 files, list of samples and few
+	other parameters and creates a MVA training trees based on these.
+	If requested, it also copies the step3 structure and adds weigth files
+	for fractional trees (with `mva_training_weight`, which is is 0.0 for
+	training events, 1/fraction for testing events and 1.0 for events that
+	did not pass the cut used to choose training events).
+	
+	`add_frac`/`add_train`/`add_test` methods are used to specify the samples.
+	`category` can be either `signal` or `background`. In `add_frac`, `fraction`
+	specifies the amount of events that are used for training.
+	
 	"""
-	step3_path = os.path.abspath(step3_path)
-	if not os.path.isdir(odir):
-		os.makedirs(odir)
+	def __init__(self, step3_path, datatypes=['data', 'mc']):
+		"""Initialize the preparer and point it to step3 data files."""
+		self._step3_root = step3_path
+		self._datatypes = datatypes
+		self._samples = []
 
-	signals = _check_default_ratios(signals, default_ratio)
-	backgrounds = _check_default_ratios(backgrounds, default_ratio)
-	signal_and_bg = dict(signals.items()+backgrounds.items())
+	def add_frac(self, category, sample, train_fraction=0.5):
+		"""Add test and train trees by splitting the sample up."""
+		f = {'category':category, 'frac':train_fraction, 'name':sample}
+		self._samples.append(f)
 
-	for channel in channels:
-		ofname = os.path.join(odir, 'mvaprep_{0}.root'.format(channel))
-		print 'Prepping channel `{0}` to `{1}`'.format(channel, ofname)
+	def add_train(self, category, sample):
+		"""Add a sample that is used solely for training."""
+		f = {'category':category, 'frac':True, 'name':sample}
+		self._samples.append(f)
+
+	def add_test(self, category, sample):
+		"""Add a sample that is used solely for testing."""
+		f = {'category':category, 'frac':False, 'name':sample}
+		self._samples.append(f)
+
+	def write(self, channel, cutstring, ofname, step3_ofdir=None):
+		"""Prepare the MVA training trees.
+		
+		It takes the samples from the specified channel, applies a the cut
+		and writes out a ROOT file (`ofname`) with the training and test trees.
+		If `step3_ofdir` is specified it also clones the step3 structure,
+		symlinks the original sources and add a weight file for fractional
+		samples.
+		
+		"""
+		self._channel = str(channel)
+		self._cutstring = str(cutstring)
+
+		print 'Prepping channel `{0}` to `{1}`'.format(self._channel, ofname)
 		tfile = ROOT.TFile(ofname, 'RECREATE')
 
 		meta = {
-			'lept': channel, 'ch': channel, 'channel': channel,
-			'cutstring': cutstring,
+			'lept': self._channel, 'ch': self._channel, 'channel': self._channel,
+			'cutstring': self._cutstring,
 			'initial_events': {}, 'fractions': {}
 		}
 
@@ -61,69 +81,77 @@ def prepare(signals, backgrounds, step3_path='step3_latest', odir='prepared',
 		_dir.mkdir('signal'); _dir.mkdir('background')
 		_dir = tfile.mkdir('test')
 		_dir.mkdir('signal'); _dir.mkdir("background")
+		tempdir = tfile.mkdir('temporary')  # FIXME: hack.. more below..
 
-		for datatype in datatypes:
-			path, samples = _find_files(step3_path, channel, datatype)
-			if prep_step3 and not os.path.isdir(os.path.join(odir, path)):
-				os.makedirs(os.path.join(odir, path))
+		print self._samples
+		for s in self._samples:
+			print 'Prepping sample:', s
+			sample_path = os.path.join(self._step3_root, self._channel, _datatype_paths['mc'])
+			sample_ifname = os.path.join(sample_path, '{0}.root'.format(s['name']))
+			sample_tfile = ROOT.TFile(sample_ifname)
+			sample_ttree = sample_tfile.Get('trees/Events')
 
-			for s in samples:
-				sample_ifname = os.path.join(step3_path, path, '{0}.root'.format(s))
-				print '> sample `{0}` from `{1}`'.format(s, sample_ifname)
-				if prep_step3:
-					sample_ofname = os.path.join(odir, path, '{0}.root'.format(s))
-					os.symlink(sample_ifname, sample_ofname)
-				if s in signal_and_bg:
-					sigbg = 'signal' if s in signals else 'background'
-					fraction = signal_and_bg[s]
+			sample_count_hist = sample_tfile.Get('trees/count_hist')
+			meta['initial_events'][s['name']] = sample_count_hist.GetBinContent(1)
 
-					tfile_sample = ROOT.TFile(sample_ifname)
-					count_hist = tfile_sample.Get('trees/count_hist')
-					meta['initial_events'][s] = count_hist.GetBinContent(1)
-					meta['fractions'][s] = fraction
+			if isinstance(s['frac'], float):
+				# if the sample is fractional
+				tc = _TrainTreeCreator(sample_ttree, self._cutstring, s['frac'])
+				tc.write_train_tree(
+					tfile.Get('{0}/{1}'.format('train', s['category'])),
+					name=s['name']
+				)
+				tc.write_test_tree(
+					tfile.Get('{0}/{1}'.format('test', s['category'])),
+					name=s['name']
+				)
 
-					tc = _TrainTreeCreator(tfile_sample.Get('trees/Events'),
-					                       cutstring, fraction)
+				if step3_ofdir is not None:
+					wfile_path = os.path.join(step3_ofdir, self._channel, _datatype_paths['mc'])
+					if not os.path.isdir(wfile_path):
+						os.makedirs(wfile_path)
+					wfile_ofname = os.path.join(wfile_path, '{0}_mva.root'.format(s['name']))
+					wfile_tfile = ROOT.TFile(wfile_ofname, 'RECREATE')
+					wfile_tdir = wfile_tfile.mkdir('trees')
+					tc.write_weight_tree(wfile_tdir)
+					wfile_tfile.Close()
+			else:
+				roodir = '{0}/{1}'.format('train' if s['frac'] else 'test', s['category'])
+				print 'Clone tree `{0}` to `{1}`'.format(s['name'], roodir)
+				tempdir.cd() # FIXME: ugly hack because ROOT stores it's temporary trees also..
+				otree = sample_ttree.CopyTree(self._cutstring)
+				tfile.Get(roodir).cd()
+				otree.Write(s['name'])
+				print 'Events written:', otree.GetEntries()
 
-					tdir = tfile.Get('{0}/{1}'.format('train', sigbg))
-					tc.write_train_tree(tdir, name=s)
-					tdir = tfile.Get('{0}/{1}'.format('test', sigbg))
-					tc.write_test_tree(tdir, name=s)
-
-					if prep_step3:
-						sample_ofname = os.path.join(odir, path, '{0}_mva.root'.format(s))
-						tfile_sample_of = ROOT.TFile(sample_ofname, 'RECREATE')
-						tdir = tfile_sample_of.mkdir('trees')
-						tc.write_weight_tree(tdir)
-						tdir.cd()
-						tfile_sample_of.Close()
-
-					del tc
-					tfile_sample.Close()
+			sample_tfile.Close()
+		print 'Writing meta:', meta
+		mvalib.utils.write_TObject('meta', meta, tfile)
 		tfile.Close()
+
+		# Create symlinks to other step3 trees
+		if step3_ofdir is not None:
+			self._symlink_step3(step3_ofdir)
+
+	def _symlink_step3(self, ofdir):
+		"""Create symlinks for step3 output."""
+		for datatype in self._datatypes:
+			p, ss = _find_files(self._step3_root, self._channel, datatype)
+			if not os.path.isdir(os.path.join(ofdir, p)):
+				os.makedirs(os.path.join(ofdir, p))
+			for s in ss:
+				sample_ifname = os.path.abspath(os.path.join(self._step3_root, p, '{0}.root'.format(s)))
+				sample_ofname = os.path.join(ofdir, p, '{0}.root'.format(s))
+				print 'Symlinking sample: `{0}` ({1})'.format(s, sample_ofname)
+				os.symlink(sample_ifname, sample_ofname)
 
 
 # =========================
 # Internal helper functions
 # =========================
 
-def _check_default_ratios(samples, ratio):
-	"""Checks if samples are a list, converts to dict and set to ratio."""
-	if isinstance(samples, dict):
-		return samples
-	if isinstance(samples, list):
-		return dict(map(lambda s: (s, ratio), samples))
-	else:
-		raise Exception('Bad type for samples `{0}`'.format(type(samples)))
-
-
 def _find_files(root, channel, datatype):
 	"""Finds the root files for the specified type of data."""
-	_datatype_paths = {
-		'mc': 'mc/iso/nominal/Jul15',
-		'data': 'data/iso/Jul15'
-	}
-
 	if not channel in ['mu', 'ele']:
 		raise Exception('Bad channel `{0}`'.format(channel))
 	if not datatype in _datatype_paths:
@@ -143,24 +171,25 @@ class _TrainTreeCreator:
 	"""Helper class that is used to create and write the training trees."""
 	def __init__(self, tree, cutstring, fraction):
 		self.tree = tree
+		self.cutstring = cutstring
+		self.fraction = fraction
 
 		self.elist_all = ROOT.TEntryList('elist_all', '')
 		self.elist_cut = ROOT.TEntryList('elist_cut', '')
 		self.elist_invcut = ROOT.TEntryList('elist_invcut', '')
 
 		self.tree.Draw('>>elist_all', '', 'entrylist')
-		self.tree.Draw('>>elist_cut', cutstring, 'entrylist')
+		self.tree.Draw('>>elist_cut', self.cutstring, 'entrylist')
 		self.elist_invcut.Add(self.elist_all)
 		self.elist_invcut.Subtract(self.elist_cut)
 
 		evids_cutall = list(mvalib.utils.iter_entrylist(self.elist_cut))
 		evids_invcut = list(mvalib.utils.iter_entrylist(self.elist_invcut))
 		random.shuffle(evids_cutall)
-		N_train = int(fraction*len(evids_cutall))
-		#print 'N_train:', N_train
+		N_train = int(self.fraction*len(evids_cutall))
 		evids_train = evids_cutall[:N_train]
 		evids_test  = evids_cutall[N_train:]
-		
+
 		self.elist_train = ROOT.TEntryList('elist_train', '')
 		self.elist_test  = ROOT.TEntryList('elist_test', '')
 		map(self.elist_train.Enter, evids_train)
@@ -181,6 +210,7 @@ class _TrainTreeCreator:
 		self.weights = sorted(weights_test+weights_train+weights_invcut)
 
 	def write_weight_tree(self, tdir, treename='mva'):
+		print 'Writing weigths to `{0}`'.format(tdir)
 		tdir.cd()
 		otree = ROOT.TTree(treename, treename)
 		var_w = array.array('f', [0])
@@ -191,37 +221,44 @@ class _TrainTreeCreator:
 		otree.Write()
 
 	def write_train_tree(self, tdir, name='Events'):
+		print 'Writing train to `{0}`'.format(tdir)
 		self._write_tree(tdir, self.elist_train, name)
 
 	def write_test_tree(self, tdir, name='Events'):
+		print 'Writing test to `{0}`'.format(tdir)
 		self._write_tree(tdir, self.elist_test, name)
 
 	def _write_tree(self, tdir, elist, name):
-		print 'Writing to `{0}`'.format(tdir)
 		self.tree.SetEntryList(elist)
 		tdir.cd()
 		otree=self.tree.CopyTree('')
 		otree.Write(name)
-		print 'Events written:',otree.GetEntries()
+		print 'Events written:', otree.GetEntries()
 
-# Unit testing...
+# A bit of testing...
 if __name__ == '__main__':
-	print 'Default cutstring:', _default_cutstring
+	from plots.common.plot_defs import plot_defs
+	mvaprep = MVAPreparer('step3_latest')
 
-	print _find_files('step3_latest', 'mu', 'mc')
-	print _find_files('step3_latest', 'ele', 'data')
+	mvaprep.add_train('background', 'WJets_inclusive')
+	mvaprep.add_test('background', 'W1Jets_exclusive')
+	mvaprep.add_test('background', 'W2Jets_exclusive')
+	mvaprep.add_test('background', 'W3Jets_exclusive')
+	mvaprep.add_test('background', 'W4Jets_exclusive')
 
-	try: _find_files('step3_latest', 'tau', 'mc')
-	except Exception as e: print e
+	mvaprep.add_test('signal', 'W1Jets_exclusive')
+	mvaprep.add_test('signal', 'T_t_ToLeptons')
+	mvaprep.add_test('signal', 'Tbar_t_ToLeptons')
+	mvaprep.add_train('signal', 'T_t')
+	mvaprep.add_train('signal', 'Tbar_t')
 
-	try: _find_files('step3_latest', 'mu', 'fake')
-	except Exception as e: print e
+	mvaprep.add_frac('background', 'WW')
+	mvaprep.add_frac('background', 'WZ')
+	mvaprep.add_frac('background', 'ZZ')
 
-	_check_default_ratios({'a':2, 'b':3}, 0.3)
-	_check_default_ratios(['a','b'], 9000)
-	try: _check_default_ratios('Woot?', 1337)
-	except Exception as e: print e
+	shutil.rmtree('prep_unit', ignore_errors=True); os.mkdir('prep_unit')
 
-	shutil.rmtree('prep_unit', ignore_errors=True)
-	prepare(['T_t_ToLeptons', 'Tbar_t_ToLeptons'], ['WW', 'WZ', 'ZZ'],
-	        odir='prep_unit', prep_step3=True)
+	mvaprep.write('mu', plot_defs['mva_bdt']['mucut'],
+	              'prep_unit/mvaprep_mu.root', step3_ofdir='prep_unit')
+	mvaprep.write('ele', plot_defs['mva_bdt']['elecut'],
+	              'prep_unit/mvaprep_ele.root', step3_ofdir='prep_unit')
