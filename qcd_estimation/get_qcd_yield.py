@@ -88,11 +88,7 @@ def getMtMinValue(channel):
     return mtMinValue
 
 def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path=(os.environ["STPOL_DIR"] + "/step3_latest/"), do_systematics=False):
-#    do_systematics = True
-#
-#    if channel == "ele":
-#        do_systematics = False
-#
+
     print "QCD estimation in " + channel + " channel"
 
     #Specify variable on which to fit
@@ -115,10 +111,11 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path=(os
     if channel == "ele":
         cuts.setTrigger("(HLT_Ele27_WP80_v8 == 1 || HLT_Ele27_WP80_v9 == 1 || HLT_Ele27_WP80_v10 || HLT_Ele27_WP80_v11)")
         cuts.setIsolationCut("el_iso < 0.1")
-        cuts.setAntiIsolationCut("el_iso > 0.1 & el_iso < 0.5")
-        cuts.setAntiIsolationCutUp("el_iso > 0.11 & el_iso < 0.55") # check +-10% variation
-        cuts.setAntiIsolationCutDown("el_iso > 0.09 & el_iso < 0.45")
         lepton_weight = "*electron_TriggerWeight*electron_IDWeight"
+        if not args.doSystematicCuts: # switch off in case doing systematic checks with different isolation regions
+            cuts.setAntiIsolationCut("el_iso > 0.15 & el_iso < 0.5")
+            cuts.setAntiIsolationCutUp("el_iso > 0.17 & el_iso < 0.55") # check +-10% variation
+            cuts.setAntiIsolationCutDown("el_iso > 0.13 & el_iso < 0.45")
     elif channel == "mu":
         lepton_weight = "*muon_TriggerWeight*muon_IsoWeight*muon_IDWeight"
         #cuts.setTrigger("1")
@@ -126,6 +123,8 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path=(os
     cuts.setFinalCutsAntiIso("1") #remove top mass and eta cuts from template
 
     cuts.setWeightMC("pu_weight*b_weight_nominal*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"+lepton_weight)
+    cuts.setWeightQCD("pu_weight"+lepton_weight)
+
     #Recreate all necessary cuts after manual changes
     cuts.calcCuts()
     #Luminosities for each different set of data have to be specified.
@@ -250,8 +249,13 @@ if __name__=="__main__":
     parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
     args = parser.parse_args()
 
-    if args.doSystematicCuts == True:
-        args.cuts = systematics_cuts()#.keys()
+    if args.doSystematicCuts == True and args.channel == "mu":
+        args.cuts = systematics_cuts_mu()#.keys()
+        print "Considering the systematic variations: " + str(args.cuts.keys())
+    if args.doSystematicCuts == True and args.channel == "ele":
+        args.cuts = systematics_cuts_ele()
+        print "Considering the systematic variations: " + str(args.cuts.keys())
+        
     elif not args.cuts: #No cuts specified, do them all
         args.cuts = cuts#.keys()
 
@@ -279,8 +283,8 @@ if __name__=="__main__":
         print "QCD scale factor, with m_t/met cut:", qcd_sf, "from", fit.orig["qcd_no_mc_sub"], "to ", y
         print "QCD scale factor, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_no_mc_sub_nomtcut"], "to ", y_nomtcut
         print "Fit information", fit
-        plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         
+        plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         
         with open(ofdir + "/%s.txt" % cut.name, "w") as of:
             of.write("%f %f %f\n" % (qcd_sf, y, error))
