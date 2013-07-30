@@ -36,12 +36,12 @@ parser.add_argument(
 )
 parser.add_argument(
     '-v',
-    '--var', required=False, default=None, type=str, dest="rej_var",
+    '--var', required=False, default=[], action='append', type=str, dest="rej_var",
     help='Variable to remove from MVA training'
 )
 args = parser.parse_args()
 
-logger = logging.getLogger('evaluateVarsAndTrain')
+logger = logging.getLogger('trainMVAs.py')
 
 if args.debug:
     logger.setLevel(logging.DEBUG)
@@ -81,9 +81,11 @@ weightString = str(Weights.total(proc) *
     Weights.wjets_madgraph_flat_weight())
 
 # Which file do we use to write our TMVA trainings
-ext='_full_'
-if rVar:
-    ext='_sans_'+rVar
+ext=''
+if len(rVar):
+    ext='_sans'
+    for v in rVar:
+        ext+='_'+v
 
 out = TFile('TMVA%s%s.root' % (proc,ext),'RECREATE')
 
@@ -103,12 +105,14 @@ def trainMVA(**kwds):
         return -1
 
     vlist=kwds.get('varlist',varList[proc])
-    rVar=kwds.get('rej_var',None)
-    ext='_full'
+    rVar=kwds.get('rej_var',[])
+    ext=''
     mname='BDT'
-    if rVar:
-        vlist.remove(rVar)
-        ext='_sans_'+rVar
+    if len(rVar):
+        ext='_sans'
+        for v in rVar:
+            vlist.remove(v)
+            ext+='_'+v
         mname+=ext
 
     factory = TMVA.Factory('stop_'+proc,out,'Transformations=I;N;D')
