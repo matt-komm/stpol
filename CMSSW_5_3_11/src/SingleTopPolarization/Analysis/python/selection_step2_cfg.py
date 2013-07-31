@@ -87,7 +87,10 @@ def SingleTopStep2():
         Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
         Config.systematic = options.systematic
         Config.dataRun = options.dataRun
-        print "Systematic! ",Config.systematic
+        Config.doSync = options.doSync
+        Config.doDebug = Config.doDebug
+
+        print "Systematic: ",Config.systematic
 
     if Config.isMC:
         logging.info("Changing jet source from %s to smearedPatJetsWithOwnRef" % Config.Jets.source)
@@ -206,8 +209,8 @@ def SingleTopStep2():
         src = cms.InputTag("allEventObjects")
     )
     process.eventShapeSequence = cms.Sequence(
-        process.allEventObjects *
-        process.eventShapeVars
+        process.allEventObjects
+        * process.eventShapeVars
     )
 
     #-----------------------------------------------
