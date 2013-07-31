@@ -27,6 +27,7 @@
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
+#include "FWCore/ParameterSet/interface/FileInPath.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
@@ -53,39 +54,36 @@ private:
     virtual void endLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup const &);
     const unsigned int maxVertices;
     std::vector<double> srcDistr;
-    std::vector<double> destDistr;
     edm::LumiReWeighting *reweighter;
-    // ----------member data ---------------------------
+    edm::FileInPath weight_file_nominal;
+    edm::FileInPath weight_file_up;
+    edm::FileInPath weight_file_down;
+    TH1D* dest_nominal, dest_up, dest_down;
 };
 
-//
-// constants, enums and typedefs
-//
-
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 PUWeightProducer::PUWeightProducer(const edm::ParameterSet &iConfig)
     : maxVertices(iConfig.getParameter<unsigned int>("maxVertices"))
     , srcDistr(iConfig.getParameter<std::vector<double>>("srcDistribution"))
-    , destDistr(iConfig.getParameter<std::vector<double>>("destDistribution"))
+    , weight_file_nominal(iConfig.getParameter<edm::FileInPath>("weightFileNominal"))
+    , weight_file_up(iConfig.getParameter<edm::FileInPath>("weightFileUp"))
+    , weight_file_down(iConfig.getParameter<edm::FileInPath>("weightFileDown"))
 {
     srcDistr.resize(maxVertices);
-    destDistr.resize(maxVertices);
     std::vector<float> _srcDistr;
-    std::vector<float> _destDistr;
+    std::vector<float> _destDistrNominal;
+    std::vector<float> _destDistrUp;
+    std::vector<float> _destDistrDown;
     for (unsigned int i = 0; i < maxVertices; i++)
     {
         _srcDistr.push_back((float)srcDistr[i]);
-        _destDistr.push_back((float)destDistr[i]);
+        _destDistrNominal.push_back((float)weight_file_nominal->GetBinContent(i));
+        _srcDistr.push_back((float)srcDistr[i]);
+        _srcDistr.push_back((float)srcDistr[i]);
     }
 
     produces<double>("PUWeightNtrue");
+    produces<double>("PUWeightNtrue_up");
+    produces<double>("PUWeightNtrue_down");
     produces<double>("PUWeightN0");
     produces<double>("nVertices0");
     produces<double>("nVerticesBXPlus1");
@@ -99,12 +97,6 @@ PUWeightProducer::~PUWeightProducer()
 {
 }
 
-
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
 void
 PUWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
 {
