@@ -38,8 +38,8 @@ cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('%s>0.5' % mva_var['mu'])
 cutlist['bdt_ele_tight'] = Cuts.met*Cut('%s>0.5' % mva_var['ele'])
 
 bdt = NestedDict()
-bdt['mu']['loose'] = 0.09
-bdt['ele']['loose'] = 0.06
+bdt['mu']['loose'] = 0.06
+bdt['ele']['loose'] = 0.13
 bdt = bdt.as_dict()
 cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
 cutlist['bdt_ele_loose'] = Cuts.met*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))
