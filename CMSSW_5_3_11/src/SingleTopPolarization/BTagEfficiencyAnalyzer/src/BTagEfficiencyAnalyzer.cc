@@ -143,6 +143,21 @@ void
 BTagEfficiencyAnalyzer::analyze(const edm::Event &iEvent, const edm::EventSetup &iSetup)
 {
     using namespace edm;
+
+    auto &get = [&event](InputTag s)
+    {
+        Handle<std::vector<float>> h;
+        event.getByLabel(s, h);
+        return h.product();
+    }
+
+
+    auto jetPts = get(jetPtSrc);
+    auto jetEtas = get(jetEtaSrc);
+    auto jetFlavours = get(jetFlavourSrc);
+    auto jetBDiscriminators = get(jetBDiscriminatorSrc);
+
+
 }
 
 
