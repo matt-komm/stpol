@@ -21,13 +21,21 @@ def get_sample_name(filename):
     """
     return filename.split("/")[-1].split(".")[0]
 
-def get_process_name(sample_name):
-    if sample_name.startswith("WJets_sherpa_nominal"):
-        return "WJets_sherpa_nominal"
-    else:
-        return sample_name
+
+process_names = {
+    "WJets_sherpa.*": "WJets_sherpa",
+    "SingleMu.*": "SingleMu",
+    "SingleEle.*": "SingleEle"
+}
+def get_process_name(sn):
+    for k, v in process_names.items():
+        if re.match(k, sn):
+            return v
+    return sn
 
 logger = logging.getLogger("sample.py")
+logger.setLevel(logging.INFO)
+
 class Sample:
     def __del__(self):
         logger.debug("Closing sample %s" % self.name)
@@ -64,6 +72,8 @@ class Sample:
         self.tree.SetCacheSize(100*1024*1024)
         if self.tfile.Get("trees/WJets_weights"):
             self.tree.AddFriend("trees/WJets_weights")
+        if self.tfile.Get("trees/MVA"):
+            self.tree.AddFriend("trees/MVA")
         #self.tree.AddBranchToCache("*", 1)
 
         self.event_count = None
@@ -110,14 +120,17 @@ class Sample:
         dtype = kwargs.get("dtype", "F")
 
         ROOT.gROOT.cd()
+        ROOT.TH1F.AddDirectory(True)
         if plot_range:
-            hist = Hist(*plot_range, type=dtype, name="htemp")
+            hist = Hist(*plot_range, type=dtype)
         elif binning is not None:
             hist = Hist(binning, type=dtype)
         else:
-            raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=(nbins, numpy.array(..))")
+            raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=numpy.array(..)")
 
         hist.Sumw2()
+        name += "_" + hist.GetName()
+        hist.SetName(name)
 
         draw_cmd = var + ">>%s" % hist.GetName()
 
@@ -140,13 +153,16 @@ class Sample:
             raise TObjectOpenException("Could not get histogram: %s" % hist)
         if hist.GetEntries() != n_entries:
             raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        ROOT.TH1F.AddDirectory(False)
+
         hist_new = hist.Clone(filter_alnum(name))
+        logger.debug(list(hist_new.y()))
 
         return hist_new
 
-    def drawHistogram2D(self, var, var2, cut_str, **kwargs):
-        logger.debug("drawHistogram: var=%s, var2=%s, cut_str=%sm kwargs=%s" % (str(var), str(var2), str(cut_str), str(kwargs)))
-        name = self.name + "_" + unique_name(var+"_"+var2, cut_str, kwargs.get("weight"))
+    def drawHistogram2D(self, var_x, var_y, cut_str, **kwargs):
+        logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
+        name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
 
         plot_range_x = kwargs.get("plot_range_x", None)
         plot_range_y = kwargs.get("plot_range_y", None)
@@ -157,6 +173,7 @@ class Sample:
         dtype = kwargs.get("dtype", "F")
 
         ROOT.gROOT.cd()
+        ROOT.TH2F.AddDirectory(True)
         if plot_range_x and plot_range_y:
             pass
             #TODO: make it work if needed
@@ -168,7 +185,7 @@ class Sample:
 
         hist.Sumw2()
 
-        draw_cmd = var+":"+var2 + ">>%s" % hist.GetName()
+        draw_cmd = var_y+":"+var_x + ">>%s" % hist.GetName()
 
         if weight_str:
             cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
@@ -189,6 +206,8 @@ class Sample:
             raise TObjectOpenException("Could not get histogram: %s" % hist)
         if hist.GetEntries() != n_entries:
             raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        ROOT.TH2F.AddDirectory(False)
+
         hist_new = hist.Clone(filter_alnum(name))
 
         return hist_new
@@ -235,7 +254,7 @@ class Sample:
 def is_mc(name):
     return not "SingleMu" in name
 
-def get_paths(basedir=None, samples_dir="step3_latest"):
+def get_paths(basedir=None, samples_dir="step3_latest", dataset=None):
     """
     basedir - the path where your STPOL directory is located
     samples_dir - the subdirectory in STPOL/...
@@ -270,9 +289,14 @@ def get_paths(basedir=None, samples_dir="step3_latest"):
                 systematic="NONE"
             else:
                 raise ValueError("Couldn't parse filename: %s" % fn)
-            dataset = spl[3]
+            _dataset = spl[3]
             fname = spl[4]
 
-            fnames[dataset][sample_type][lepton][systematic][iso] = root
+            fnames[_dataset][sample_type][lepton][systematic][iso] = root
             break
-    return fnames.as_dict()
+    if not dataset:
+        return fnames.as_dict()
+    elif dataset == "latest":
+        return fnames["Jul15"].as_dict()
+    else:
+        return fnames[dataset].as_dict()

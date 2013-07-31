@@ -1,8 +1,8 @@
 #CVS crud
 *CVS*
-
-testing*
-log*
+/analysis_notes
+/testing*
+/log*
 
 *__init__.py
 CMSSW_5_3_11/.SCRAM
@@ -15,7 +15,6 @@ CMSSW_5_3_11/tmp
 *.pickle
 *.out
 /data
-/out*
 
 # Compiled Object files
 *.slo
@@ -60,5 +59,12 @@ CMSSW_5_3_11/tmp
 /misc/*
 /local
 /theta
+/lqetafit/htmlout*
+/lqetafit/topfit
 
 /stpol.xcodeproj/xcuserdata
+
+*.pdf
+*.yield
+
+*.txt

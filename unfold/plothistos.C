@@ -491,12 +491,12 @@ plot_pseudo()
 
 plothistos()
 {
+	plot_unfolded();
 	plot_asymmetry();
 	plot_asymmetry_bias();
 	plot_asymmetry_pull();
 	plot_staterror();
 	plot_shape();
-	plot_unfolded();
 	plot_pseudo();
 	plot_matrix();
 	plot_correlation();

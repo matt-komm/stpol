@@ -68,4 +68,8 @@ cd $CMSSW_BASE/src/SingleTopPolarization
 git clone https://github.com/andrey-popov/single-top.git single-top-CMS
 git checkout sync_electrons single-top-CMS/plugins/BuildFile.xml
 scram b
+
+$STPOL_DIR/setup/install_exempi.sh
+$STPOL_DIR/setup/install_pylibs.sh
+
 cd $STPOL_DIR

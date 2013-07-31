@@ -1,6 +1,8 @@
 #!/bin/env python
-from ROOT import TFile,TTree
+from ROOT import TFile,TTree,TObject
 from plots.common.utils import *
+from plots.common.cuts import Cuts
+from plots.common.plot_defs import cutlist
 import sys
 
 if len(sys.argv) < 2:
@@ -15,28 +17,28 @@ if '/mu/' in dir:
     prt = 'mu'
     proc = 'mu'
 
-merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel=proc)
+physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=proc)
+merge_cmds = PhysicsProcess.get_merge_dict(physics_processes)
 
 if len(sys.argv) == 3:
     flist=[dir+'/'+sys.argv[2]]
 else:
     flist=get_file_list(merge_cmds,sys.argv[1])
 
-basecut = 'n_jets == 2 & n_tags == 1 & n_veto_ele == 0 & n_veto_mu == 0 & rms_lj < 0.025 & pt_lj > 40 & pt_bj > 40'
-mucut = basecut+' & n_muons == 1 '
-elecut = basecut+' & n_eles == 1 '
-cut = elecut
+cut = str(cutlist['2j1t']*cutlist['presel_ele']*Cuts.met)
 if '/mu/' in dir:
-    cut = mucut
+    cut = str(cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu)
 
 for f in flist:
     print "Starting:",f
     tf=TFile(f,'UPDATE')
-    tf.cd("trees")
     t=tf.Get("trees/Events")
     t.AddFriend('trees/WJets_weights')
+    print cut
     ct=t.CopyTree(cut)
-    ct.SetName("Events_MVA")
-    ct.Write()
+    print t, ct
+    print t.GetEntries(), ct.GetEntries()
+    ct.SetName("Events_MVAwQCD")
+    tf.cd("trees")
+    ct.Write("", TObject.kOverwrite)
     tf.Close()
-

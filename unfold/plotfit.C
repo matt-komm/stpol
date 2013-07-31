@@ -15,7 +15,7 @@ void plotfit()
 	vector<TH1F*> histos;
 	TH1F *hsignal;
 
-	read_fitres(names,scales,uncs);
+	read_fitres("nominal",names,scales,uncs);
 	Int_t nbkgs = names.size()-1;
 
 	TCanvas *c = new TCanvas("c","canvas",1024,768);
@@ -23,8 +23,8 @@ void plotfit()
 	THStack *hstack = new THStack("hstack","stack plot");
 
 	// FIXME
-//	TFile *f = new TFile("histos/data.root");
-	TFile *f = new TFile("histos/pseudo_data.root");
+	TFile *f = new TFile("histos/data.root");
+	//TFile *f = new TFile("histos/pseudo_data.root");
 
 	TH1F *hdata = (TH1F*)f->Get(var_y+"__DATA");
 

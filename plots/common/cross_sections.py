@@ -16,8 +16,8 @@ xs = {
     , "WJets_inclusive": 37509 #30400.0 LO
 
 	#FIXME: ttbar branching ratio
-	, "TTJets_SemiLept": (0.676*0.326*2) * 234.0
-	, "TTJets_FullLept": (0.326**2) * 234.0
+	, "TTJets_SemiLept": (0.676*0.326*2) * 245.8 #[arxiv:1303.6254]
+	, "TTJets_FullLept": (0.326**2) * 245.8 #[arxiv:1303.6254]
 
 	#exclusive sample branching ratios, same as PREP
 	, "W1Jets_exclusive": 5400.0 * WJets_lo_nnlo_scale_factor
@@ -26,7 +26,7 @@ xs = {
 	, "W4Jets_exclusive": 214.0 * WJets_lo_nnlo_scale_factor
     
     #http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa
-    ,"WJets_sherpa_nominal": 30503.0 * WJets_lo_nnlo_scale_factor / WJets_sherpa_weight_factor
+    ,"WJets_sherpa": 30503.0 * WJets_lo_nnlo_scale_factor / WJets_sherpa_weight_factor
 
 	#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=*GJets_HT-*_8TeV-madgraph*
 	, "GJets1": 960.5 #200To400
@@ -78,6 +78,18 @@ xs["Tbar_t_scaledown"] = xs["Tbar_t_ToLeptons"]
 
 xs["TToLeptons_t-channel_mass166_5"] = xs["T_t_ToLeptons"]
 xs["T_t_ToLeptons_mass178_5"] = xs["T_t_ToLeptons"]
+
+xs["TToBMuNu_t-channel"] = (xs["T_t_ToLeptons"] + xs["Tbar_t_ToLeptons"]) / 3
+xs["TToBENu_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBTauNu_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBENu_anomWtb-0100_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBMuNu_anomWtb-0100_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBTauNu_anomWtb-0100_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBENu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBMuNu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
+xs["TToBTauNu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
+
+
 
 #Use this dict to create lumis corresponding to processings. Please don't overwrite old lumis
 lumis = dict()

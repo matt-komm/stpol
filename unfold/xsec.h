@@ -11,6 +11,17 @@ using namespace std;
 
 Float_t get_xsec(TString process)
 {
+	if(process.Contains("TToBMuNu")) process = "T_t_ToLeptons"; // FIXME
+	
+	if(process.Contains("TToLeptons_t-channel")) process = "T_t_ToLeptons";
+	if(process.Contains("Tbar_t_mass")) process = "Tbar_t_ToLeptons";
+	if(process.Contains("Tbar_t_scale")) process = "Tbar_t_ToLeptons";
+        
+	if(process.Contains("TTJets_mass")) process = "TTJets";
+	if(process.Contains("TTJets_scale")) process = "TTJets";
+	if(process.Contains("TTJets_matching")) process = "TTJets";
+
+	
 	map <TString, Float_t>xsec;
 	xsec["T_t"] = 56.4;
 	xsec["Tbar_t"] = 30.7;
@@ -21,7 +32,8 @@ Float_t get_xsec(TString process)
 	xsec["Tbar_s"] = 1.76;
 	xsec["T_tW"] = 11.1;
 	xsec["Tbar_tW"] = 11.1;
-	
+
+	xsec["TTJets"] = 234.0;
 	xsec["TTJets_SemiLept"] = (0.676*0.326*2) * 234.0;
 	xsec["TTJets_FullLept"] = (0.326*0.326) * 234.0;
 

@@ -1,0 +1,3 @@
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/Tbar_t_ToLeptons_mass178_5/output_1_1_0iy.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/Tbar_t_ToLeptons_mass178_5/output_2_1_GUF.root
+file:/hdfs/cms/store/user/andres/Comphep_reproc_recompile//iso/SYST/Tbar_t_ToLeptons_mass178_5/output_4_1_udL.root

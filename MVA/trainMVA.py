@@ -9,7 +9,7 @@ from plots.common.utils import *
 from plots.common.colors import sample_colors_same
 from plots.common.cross_sections import lumis
 from plots.common.cuts import *
-from plots.common.plot_defs import qcdScale
+from plots.qcd_scale_factors import qcdScale
 
 if len(sys.argv) < 2: 
     print "Usage: ./trainMVA.py ele/mu"
@@ -18,10 +18,13 @@ if len(sys.argv) < 2:
 proc = sys.argv[1]
 # Choose between electron / muon channel fitting
 step3_ver="83a02e9_Jul22"
-step3 = "/home/mario/Summer13/stpol/step3_new"
+step3 = "/home/mario/Summer13/stpol/step3_latest"
+if len(sys.argv) == 3:
+    step3 = sys.argv[2]
 lumi=lumis[step3_ver]["iso"][proc]
 
-merge_cmds = PhysicsProcess.get_merge_dict(lepton_channel=proc)
+physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=proc)
+merge_cmds = PhysicsProcess.get_merge_dict(physics_processes)
 flist = get_file_list(
    merge_cmds,
    step3 + "/%s/mc/iso/nominal/Jul15/" % proc
@@ -34,12 +37,14 @@ flist += get_file_list(
 # Read in the file list from the output directory
 samples = {}
 for f in flist:
-    samples[f] = Sample.fromFile(f, tree_name="Events_MVA")
+    samples[f] = Sample.fromFile(f, tree_name="Events_MVAwQCD")
 
 # To compute accurate weight we need to load from the tree also the weights in question
-#weightString = str(Weights.total(proc))
+weightString = str(Weights.total(proc) *
+                   Weights.wjets_madgraph_shape_weight() *
+                   Weights.wjets_madgraph_flat_weight())
 # Temporary patch until proper step3 is available
-weightString = "1.0"
+#weightString = "1.0"
 
 t={}
 f={}
@@ -50,8 +55,8 @@ for key in flist:
     t[key]=samples[key].getTree()
     if samples[key].isMC: 
         w[key]=samples[key].lumiScaleFactor(lumi)
-    if 'data' in key and proc=='ele':
-        w[key]=qcdScale[proc]['presel']
+    if 'data' in key:# and proc=='ele':
+        w[key]=qcdScale[proc]['2j1t']
 
 signal=['T_t_ToLeptons','Tbar_t_ToLeptons']
 
@@ -73,12 +78,12 @@ factory.AddVariable("met",'D')
 factory.AddVariable("mt_"+prt,'D')
 factory.AddVariable("mass_bj",'D')
 factory.AddVariable("mass_lj",'D')
-factory.AddVariable("bdiscr_bj",'D')
-factory.AddVariable("bdiscr_lj",'D')
+#factory.AddVariable("bdiscr_bj",'D')
+#factory.AddVariable("bdiscr_lj",'D')
 factory.AddVariable(prt+"_pt",'D')
-factory.AddVariable(prt+"_charge",'I')
+#factory.AddVariable(prt+"_charge",'I')
 factory.AddVariable("pt_bj",'D')
-factory.AddSpectator("cos_theta",'D')
+#factory.AddSpectator("cos_theta",'D')
 
 # Now let's add signal and background trees with proper weights
 for k in t.keys():
@@ -99,8 +104,8 @@ factory.SetWeightExpression(weightString)
 # Prepare training and testing
 factory.PrepareTrainingAndTestTree(TCut(),TCut(),
                "NormMode=None:"\
-               "NTrain_Signal=20000:"\
-               "NTrain_Background=100000:"\
+               #"NTrain_Signal=20000:"\
+               #"NTrain_Background=100000:"\
                "V")
 
 # Now let's book an MVA method
