@@ -290,7 +290,7 @@ def SingleTopStep2():
             src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
         )
     process.patMETNTupleProducer = process.recoTopNTupleProducer.clone(
-        src=cms.InputTag(Config.metSource),
+        src=cms.InputTag("goodMETs"),
     )
     process.trueLeptonNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueLepton", "STPOLSEL2"),
@@ -418,6 +418,7 @@ def SingleTopStep2():
             saveGenJets = cms.bool(False),
             savePDFInfo = cms.bool(True)
         )
+
 
 
     #-----------------------------------------------
