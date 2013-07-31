@@ -105,6 +105,7 @@ class MVAPreparer:
 					tfile.Get('{0}/{1}'.format('test', s['category'])),
 					name=s['name']
 				)
+				meta['fractions'][s['name']] = s['frac']
 
 				if step3_ofdir is not None:
 					wfile_path = os.path.join(step3_ofdir, self._channel, _datatype_paths['mc'])
@@ -117,6 +118,7 @@ class MVAPreparer:
 					wfile_tfile.Close()
 			else:
 				roodir = '{0}/{1}'.format('train' if s['frac'] else 'test', s['category'])
+				meta['fractions'][s['name']] = 1.0 if s['frac'] else 0.0
 				print 'Clone tree `{0}` to `{1}`'.format(s['name'], roodir)
 				tempdir.cd() # FIXME: ugly hack because ROOT stores it's temporary trees also..
 				otree = sample_ttree.CopyTree(self._cutstring)
