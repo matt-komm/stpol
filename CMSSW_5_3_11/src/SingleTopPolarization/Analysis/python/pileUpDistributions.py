@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
 This file contains the distributions for the true number of vertices as emplyed in MC.
+FIXME: put a link to the source of these distributions.
 """
 
 S10 = [
