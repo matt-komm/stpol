@@ -116,6 +116,8 @@ MuonEfficiencyProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
    float weightTrigUp = TMath::QuietNaN();
    float weightTrigDown = TMath::QuietNaN();
 
+   float err = 0.01;
+
    Handle<View<reco::Candidate> > muons;
    iEvent.getByLabel(src, muons);
    if (muons->size()>1)
@@ -131,60 +133,57 @@ MuonEfficiencyProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetu
       
       if(fabs(muon.eta())<0.9){
          weightID = 0.9925;
-         weightIDUp = weightID + 0.0002;
-         weightIDDown = weightID - 0.0002;
+         weightIDUp = weightID + err;
+         weightIDDown = weightID - err;
          if(muon.userFloat("deltaBetaCorrRelIso")<0.12  || muon.userFloat("deltaBetaCorrRelIso")>0.2){
             weightIso = 0.9959;
-            weightIsoUp = weightIso + 0.0002;
-            weightIsoDown = weightIso - 0.0002;
+            weightIsoUp = weightIso + err;
+            weightIsoDown = weightIso - err;
          }else if(muon.userFloat("deltaBetaCorrRelIso")<0.2){
             weightIso = 0.9994;
-            weightIsoUp = weightIso + 0.0001;
-            weightIsoDown = weightIso - 0.0001;
+            weightIsoUp = weightIso + err;
+            weightIsoDown = weightIso - err;
          }
 
 
 	 weightTrig = 0.9837;
-	 float err = 0.00021;
 	 weightTrigUp = weightTrig + err;
 	 weightTrigDown = weightTrig - err; 
       }
       else if (fabs(muon.eta()) < 1.2){
          weightID = 0.9928;
-         weightIDUp = weightID + 0.0003;
-         weightIDDown = weightID - 0.0003;
+         weightIDUp = weightID + err;
+         weightIDDown = weightID - err;
          if(muon.userFloat("deltaBetaCorrRelIso")<0.12 || muon.userFloat("deltaBetaCorrRelIso")>0.2){
             weightIso = 0.9878;
-            weightIsoUp = weightIso + 0.0003;
-            weightIsoDown = weightIso - 0.0003;
+            weightIsoUp = weightIso + err;
+            weightIsoDown = weightIso - err;
          }else if(muon.userFloat("deltaBetaCorrRelIso")<0.2){
             weightIso = 1.0014;
-            weightIsoUp = weightIso + 0.0002;
-            weightIsoDown = weightIso - 0.0002;
+            weightIsoUp = weightIso + err;
+            weightIsoDown = weightIso - err;
          }
          
       
 	 weightTrig = 0.9656;
-	 float err = 0.00066;
 	 weightTrigUp = weightTrig + err;
 	 weightTrigDown = weightTrig - err; 
       }
       else if(fabs(muon.eta())<2.1){
          weightID = 0.9960;
-         weightIDUp = weightID + 0.0003;
-         weightIDDown = weightID - 0.0003;
+         weightIDUp = weightID + err;
+         weightIDDown = weightID - err;
          if(muon.userFloat("deltaBetaCorrRelIso")<0.12 || muon.userFloat("deltaBetaCorrRelIso")>0.2){
             weightIso = 1.0027;
-            weightIsoUp = weightIso + 0.0002;
-            weightIsoDown = weightIso - 0.0002;
+            weightIsoUp = weightIso + err;
+            weightIsoDown = weightIso - err;
          }else if(muon.userFloat("deltaBetaCorrRelIso")<0.2){
             weightIso = 1.0014;
-            weightIsoUp = weightIso + 0.0001;
-            weightIsoDown = weightIso - 0.0001;
+            weightIsoUp = weightIso + err;
+            weightIsoDown = weightIso - err;
          }
          
 	 weightTrig = 0.9962;
-	 float err = 0.00052;
 	 weightTrigUp = weightTrig + err;
 	 weightTrigDown = weightTrig - err; 
       }
