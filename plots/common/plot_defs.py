@@ -30,15 +30,19 @@ cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
 cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
 
-cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('mva_BDT>0.5')
-cutlist['bdt_ele_tight'] = Cuts.met*Cut('mva_BDT>0.5')
+mva_var = {}
+mva_var['ele']='mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj'
+mva_var['mu']='mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj'
+
+cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('%s>0.5' % mva_var['mu'])
+cutlist['bdt_ele_tight'] = Cuts.met*Cut('%s>0.5' % mva_var['ele'])
 
 bdt = NestedDict()
 bdt['mu']['loose'] = 0.09
 bdt['ele']['loose'] = 0.06
 bdt = bdt.as_dict()
-cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('mva_BDT>%f' % bdt['mu']['loose'])
-cutlist['bdt_ele_loose'] = Cuts.met*Cut('mva_BDT>%f' % bdt['ele']['loose'])
+cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
+cutlist['bdt_ele_loose'] = Cuts.met*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))
 
 #Load the scale factors externally for better factorisation
 from plots.fit_scale_factors import fitpars
@@ -320,7 +324,7 @@ varnames["rms_lj"] = 'RMS_{lj}'
 
 plot_defs['mva_bdt'] = {
     'enabled': True,
-    'var': 'mva_BDT',
+    'var': [mva_var['ele'],mva_var['mu']],
     'range': [40,-1,1],
     'iso': True,
     'estQcd': '2j1t',
@@ -336,20 +340,17 @@ plot_defs['mva_bdt'] = {
 plot_defs['mva_bdt_fit'] = cp(plot_defs['mva_bdt'] )
 plot_defs['mva_bdt_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
-plot_defs['mva_bdt_zoom']={
-    'enabled': True,
-    'var': 'mva_BDT',
-    'range': [50,0,1],
-    'iso': True,
-    'estQcd': '2j1t',
-    'gev': False,
-    'log': False,
-    'xlab': varnames["BDT_uncat"],
-    'labloc': 'top-right',
-    'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
-    'dir': 'BDT'
-}
+plot_defs['mva_shape'] = cp(plot_defs['mva_bdt'])
+plot_defs['mva_shape']['normalize'] = True
+plot_defs['mva_shape']['log'] = False
+
+plot_defs['mva_shape_log'] = cp(plot_defs['mva_shape'])
+plot_defs['mva_shape_log']['log'] = True
+
+plot_defs['mva_bdt_zoom']=cp(plot_defs['mva_bdt'])
+plot_defs['mva_bdt_zoom']['range']=[50,0,1]
+plot_defs['mva_bdt_zoom']['log']=False
+
 plot_defs['mva_bdt_zoom_fit'] = cp(plot_defs['mva_bdt_zoom'] )
 plot_defs['mva_bdt_zoom_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
@@ -604,7 +605,7 @@ extranges = {
 plot_defs['final_BDT']={
     'tags': ["an", "control.tex", "mva"],
     'enabled': True,
-    'var': 'mva_BDT',
+    'var': [mva_var['ele'],mva_var['mu']],
     'range': [40, -1, 1],
     'iso': True,
     'estQcd': 'presel',
