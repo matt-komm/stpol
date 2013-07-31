@@ -1,13 +1,34 @@
-from MVA2 import common
+#!/usr/bin/env python
+"""An example of the mvalib.prepare API to prepare samples for training."""
 
-# different use options
+import os, shutil
+from mvalib.prepare import *
+from plots.common.plot_defs import plot_defs
 
-#~ signals = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]
-#~ backgrounds = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
-#~ common.prepare_files(signals, backgrounds, ofname="mypreparedfile.root", default_ratio = 0.5)
+mvaprep = MVAPreparer('../step3_latest')
 
-signals = {"T_t_ToLeptons": 0.5, "Tbar_t_ToLeptons": 0.4}
-backgrounds = {"W1Jets_exclusive": 0.2, "W2Jets_exclusive": 0.2, "W3Jets_exclusive": 0.3, "W4Jets_exclusive": 0.2}
-common.prepare_files(signals, backgrounds)
+mvaprep.add_train('background', 'WJets_inclusive')
+mvaprep.add_test('background', 'W1Jets_exclusive')
+mvaprep.add_test('background', 'W2Jets_exclusive')
+mvaprep.add_test('background', 'W3Jets_exclusive')
+mvaprep.add_test('background', 'W4Jets_exclusive')
+
+mvaprep.add_test('signal', 'W1Jets_exclusive')
+mvaprep.add_test('signal', 'T_t_ToLeptons')
+mvaprep.add_test('signal', 'Tbar_t_ToLeptons')
+mvaprep.add_train('signal', 'T_t')
+mvaprep.add_train('signal', 'Tbar_t')
+
+mvaprep.add_frac('background', 'WW', train_fraction=0.2)
+mvaprep.add_frac('background', 'WZ', train_fraction=0.4)
+mvaprep.add_frac('background', 'ZZ')
+
+shutil.rmtree('prepared', ignore_errors=True)
+os.mkdir('prepared')
+
+mvaprep.write('mu', plot_defs['mva_bdt']['mucut'],
+              'prepared/mvaprep_mu.root', step3_ofdir='prepared')
+mvaprep.write('ele', plot_defs['mva_bdt']['elecut'],
+              'prepared/mvaprep_ele.root', step3_ofdir='prepared')
 
 
