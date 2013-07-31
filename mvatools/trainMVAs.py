@@ -39,6 +39,11 @@ parser.add_argument(
     '--var', required=False, default=[], action='append', type=str, dest="rej_var",
     help='Variable to remove from MVA training'
 )
+parser.add_argument(
+    '-r',
+    '--rank', required=False, default=[], action='append', type=str, dest="rank_var",
+    help='Variable to use in training for rank cumulation'
+)
 args = parser.parse_args()
 
 logger = logging.getLogger('trainMVAs.py')
@@ -47,6 +52,12 @@ if args.debug:
     logger.setLevel(logging.DEBUG)
 
 rVar=args.rej_var
+cVar=args.rank_var
+
+if len(rVar) and len(cVar):
+    logger.error('Cannot set exclusion and cumulation variables together')
+    sys.exit(1)
+
 # Get list of samples and variables to be used for training
 from sampleList import *
 
@@ -87,6 +98,11 @@ if len(rVar):
     for v in rVar:
         ext+='_'+v
 
+if len(cVar):
+    ext='_with'
+    for v in cVar:
+        ext+='_'+v
+
 out = TFile('TMVA%s%s.root' % (proc,ext),'RECREATE')
 
 def trainMVA(**kwds):
@@ -98,6 +114,7 @@ def trainMVA(**kwds):
         proc - process that is used. Should be either 'ele' or 'mu'
         weight - weight string to use
         rej_var - possibly a variable to remove
+        rank_var - variables to be used instead of varlist
     """
     proc = kwds.get('proc',0)
     if not proc:
@@ -106,6 +123,7 @@ def trainMVA(**kwds):
 
     vlist=kwds.get('varlist',varList[proc])
     rVar=kwds.get('rej_var',[])
+    cVar=kwds.get('rank_var',[])
     ext=''
     mname='BDT'
     if len(rVar):
@@ -113,6 +131,12 @@ def trainMVA(**kwds):
         for v in rVar:
             vlist.remove(v)
             ext+='_'+v
+        mname+=ext
+    if len(cVar):
+        ext='_with'
+        for v in cVar:
+            ext+='_'+v
+        vlist=cVar
         mname+=ext
 
     factory = TMVA.Factory('stop_'+proc,out,'Transformations=I;N;D')
@@ -166,5 +190,5 @@ def trainMVA(**kwds):
     factory.EvaluateAllMethods()
 
 # First, train the main BDT with all variables
-trainMVA(proc=proc,weight=weightString,varlist=varList[proc],rej_var=rVar)
+trainMVA(proc=proc,weight=weightString,varlist=varList[proc],rej_var=rVar,rank_var=cVar)
 out.Close()
