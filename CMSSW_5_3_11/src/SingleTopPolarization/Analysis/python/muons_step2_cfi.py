@@ -85,7 +85,11 @@ def MuonSetup(process, conf = None):
 
     process.muonWeightsProducer = cms.EDProducer("MuonEfficiencyProducer",
         src=cms.InputTag("singleIsoMu"),
-        dataRun=cms.string(conf.dataRun)
+        dataRun=cms.string(conf.dataRun),
+
+        #Variate all the scale factors by this value
+        SFError=cms.double(0.01),
+        applyConservativeSyst=cms.double(True)
     )
 
     process.recoNuProducerMu = cms.EDProducer('ClassicReconstructedNeutrinoProducer',
