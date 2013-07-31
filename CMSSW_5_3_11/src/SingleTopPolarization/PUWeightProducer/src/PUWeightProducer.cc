@@ -10,6 +10,8 @@
  Implementation:
     Systematic variations are calculated by variating the minimum bias cross section (FIXME: explain)
     and having new effective data number of vertices distributions corresponding to the variations.
+    The class reads the addPileupInfo structure from the EDM event and the number of _true_ vertices
+    is accessed via PileupSummaryInfo::getTrueNumInteractions.
 */
 //
 // Original Author:  Joosep Pata
@@ -53,11 +55,10 @@ private:
     virtual void endLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup const &);
     const unsigned int maxVertices;
     std::vector<double> srcDistr;
-    edm::LumiReWeighting *reweighter;
+    edm::LumiReWeighting *reweighter_nominal,*reweighter_down, *reweighter_up;
     edm::FileInPath weight_file_nominal;
     edm::FileInPath weight_file_up;
     edm::FileInPath weight_file_down;
-    TH1D *dest_nominal, dest_up, dest_down;
 };
 
 PUWeightProducer::PUWeightProducer(const edm::ParameterSet &iConfig)
@@ -72,12 +73,24 @@ PUWeightProducer::PUWeightProducer(const edm::ParameterSet &iConfig)
     std::vector<float> _destDistrNominal;
     std::vector<float> _destDistrUp;
     std::vector<float> _destDistrDown;
+    TFile* file_nominal = new TFile(weight_file_nominal.fullPath().c_str());
+    TFile* file_up = new TFile(weight_file_up.fullPath().c_str());
+    TFile* file_down = new TFile(weight_file_down.fullPath().c_str());
     for (unsigned int i = 0; i < maxVertices; i++)
     {
         _srcDistr.push_back((float)srcDistr[i]);
-        _destDistrNominal.push_back((float)weight_file_nominal->Get('pileup')GetBinContent(i + 1));
-        _destDistrUp.push_back((float)weight_file_up->Get('pileup')GetBinContent(i + 1));
-        _destDistrDown.push_back((float)weight_file_down->Get('pileup')GetBinContent(i + 1));
+        _destDistrNominal.push_back(
+            (float)
+            (((TH1D*)(file_nominal->Get("pileup")))->GetBinContent(i + 1))
+        );
+        _destDistrUp.push_back(
+            (float)
+            (((TH1D*)(file_up->Get("pileup")))->GetBinContent(i + 1))
+        );
+        _destDistrDown.push_back(
+            (float)
+            (((TH1D*)(file_down->Get("pileup")))->GetBinContent(i + 1))
+        );
     }
 
     produces<double>("PUWeightNtrue");
@@ -139,15 +152,15 @@ PUWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
     double puWeight_ntrue_down = TMath::QuietNaN();
     if (nPUs > 0 && n0 > 0)
     {
-        puWeight_n0 = reweighter->weight(n0);
+        puWeight_n0 = reweighter_nominal->weight(n0);
     }
     if (nPUs > 0 && ntrue > 0)
     {
-        puWeight_ntrue = reweighter->weight(ntrue);
-        puWeight_ntrue_up = reweighter->weight(ntrue);
-        puWeight_ntrue_down = reweighter->weight(ntrue);
+        puWeight_ntrue = reweighter_nominal->weight(ntrue);
+        puWeight_ntrue_up = reweighter_up->weight(ntrue);
+        puWeight_ntrue_down = reweighter_down->weight(ntrue);
     }
-    LogDebug("produce()") << 'calculated PU weight nominal=' << puWeight_n0 << ' up=' << puWeight_ntrue_up << ' down=' << puWeight_ntrue_down;
+    LogDebug("produce()") << "calculated PU weight nominal=" << puWeight_n0 << " up=" << puWeight_ntrue_up << " down=" << puWeight_ntrue_down;
     iEvent.put(std::auto_ptr<double>(new double(n0)), "nVertices0");
     iEvent.put(std::auto_ptr<double>(new double(np1)), "nVerticesBXPlus1");
     iEvent.put(std::auto_ptr<double>(new double(nm1)), "nVerticesBXMinus1");
@@ -196,7 +209,7 @@ PUWeightProducer::endLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup con
 {
 }
 
-// ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
+// ------------ method fills "descriptions" with the allowed parameters for the module  ------------
 void
 PUWeightProducer::fillDescriptions(edm::ConfigurationDescriptions &descriptions)
 {
