@@ -12,7 +12,7 @@ vars=`grep varList sampleList.py|grep $proc|sed 's+.*\[++g;s+\]++g;s+,+\ +g'|tr 
 ranking=""
 nVars=`echo $vars|wc -w`
 
-for i in `seq $nVars`; do
+for i in `seq $((nVars-1))`; do
 	add=''
 	for v in $ranking; do
 		add="$add -v $v"
@@ -24,4 +24,4 @@ for i in `seq $nVars`; do
 	ranking="$ranking $next"
 done
 
-echo "Final ranking: $ranking"
+echo "Final ranking: $ranking $vars"
