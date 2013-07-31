@@ -89,7 +89,7 @@ def MuonSetup(process, conf = None):
 
         #Variate all the scale factors by this value
         SFError=cms.double(0.01),
-        applyConservativeSyst=cms.double(True)
+        applyConservativeSyst=cms.bool(True)
     )
 
     process.recoNuProducerMu = cms.EDProducer('ClassicReconstructedNeutrinoProducer',
