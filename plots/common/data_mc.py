@@ -215,7 +215,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     additional_comments = ""
     if 'cutname' in plot_def.keys():
-        additional_comments += ", " + plot_def['cutname']['lepton_channel']
+        additional_comments += ", " + plot_def['cutname'][lepton_channel]
     lbox = lumi_textbox(lumi,
         boxloc,
         'preliminary',
