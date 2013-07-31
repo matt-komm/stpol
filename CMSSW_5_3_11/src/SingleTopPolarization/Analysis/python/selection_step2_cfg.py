@@ -11,86 +11,85 @@ import SingleTopPolarization.Analysis.sample_types as sample_types
 
 def SingleTopStep2():
 
-    if not Config.onGrid:
-        options = VarParsing('analysis')
-        options.register ('subChannel', 'T_t',
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "The sample that you are running on")
-        options.register ('reverseIsoCut', False,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Consider anti-isolated region")
-        options.register ('doDebug', False,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Turn on debugging messages")
-        options.register ('isMC', True,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Run on MC"
-        )
-        options.register ('doGenParticlePath', True,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Run the gen particle paths (only works on specific MC)"
-        )
-        options.register ('globalTag', Config.globalTagMC,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "Global tag"
-        )
-        options.register ('srcPUDistribution', "S10",
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "Source pile-up distribution"
-        )
-        options.register ('destPUDistribution', "data",
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "destination pile-up distribution"
-        )
+    options = VarParsing('analysis')
+    options.register ('subChannel', 'T_t',
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "The sample that you are running on")
+    options.register ('reverseIsoCut', False,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Consider anti-isolated region")
+    options.register ('doDebug', False,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Turn on debugging messages")
+    options.register ('isMC', True,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Run on MC"
+    )
+    options.register ('doGenParticlePath', True,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Run the gen particle paths (only works on specific MC)"
+    )
+    options.register ('globalTag', Config.globalTagMC,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "Global tag"
+    )
+    options.register ('srcPUDistribution', "S10",
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "Source pile-up distribution"
+    )
+    options.register ('destPUDistribution', "data",
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "destination pile-up distribution"
+    )
 
-        options.register ('isComphep', False,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Use CompHep-specific processing")
+    options.register ('isComphep', False,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Use CompHep-specific processing")
 
-        options.register ('isSherpa', False,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Use sherpa-specific processing")
+    options.register ('isSherpa', False,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Use sherpa-specific processing")
 
-        options.register ('systematic', "",
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "Apply Systematic variation")
+    options.register ('systematic', "",
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "Apply Systematic variation")
 
-        options.register ('dataRun', "RunABCD",
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "A string Run{A,B,C,D} to specify the data period")
+    options.register ('dataRun', "RunABCD",
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "A string Run{A,B,C,D} to specify the data period")
 
-        options.parseArguments()
-
-
-        if options.isMC:
-            Config.srcPUDistribution = pileUpDistributions.distributions[options.srcPUDistribution]
-            Config.destPUDistribution = pileUpDistributions.distributions[options.destPUDistribution]
+    options.parseArguments()
 
 
-        Config.Leptons.reverseIsoCut = options.reverseIsoCut
-        Config.subChannel = options.subChannel
-        Config.doDebug = options.doDebug
-        Config.isMC = options.isMC
-        Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
-        Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
-        Config.systematic = options.systematic
-        Config.dataRun = options.dataRun
-        Config.doSync = options.doSync
-        Config.doDebug = Config.doDebug
+    if options.isMC:
+        Config.srcPUDistribution = pileUpDistributions.distributions[options.srcPUDistribution]
+        Config.destPUDistribution = pileUpDistributions.distributions[options.destPUDistribution]
 
-        print "Systematic: ",Config.systematic
+
+    Config.Leptons.reverseIsoCut = options.reverseIsoCut
+    Config.subChannel = options.subChannel
+    Config.doDebug = options.doDebug
+    Config.isMC = options.isMC
+    Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
+    Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
+    Config.systematic = options.systematic
+    Config.dataRun = options.dataRun
+    Config.doSync = options.doSync
+    Config.doDebug = Config.doDebug
+
+    print "Systematic: ",Config.systematic
 
     if Config.isMC:
         logging.info("Changing jet source from %s to smearedPatJetsWithOwnRef" % Config.Jets.source)
