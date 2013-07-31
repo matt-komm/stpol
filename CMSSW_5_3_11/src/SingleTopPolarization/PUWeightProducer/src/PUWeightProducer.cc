@@ -12,6 +12,7 @@
     and having new effective data number of vertices distributions corresponding to the variations.
     The class reads the addPileupInfo structure from the EDM event and the number of _true_ vertices
     is accessed via PileupSummaryInfo::getTrueNumInteractions.
+    Implemented as in https://twiki.cern.ch/twiki/bin/view/CMS/PileupMCReweightingUtilities
 */
 //
 // Original Author:  Joosep Pata
