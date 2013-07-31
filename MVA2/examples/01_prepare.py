@@ -13,11 +13,10 @@ mvaprep.add_test('background', 'W2Jets_exclusive')
 mvaprep.add_test('background', 'W3Jets_exclusive')
 mvaprep.add_test('background', 'W4Jets_exclusive')
 
-mvaprep.add_test('signal', 'W1Jets_exclusive')
-mvaprep.add_test('signal', 'T_t_ToLeptons')
-mvaprep.add_test('signal', 'Tbar_t_ToLeptons')
 mvaprep.add_train('signal', 'T_t')
 mvaprep.add_train('signal', 'Tbar_t')
+mvaprep.add_test('signal', 'T_t_ToLeptons')
+mvaprep.add_test('signal', 'Tbar_t_ToLeptons')
 
 mvaprep.add_frac('background', 'WW', train_fraction=0.2)
 mvaprep.add_frac('background', 'WZ', train_fraction=0.4)
