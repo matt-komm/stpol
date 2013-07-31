@@ -74,10 +74,9 @@ def SingleTopStep2():
         options.parseArguments()
 
 
+        #Configure the MC pile-up histogram
         if options.isMC:
             Config.srcPUDistribution = pileUpDistributions.distributions[options.srcPUDistribution]
-            Config.destPUDistribution = pileUpDistributions.distributions[options.destPUDistribution]
-
 
         Config.Leptons.reverseIsoCut = options.reverseIsoCut
         Config.subChannel = options.subChannel
@@ -87,7 +86,9 @@ def SingleTopStep2():
         Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
         Config.systematic = options.systematic
         Config.dataRun = options.dataRun
-        print "Systematic! ",Config.systematic
+        Config.doDebug = Config.doDebug
+
+        print "Systematic: ",Config.systematic
 
     if Config.isMC:
         logging.info("Changing jet source from %s to smearedPatJetsWithOwnRef" % Config.Jets.source)
@@ -144,10 +145,11 @@ def SingleTopStep2():
     process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
 
     process.source = cms.Source("PoolSource",
-        # replace 'myfile.root' with the source file you want to use
         fileNames=cms.untracked.vstring(options.inputFiles),
-        cacheSize = cms.untracked.uint32(10*1024*1024),
+        cacheSize = cms.untracked.uint32(50*1024*1024),
     )
+
+    print options
 
 
     #-------------------------------------------------
@@ -206,8 +208,8 @@ def SingleTopStep2():
         src = cms.InputTag("allEventObjects")
     )
     process.eventShapeSequence = cms.Sequence(
-        process.allEventObjects *
-        process.eventShapeVars
+        process.allEventObjects
+        * process.eventShapeVars
     )
 
     #-----------------------------------------------
@@ -282,7 +284,7 @@ def SingleTopStep2():
             src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
         )
     process.patMETNTupleProducer = process.recoTopNTupleProducer.clone(
-        src=cms.InputTag(Config.metSource),
+        src=cms.InputTag("goodMETs"),
     )
     process.trueLeptonNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueLepton", "STPOLSEL2"),
@@ -412,6 +414,7 @@ def SingleTopStep2():
         )
 
 
+
     #-----------------------------------------------
     # Paths
     #-----------------------------------------------
@@ -530,3 +533,11 @@ def SingleTopStep2():
     print "Step2 configured"
 
     return process
+
+if __name__=="__main__":
+    process = SingleTopStep2()
+    from SingleTopPolarization.Analysis.test_files import testfiles
+    process.source.fileNames=cms.untracked.vstring(testfiles["step1"]["signal"])
+    process.maxEvents.input=-1
+
+    print str(process.source)
