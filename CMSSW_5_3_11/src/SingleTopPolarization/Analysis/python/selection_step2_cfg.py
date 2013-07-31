@@ -87,7 +87,10 @@ def SingleTopStep2():
         Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
         Config.systematic = options.systematic
         Config.dataRun = options.dataRun
-        print "Systematic! ",Config.systematic
+        Config.doSync = options.doSync
+        Config.doDebug = Config.doDebug
+
+        print "Systematic: ",Config.systematic
 
     if Config.isMC:
         logging.info("Changing jet source from %s to smearedPatJetsWithOwnRef" % Config.Jets.source)
@@ -206,8 +209,8 @@ def SingleTopStep2():
         src = cms.InputTag("allEventObjects")
     )
     process.eventShapeSequence = cms.Sequence(
-        process.allEventObjects *
-        process.eventShapeVars
+        process.allEventObjects
+        * process.eventShapeVars
     )
 
     #-----------------------------------------------
@@ -282,7 +285,7 @@ def SingleTopStep2():
             src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
         )
     process.patMETNTupleProducer = process.recoTopNTupleProducer.clone(
-        src=cms.InputTag(Config.metSource),
+        src=cms.InputTag("goodMETs"),
     )
     process.trueLeptonNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueLepton", "STPOLSEL2"),
@@ -412,6 +415,7 @@ def SingleTopStep2():
         )
 
 
+
     #-----------------------------------------------
     # Paths
     #-----------------------------------------------
@@ -530,3 +534,9 @@ def SingleTopStep2():
     print "Step2 configured"
 
     return process
+
+if __name__=="__main__":
+    process = SingleTopStep2()
+    from SingleTopPolarization.Analysis.test_files import testfiles
+
+    process.source.fileNames=cms.untracked.vstring(testfiles["step1"]["signal"])
