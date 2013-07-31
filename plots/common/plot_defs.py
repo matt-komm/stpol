@@ -34,15 +34,17 @@ mva_var = {}
 mva_var['ele']='mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj'
 mva_var['mu']='mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj'
 
-cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('%s>0.5' % mva_var['mu'])
-cutlist['bdt_ele_tight'] = Cuts.met*Cut('%s>0.5' % mva_var['ele'])
 
 bdt = NestedDict()
 bdt['mu']['loose'] = 0.06
+bdt['mu']['tight'] = 0.6
 bdt['ele']['loose'] = 0.13
+bdt['ele']['tight'] = 0.6
 bdt = bdt.as_dict()
 cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
 cutlist['bdt_ele_loose'] = Cuts.met*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))
+cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['tight']))
+cutlist['bdt_ele_tight'] = Cuts.met*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['tight']))
 
 #Load the scale factors externally for better factorisation
 from plots.fit_scale_factors import fitpars
@@ -587,6 +589,10 @@ plot_defs['final_met_phi_mva_loose_fit']={
 plot_defs['final_cosTheta_mva_tight'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_tight']['elecut'] = cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_tight']
 plot_defs['final_cosTheta_mva_tight']['mucut'] = cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_tight']
+plot_defs['final_cosTheta_mva_tight']['cutname'] = {
+            "mu": "BDT > %.2f" % bdt['mu']['tight'],
+            "ele": "BDT > %.2f" % bdt['ele']['tight']
+        }
 
 plot_defs['final_cosTheta_mva_tight_fit'] = cp(plot_defs['final_cosTheta_mva_tight'])
 plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva']
