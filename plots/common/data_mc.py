@@ -203,7 +203,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     p1.SetFillStyle(0);
     p1.cd()
 
-    stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_def['log'], stack = False)
+    stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_def['log'], stack = (not do_norm))
 
     #Put the the lumi box where the legend is not
     boxloc = 'top-right'
