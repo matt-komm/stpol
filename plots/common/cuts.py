@@ -30,7 +30,7 @@ class Cuts:
     lepton_veto = Cut("n_veto_mu==0 && n_veto_ele==0")
     electron_iso = Cut("el_mva > 0.9 & el_reliso < 0.1")
     mu_antiiso = Cut("mu_iso>0.2 && mu_iso<0.5")
-    electron_antiiso = Cut("el_iso > 0.1 & el_iso < 0.5")
+    electron_antiiso = Cut("el_iso > 0.15 & el_iso < 0.5")
     met = Cut('met > 45')
     no_cut = Cut("1")
 
