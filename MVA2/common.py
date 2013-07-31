@@ -337,3 +337,34 @@ def find_max_in_trees(trees, var, special = ["eta_lj"]):
 			maxv = max(tree.GetMaximum(var), maxv)
 		return maxv
 
+def find_efficiency(signals, cs1, cs2):
+	sum_tot = 0.0
+	sum_left = 0.0
+	for tree, weight in signals.iteritems():
+		sum_tot += tree.GetEntries(cs1) * weight
+		sum_left += tree.GetEntries("(" + cs1 + ") && (" + cs2 + ")") * weight
+	return sum_left/sum_tot
+
+def find_cut_value(signals, var, efficiency, cs):
+	cmax = float('-Inf')
+	cmin = float('Inf')
+	for tree in signals:
+		cmax = max(cmax, tree.GetMaximum(var))
+		cmin = min(cmin, tree.GetMinimum(var))
+	cval = (cmax+cmin)/2
+	ceff = find_efficiency(signals, cs, "{0} > {1}".format(var, cval))
+	iters = 0
+	while abs(ceff - efficiency) > 0.01 and iters < 30:
+		if ceff > efficiency:
+			cmin = cval
+		else:
+			cmax = cval
+		cval = (cmax+cmin)/2
+		ceff = find_efficiency(signals, cs, "{0} > {1}".format(var, cval))
+		iters += 1
+	if iters == 30:
+		print "Warning: binary search of cut value for "+var+" did not converge"
+	return cval
+	
+	
+	

@@ -25,7 +25,8 @@ if not os.path.isdir(args.odir): os.mkdir(args.odir)
 for inpfn in args.trees:
 	outfn = os.path.join(args.odir, inpfn.split('/')[-1])
 	if args.suf: outfn = outfn.replace('.root', '_'+args.suf+'.root')
-	shutil.copyfile(inpfn, outfn)
+	if inpfn != outfn:
+		shutil.copyfile(inpfn, outfn)
 	outf = ROOT.TFile(outfn, 'UPDATE')
 	outf.cd('trees')
 	tree = outf.Get('trees/Events')

@@ -3,10 +3,17 @@
 
 #Need to do basicConfig before doing any other logger commands in python 2.6
 #to prevent the other loggers from not recognizing levels set here
-import logging
-logging.basicConfig(level=logging.WARNING)
-
 import sys
+
+import logging
+
+#FIXME: make this part nicer
+level = logging.WARNING
+if "--DEBUG" in sys.argv:
+    sys.argv.pop(sys.argv.index("--DEBUG"))
+    level=logging.DEBUG
+logging.basicConfig(level=level)
+
 import os
 
 import argparse
@@ -207,10 +214,7 @@ if __name__=="__main__":
 
             plot_def = plot_defs[plotname]
 
-            canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, merge_cmds)
-
-            PhysicsProcess.name_histograms(physics_processes, merged_hists)
-
+            canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
 
             #This is adopted in the AN
             if lepton_channel=="ele":
