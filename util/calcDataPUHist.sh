@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DIR=$STPOL_DIR
-DATADIR=$STPOL_DIR/$CMSSW_VERSION/data/pu_weights
+DATADIR=$STPOL_DIR/$CMSSW_VERSION/src/data/pu_weights
 mkdir -p $DATADIR
 LUMI=crabs/lumis/22jan_dcsonly.json
 
