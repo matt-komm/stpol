@@ -35,10 +35,10 @@ fitpars['final_2j1t']['ele'] = [
 
 #New MVA with cut on MT
 fitpars['final_2j1t_mva']['mu'] = [
-    (tchan, 1.164032),
-    (top, 1.018774),
-    (WZJets, 1.317858),
-    (qcd, 0.975618),
+    (tchan, 1.164742),
+    (top, 1.027838),
+    (WZJets, 1.299009),
+    (qcd, 0.974701),
 ]
 
 fitpars['final_2j1t']['ele'] = [
