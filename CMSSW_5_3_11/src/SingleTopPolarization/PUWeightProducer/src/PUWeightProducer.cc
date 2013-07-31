@@ -5,10 +5,11 @@
 //
 /**\class PUWeightProducer PUWeightProducer.cc SingleTopPolarization/PUWeightProducer/src/PUWeightProducer.cc
 
- Description: [one line class summary]
+ Description: This class calculates the nominal pile-up weight, taking into account the measured distribution of vertices and the number of true vertices at generation
 
  Implementation:
-     [Notes on implementation]
+    Systematic variations are calculated by variating the minimum bias cross section (FIXME: explain)
+    and having new effective data number of vertices distributions corresponding to the variations.
 */
 //
 // Original Author:  Joosep Pata
@@ -17,8 +18,6 @@
 //
 //
 
-
-// system include files
 #include <memory>
 
 // user include files
@@ -58,7 +57,7 @@ private:
     edm::FileInPath weight_file_nominal;
     edm::FileInPath weight_file_up;
     edm::FileInPath weight_file_down;
-    TH1D* dest_nominal, dest_up, dest_down;
+    TH1D *dest_nominal, dest_up, dest_down;
 };
 
 PUWeightProducer::PUWeightProducer(const edm::ParameterSet &iConfig)
@@ -76,20 +75,23 @@ PUWeightProducer::PUWeightProducer(const edm::ParameterSet &iConfig)
     for (unsigned int i = 0; i < maxVertices; i++)
     {
         _srcDistr.push_back((float)srcDistr[i]);
-        _destDistrNominal.push_back((float)weight_file_nominal->GetBinContent(i));
-        _srcDistr.push_back((float)srcDistr[i]);
-        _srcDistr.push_back((float)srcDistr[i]);
+        _destDistrNominal.push_back((float)weight_file_nominal->Get('pileup')GetBinContent(i + 1));
+        _destDistrUp.push_back((float)weight_file_up->Get('pileup')GetBinContent(i + 1));
+        _destDistrDown.push_back((float)weight_file_down->Get('pileup')GetBinContent(i + 1));
     }
 
     produces<double>("PUWeightNtrue");
-    produces<double>("PUWeightNtrue_up");
-    produces<double>("PUWeightNtrue_down");
+    produces<double>("PUWeightNtrueUp");
+    produces<double>("PUWeightNtrueDown");
+
     produces<double>("PUWeightN0");
     produces<double>("nVertices0");
     produces<double>("nVerticesBXPlus1");
     produces<double>("nVerticesBXMinus1");
     produces<double>("nVerticesTrue");
-    reweighter = new edm::LumiReWeighting(_srcDistr, _destDistr);
+    reweighter_nominal = new edm::LumiReWeighting(_srcDistr, _destDistrNominal);
+    reweighter_up = new edm::LumiReWeighting(_srcDistr, _destDistrUp);
+    reweighter_down = new edm::LumiReWeighting(_srcDistr, _destDistrDown);
 }
 
 
@@ -140,6 +142,8 @@ PUWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
     if (nPUs > 0 && ntrue > 0)
     {
         puWeight_ntrue = reweighter->weight(ntrue);
+        puWeight_ntrue_up = reweighter->weight(ntrue);
+        puWeight_ntrue_down = reweighter->weight(ntrue);
     }
     LogDebug("produce()") << "calculated PU weight = " << puWeight_n0;
     iEvent.put(std::auto_ptr<double>(new double(n0)), "nVertices0");
@@ -147,6 +151,8 @@ PUWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
     iEvent.put(std::auto_ptr<double>(new double(nm1)), "nVerticesBXMinus1");
     iEvent.put(std::auto_ptr<double>(new double(ntrue)), "nVerticesTrue");
     iEvent.put(std::auto_ptr<double>(new double(puWeight_ntrue)), "PUWeightNtrue");
+    iEvent.put(std::auto_ptr<double>(new double(puWeight_ntrue_up)), "PUWeightNtrueUp");
+    iEvent.put(std::auto_ptr<double>(new double(puWeight_ntrue_down)), "PUWeightNtrueDown");
     iEvent.put(std::auto_ptr<double>(new double(puWeight_n0)), "PUWeightN0");
 
 
