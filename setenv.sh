@@ -30,6 +30,9 @@ PYTHONPATH=$PYTHONPATH:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/local/lib/python
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/qcd_estimation/
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/theta/utils2/
 
+# Add MVA related python modules
+export PYTHONPATH=$PYTHONPATH:$STPOL_DIR/MVA2/
+
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$STPOL_DIR/local/lib
 export LD_RUN_PATH=$LD_RUN_PATH:$STPOL_DIR/local/lib
 export PATH=$PATH:$STPOL_DIR/local/bin
