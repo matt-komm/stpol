@@ -44,10 +44,7 @@ then
 else
     echo "Detected that we're not on hep.kbfi.ee, environment may be broken!"
     PYTHONPATH=$STPOL_DIR/$CMSSW_VERSION/python/:$PYTHONPATH
-#    echo '' > $STPOL_DIR/$CMSSW_VERSION/src/__init__.py
-#    echo '' > $STPOL_DIR/$CMSSW_VERSION/src/SingleTopPolarization/__init__.py
-#    echo 'import os; __path__.append(os.path.join(os.path.abspath(__file__), "python"));print __path__' > $STPOL_DIR/$CMSSW_VERSION/src/SingleTopPolarization/Analysis/__init__.py
-#    echo '' > $STPOL_DIR/$CMSSW_VERSION/src/SingleTopPolarization/Analysis/python/__init__.py
+    $STPOL_DIR/util/prepare_paths.sh
 fi
 
 # Return to original directory
