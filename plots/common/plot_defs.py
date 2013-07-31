@@ -34,10 +34,6 @@ mva_var = {}
 mva_var['ele']='mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj'
 mva_var['mu']='mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj'
 
-# Temporarily override with old MVA names
-mva_var['ele']='mva_BDT'
-mva_var['mu']='mva_BDT'
-
 cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('%s>0.5' % mva_var['mu'])
 cutlist['bdt_ele_tight'] = Cuts.met*Cut('%s>0.5' % mva_var['ele'])
 
