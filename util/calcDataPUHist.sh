@@ -3,7 +3,7 @@
 DIR=$STPOL_DIR
 DATADIR=$STPOL_DIR/$CMSSW_VERSION/src/data/pu_weights
 mkdir -p $DATADIR
-LUMI=crabs/lumis/22jan_dcsonly.json
+LUMI=crabs/lumis/Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt
 
 curl -k https://cms-service-dqm.web.cern.ch/cms-service-dqm/CAF/certification/Collisions12/8TeV/PileUp/pileup_latest.txt > $DATADIR/pileup_latest.txt
 
