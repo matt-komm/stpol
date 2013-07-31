@@ -135,6 +135,8 @@ PUWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
 
     double puWeight_n0 = TMath::QuietNaN();
     double puWeight_ntrue = TMath::QuietNaN();
+    double puWeight_ntrue_up = TMath::QuietNaN();
+    double puWeight_ntrue_down = TMath::QuietNaN();
     if (nPUs > 0 && n0 > 0)
     {
         puWeight_n0 = reweighter->weight(n0);
@@ -145,7 +147,7 @@ PUWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
         puWeight_ntrue_up = reweighter->weight(ntrue);
         puWeight_ntrue_down = reweighter->weight(ntrue);
     }
-    LogDebug("produce()") << "calculated PU weight = " << puWeight_n0;
+    LogDebug("produce()") << 'calculated PU weight nominal=' << puWeight_n0 << ' up=' << puWeight_ntrue_up << ' down=' << puWeight_ntrue_down;
     iEvent.put(std::auto_ptr<double>(new double(n0)), "nVertices0");
     iEvent.put(std::auto_ptr<double>(new double(np1)), "nVerticesBXPlus1");
     iEvent.put(std::auto_ptr<double>(new double(nm1)), "nVerticesBXMinus1");

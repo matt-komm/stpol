@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 import SingleTopPolarization.Analysis.pileUpDistributions as pileUpDistributions
-
+from SingleTopPolarization.Analysis.test_files import testfiles
 process = cms.Process("OWNPARTICLES")
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
@@ -25,7 +25,9 @@ process.source = cms.Source("PoolSource",
 process.puWeightProducer = cms.EDProducer('PUWeightProducer'
     , maxVertices = cms.uint32(50)
     , srcDistribution = cms.vdouble(pileUpDistributions.S7)
-    , destDistribution = cms.vdouble(pileUpDistributions.data)
+    , weightFileNominal=cms.FileInPath("data/pu_weight/data_PU_nominal.root")
+    , weightFileUp=cms.FileInPath("data/pu_weight/data_PU_up.root")
+    , weightFileDown=cms.FileInPath("data/pu_weight/data_PU_down.root")
 )
 
 process.out = cms.OutputModule("PoolOutputModule",
