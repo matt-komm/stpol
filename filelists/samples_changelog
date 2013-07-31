@@ -1,6 +1,6 @@
 -------
 Sample: FIXME
-git hash: 5ef48e
+git hash: 5a0165
 Explanation:
 Reorganized the MET sequences in step2, making them call a common method. Incorporated the phi-modulation correction using standard modules. PU weight variations now calculated using variated data PU histograms. Using conservative scale factors on lepton weights by default.
 -------
