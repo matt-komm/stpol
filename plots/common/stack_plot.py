@@ -72,13 +72,16 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
         min_bin = 0.1*min([st.GetMinimum("nostack") for st in stacks.values()])
 
     if min_bin == 0:
-        min_bin = 0.001
+        if not do_stack:
+            min_bin = 0.001
+        else: 
+            min_bin = 1
 
     #Need to draw the stacks one time to initialize everything
     for name, stack in stacks.items():
         stack.Draw()
     canv.Draw()
-    logger.info("stack: %s" % str(stack))
+    logger.info("do_stack: %s" % str(do_stack))
     #Now draw really
     first = True
     for name, stack in stacks.items():
