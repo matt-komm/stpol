@@ -1,6 +1,6 @@
 import ROOT
 from binnings import *
-from plots.common.utils import merge_cmds, merge_hists, get_file_list
+from plots.common.utils import *
 from plots.common.sample import Sample
 from plots.common.cross_sections import lumi_iso
 import numpy
@@ -16,19 +16,24 @@ MAXBIN = 10000
 var_min = -1
 var_max = 1
 
+def merge_anomalous(proc, coupling):
+    return PhysicsProcess.get_merge_dict(PhysicsProcess.get_proc_dict(proc, coupling))
+    
+
 def get_signal_samples(coupling, step3='/'.join([os.environ["STPOL_DIR"], "step3_latest"]), proc="mu"):
     samples={}
     # Load in the data
     if coupling == "powheg":
         datadir = '/'.join([step3, proc, "mc", "iso", "nominal", "Jul15"])
     else:
-        datadir = '/'.join([step3, proc, "mc_syst", "iso", "SYST", "Jul15"])
-    flist=get_file_list(merge_cmds, datadir, False)
+        datadir = "/".join(("/home", "andres", "single_top", "stpol", "out", "step3_anomalous", proc, "syst_07_28", "iso", "SYST"))
+        #datadir = '/'.join([step3, proc, "mc_syst", "iso", "SYST", "Jul15"])
+    flist=get_file_list(merge_anomalous(proc, coupling), datadir, False)
     #Load signal samples in the isolated directory
     for f in flist:
-        if f.endswith("ToLeptons.root") or f.endswith("_t-channel.root"):
+        #print f, coupling, f.endswith("Nu_t-channel.root"), f.endswith("ToLeptons.root")
+        if f.endswith("ToLeptons.root") or (coupling == "comphep" and f.endswith("Nu_t-channel.root")) or ("anomWtb" in coupling and coupling in f):
             samples[f] = Sample.fromFile(datadir+'/'+f, tree_name='Events')
-    print coupling    
     if coupling == "powheg":
         assert len(samples) == 2
     else:
@@ -45,20 +50,20 @@ def get_signal_histo(var, weight, step3='/'.join([os.environ["STPOL_DIR"], "step
             hist = sample.drawHistogram(var, cuts, weight=weight, plot_range=plot_range)
             hist.Scale(sample.lumiScaleFactor(lumi))
             hists_mc[sample.name] = hist
-    merged_hists = merge_hists(hists_mc, merge_cmds).values()
+    merged_hists = merge_hists(hists_mc, merge_anomalous(proc, coupling)).values()
     assert len(merged_hists) == 1
     return merged_hists[0]
 
 
-def getbinning(histo, bins, zerobin=None):
+def getbinning(histo, coupling, bins, zerobin=None):
     totint = histo.Integral(0, MAXBIN)
     evbin = totint/bins
-    print histo, totint, bins
     edges = [0.]*(bins+1)
     edges[0] = var_min
     iedge = 1
 
     prevbin = 0
+    zero_set = False
     for k in range(1,MAXBIN+1):
         integral = histo.Integral(prevbin+1, k)
         if(integral>=evbin):
@@ -67,6 +72,18 @@ def getbinning(histo, bins, zerobin=None):
             # Set bin edge to 0 in order to calculate the asymmetry
             #if(math.fabs(newedge)<0.06):
             #    newedge = 0
+            if zerobin is not None:
+                if coupling in ["powheg", "comphep"] and k==zerobin:
+                    print "Changing bin %d from %.3f to 0." % (zerobin, edges[zerobin])
+                    newedge = 0.0
+                elif math.fabs(newedge)<0.08 and zero_set == False:   #anomalous couplings
+                    print "Changing bin %d from %.3f to 0." % (zerobin, edges[zerobin])
+                    newedge = 0.0
+                    zero_set = True
+                elif newedge>=0.08 and zero_set==False:
+                    print "Changing bin %d from %.3f to 0." % (zerobin, edges[zerobin])
+                    newedge = 0.0
+                    zero_set = True
             edges[iedge] = newedge
             iedge += 1
             prevbin = k
@@ -74,9 +91,6 @@ def getbinning(histo, bins, zerobin=None):
     lastedge = histo.GetXaxis().GetBinUpEdge(MAXBIN)
     edges[bins] = lastedge
     #Set bin #zerobin to zero if parameter set
-    if zerobin is not None:
-        print "Changing bin %d from %.3f to 0." % (zerobin, edges[zerobin])
-        edges[zerobin] = 0.0
     return edges
 
 def findbinning(bins_generated, cuts, weight, indir, channel, coupling,  zerobin_gen=None, zerobin_rec=None):
@@ -84,13 +98,13 @@ def findbinning(bins_generated, cuts, weight, indir, channel, coupling,  zerobin
     histo_rec = get_signal_histo(var_y, weight, cuts=cuts, step3=indir, coupling=coupling, proc=channel)
 
     # generated
-    binning_gen = getbinning(histo_gen, bins_generated, zerobin_gen)
+    binning_gen = getbinning(histo_gen, coupling, bins_generated, zerobin_gen)
     # reconstructed
-    binning_rec = getbinning(histo_rec, bins_generated*2, zerobin_rec)
+    binning_rec = getbinning(histo_rec, coupling, bins_generated*2, zerobin_rec)
     return (numpy.array(binning_gen), numpy.array(binning_rec))
 
 def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_cut = None, coupling = "powheg"):
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, mva_cut)])
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling)])
     mkdir_p(outdir)
     fo = ROOT.TFile(outdir+"/rebinned.root","RECREATE")
     
@@ -100,11 +114,10 @@ def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_
     binning_x=bin_list_x
     binning_y=bin_list_y
     lumi = lumi_iso[proc]
-
-    hists_rec = {}
+    hists_rec = {}  
     hists_gen = {}
     matrices = {}
-    samples = get_signal_samples(coupling, indir)
+    samples = get_signal_samples(coupling, indir, proc)
     for name, sample in samples.items():
         hist_rec = sample.drawHistogram(var_y, cuts, weight=weight, binning=binning_y)
         hist_rec.Scale(sample.lumiScaleFactor(lumi))
@@ -116,9 +129,9 @@ def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_
         matrix.Scale(sample.lumiScaleFactor(lumi))
         matrices[sample.name] = matrix
 
-    merged_rec = merge_hists(hists_rec, merge_cmds).values()
-    merged_gen = merge_hists(hists_gen, merge_cmds).values()
-    merged_matrix = merge_hists(matrices, merge_cmds).values()
+    merged_rec = merge_hists(hists_rec, merge_anomalous(proc, coupling)).values()
+    merged_gen = merge_hists(hists_gen, merge_anomalous(proc, coupling)).values()
+    merged_matrix = merge_hists(matrices, merge_anomalous(proc, coupling)).values()
     assert len(merged_rec) == 1
     assert len(merged_gen) == 1
     #The should be nothing in overflow bins, if it happens there is, make some changes
@@ -138,7 +151,7 @@ def rebin(cuts, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_
     fo.Close()
 
 def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None, coupling="powheg"):
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, mva_cut)])
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling)])
     fo = ROOT.TFile(outdir+"/efficiency.root","RECREATE")
     fo.cd()
     
@@ -164,14 +177,14 @@ def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None, coupling="powh
      
 	
     
-    merged_gen_presel = merge_hists(hists_presel, merge_cmds).values()[0]#hists_presel["T_t_ToLeptons"]#
-    merged_gen_presel_rebin = merge_hists(hists_presel_rebin, merge_cmds).values()[0]#hists_presel_rebin["T_t_ToLeptons"]
+    merged_gen_presel = merge_hists(hists_presel, merge_anomalous(proc, coupling)).values()[0]#hists_presel["T_t_ToLeptons"]#
+    merged_gen_presel_rebin = merge_hists(hists_presel_rebin, merge_anomalous(proc, coupling)).values()[0]#hists_presel_rebin["T_t_ToLeptons"]
     #total_scale = scales["T_t_ToLeptons"] + scales["Tbar_t_ToLeptons"]
     #merged_gen_presel.Scale(total_scale/merged_gen_presel.Integral())
     #merged_gen_presel_rebin.Scale(total_scale/merged_gen_presel_rebin.Integral())
 
-    assert len(merge_hists(hists_presel, merge_cmds).values()) == 1
-    assert len(merge_hists(hists_presel_rebin, merge_cmds).values()) == 1
+    assert len(merge_hists(hists_presel, merge_anomalous(proc, coupling)).values()) == 1
+    assert len(merge_hists(hists_presel_rebin, merge_anomalous(proc, coupling)).values()) == 1
     
     hists_gen= {}
     hists_gen_rebin = {}
@@ -192,9 +205,9 @@ def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None, coupling="powh
     
     
     
-    merged_gen = merge_hists(hists_gen, merge_cmds).values()[0] #hists_gen["T_t_ToLeptons"]
-    merged_gen_rebin = merge_hists(hists_gen_rebin, merge_cmds).values()[0]#hists_gen_rebin["T_t_ToLeptons"]
-    merged_rec = merge_hists(hists_rec, merge_cmds).values()[0]#hists_rec["T_t_ToLeptons"]#
+    merged_gen = merge_hists(hists_gen, merge_anomalous(proc, coupling)).values()[0] #hists_gen["T_t_ToLeptons"]
+    merged_gen_rebin = merge_hists(hists_gen_rebin, merge_anomalous(proc, coupling)).values()[0]#hists_gen_rebin["T_t_ToLeptons"]
+    merged_rec = merge_hists(hists_rec, merge_anomalous(proc, coupling)).values()[0]#hists_rec["T_t_ToLeptons"]#
     
     print merged_gen.GetEntries(), merged_gen.Integral()
     print merged_gen_rebin.GetEntries(), merged_gen_rebin.Integral()
@@ -222,18 +235,19 @@ def efficiency(cuts, binning_x, indir, proc="mu", mva_cut = None, coupling="powh
     fo.Close()
 
 def make_histos(binning, cut_str, cut_str_antiiso, indir, channel, mva_cut, coupling):
-    systematics = generate_systematics(channel)
+    systematics = generate_systematics(channel, coupling)
     var = "cos_theta"
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", generate_out_dir(channel, mva_cut, coupling)])
-    make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, channel, binning=binning)
-    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", generate_out_dir(channel, mva_cut, coupling)])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(channel, mva_cut)])+"/data.root")
+    subdir = generate_out_dir(channel, var, mva_cut, coupling)
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", subdir])
+    make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, channel, coupling, binning=binning)
+    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", subdir])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", subdir])+"/data.root")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Makes systematics histograms for final fit')
     parser.add_argument('--channel', dest='channel', choices=["mu", "ele"], required=True, help="The lepton channel used")
     parser.add_argument('--path', dest='path', default="$STPOL_DIR/step3_latest/", required=True)
-    parser.add_argument('--mva', dest='mva', action='store_true', default=False, help="Use MVA option")
-    parser.add_argument('--mva_cut', dest='mva_cut', type=float, default=None, help="MVA cut value")
+    parser.add_argument('--mva', dest='mva', action='store_true', default=False, help="Use MVA cut, not eta")
+    parser.add_argument('--mva_cut', dest='mva_cut', type=float, default=-1, help="MVA cut value")
     parser.add_argument('--coupling', dest='coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
     args = parser.parse_args()
 
@@ -243,13 +257,13 @@ if __name__ == "__main__":
 
     #indir = '/'.join([os.environ["STPOL_DIR"], "step3_latest"])
     if(args.mva):
-        cut_str = str(Cuts.mva_iso(args.mva_cut, args.channel))
-        cut_str_antiiso = str(Cuts.mva_antiiso(args.mva_cut, args.channel))
+        cut_str = str(Cuts.mva_iso(args.channel, args.mva_cut))
+        cut_str_antiiso = str(Cuts.mva_antiiso(args.channel, args.mva_cut))
     else:
         cut_str = str(Cuts.final_iso(args.channel))
         cut_str_antiiso = str(Cuts.final_antiiso(args.channel))
     weight = str(Weights.total_weight(args.channel))
-
+    
     bins_gen = 7
     bins_rec = bins_gen * 2
     zerobin_gen = 2
@@ -259,12 +273,12 @@ if __name__ == "__main__":
     #bin_list_gen = numpy.array([-1.,    -0.2632, 0.0,   0.19,    0.3528,  0.5062,  0.6652,  1.    ])
     #bin_list_rec = numpy.array([-1.,     -0.4496, -0.2254, -0.069,   0.0,   0.1478,  0.2346,  0.3174,  0.3956,   0.4738,  0.545,   0.6112,  0.6866,  0.7714,  1.    ])
 
-    binning_file = open('binnings/'+generate_out_dir(args.channel, args.mva_cut)+'.txt', 'w')
+    binning_file = open('binnings/'+generate_out_dir(args.channel, "cos_theta", args.mva_cut, args.coupling)+'.txt', 'w')
     binning_file.write(str(bin_list_gen)+'\n')
     binning_file.write(str(bin_list_rec))
     binning_file.close()
 
     print "found binning: ", bin_list_gen, ";", bin_list_rec
-    rebin(cut_str, bins_gen, bin_list_gen, bins_rec, bin_list_rec, indir, args.channel, args.mva_cut)
+    rebin(cut_str, bins_gen, bin_list_gen, bins_rec, bin_list_rec, indir, args.channel, args.mva_cut, args.coupling)
     efficiency(cut_str, bin_list_gen, indir, args.channel, args.mva_cut, args.coupling)
     make_histos(bin_list_rec, cut_str, cut_str_antiiso, indir, args.channel, args.mva_cut, args.coupling)

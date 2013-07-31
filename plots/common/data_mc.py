@@ -40,9 +40,11 @@ def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     if not ignore_missing:
         raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
 
-def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cmds):
+def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_processes):
 
     logger.info('Plot in progress %s' % name)
+
+    merge_cmds = PhysicsProcess.get_merge_dict(physics_processes) #The actual merge dictionary
 
     var = plot_def['var']
 
@@ -96,6 +98,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
 
             hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
             hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
+            logger.debug("Using the QCD scale factor %s: %.2f" % (plot_def['estQcd'], qcdScale[lepton_channel][plot_def['estQcd']]))
             hist_qcd.Scale(qcdScale[lepton_channel][plot_def['estQcd']])
             hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
             hist_qcd=hist_qcd_loose
@@ -145,6 +148,9 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
         ))
 
     merged_hists_l = merged_hists.values()
+
+    PhysicsProcess.name_histograms(physics_processes, merged_hists)
+
     leg = legend([hist_data] + list(reversed(merged_hists_l)), legend_pos=plot_def['labloc'], style=['p','f'])
 
     canv = ROOT.TCanvas()
@@ -185,7 +191,15 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, merge_cm
     chan = 'Electron'
     if lepton_channel == "mu":
         chan = 'Muon'
-    lbox = lumi_textbox(lumi,boxloc,'preliminary',chan+' channel')
+
+    additional_comments = ""
+    if 'cutname' in plot_def.keys():
+        additional_comments += ", " + plot_def['cutname']['lepton_channel']
+    lbox = lumi_textbox(lumi,
+        boxloc,
+        'preliminary',
+        chan + ' channel' + additional_comments
+    )
 
     #Draw everything
     lbox.Draw()

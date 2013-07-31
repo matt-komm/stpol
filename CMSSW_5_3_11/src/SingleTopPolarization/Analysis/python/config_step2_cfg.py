@@ -109,7 +109,7 @@ class Config(C):
 
     class Muons(Leptons):
         relIsoCutRangeIsolatedRegion = [0.0, 0.12]
-        relIsoCutRangeAntiIsolatedRegion = [0.2, 0.9]
+        relIsoCutRangeAntiIsolatedRegion = [0.2, 0.5]
         looseVetoRelIsoCut = 0.2
         source = "muonsWithID"
         triggerPath = "HLT_IsoMu24_eta2p1_v*"
@@ -119,7 +119,7 @@ class Config(C):
         cutOnIso = True
         mvaCut = 0.9
         relIsoCutRangeIsolatedRegion = [0.0, 0.1]
-        relIsoCutRangeAntiIsolatedRegion = [0.1, 0.5]
+        relIsoCutRangeAntiIsolatedRegion = [0.15, 0.5]
         looseVetoRelIsoCut = 0.15
         transverseMassType = "MET"
         source = "electronsWithID"
