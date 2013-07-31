@@ -41,7 +41,7 @@ fitpars['final_2j1t_mva']['mu'] = [
     (qcd, 0.974701),
 ]
 
-fitpars['final_2j1t']['ele'] = [
+fitpars['final_2j1t_mva']['ele'] = [
     (tchan, 1.080942),
     (top, 1.037056),
     (WZJets, 1.305009),
