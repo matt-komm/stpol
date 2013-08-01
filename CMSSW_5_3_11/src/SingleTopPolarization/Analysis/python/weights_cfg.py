@@ -20,6 +20,8 @@ def WeightSetup(process, conf):
     process.puWeightProducer = cms.EDProducer('PUWeightProducer'
         , maxVertices = cms.uint32(50)
         , srcDistribution = cms.vdouble(conf.srcPUDistribution)
-        , destDistribution = cms.vdouble(conf.destPUDistribution)
+        , weightFileNominal=cms.FileInPath("data/pu_weights/data_PU_nominal.root")
+        , weightFileUp=cms.FileInPath("data/pu_weights/data_PU_up.root")
+        , weightFileDown=cms.FileInPath("data/pu_weights/data_PU_down.root")
     )
     process.weightSequence += process.puWeightProducer

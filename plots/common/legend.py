@@ -3,6 +3,7 @@ import ROOT
 import logging
 
 logger = logging.getLogger("legend")
+logger.setLevel(logging.WARNING)
 def legend(hists, **kwargs):
     """
         ***Mandatory arguments:

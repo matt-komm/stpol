@@ -31,11 +31,8 @@ class Config(C):
     #Enable debugging modules
     doDebug = False
 
-    #Whether to output CMSSW-specific trees
-    skipPatTupleOutput = False
-
-    #Whether to run over grid (without command-line arguments)
-    onGrid = False
+    #Do a phi-correction for the MET, as dependent on the number of vertices
+    doMETSystShift = True
 
     #If using comphep-generated input
     isCompHep = False
@@ -97,9 +94,8 @@ class Config(C):
 
         reverseIsoCut = False
         cutOnIso = True
-        cutOnTransverseMass = False
-        transverseMassType = "MtW"
-        transverseMassCut = 40
+
+        transverseMassDef = 0 #Set to 0 to never throw away any MET from the analysis
         relIsoType = RelativeIsolation.rhoCorrRelIso
 
         relIsoCutRangeIsolatedRegion = [0.0, 0.2]
@@ -117,7 +113,7 @@ class Config(C):
     class Electrons(Leptons):
         pt = "ecalDrivenMomentum.Pt()"
         cutOnIso = True
-        mvaCut = 0.9
+        mvaCut = 0.9 #This defines a good signal electron, this is not a cut per se
         relIsoCutRangeIsolatedRegion = [0.0, 0.1]
         relIsoCutRangeAntiIsolatedRegion = [0.15, 0.5]
         looseVetoRelIsoCut = 0.15
