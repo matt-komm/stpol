@@ -56,6 +56,15 @@ cmsenv
 scram setup lhapdffull
 cmsenv
 
+scram b -j 8 &> scram_log
+cd $CMSSW_BASE/../
+source setenv.sh
+
+$STPOL_DIR/setup/install_tunfold.sh
+$STPOL_DIR/setup/install_theta.sh
+$STPOL_DIR/setup/install_exempi.sh
+$STPOL_DIR/setup/install_pylibs.sh
+
 #Download common CMSSW module for single top
 cd $CMSSW_BASE/src/SingleTopPolarization
 git clone https://github.com/andrey-popov/single-top.git single-top-CMS
@@ -67,7 +76,4 @@ scram b -j 8 &> scram_log
 cd $CMSSW_BASE/../
 source setenv.sh
 
-$STPOL_DIR/setup/install_tunfold.sh
-$STPOL_DIR/setup/install_theta.sh
-$STPOL_DIR/setup/install_exempi.sh
-$STPOL_DIR/setup/install_pylibs.sh
+cd $STPOL_DIR
