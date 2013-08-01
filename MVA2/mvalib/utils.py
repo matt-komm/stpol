@@ -1,5 +1,6 @@
 """Utility methods for the MVA library."""
 
+import os.path
 import pickle
 import ROOT
 from plots.common import cross_sections
@@ -26,3 +27,8 @@ def iter_entrylist(elist):
 	"""Create an iterator that iterates over TEntryList elements."""
 	for n in xrange(0, elist.GetN()):
 		yield elist.GetEntry(n)
+
+
+def get_sample_name(fullpath):
+	"""Reduce a path of a ROOT file to the sample name"""
+	return '.'.join(os.path.basename(fullpath).split('.')[:-1])

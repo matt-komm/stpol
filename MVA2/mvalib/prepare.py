@@ -160,13 +160,8 @@ def _find_files(root, channel, datatype):
 		raise Exception('Bad datatype `{0}`'.format(datatype))
 
 	path = os.path.join(root, channel, _datatype_paths[datatype])
-	samples = map(_get_sample_name, glob(os.path.join(path, '*')))
+	samples = map(mvalib.utils.get_sample_name, glob(os.path.join(path, '*')))
 	return os.path.join(channel, _datatype_paths[datatype]), samples
-
-
-def _get_sample_name(fullpath):
-	"""Reduce a path to a ROOT file to the sample name"""
-	return '.'.join(os.path.basename(fullpath).split('.')[:-1])
 
 
 class _TrainTreeCreator:
