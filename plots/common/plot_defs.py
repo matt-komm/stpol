@@ -417,8 +417,12 @@ plot_defs['invar_mass_lj'] = cp(plot_defs['invar_mass_bj'])
 plot_defs['invar_mass_lj']['var'] = 'mass_lj'
 plot_defs['invar_mass_lj']['xlab'] = 'm_{lq-jet} [GeV]'
 
-from mvatools.sampleList import varRank
-for v in varRank:
+from mvatools.sampleList import varRank 
+vlist = varRank['mu']
+vlist.remove('mu_pt')
+vlist.remove('mt_mu')
+vlist+=['lep_pt','mtW']
+for v in vlist:
     plot_defs['invar_%s_bdt_loose' % v] = cp(plot_defs['invar_%s' % v])
     plot_defs['invar_%s_bdt_loose' % v]['elecut'] *=cutlist['bdt_ele_loose']
     plot_defs['invar_%s_bdt_loose' % v]['mucut'] *=cutlist['bdt_mu_loose']
