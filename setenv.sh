@@ -24,7 +24,7 @@ export local_dbs_url=https://cmsdbsprod.cern.ch:8443/cms_dbs_ph_analysis_02_writ
 # Add plotfw to python library path
 #PYTHONPATH=$PYTHONPATH:${SCRIPT_DIR}/newplots
 #PYTHONPATH=$PYTHONPATH:`readlink -f runconfs`:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/local/lib/python2.6/site-packages/
-PYTHONPATH=$PYTHONPATH:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/local/lib/python2.6/site-packages/
+PYTHONPATH=$PYTHONPATH:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/mvatools:$STPOL_DIR/local/lib/python2.6/site-packages/
 
 #Add QCD estimation stuff
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/qcd_estimation/
