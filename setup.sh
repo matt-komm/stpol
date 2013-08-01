@@ -56,6 +56,13 @@ cmsenv
 scram setup lhapdffull
 cmsenv
 
+#Download common CMSSW module for single top
+cd $CMSSW_BASE/src/SingleTopPolarization
+git clone https://github.com/andrey-popov/single-top.git single-top-CMS
+git checkout sync_electrons single-top-CMS/plugins/BuildFile.xml
+scram b
+cd $STPOL_DIR
+
 scram b -j 8 &> scram_log
 cd $CMSSW_BASE/../
 source setenv.sh
