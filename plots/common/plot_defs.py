@@ -392,7 +392,7 @@ plot_defs['invar_lep_pt'] = cp(plot_defs['invar_top_mass'])
 plot_defs['invar_lep_pt']['var']=['el_pt','mu_pt'],
 plot_defs['invar_lep_pt']['range']=[35,25,200]
 plot_defs['invar_lep_pt']['xlab']=varnames['pt_lep']
-plot_defa['invar_lep_pt']['log']=True
+plot_defs['invar_lep_pt']['log']=True
 
 plot_defs['invar_mtW'] = cp(plot_defs['invar_top_mass'])
 plot_defs['invar_mtW']['var']=['mt_el','mt_mu'],
