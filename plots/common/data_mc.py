@@ -12,7 +12,7 @@ from plots.common.legend import legend
 from plots.common.odict import OrderedDict
 from plots.common.stack_plot import plot_hists_stacked
 from plots.common.hist_plots import plot_data_mc_ratio
-
+import pdb
 
 def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     """
@@ -50,11 +50,14 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     #Id var is a list/tuple, assume
     if not isinstance(var, basestring):
-        if lepton_channel == 'ele':
-            var = var[0]
-        else:
-            var = var[1]
-
+        try:
+            if lepton_channel == 'ele':
+                var = var[0]
+            elif lepton_channel == 'mu':
+                var = var[1]
+        except Exception as e:
+            logger.error("Plot variable 'var' specification incorrect for multi-variable plot: %s" % str(var))
+            raise e
     cut = None
     if lepton_channel == 'ele':
         cut = plot_def['elecut']
