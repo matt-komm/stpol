@@ -428,7 +428,7 @@ for v in varRank:
     plot_defs['invar_%s_bdt_tight' % v]['mucut'] *=cutlist['bdt_mu_tight']
 
     for k in ['', '_bdt_loose', '_bdt_tight' ]:
-        plot_defs['invar_%s%s_fit' % (v,k)] = cp(plot_defs['invar_%s%s'] % (v,k)])
+        plot_defs['invar_%s%s_fit' % (v,k)] = cp(plot_defs['invar_%s%s' % (v,k)])
         plot_defs['invar_%s%s_fit' % (v,k)]['fitpars'] = fitpars['final_2j1t_mva']
 
 #-----------------------------------------------
