@@ -357,6 +357,81 @@ plot_defs['mva_bdt_zoom_fit'] = cp(plot_defs['mva_bdt_zoom'] )
 plot_defs['mva_bdt_zoom_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 #-----------------------------------------------
+# BDT input variables before/after cut
+#-----------------------------------------------
+
+plot_defs['invar_top_mass'] = {
+        'tags': ['invars', 'mva'],
+        'enabled': True,
+        'var': 'top_mass',
+        'range': [30,0,300],
+        'iso': True,
+        'estQcd': '2j1t',
+        'gev': True,
+        'log': False,
+        'xlab': varnames['top_mass'],
+        'labloc': 'top-right',
+        'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
+        'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
+        #'cutname': '2J1T',
+        'dir': 'BDT'
+}
+
+plot_defs['invar_C'] = cp(plot_defs['invar_top_mass'])
+plot_defs['invar_C']['var']='C'
+plot_defs['invar_C']['range']=[50,0,1]
+plot_defs['invar_C']['gev']=False
+plot_defs['invar_C']['xlab']='C'
+
+plot_defs['invar_eta_lj'] = cp(plot_defs['invar_C'])
+plot_defs['invar_eta_lj']['var']='eta_lj'
+plot_defs['invar_eta_lj']['range']=[50,0,5]
+plot_defs['invar_eta_lj']['xlab']=varnames['eta_lj']
+
+plot_defs['invar_lep_pt'] = cp(plot_defs['invar_top_mass'])
+plot_defs['invar_lep_pt']['var']=['el_pt','mu_pt'],
+plot_defs['invar_lep_pt']['range']=[35,25,200]
+plot_defs['invar_lep_pt']['xlab']=varnames['pt_lep']
+plot_defa['invar_lep_pt']['log']=True
+
+plot_defs['invar_mtW'] = cp(plot_defs['invar_top_mass'])
+plot_defs['invar_mtW']['var']=['mt_el','mt_mu'],
+plot_defs['invar_mtW']['range']=[40,0,200]
+plot_defs['invar_mtW']['xlab']=varnames['mt_mu']
+
+plot_defs['invar_met'] = cp(plot_defs['invar_top_mass'])
+plot_defs['invar_met']['var']='met',
+plot_defs['invar_met']['range']=[40,0,200]
+plot_defs['invar_met']['xlab']=varnames['met']
+
+plot_defs['invar_pt_bj'] = cp(plot_defs['invar_lep_pt'])
+plot_defs['invar_pt_bj']['var'] = 'pt_bj'
+plot_defs['invar_pt_bj']['xlab'] = 'b-jet p_{T} [GeV]'
+
+plot_defs['invar_mass_bj'] = cp(plot_defs['invar_top_mass'])
+plot_defs['invar_mass_bj']['var'] = 'mass_bj'
+plot_defs['invar_mass_bj']['range'] = [40,0,200]
+plot_defs['invar_mass_bj']['xlab'] = 'm_{b-jet} [GeV]'
+
+plot_defs['invar_mass_lj'] = cp(plot_defs['invar_mass_bj'])
+plot_defs['invar_mass_lj']['var'] = 'mass_lj'
+plot_defs['invar_mass_lj']['xlab'] = 'm_{lq-jet} [GeV]'
+
+from mvatools.sampleList import varRank
+for v in varRank:
+    plot_defs['invar_%s_bdt_loose' % v] = cp(plot_defs['invar_%s' % v])
+    plot_defs['invar_%s_bdt_loose' % v]['elecut'] *=cutlist['bdt_ele_loose']
+    plot_defs['invar_%s_bdt_loose' % v]['mucut'] *=cutlist['bdt_mu_loose']
+
+    plot_defs['invar_%s_bdt_tight' % v] = cp(plot_defs['invar_%s' % v])
+    plot_defs['invar_%s_bdt_tight' % v]['elecut'] *=cutlist['bdt_ele_tight']
+    plot_defs['invar_%s_bdt_tight' % v]['mucut'] *=cutlist['bdt_mu_tight']
+
+    for k in ['', '_bdt_loose', '_bdt_tight' ]:
+        plot_defs['invar_%s%s_fit' % (v,k)] = cp(plot_defs['invar_%s%s'] % (v,k)])
+        plot_defs['invar_%s%s_fit' % (v,k)]['fitpars'] = fitpars['final_2j1t_mva']
+
+#-----------------------------------------------
 # selection.tex
 #-----------------------------------------------
 nbins_selection = 20
