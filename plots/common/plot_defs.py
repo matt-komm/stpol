@@ -356,6 +356,13 @@ plot_defs['mva_bdt_zoom']['log']=False
 plot_defs['mva_bdt_zoom_fit'] = cp(plot_defs['mva_bdt_zoom'] )
 plot_defs['mva_bdt_zoom_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
+plot_defs['mva_bdt_cosTheta_neg'] = cp(plot_defs['mva_bdt_zoom'])
+plot_defs['mva_bdt_cosTheta_neg']['elecut']*=cutlist['bdt_ele_loose']*Cut('cos_theta<0')
+plot_defs['mva_bdt_cosTheta_neg']['mucut']*=cutlist['bdt_mu_loose']*Cut('cos_theta<0')
+
+plot_defs['mva_bdt_cosTheta_neg_fit'] = cp(plot_defs['mva_bdt_cosTheta_neg'])
+plot_defs['mva_bdt_cosTheta_neg_fit']['fitpars'] = fitpars['final_2j1t_mva']
+
 #-----------------------------------------------
 # BDT input variables before/after cut
 #-----------------------------------------------
@@ -382,6 +389,9 @@ plot_defs['invar_C']['var']='C'
 plot_defs['invar_C']['range']=[50,0,1]
 plot_defs['invar_C']['gev']=False
 plot_defs['invar_C']['xlab']='C'
+
+plot_defs['invar_C_norm'] = cp(plot_defs['invar_C'])
+plot_defs['invar_C_norm']['normalize'] = True
 
 plot_defs['invar_eta_lj'] = cp(plot_defs['invar_C'])
 plot_defs['invar_eta_lj']['var']='eta_lj'
