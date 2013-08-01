@@ -49,21 +49,21 @@ parser.add_option("--doNTags", dest="doNTags", action="store_true", default=Fals
 parser.add_option("--nT", dest="nT", type="string", default="0,10",
     description="A comma separated list of min,max of the number of tags to consider."
 )
-parser.add_option("--mtw", dest="doMtw", action="store_true", default=False,
-    description="Select events that pass an MtW(mu) cut."
-)
-parser.add_option("--met", dest="doMet", action="store_true", default=False,
-    description="Select events that pass a MET cut."
-)
-parser.add_option("--etalj", dest="doEtaLj", action="store_true", default=False,
-    description="Select events that pass the |eta_lj|>2.5 cut."
-)
+# parser.add_option("--mtw", dest="doMtw", action="store_true", default=False,
+#     description="Select events that pass an MtW(mu) cut."
+# )
+# parser.add_option("--met", dest="doMet", action="store_true", default=False,
+#     description="Select events that pass a MET cut."
+# )
+# parser.add_option("--etalj", dest="doEtaLj", action="store_true", default=False,
+#     description="Select events that pass the |eta_lj|>2.5 cut."
+# )
 parser.add_option("--isMC", dest="isMC", action="store_true", default=False,
     description="Processed files are MC."
 )
-parser.add_option("--mtop", dest="mtop", type="string", default="none", choices=["SR", "SB", "none"],
-    description="Select events that pass the top mass window cut in a predefined signal/sideband region."
-)
+# parser.add_option("--mtop", dest="mtop", type="string", default="none", choices=["SR", "SB", "none"],
+#     description="Select events that pass the top mass window cut in a predefined signal/sideband region."
+# )
 parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False,
     description="Add several additional variables in the trees."
 )
@@ -73,9 +73,9 @@ parser.add_option("--doControlVars", dest="doControlVars", action="store_true", 
 #parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False,
 #    description="Enable anti-iso lepton specific processing."
 #)
-parser.add_option("--skipTree", dest="skipTree", action="store_true", default=False,
-    description="Do not produce the output tree."
-)
+# parser.add_option("--skipTree", dest="skipTree", action="store_true", default=False,
+#     description="Do not produce the output tree."
+# )
 parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root",
     description="Filename of the flat ROOT output file."
 )
@@ -235,8 +235,8 @@ process.bTagCuts = cms.PSet(
 )
 
 process.topCuts = cms.PSet(
-        applyMassCut = cms.bool(options.mtop != "none"),
-        signalRegion = cms.bool(options.mtop == "SR"),
+        applyMassCut = cms.bool(False),
+        signalRegion = cms.bool(True),
         signalRegionMassLow = cms.double(130),
         signalRegionMassHigh = cms.double(220),
         topMassSrc = cms.InputTag("recoTopNTupleProducer", "Mass")
@@ -282,8 +282,8 @@ process.metCuts = cms.PSet(
     mtElSrc = cms.InputTag("eleMTW"),
     metSrc = cms.InputTag("patMETNTupleProducer", "Pt"),
     metPhiSrc = cms.InputTag("patMETNTupleProducer", "Phi"),
-    doMTCut = cms.bool( options.doMtw ),
-    doMETCut = cms.bool( options.doMet ),
+    doMTCut = cms.bool(False),
+    doMETCut = cms.bool(False),
     minValMtw = cms.double(50),
     minValMet = cms.double(45)
     )
@@ -350,7 +350,7 @@ process.finalVars = cms.PSet(
 
 process.pdfWeights = cms.PSet(
     #PDF stuff
-    addPDFInfo = cms.bool(False),
+    addPDFInfo = cms.bool(options.isMC),
     scalePDFSrc = cms.InputTag("PDFweights", "scalePDF"),
 	x1Src = cms.InputTag("PDFweights", "x1"),
 	x2Src = cms.InputTag("PDFweights", "x2"),
@@ -383,13 +383,13 @@ process.genParticles = cms.PSet(
     requireGenMuon  = cms.bool(False)
 )
 
-process.bEfficiencyCalcs = cms.PSet(
-    doBEffCalcs = cms.bool(options.isMC),
-    jetPtSrc = cms.InputTag("goodJetsNTupleProducer", "Pt"),
-    jetEtaSrc = cms.InputTag("goodJetsNTupleProducer", "Eta"),
-    jetBDiscriminatorSrc = cms.InputTag("goodJetsNTupleProducer", "bDiscriminatorTCHP"),
-    jetFlavourSrc = cms.InputTag("goodJetsNTupleProducer", "partonFlavour"),
-)
+# process.bEfficiencyCalcs = cms.PSet(
+#     doBEffCalcs = cms.bool(options.isMC),
+#     jetPtSrc = cms.InputTag("goodJetsNTupleProducer", "Pt"),
+#     jetEtaSrc = cms.InputTag("goodJetsNTupleProducer", "Eta"),
+#     jetBDiscriminatorSrc = cms.InputTag("goodJetsNTupleProducer", "bDiscriminatorTCHP"),
+#     jetFlavourSrc = cms.InputTag("goodJetsNTupleProducer", "partonFlavour"),
+# )
 
 def print_process(p):
     for k, v in p.__dict__.items():
