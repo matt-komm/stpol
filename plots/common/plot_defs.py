@@ -400,7 +400,7 @@ plot_defs['invar_mtW']['range']=[40,0,200]
 plot_defs['invar_mtW']['xlab']=varnames['mt_mu']
 
 plot_defs['invar_met'] = cp(plot_defs['invar_top_mass'])
-plot_defs['invar_met']['var']='met',
+plot_defs['invar_met']['var']='met'
 plot_defs['invar_met']['range']=[40,0,200]
 plot_defs['invar_met']['xlab']=varnames['met']
 
