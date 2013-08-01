@@ -412,6 +412,7 @@ plot_defs['invar_mass_bj'] = cp(plot_defs['invar_top_mass'])
 plot_defs['invar_mass_bj']['var'] = 'mass_bj'
 plot_defs['invar_mass_bj']['range'] = [40,0,200]
 plot_defs['invar_mass_bj']['xlab'] = 'm_{b-jet} [GeV]'
+plot_defs['invar_mass_bj']['log'] = True
 
 plot_defs['invar_mass_lj'] = cp(plot_defs['invar_mass_bj'])
 plot_defs['invar_mass_lj']['var'] = 'mass_lj'
