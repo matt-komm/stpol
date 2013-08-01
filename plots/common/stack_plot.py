@@ -29,6 +29,7 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     do_log_y - True/False to set log scale on y axis
     min_bin - the lower cutoff on the y axis, which may be necessary for log y scale
     max_bin_mult - the y axis upper limit will be this multipier times the maimal bin height
+    stack - wether we actually stack or not
     ***returns
     a dictionary with the instances of the drawn TStacks. NB: you must keep the output of this
     method until you print the TCanvas, otherwise the stack references are destroyed.
@@ -47,7 +48,7 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     x_label = kwargs.get("x_label", "x_label")
     y_label = kwargs.get("y_label", "")
 
-    min_bin = kwargs.get("min_bin", 10)
+    min_bin = kwargs.get("min_bin", -1)
     max_bin_mult = kwargs.get("max_bin_mult", 1.8)
 
 
@@ -60,26 +61,49 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
             stacks[name].Add(hist)
 
     max_bin = max([st.GetMaximum() for st in stacks.values()])
+    logger.info('Maximal bin: %1.3f' % max_bin)
+    logger.info('Stack info: %s' % str([(k,v.GetMaximum()) for k,v in stacks.items()]))
+    if min_bin == -1:
+        min_bin = 0.3*min([st.GetMinimum() for st in stacks.values()])
+
+    do_stack = kwargs.get('stack', True)
+    if not do_stack:
+        max_bin = max([st.GetMaximum("nostack") for st in stacks.values()])
+        min_bin = 0.1*min([st.GetMinimum("nostack") for st in stacks.values()])
+
+    if min_bin == 0:
+        if not do_stack:
+            min_bin = 0.001
+        else: 
+            min_bin = 1
 
     #Need to draw the stacks one time to initialize everything
     for name, stack in stacks.items():
         stack.Draw()
     canv.Draw()
-
+    logger.info("do_stack: %s" % str(do_stack))
     #Now draw really
     first = True
     for name, stack in stacks.items():
         logger.debug("Drawing stack %s" % name)
+        if name == 'data' and not do_stack:
+            continue
         if name in draw_styles.keys():
             drawcmd = draw_styles[name]
         else:
             drawcmd = "BAR HIST goff" #default stack style
+
+        if not do_stack:
+            drawcmd = "nostack hist"
         if not first:
             drawcmd += " SAME"
+        logger.info('name: %s drawcmd: %s' % (name,drawcmd))
+        logger.info('options: %s' % str(stack.GetOption()))
         stack.Draw(drawcmd)
 
         #Set the plot style on the first stack
         if first:
+            logger.info('minimum: %1.3f maximum: %1.3f' % (min_bin, max_bin_mult*max_bin))
             stack.SetMaximum(max_bin_mult*max_bin)
             if do_log_y:
                 stack.SetMinimum(min_bin)

@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# this script runs in parallel all the ranking MVA's by adding variables as are needed
+
+proc=$1
+if [ "x$proc" == "x" ]; then
+	echo "Usage: ./doAllRanks channel"
+	exit 1
+fi
+
+vars=`grep varRank sampleList.py|grep $proc|sed 's+.*\[++g;s+\]++g;s+,+\ +g'|tr -d "'"`
+nVars=`echo $vars|wc -w`
+ranking=`echo $vars|cut -f1 -d' '`
+vars=`echo $vars|cut -f2- -d' '`
+echo "|$ranking|$vars|"
+for i in `seq $nVars`; do
+	add=''
+	for v in $ranking; do
+		add="$add -r $v"
+	done
+	./trainMVAs.py -c $proc $add &
+	next=`echo $vars|cut -f1 -d' '`
+	vars=`echo $vars|cut -f2- -d' '`
+	ranking="$ranking $next"
+done
+

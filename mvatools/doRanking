@@ -1,0 +1,27 @@
+#!/bin/bash
+# This script does the variable ranking. Once executed it will train the MVA with reduced number of variables
+# and keeps doing that until there is just one variable left. Once the ranking is known it'll save it out
+
+proc=$1
+if [ "x$proc" == "x" ]; then
+	echo "Usage: ./doRanking channel"
+	exit 1
+fi
+
+vars=`grep varList sampleList.py|grep $proc|sed 's+.*\[++g;s+\]++g;s+,+\ +g'|tr -d "'"`
+ranking=""
+nVars=`echo $vars|wc -w`
+
+for i in `seq $((nVars-1))`; do
+	add=''
+	for v in $ranking; do
+		add="$add -v $v"
+	done
+	parallel ./trainMVAs.py -c $proc $add -v -- $vars
+	next=`./checkRanking.py -c $proc $add`
+	vars=`echo $vars|tr ' ' '\n'|grep -v $next|tr '\n' ' '`
+	echo $vars
+	ranking="$ranking $next"
+done
+
+echo "Final ranking: $ranking $vars"

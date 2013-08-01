@@ -47,11 +47,6 @@
 
 #include "SingleTopPolarization/Analysis/interface/debug_util.h"
 
-
-//
-// class declaration
-//
-
 typedef std::vector<std::vector<unsigned int>> Combinations;
 
 class BTagSystematicsWeightProducer : public edm::EDProducer

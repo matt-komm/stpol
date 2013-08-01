@@ -27,7 +27,7 @@ cd $CMSSW_BASE/src
 #From official PAT recipe
 addpkg DataFormats/PatCandidates V06-05-06-12
 addpkg PhysicsTools/PatAlgos     V08-09-62
-addpkg PhysicsTools/PatUtils
+addpkg PhysicsTools/PatUtils #V03-09-28 FIXME
 addpkg RecoBTag/ImpactParameter V01-04-09-01
 addpkg RecoBTag/SecondaryVertex V01-10-06
 addpkg RecoBTag/SoftLepton      V05-09-11
@@ -62,14 +62,18 @@ source setenv.sh
 
 $STPOL_DIR/setup/install_tunfold.sh
 $STPOL_DIR/setup/install_theta.sh
+$STPOL_DIR/setup/install_exempi.sh
+$STPOL_DIR/setup/install_pylibs.sh
 
 #Download common CMSSW module for single top
 cd $CMSSW_BASE/src/SingleTopPolarization
 git clone https://github.com/andrey-popov/single-top.git single-top-CMS
 git checkout sync_electrons single-top-CMS/plugins/BuildFile.xml
 scram b
+cd $STPOL_DIR
 
-$STPOL_DIR/setup/install_exempi.sh
-$STPOL_DIR/setup/install_pylibs.sh
+scram b -j 8 &> scram_log
+cd $CMSSW_BASE/../
+source setenv.sh
 
 cd $STPOL_DIR

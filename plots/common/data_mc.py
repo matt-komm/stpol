@@ -65,6 +65,9 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     plot_range = plot_def['range']
 
+    do_norm = False
+    if 'normalize' in plot_def.keys() and plot_def['normalize']:
+        do_norm = True
     hists_mc = dict()
     hists_data = dict()
     for name, sample in samples.items():
@@ -73,7 +76,10 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
             hist = sample.drawHistogram(var, cut_str, weight=str(weight), plot_range=plot_range)
             hist.Scale(sample.lumiScaleFactor(lumi))
             hists_mc[sample.name] = hist
-            Styling.mc_style(hists_mc[sample.name], sample.name)
+            if do_norm:
+                Styling.mc_style_nostack(hists_mc[sample.name], sample.name)
+            else:
+                Styling.mc_style(hists_mc[sample.name], sample.name)
 
             if "fitpars" in plot_def.keys():
                 rescale_to_fit(sample.name, hist, plot_def["fitpars"][lepton_channel])
@@ -110,7 +116,10 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
             hists_mc[sampn] = hist_qcd
             hists_mc[sampn].SetTitle('QCD')
-            Styling.mc_style(hists_mc[sampn], 'QCD')
+            if do_norm:
+                Styling.mc_style_nostack(hists_mc[sampn], 'QCD')
+            else:
+                Styling.mc_style(hists_mc[sampn], 'QCD')
 
         #Real ordinary data in the isolated region
         elif not "antiiso" in name:
@@ -134,6 +143,11 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     if hist_data.Integral()<=0:
         raise Exception("Histogram for data was empty. Something went wrong, please check.")
 
+    if do_norm:
+        for k,v in merged_hists.items():
+            v.Scale(1./v.Integral())
+        hist_data.Scale(1./hist_data.Integral())
+
     htot = sum(merged_hists.values())
 
     chi2 = hist_data.Chi2Test(htot, "UW CHI2/NDF")
@@ -151,7 +165,10 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     PhysicsProcess.name_histograms(physics_processes, merged_hists)
 
-    leg = legend([hist_data] + list(reversed(merged_hists_l)), legend_pos=plot_def['labloc'], style=['p','f'])
+    leg_style = ['p','f']
+    if do_norm:
+        leg_style=['p','l']
+    leg = legend([hist_data] + list(reversed(merged_hists_l)), legend_pos=plot_def['labloc'], styles=leg_style)
 
     canv = ROOT.TCanvas()
 
@@ -174,15 +191,19 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     if plot_def['log']:
         fact = 10
 
+    plow=0.3
+    if do_norm:
+        plow=0
+
     #Make a separate pad for the stack plot
-    p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
+    p1 = ROOT.TPad("p1", "p1", 0, plow, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
     p1.SetGrid();
     p1.SetFillStyle(0);
     p1.cd()
 
-    stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_def['log'])
+    stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_def['log'], stack = (not do_norm))
 
     #Put the the lumi box where the legend is not
     boxloc = 'top-right'
@@ -194,7 +215,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     additional_comments = ""
     if 'cutname' in plot_def.keys():
-        additional_comments += ", " + plot_def['cutname']['lepton_channel']
+        additional_comments += ", " + plot_def['cutname'][lepton_channel]
     lbox = lumi_textbox(lumi,
         boxloc,
         'preliminary',
@@ -207,14 +228,15 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     canv.Draw()
 
     #Draw the ratio plot with
-    ratio_pad, hratio, hline = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
+    if not do_norm:
+        ratio_pad, hratio, hline = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
+        canv.PAD2 = ratio_pad
+        canv.HRATIO = hratio
+        canv.HLINE = hline
 
     canv.PAD1 = p1
     canv.STACKS = stacks
     canv.LEGEND = legend
     canv.LUMIBOX = lbox
-    canv.PAD2 = ratio_pad
-    canv.HRATIO = hratio
-    canv.HLINE = hline
 
     return canv, merged_hists, htot, hist_data
