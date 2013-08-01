@@ -27,7 +27,7 @@ cd $CMSSW_BASE/src
 #From official PAT recipe
 addpkg DataFormats/PatCandidates V06-05-06-12
 addpkg PhysicsTools/PatAlgos     V08-09-62
-addpkg PhysicsTools/PatUtils
+addpkg PhysicsTools/PatUtils #V03-09-28 FIXME
 addpkg RecoBTag/ImpactParameter V01-04-09-01
 addpkg RecoBTag/SecondaryVertex V01-10-06
 addpkg RecoBTag/SoftLepton      V05-09-11

@@ -29,3 +29,5 @@ global_tags["mc"]["Jul15"] = gt_mc
 global_tags["mc"]["Jul15_qcd"] = gt_mc
 global_tags["data"]["Jul15"] = gt_data
 
+global_tags["data"]["Aug1"] = gt_data
+

@@ -113,6 +113,11 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3):
 
 
 def plot_hists_dict(hist_dict, setNames=True, **kwargs):
+    """
+    Draws the contents of a dictionary of hists.
+    hist_dict - dict{str, Hist}: a collection of histograms to be drawn.
+    setNames - bool: The keys of the dict will be used as titles in the legend. Styling will be done automatically.
+    """
     items = hist_dict.items()
     for hn, h in items:
         h.SetName(hn)
