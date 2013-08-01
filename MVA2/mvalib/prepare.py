@@ -236,31 +236,3 @@ class _TrainTreeCreator:
 		otree=self.tree.CopyTree('')
 		otree.Write(name)
 		print 'Events written:', otree.GetEntries()
-
-# A bit of testing...
-if __name__ == '__main__':
-	from plots.common.plot_defs import plot_defs
-	mvaprep = MVAPreparer('step3_latest')
-
-	mvaprep.add_train('background', 'WJets_inclusive')
-	mvaprep.add_test('background', 'W1Jets_exclusive')
-	mvaprep.add_test('background', 'W2Jets_exclusive')
-	mvaprep.add_test('background', 'W3Jets_exclusive')
-	mvaprep.add_test('background', 'W4Jets_exclusive')
-
-	mvaprep.add_test('signal', 'W1Jets_exclusive')
-	mvaprep.add_test('signal', 'T_t_ToLeptons')
-	mvaprep.add_test('signal', 'Tbar_t_ToLeptons')
-	mvaprep.add_train('signal', 'T_t')
-	mvaprep.add_train('signal', 'Tbar_t')
-
-	mvaprep.add_frac('background', 'WW')
-	mvaprep.add_frac('background', 'WZ')
-	mvaprep.add_frac('background', 'ZZ')
-
-	shutil.rmtree('prep_unit', ignore_errors=True); os.mkdir('prep_unit')
-
-	mvaprep.write('mu', plot_defs['mva_bdt']['mucut'],
-	              'prep_unit/mvaprep_mu.root', step3_ofdir='prep_unit')
-	mvaprep.write('ele', plot_defs['mva_bdt']['elecut'],
-	              'prep_unit/mvaprep_ele.root', step3_ofdir='prep_unit')
