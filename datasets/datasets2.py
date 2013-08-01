@@ -36,6 +36,7 @@ step2_mc_syst_files = [
 step2_data_files = [
 #    "/data/May20"
     "/data/Jul15",
+    "/data/Aug1",
 ]
 
 def is_fastsim(name):
@@ -182,7 +183,10 @@ def make_cfgs(fn, tag, cmdline, subdir=None):
         spl.insert(-1, subdir)
         outdir = "/".join(spl)
     logging.info("Input file %s => %s" % (fn, outdir))
-    os.makedirs(outdir)
+    try:
+        os.makedirs(outdir)
+    except Exception as e:
+        pass
     datasets = parse_file(fn)
     for d in datasets:
         ofn = outdir + "/crab_%s.cfg" % d.name
