@@ -58,23 +58,15 @@ private:
     // ----------member data ---------------------------
     const edm::InputTag src;
     const std::string dataRun;
+    const float err_CONSERVATIVE;
+    const bool applyConservativeSyst;
 };
 
-//
-// constants, enums and typedefs
-//
-
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 MuonEfficiencyProducer::MuonEfficiencyProducer(const edm::ParameterSet &iConfig)
     : src(iConfig.getParameter<edm::InputTag>("src"))
     , dataRun(iConfig.getParameter<std::string>("dataRun"))
+    , err_CONSERVATIVE(iConfig.getParameter<double>("SFError"))
+    , applyConservativeSyst(iConfig.getParameter<bool>("applyConservativeSyst"))
 {
     edm::LogInfo("constructor") << "dataRun=" << dataRun;
     produces<double>("muonIDWeight");
@@ -91,18 +83,9 @@ MuonEfficiencyProducer::MuonEfficiencyProducer(const edm::ParameterSet &iConfig)
 
 MuonEfficiencyProducer::~MuonEfficiencyProducer()
 {
-
-    // do anything here that needs to be done at desctruction time
-    // (e.g. close files, deallocate resources etc.)
-
 }
 
 
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
 void
 MuonEfficiencyProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
 {
@@ -121,7 +104,7 @@ MuonEfficiencyProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetu
     iEvent.getByLabel(src, muons);
     if (muons->size() > 1)
         LogError("muon weights") << "Muon weights are only defined for a single-muon event, but you have " << muons->size();
-
+    
     //Take only the first muon
     for ( uint i = 0; i < 1; ++i )
     {
@@ -206,24 +189,16 @@ MuonEfficiencyProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetu
     }
 
     LogDebug("Muon with id weights") << weightID << weightIDUp << weightIDDown;
-
-    /*
-    //tight ID
-    abs(eta)<0.9 -> sf = 0.9925+-0.0002
-    0.9<abs(eta)<1.2 -> 0.9928+-0.0003
-    1.2<abs(eta)<2.1 -> 0.9960+-0.0003
-    ____
-    PFComb dBeta RelIso <0.12
-    abs(eta)<0.9 -> sf = 1.9959+-0.0002
-    0.9<abs(eta)<1.2 -> 0.9878+-0.0003
-    1.2<abs(eta)<2.1 -> 1.0027+-0.0002
-
-    PFComb dBeta RelIso <0.2
-    abs(eta)<0.9 -> sf = 0.9994+-0.0001
-    0.9<abs(eta)<1.2 -> 1.0014+-0.0002
-    1.2<abs(eta)<2.1 -> 1.0014+-0.0001
-
-    */
+   
+    //Simply set the common variated scale factors using a conservative strategy
+    if (applyConservativeSyst) {
+        weightIDUp = weightID + err_CONSERVATIVE;
+        weightIDDown = weightID - err_CONSERVATIVE;
+        weightIsoUp = weightIso + err_CONSERVATIVE;
+        weightIsoDown = weightIso - err_CONSERVATIVE;
+        weightTrigUp = weightTrig + err_CONSERVATIVE;
+        weightTrigDown = weightTrig - err_CONSERVATIVE;
+    }
     iEvent.put(std::auto_ptr<double>(new double(weightID)), "muonIDWeight");
     iEvent.put(std::auto_ptr<double>(new double(weightIDUp)), "muonIDWeightUp");
     iEvent.put(std::auto_ptr<double>(new double(weightIDDown)), "muonIDWeightDown");
