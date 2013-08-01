@@ -1,4 +1,17 @@
 -------
+Sample: FIXME
+git hash: 5a0165 processing, 0eb8c59 extra configuration
+Explanation:
+Added missing data.
+Reorganized the MET sequences in step2, making them call a common method.
+Incorporated the phi-modulation correction using standard modules.
+PU weight variations now calculated using variated data PU histograms.
+Using conservative scale factors on lepton weights by default.
+-------
+Sample: datasets/step2/data/Aug1
+git hash: ?????
+Explanation: processed some 0.9/fb of data that was missing from the previous iteration of step1 (Jul15)
+-------
 Sample: /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
 git hash: 39a2ddb
 Explanation:

@@ -3,6 +3,7 @@ from odict import OrderedDict
 import string
 import logging
 logger = logging.getLogger("utils")
+logger.setLevel(logging.WARNING)
 import os
 import re
 import glob
@@ -218,7 +219,7 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
             raise ValueError("First argument(hists_d) must be a dict of Histograms, but found %s" % v)
 
     out_d = OrderedDict()
-    logging.debug("merge_hists: input histograms %s" % str(hists_d))
+    logger.debug("merge_hists: input histograms %s" % str(hists_d))
     
     for merge_name, items in merge_groups.items():
         # if name in merge_groups.keys():

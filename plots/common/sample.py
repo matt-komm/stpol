@@ -238,7 +238,7 @@ class Sample:
     def fromDirectory(directory, out_type="dict", prefix="", tree_name="Events"):
         import glob
         file_names = glob.glob(directory + "/*.root")
-        logging.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
+        logger.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
         if out_type=="list":
             samples = [Sample.fromFile(file_name, tree_name) for file_name in file_names]
         elif out_type=="dict":

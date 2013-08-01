@@ -31,12 +31,6 @@ class Config(C):
     #Enable debugging modules
     doDebug = False
 
-    #Whether to output CMSSW-specific trees
-    skipPatTupleOutput = False
-
-    #Whether to run over grid (without command-line arguments)
-    onGrid = False
-
     #Do a phi-correction for the MET, as dependent on the number of vertices
     doMETSystShift = True
 
