@@ -46,44 +46,21 @@ parser.add_option("--nJ", dest="nJ", type="string", default="0,10",
 parser.add_option("--doNTags", dest="doNTags", action="store_true", default=False,
     description="Select events that had a number of tags."
 )
+parser.add_option("--systematic", action="store", default="nominal", type="string",
+    description="The systematic scenario"
+)
 parser.add_option("--nT", dest="nT", type="string", default="0,10",
     description="A comma separated list of min,max of the number of tags to consider."
 )
-# parser.add_option("--mtw", dest="doMtw", action="store_true", default=False,
-#     description="Select events that pass an MtW(mu) cut."
-# )
-# parser.add_option("--met", dest="doMet", action="store_true", default=False,
-#     description="Select events that pass a MET cut."
-# )
-# parser.add_option("--etalj", dest="doEtaLj", action="store_true", default=False,
-#     description="Select events that pass the |eta_lj|>2.5 cut."
-# )
 parser.add_option("--isMC", dest="isMC", action="store_true", default=False,
     description="Processed files are MC."
 )
-# parser.add_option("--mtop", dest="mtop", type="string", default="none", choices=["SR", "SB", "none"],
-#     description="Select events that pass the top mass window cut in a predefined signal/sideband region."
-# )
 parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False,
     description="Add several additional variables in the trees."
 )
-#parser.add_option("--doEventShape", dest="doEventShape", action="store_true", default=False,
-#    description="Do runtime calculation of the event shape variables."
-#)
-#parser.add_option("--isAntiIso", dest="isAntiIso", action="store_true", default=False,
-#    description="Enable anti-iso lepton specific processing."
-#)
-# parser.add_option("--skipTree", dest="skipTree", action="store_true", default=False,
-#     description="Do not produce the output tree."
-# )
 parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root",
     description="Filename of the flat ROOT output file."
 )
-# parser.add_option("--cutString", dest="cutString", type="string", default="1.0",
-#     description="An additional TTree called Events_selected will be created by applying this cutstring.\
-#     Note that applying this cut string will NOT decrease processing time by skipping some events,\
-#     which is conceptually different from the above cuts."
-# )
 
 options, args = parser.parse_args()
 
@@ -116,7 +93,6 @@ process.fwliteInput = cms.PSet(
     fileNames   = cms.vstring(input_files),
     maxEvents   = cms.int32(-1),
     outputEvery = cms.uint32(10000),
-    makeTree = cms.bool(not options.skipTree),
 )
 print "Input files:"
 for fi in input_files:
@@ -191,7 +167,7 @@ process.eleCuts = cms.PSet(
 process.jetCuts = cms.PSet(
     cutOnNJets = cms.bool(options.doNJets),
     applyRmsLj = cms.bool(False),
-    applyEtaLj = cms.bool(options.doEtaLj),
+    applyEtaLj = cms.bool(False),
 
     goodJetsCountSrc = cms.InputTag("goodJetCount"),
     bTagJetsCountSrc = cms.InputTag("bJetCount"),
@@ -348,9 +324,18 @@ process.finalVars = cms.PSet(
     #scaleFactorsSrc = cms.InputTag("bTagWeightProducerNJMT", "scaleFactors")
 )
 
+PDFSets = [
+    'cteq66.LHgrid',
+    'MSTW2008nlo68cl.LHgrid',
+    'NNPDF21_100.LHgrid',
+    'CT10.LHgrid',
+    'MSTW2008nlo68cl.LHgrid'
+]
+
+
 process.pdfWeights = cms.PSet(
     #PDF stuff
-    addPDFInfo = cms.bool(options.isMC),
+    enabled = cms.bool(options.isMC and options.systematic=="nominal"),
     scalePDFSrc = cms.InputTag("PDFweights", "scalePDF"),
 	x1Src = cms.InputTag("PDFweights", "x1"),
 	x2Src = cms.InputTag("PDFweights", "x2"),
@@ -358,7 +343,7 @@ process.pdfWeights = cms.PSet(
 	id2Src = cms.InputTag("PDFweights", "id2"),
 
     #PDFSets = cms.vstring('cteq66.LHgrid','MSTW2008nlo68cl.LHgrid') #ok
-	PDFSets	= cms.vstring('NNPDF21_100.LHgrid','CT10.LHgrid','MSTW2008nlo68cl.LHgrid'),
+	PDFSets	= cms.vstring(PDFSets)
 )
 
 process.lumiBlockCounters = cms.PSet(
