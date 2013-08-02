@@ -26,7 +26,7 @@
 #include "event_shape.h"
 
 //Enable to compile with LHAPDF
-//#define WITH_LHAPDF
+#define WITH_LHAPDF
 #ifdef WITH_LHAPDF
 #include "pdf_weights.h"
 #endif
@@ -1202,8 +1202,7 @@ int main(int argc, char *argv[])
                 event_id_branches["run_id"] = (unsigned int)event.id().run();
                 event_id_branches["lumi_id"] = (unsigned int)event.id().luminosityBlock();
 
-                if (make_tree)
-                    out_tree->Fill();
+                out_tree->Fill();
             }
 
             fwlite::LuminosityBlock ls(in_file);
@@ -1275,8 +1274,9 @@ int main(int argc, char *argv[])
     {
         ss << f << " ";
     }
-    TNamed *pdesc = new TNamed("infiles", ss.string().c_str());
+    TNamed *inflist = new TNamed("infiles", ss.str().c_str());
     pdesc->Write();
+    inflist->Write();
 
 
     return 0;
