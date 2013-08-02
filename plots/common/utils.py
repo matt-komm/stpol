@@ -331,3 +331,11 @@ def filter_hists(indict, pat):
 def escape(s):
     return re.sub("[\/ \( \) \\ \. \* \+ \> \< \# \{ \}]", "", s)
 
+def setErrors(histo):
+    factor = 1.0    
+    if histo.GetEntries()>0:
+        factor = histo.Integral()/histo.GetEntries()
+    for i in range(1, histo.GetNbinsX()+1):
+        if histo.GetBinError(i) < factor:
+            histo.SetBinError(i, factor)
+
