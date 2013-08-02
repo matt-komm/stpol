@@ -32,6 +32,10 @@ if __name__=="__main__":
         default="filelists/Jul15_partial", type=str, required=False,
         help="Input directory with the file lists"
     )
+    parser.add_argument("--syst-on", dest="syst",
+        default=False, required=False, action="store_true",
+        help="Do the systematics"
+    )
     cmdline_args = parser.parse_args()
     print cmdline_args
     print "Input directory is %s" % cmdline_args.indir
@@ -59,9 +63,14 @@ if __name__=="__main__":
                     #!!!!!!!FIXME: cleverer way of getting the systematic scenario
                     if "nominal" in root:
                         args += " --systematic=nominal"
+                    elif not cmdline_args.syst:
+                        continue
                     else:
                         spl = root.split("/")
-                        idx = spl.index("mc")
+                        try:
+                            idx = spl.index("mc")
+                        except:
+                            idx = spl.index("mc_syst")
                         syst = spl[idx+2]
                         args += " --systematic="+syst
 
