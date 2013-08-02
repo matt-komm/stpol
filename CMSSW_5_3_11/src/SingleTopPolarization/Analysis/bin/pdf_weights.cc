@@ -95,7 +95,9 @@ bool PDFWeights::process(const edm::EventBase& event) {
         double	w0		= xpdf1 * xpdf2;
         int		nPDFSet = LHAPDF::numberPDF(InitNr);
         std::vector<float>& weights = branch_vars.vars_vfloat[std::string("pdf_weights_"+PDFnames[i])]; 
-        weights.clear(); 
+        for (auto& e : weights)
+            e = 0.0;
+
         for (int p = 1; p <= nPDFSet; p++)
         {
             LHAPDF::usePDFMember(InitNr, p);
