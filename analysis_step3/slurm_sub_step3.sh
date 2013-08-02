@@ -24,8 +24,12 @@ if [[ ! -s $INFILE ]]; then
 fi
 
 #split input file into N-line pieces
+#Special treatment for signal and nominal samples
+#Signal is produced unskimmed and contains very many events, nominal samples must run PDFs which are slow
 if [[ "$INFILE" == *T_t* ]] || [[ "$INFILE" == *Tbar_t* ]]; then
-    N=1
+    N=1;
+elif [[ "$INFILE" == *nominal* ]]; then
+    N=5;
 else
     N=50;
 fi
