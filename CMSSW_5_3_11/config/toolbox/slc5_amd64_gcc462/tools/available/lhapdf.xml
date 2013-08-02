@@ -1,0 +1,10 @@
+<tool name="lhapdf" version="5.8.9-local">
+  <lib name="LHAPDF"/>
+  <client>
+    <environment name="LHAPDF_BASE" default="$STPOL_DIR/local"/>
+    <environment name="LIBDIR" default="$LHAPDF_BASE/lib"/>
+    <environment name="INCLUDE" default="$LHAPDF_BASE/include"/>
+  </client>
+  <runtime name="LHAPATH" value="$LHAPDF_BASE/share/lhapdf"/>
+  <use name="f77compiler"/>
+</tool>
