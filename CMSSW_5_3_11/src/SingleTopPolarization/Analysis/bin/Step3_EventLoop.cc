@@ -22,11 +22,11 @@
 
 #include "cuts_base.h"
 #include "hlt_cuts.h"
-#include "b_efficiency_calc.h"
+//#include "b_efficiency_calc.h"
 #include "event_shape.h"
 
 //Enable to compile with LHAPDF
-//#define WITH_LHAPDF
+#define WITH_LHAPDF
 #ifdef WITH_LHAPDF
 #include "pdf_weights.h"
 #endif
@@ -1016,7 +1016,7 @@ int main(int argc, char *argv[])
     const edm::ParameterSet &hlt_pars_mu = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("HLTmu");
     const edm::ParameterSet &hlt_pars_ele = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("HLTele");
 
-    const edm::ParameterSet &b_eff_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("bEfficiencyCalcs");
+    //onst edm::ParameterSet &b_eff_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("bEfficiencyCalcs");
 
     const edm::ParameterSet &lumiblock_counter_pars = builder.processDesc()->getProcessPSet()->getParameter<edm::ParameterSet>("lumiBlockCounters");
     edm::InputTag totalPATProcessedCountSrc = lumiblock_counter_pars.getParameter<edm::InputTag>("totalPATProcessedCountSrc");
@@ -1064,17 +1064,17 @@ int main(int argc, char *argv[])
     int maxEvents_( in.getParameter<int>("maxEvents") );
 
     //Making the output tree is optional
-    bool make_tree ( in.getParameter<bool>("makeTree") );
+    //bool make_tree ( in.getParameter<bool>("makeTree") );
     unsigned int outputEvery_( in.getParameter<unsigned int>("outputEvery") );
 
     TFileDirectory dir = fs.mkdir("trees");
     TTree *out_tree = 0;
-    if (make_tree)
-        out_tree = dir.make<TTree>("Events", "Events");
+    //if (make_tree)
+    out_tree = dir.make<TTree>("Events", "Events");
     TH1I *count_hist = dir.make<TH1I>("count_hist", "Event counts", count_map.size(), 0, count_map.size() - 1);
 
     TFileDirectory dir_effs = fs.mkdir("b_eff_hists");
-    BEffCalcs b_eff_calcs(b_eff_pars, branch_vars, dir_effs);
+    //BEffCalcs b_eff_calcs(b_eff_pars, branch_vars, dir_effs);
 
     TFile::SetOpenTimeout(60000);
     if (!TFile::SetCacheFileDir("/scratch/joosep"))
@@ -1087,38 +1087,36 @@ int main(int argc, char *argv[])
     event_id_branches["lumi_id"] = 0;
 
 
-    if (make_tree)
+
+    //Create all the requested branches in the TTree
+    LogInfo << "Creating branches: ";
+    for (auto & elem : branch_vars.vars_float)
     {
-        //Create all the requested branches in the TTree
-        LogInfo << "Creating branches: ";
-        for (auto & elem : branch_vars.vars_float)
-        {
-            const std::string &br_name = elem.first;
-            std::cout << br_name << ", ";
-            float *p_branch = &(elem.second);
-            out_tree->Branch(br_name.c_str(), p_branch);
-        }
-        for (auto & elem : branch_vars.vars_int)
-        {
-            const std::string &br_name = elem.first;
-            std::cout << br_name << ", ";
-            int *p_branch = &(elem.second);
-            out_tree->Branch(br_name.c_str(), p_branch);
-        }
-        for (auto & elem : branch_vars.vars_vfloat)
-        {
-            std::cout << elem.first << ", ";
-            out_tree->Branch(elem.first.c_str(), &(elem.second));
-        }
-        for (auto & elem : event_id_branches)
-        {
-            const std::string &br_name = elem.first;
-            std::cout << br_name << ", ";
-            int *p_branch = &(elem.second);
-            out_tree->Branch(br_name.c_str(), p_branch);
-        }
-        std::cout << std::endl;
+        const std::string &br_name = elem.first;
+        std::cout << br_name << ", ";
+        float *p_branch = &(elem.second);
+        out_tree->Branch(br_name.c_str(), p_branch);
     }
+    for (auto & elem : branch_vars.vars_int)
+    {
+        const std::string &br_name = elem.first;
+        std::cout << br_name << ", ";
+        int *p_branch = &(elem.second);
+        out_tree->Branch(br_name.c_str(), p_branch);
+    }
+    for (auto & elem : branch_vars.vars_vfloat)
+    {
+        std::cout << elem.first << ", ";
+        out_tree->Branch(elem.first.c_str(), &(elem.second));
+    }
+    for (auto & elem : event_id_branches)
+    {
+        const std::string &br_name = elem.first;
+        std::cout << br_name << ", ";
+        int *p_branch = &(elem.second);
+        out_tree->Branch(br_name.c_str(), p_branch);
+    }
+    std::cout << std::endl;
 
     // loop the events
     int ievt = 0;
@@ -1188,10 +1186,10 @@ int main(int argc, char *argv[])
                 }
                 if (!passes_gen_cuts) continue;
 
-                if (b_eff_calcs.doBEffCalcs)
+                /*if (b_eff_calcs.doBEffCalcs)
                 {
                     b_eff_calcs.process(event);
-                }
+                }*/
 
 #ifdef WITH_LHAPDF
                 if (pdf_weights.enabled)
@@ -1204,8 +1202,7 @@ int main(int argc, char *argv[])
                 event_id_branches["run_id"] = (unsigned int)event.id().run();
                 event_id_branches["lumi_id"] = (unsigned int)event.id().luminosityBlock();
 
-                if (make_tree)
-                    out_tree->Fill();
+                out_tree->Fill();
             }
 
             fwlite::LuminosityBlock ls(in_file);
@@ -1272,7 +1269,14 @@ int main(int argc, char *argv[])
 
     dir.cd();
     TNamed *pdesc = new TNamed("process_desc", builder.processDesc()->dump().c_str());
+    std::stringstream ss;
+    for (auto & f : inputFiles_)
+    {
+        ss << f << " ";
+    }
+    TNamed *inflist = new TNamed("infiles", ss.str().c_str());
     pdesc->Write();
+    inflist->Write();
 
 
     return 0;

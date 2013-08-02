@@ -111,6 +111,8 @@ class Sample:
 
     def drawHistogram(self, var, cut_str, **kwargs):
         logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
+        if not isinstance(var, basestring):
+            raise TypeError("Sample.drawHistogram expects variable as a plain string, but received: %s" % str(var))
         name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)

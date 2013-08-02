@@ -6,6 +6,7 @@ import os
 import argparse
 import datetime
 from SingleTopPolarization.Analysis import sample_types
+import pdb
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(
@@ -47,7 +48,6 @@ if __name__=="__main__":
             sampn = get_sample_name(fi)
             is_signal = sample_types.is_signal(sampn)
             isMC = sample_types.is_mc(sampn)
-
             for lep in leptons:
                 if sampn.startswith("SingleMu") and lep=="ele":
                     continue
@@ -56,6 +56,14 @@ if __name__=="__main__":
                 args = " --doControlVars --lepton=%s" % lep
                 if isMC:
                     args += " --isMC"
+                    #!!!!!!!FIXME: cleverer way of getting the systematic scenario
+                    if "nominal" in root:
+                        args += " --systematic=nominal"
+                    else:
+                        spl = root.split("/")
+                        idx = spl.index("mc")
+                        syst = spl[idx+2]
+                        args += " --systematic="+syst
 
                 #Apply the processing cuts
                 if not is_signal or (is_signal and cmdline_args.applyCutsToSignal):

@@ -9,6 +9,7 @@ import re
 import glob
 from copy import deepcopy
 import pdb
+logger.debug('Importing rootpy...')
 from rootpy.plotting.hist import Hist, Hist2D
 
 
