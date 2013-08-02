@@ -198,6 +198,10 @@ class MVATrainer:
 		"""Book a method for training by calling the TMVA::Factory.BookMethod()."""
 		if tag in self.methods:
 			print 'MVA_trainer: Method tagged ' + tag + ' already booked. Skipping.'
+			return
+		if self.tfile.GetDirectory("Method_{0}".format(method_type)) != None:
+			print 'MVA_trainer: Method tagged ' + tag + ' already trained. Skipping.'
+			return
 		self.methods.append(tag)
 		self.factory.BookMethod(method_type, tag, options)
 
@@ -266,8 +270,9 @@ class MVATrainer:
 		"""Store all custom metadata etc."""
 		self.metadata['mvas'] = self.methods
 		mvalib.utils.write_TObject('meta', self.metadata, self.tfile)
-
-		mvadir = self.tfile.mkdir('MVAs')
+		
+		mvadir = self.tfile.GetDirectory('MVAs')
+		if mvadir == None: mvadir = self.tfile.mkdir('MVAs')
 		for meth in self.methods:
 			meta = {}
 			meta['varlist'] = self.variables
