@@ -118,17 +118,16 @@ GenericPointerCombiner<inClass, outClass>::produce(edm::Event& iEvent, const edm
     }
    }
    if (logErrors) {
-   if((uint)(pOut->size()) < minOut) {
-    LogError("produce()") << "Output collection has too few items: " << pOut->size() << "<" << minOut;
+        if((uint)(pOut->size()) < minOut) {
+         LogError("produce()") << "Output collection has too few items: " << pOut->size() << "<" << minOut;
 
+        }
+        else if( (uint)(pOut->size()) > maxOut) {
+         LogError("produce()") << "Output collection has too many items: " << pOut->size() << ">" << maxOut;
+        }
    }
-   else if( (uint)(pOut->size()) > maxOut) {
-    LogError("produce()") << "Output collection has too many items: " << pOut->size() << ">" << maxOut;
-   }
-   }
-   else {
-    iEvent.put(pOut);
-   }
+   LogDebug("produce()") << "Combined collection has " << pOut->size() << " items" << std::endl;
+   iEvent.put(pOut);
 }
 
 // ------------ method called once each job just before starting event loop  ------------
