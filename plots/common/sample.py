@@ -34,7 +34,7 @@ def get_process_name(sn):
     return sn
 
 logger = logging.getLogger("sample.py")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 class Sample:
     def __del__(self):
@@ -62,7 +62,7 @@ class Sample:
         except Exception as e:
             raise e
         try:
-            self.tree = self.tfile.Get("trees/"+tree_name)            
+            self.tree = self.tfile.Get("trees/"+tree_name)
         except Exception as e:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.file_name, self.tfile))
 
