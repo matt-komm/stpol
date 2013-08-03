@@ -12,6 +12,10 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(
         description='Runs step3 trees on the cluster'
     )
+    parser.add_argument("indir",
+        default=None, type=str,
+        help="Input directory with the file lists"
+    )
     parser.add_argument(
         "-o", "--ofdir", type=str, default="out/step3", required=False,
         help="the output directory for the step3 trees"
@@ -27,10 +31,6 @@ if __name__=="__main__":
     parser.add_argument("--dryRun",
         default=False, action="store_true",
         help="Don't really submit the jobs."
-    )
-    parser.add_argument("--indir",
-        default="filelists/Jul15_partial", type=str, required=False,
-        help="Input directory with the file lists"
     )
     parser.add_argument("--syst-on", dest="syst",
         default=False, required=False, action="store_true",
