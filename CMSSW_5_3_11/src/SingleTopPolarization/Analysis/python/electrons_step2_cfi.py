@@ -138,7 +138,6 @@ def ElectronSetup(process, conf):
     if conf.doDebug:
         process.electronAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("electronsWithIso"))
         process.electronVetoAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("looseVetoElectrons"))
-        process.metAnalyzer = cms.EDAnalyzer('SimpleMETAnalyzer', interestingCollections=cms.untracked.VInputTag(conf.metSource))
 
 def ElectronPath(process, conf):
     process.elePathPreCount = cms.EDProducer("EventCountProducer")
@@ -155,6 +154,7 @@ def ElectronPath(process, conf):
 
     process.elePath = cms.Path(
         process.elePathPreCount *
+        process.leptonSequence *
 
         process.oneIsoEle *
         process.noIsoMu *
@@ -171,10 +171,6 @@ def ElectronPath(process, conf):
         process.elePath.insert(
             process.elePath.index(process.oneIsoEle),
             process.electronAnalyzer
-        )
-        process.elePath.insert(
-            process.elePath.index(process.eleMetSequence),
-            process.metAnalyzer
         )
 
     if conf.isMC:
