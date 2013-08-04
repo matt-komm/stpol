@@ -176,6 +176,12 @@ int main( int argc, const char* argv[] )
     TH1D* histo_input = new TH1D();
     tree_input->SetBranchAddress(argv[3],&histo_input);
     tree_input->GetEntry(0);
+    /*
+    TCanvas* canvas = new TCanvas("canvas","",800,600);  
+    histo_input->Draw();
+    canvas->Update();
+    canvas->WaitPrimitive();
+    */
     
     TFile responseFile(argv[4],"r");
     TH2D* response =(TH2D*)responseFile.Get(argv[5]);;
@@ -223,12 +229,13 @@ int main( int argc, const char* argv[] )
     printf("events: %i\r\n",nevents);
     gErrorIgnoreLevel = kPrint | kInfo | kWarning;
     
-    for (int cnt=1; cnt<=nevents;++cnt) {
+    for (int cnt=0; cnt<nevents;++cnt) {
+        
         tree_input->GetEntry(cnt);
-        if (cnt%int(nevents/20.0)==0) {
+        
+        if (nevents>200 && cnt%int(nevents/20.0)==0) {
             printf("unfolding...%i %%\r\n",int(100.0*cnt/nevents));
         }
-
         TUnfold* tunfold = new TUnfold(response,TUnfold::kHistMapOutputHoriz);
         tunfold->DoUnfold(tau,histo_input);
         histo_output_tunfold->Scale(0.0);
