@@ -196,14 +196,12 @@ if __name__=="__main__":
             merge_cmds,
             args.indir + "/%s/mc/iso/nominal/Jul15/" % lepton_channel
         )
-        flist += get_file_list(
-            merge_cmds,
-            args.indir + "/%s/data/iso/" % lepton_channel
-        )
-        flist += get_file_list(
-            {'data':merge_cmds['data']},
-            args.indir + "/%s/data/antiiso/" % lepton_channel
-        )
+        for iso in ['iso', 'antiiso']:
+            for ds in ['Jul15', 'Aug1']:
+                flist += get_file_list(
+                    merge_cmds,
+                    args.indir + "/%s/data/%s/%s/" % (lepton_channel, iso, ds)
+                )
         if len(flist)==0:
             raise Exception("Couldn't open any files. Are you sure that %s exists and contains root files?" % args.indir)
 
