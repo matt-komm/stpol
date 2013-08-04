@@ -602,6 +602,8 @@ class Weights : public CutsBase
 public:
     edm::InputTag bWeightNominalSrc;
     edm::InputTag puWeightSrc;
+    edm::InputTag puWeightUpSrc;
+    edm::InputTag puWeightDownSrc;
     edm::InputTag ttbarWeightSrc;
 
     edm::InputTag muonIDWeightSrc;
@@ -664,6 +666,9 @@ public:
             branch_vars.vars_float["electron_IDWeight_down"] = 1.0;
             branch_vars.vars_float["electron_TriggerWeight_up"] = 1.0;
             branch_vars.vars_float["electron_TriggerWeight_down"] = 1.0;
+
+            branch_vars.vars_float["pu_weight_up"] = 1.0;
+            branch_vars.vars_float["pu_weight_down"] = 1.0;
         }
     }
 
@@ -695,6 +700,9 @@ public:
 
         if ( doWeights && doWeightSys )
         {
+            puWeightUpSrc = pars.getParameter<edm::InputTag>("puWeightUpSrc");
+            puWeightDownSrc = pars.getParameter<edm::InputTag>("puWeightDownSrc");
+
             bWeightNominalLUpSrc = pars.getParameter<edm::InputTag>("bWeightNominalLUpSrc");
             bWeightNominalLDownSrc = pars.getParameter<edm::InputTag>("bWeightNominalLDownSrc");
             bWeightNominalBCUpSrc = pars.getParameter<edm::InputTag>("bWeightNominalBCUpSrc");
@@ -760,6 +768,10 @@ public:
 
         if ( doWeights && doWeightSys )
         {
+            branch_vars.vars_float["pu_weight_up"] = get_collection<double>(event, puWeightUpSrc, 0.0);
+            branch_vars.vars_float["pu_weight_down"] = get_collection<double>(event, puWeightDownSrc, 0.0);
+            
+            
             branch_vars.vars_float["b_weight_nominal_Lup"] = get_collection<float>(event, bWeightNominalLUpSrc, 0.0);
             branch_vars.vars_float["b_weight_nominal_Ldown"] = get_collection<float>(event, bWeightNominalLDownSrc, 0.0);
             branch_vars.vars_float["b_weight_nominal_BCup"] = get_collection<float>(event, bWeightNominalBCUpSrc, 0.0);
