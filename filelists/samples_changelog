@@ -1,4 +1,16 @@
 -------
+Sample: Aug4_0eb863_full
+step: step2
+git hash: 0eb863
+filelist: ???
+Explanation: as Aug4_c6a4b11, but with all sustematics
+-------
+Sample: Aug4_c6a4b11_puw
+step: step3
+git hash: ???
+filelist: ~joosep/singletop/stpol/Aug4_c6a4b11_puw
+Explanation: as Aug4_c6a4b11 but the pile-up weight with variations is correctly saved 
+-------
 Sample: Aug4_c6a4b11
 step: step2
 git hash: c6a4b11
