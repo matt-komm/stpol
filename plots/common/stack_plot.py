@@ -7,7 +7,7 @@ except ImportError:
     from odict import OrderedDict
 import logging
 logger = logging.getLogger("stack_plot")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 def plot_hists_stacked(canv, hist_groups, **kwargs):
     """
