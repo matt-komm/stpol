@@ -53,6 +53,8 @@ addpkg RecoMET/METAnalyzers V00-00-08
 
 #LHAPDF setup must be done prior to full compile
 cmsenv
+mkdir -p $STPOL_DIR/local/lib
+mkdir -p $STPOL_DIR/local/include
 scram setup lhapdffull
 cmsenv
 
