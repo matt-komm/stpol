@@ -17,7 +17,11 @@ If you also wish to commit, you'll have to have a github account and be added to
 or by using the following script
 >source setenv.sh
 
-### Create the workspace
+### Create the workspace (lite)
+
+> ./setup/install_pylibs.sh
+
+### Create the workspace (full)
 
 Run the following to create the CMSSW directory, link the SingleTopPolarization source code folder to it and compile everything
 >. ./setup.sh
