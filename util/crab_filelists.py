@@ -11,7 +11,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(
         description='Prepares the step2 file lists from the input RReport.xml files supplied over stdin.'
     )
-    parser.add_argument("-i", "--indir", default=None, type=str, required=False,
+    parser.add_argument("indir", default=".", type=str,
        help="""
        The input directory to scan recursively for RReport.xml files generated with
         '$crab -USER.xml_report RReport.xml -status -c crab_directory'
