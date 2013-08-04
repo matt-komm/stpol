@@ -36,7 +36,7 @@ if __name__=="__main__":
     tdrstyle()
 
     #THhe name of the pseudoexperiment TH1D
-    brname = "pd__data_obs_cosTheta"
+    brname = "tunfold"
 
     parser = argparse.ArgumentParser(
         description='Plots the pseudoexperiment distribution'
@@ -48,9 +48,10 @@ if __name__=="__main__":
     )
     args = parser.parse_args()
 
+
     logger.info("Loading pseudoexperiments from file %s" % args.infile)
     fi = ROOT.TFile(args.infile)
-    t = fi.Get("products")
+    t = fi.Get("unfolded")
 
     #Make a histogram with a nonspecific binning just to have a memory address
     hi = Hist(1, 0, 1, type='D')
@@ -61,6 +62,7 @@ if __name__=="__main__":
 
     #Now we can have a proper histogram with the right bins
     binning = list(hi.x())
+    logger.info("Binning: %s" % str(binning))
     hi = Hist(binning, type='D')
     t.SetBranchAddress(brname, ROOT.AddressOf(hi))
     nbins = len(binning)
@@ -71,10 +73,10 @@ if __name__=="__main__":
     i=0
 
     #The asymmetry distribution
-    hasym = Hist(100, -0.15, 0.05, name='asymmetry', title='posterior PE')
+    hasym = Hist(100, -0.51, -0.2, name='asymmetry', title='posterior PE')
 
     #Find the bin index where costheta=0 (center)
-    center = find_bin_idx(binning, 0)
+    center = find_bin_idx(binning, 0)+1
 
     logger.info("Central bin index = %d" % center)
     
@@ -106,4 +108,5 @@ if __name__=="__main__":
     leg = legend([hasym], styles=['p'], legend_pos='top-left')
     pmi = PlotMetaInfo('asymmetry_pseudoexp', 'final_2J1T', 'None', fi.GetPath())
     of.savePlot(canv, pmi)
+    logger.info("Asymmetry PE mean=%.2f, stddev=%.2f" % (hasym.GetMean(), hasym.GetRMS()))
     print "All done"
