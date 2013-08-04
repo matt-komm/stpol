@@ -5,25 +5,34 @@ from plots.common.cuts import Cuts
 import sys
 import ROOT
 import os
+import copy
 logger = logging.getLogger("make_histo")
 
+cp = copy.deepcopy
 hist1 = {
     #'name': 'cos_theta_final_cutbased_2j1t',
     'var': 'cos_theta',
     'plot_range': [100, -1, 1],
-    'cut_name': "1.0"
+    'cut_name': "final_2j1t_cutbased",
     'cut': str(Cuts.hlt("mu")*Cuts.lepton("mu")*Cuts.final(2,1)),
-    'weight': "1.0"
+    'weight_name': "nominal",
+    'weight': "1.0",
     'cached_cut': False,
 }
 
+weight_scenarios = {
+    "pu": ("pu_weight", "pu_weight_up", "pu_weight_down"),
+    "btag": ("", "pu_weight_up", "pu_weight_down"),
+}
+
+
 hists = {
-    'hist1': hist1
+    'hist1': hist1,
 }
 
 def make_histo(fname, hdict):
-    name = hdict['name']
     var = hdict['var']
+    name = "__".join([var, hdict['cut_name'], hdict['weight_name']])
     plot_range = hdict['plot_range']
     cut = hdict['cut']
     weight = hdict['weight']
@@ -50,4 +59,5 @@ def make_histo(fname, hdict):
     logger.info("Saved histogram %s to file %s" % (name, ofname))
 
 if __name__=='__main__':
-    make_histo(sys.argv[1], hist1)
+    for hn, h in hists.items():
+        make_histo(sys.argv[1], h)
