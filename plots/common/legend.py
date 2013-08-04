@@ -97,11 +97,12 @@ def legend(hists, **kwargs):
     leg.SetFillStyle(0)
 
     if "names" in kwargs:
+        raise Exception("Deprecated stuff. Don't use")
         rnames = names[::-1]
         data = rnames.pop()
         rnames.insert(0,data)
-        from odict import OrderedDict as dict
-        name_hist_pairs =dict(zip( rnames, hists))
+        from odict import OrderedDict
+        name_hist_pairs = OrderedDict(zip(rnames, hists))
         
         for name in name_hist_pairs:
             leg_style = styles.pop()

@@ -10,7 +10,14 @@
 <use name="PhysicsTools/Utilities"/>
 <use name="PhysicsTools/SelectorUtils"/>
 
+<library name="FWTree" file="libFWTree.cpp">
+    <Flags CXXFLAGS="-O3 -shared -fPIC"/>
+</library>
+
+<!--
+
 <bin name="Step3_EventLoop" file="Step3_EventLoop.cc,cuts_base.cpp,hlt_cuts.cpp,b_efficiency_calc.cc,event_shape.cc,pdf_weights.cc">
     <use name="lhapdffull"/>
     <Flags CXXFLAGS="-O3"/>
 </bin>
+-->
