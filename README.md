@@ -14,10 +14,14 @@ If you also wish to commit, you'll have to have a github account and be added to
 ### Make sure you have sourced cmsset
 
 >source /cvmfs/cms.cern.ch/cmsset_default.sh
-or by using the following script
+
+or by using the following command
+
 >source setenv.sh
 
 ### Create the workspace (lite)
+
+If you only need to install the python dependencies without CMSSW, you can executel the following
 
 > ./setup/install_pylibs.sh
 
@@ -26,6 +30,7 @@ or by using the following script
 Run the following to create the CMSSW directory, link the SingleTopPolarization source code folder to it and compile everything
 >. ./setup.sh
 
+# Anything below needs to be updated
 ---
 Note, your showtags output after the setup should be the following:          
 ``` bash
