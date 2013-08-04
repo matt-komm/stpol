@@ -34,7 +34,7 @@ def get_process_name(sn):
     return sn
 
 logger = logging.getLogger("sample.py")
-logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.WARNING)
 
 class Sample:
     def __del__(self):
@@ -85,6 +85,7 @@ class Sample:
         self.isMC = not self.file_name.split("/")[-1].startswith("Single")
 
         logger.debug("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
+        logger.debug("Sample path is %s" % self.tfile.GetPath())
 
     def getEventCount(self):
         if self.event_count is None:

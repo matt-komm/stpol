@@ -39,31 +39,48 @@ import rootpy
 import numpy
 import re
 
-#FIXME: remove this when stable
-OLD_PLOTTING = False
-try:
-    from plots.common.output import OutputFolder
-    from plots.common.metainfo import PlotMetaInfo
-except Exception as e:
-    OLD_PLOTTING=True
-    print "Disabling new plotting: %s" % str(e)
+from plots.common.output import OutputFolder
+from plots.common.metainfo import PlotMetaInfo
 
 from rootpy.extern.progressbar import *
 
 logger = logging.getLogger("make_all_plots")
-mc_sf=1.
+
+#FIXME: take the lumis from a central database
 lumis = {
     "mu": 19800,
     "ele": 19800,
 }
 
 def yield_string(h, hn=None):
+    """
+    Returns the yield of a Hist in a human-readable format.
+
+    Args:
+        h: a Hist of the yield to process
+
+    Keywords:
+        hn: the name of the process to be printed.
+
+    Returns: the final yield string
+    """
     if not hn:
         hn = hn.GetTitle()
     _int, _err = calc_int_err(h)
     return "%s | %.2f | %.2f\n" % (hn, _int, _err)
 
 def save_yield_table(hmerged_mc, hdata, ofdir, name):
+    """
+    Saves the yield table of the total MC and data histograms.
+
+    Args:
+        hmerged_mc: a dictionary with (str, Hist) of the Monte Carlo histograms
+        hdata: a Hist with data
+        ofdir: the output directory for the yield table file
+        name: the name of the yield table file, without a suffix
+
+    Returns: nothing
+    """
     with open(os.path.join(ofdir, name+".yield"), "w") as ofi:
         hsum = None
         for hn, h in hmerged_mc.items():
@@ -77,16 +94,40 @@ def save_yield_table(hmerged_mc, hdata, ofdir, name):
         ofi.write(yield_string(hsum, "MC"))
         ofi.write(yield_string(hdata, "data"))
 
-        #Get the pretty names for the processes from the PhysicsProcess.pretty_name variable
         for procname, hist in merged_hists.items():
             try:
                 hist.SetTitle(physics_processes[procname].pretty_name)
-            except KeyError: #QCD does not have a defined PhysicsProcess but that's fine because we take it separately
+            except KeyError:
+            #QCD does not have a defined PhysicsProcess but that's fine because 
+            #we take it separately
                 pass
+
+def change_syst(paths, dest):
+    """
+    A crude way to change the MC samples from nominal to a specific systematic
+    run.
+
+    Args:
+        paths: a list with the filesystem paths to change.
+        dest: the destination systematics.
+
+    Returns: a list with the changed paths.
+    """
+    return map(lambda x: x.replace("nominal", dest) if "nominal" in x else x, paths)
+
+def total_syst(hnominal, hists, corr=None):
+    #FIXME: implement addition of correlated histograms
+    if not corr:
+        corr = numpy.identity(len(hists))
+
+    bins_nom = numpy.array(hnominal.y())
+    bins_syst = map(numpy.array, map(lambda h: h.y(), hists))
+    bins_diff = map(lambda b: b-bins_nom, bins_syst)
+
+
 
 if __name__=="__main__":
     logger.setLevel(logging.DEBUG)
-    logging.basicConfig(level=level)
 
     tdrstyle.tdrstyle()
 
@@ -142,16 +183,16 @@ if __name__=="__main__":
     if not args.channels:
         args.channels = ["mu", "ele"]
 
-    if not OLD_PLOTTING:
-        output_folder = OutputFolder(
-            os.path.join(os.environ["STPOL_DIR"],"out", "plots"),
-            subpath="make_all_plots",
-            overwrite=False,
-            unique_subdir=args.new,
-            skip_png=args.cluster
-        )
-        logger.info("Output folder is %s" % output_folder.out_folder)
+    output_folder = OutputFolder(
+        os.path.join(os.environ["STPOL_DIR"],"out", "plots"),
+        subpath="make_all_plots",
+        overwrite=False,
+        unique_subdir=args.new,
+        skip_png=args.cluster
+    )
+    logger.info("Output folder is %s" % output_folder.out_folder)
 
+    #FIXME: factorize
     #Check if any of the provided hashtags matches any of the (optional) hashtags of the plot defs
     args.plots += [k for (k, v) in plot_defs.items() if 'tags' in v.keys() and len(set(args.tags).intersection(set(v['tags'])))>0]
     #Remove plots with disabled tags
@@ -166,7 +207,9 @@ if __name__=="__main__":
         logging.info("No plots specified, plotting everything")
     logger.info("Plotting: %s" % str(args.plots))
 
+    #Do the progress bar
     pbar = None
+    nplot = 0
     if args.quiet:
         logger.setLevel(logging.ERROR)
         widgets = [Percentage(), ' ', Bar(marker=RotatingMarker()), ' ', ETA()]
@@ -176,16 +219,15 @@ if __name__=="__main__":
         ).start()
 
     tree = args.tree
-    datadirs = dict()
 
-    # Declare which data we will use
-    step3 = args.indir
-
-    nplot = 0
+    #The enabled systematic channels
+    systs = ["EnUp", "EnDown"]
 
     for lepton_channel in args.channels:
         logger.info("Plotting lepton channel %s" % lepton_channel)
+
         weight = Weights.total(lepton_channel)*Weights.wjets_madgraph_shape_weight()*Weights.wjets_madgraph_flat_weight()
+
         physics_processes = PhysicsProcess.get_proc_dict(lepton_channel=lepton_channel)#Contains the information about merging samples and proper pretty names for samples
         merge_cmds = PhysicsProcess.get_merge_dict(physics_processes) #The actual merge dictionary
 
@@ -209,11 +251,39 @@ if __name__=="__main__":
         for f in flist:
             samples[f] = Sample.fromFile(f, tree_name=tree)
 
+        samples_syst = {}
+        for syst in systs:
+            samples_syst[syst] = {}
+            for f in change_syst(flist, syst):
+                samples_syst[syst][f] = Sample.fromFile(f, tree_name=tree)
+ 
         for plotname in args.plots:
 
             plot_def = plot_defs[plotname]
 
             canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
+
+            #Draw the histograms from systematically variated samples
+            hists_tot_mc_syst_up = {}
+            hists_tot_mc_syst_down = {}
+            for syst, samps in samples_syst.items():
+                _canv, _merged_hists, _htot_mc, _htot_data = data_mc_plot(samps, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
+                chi2 = htot_mc.Chi2Test(_htot_mc, "WW CHI2/NDF")
+                logger.info("Chi2 between nominal and %s is %.2f" % (syst, chi2))
+                if "Up" in syst:
+                    hists_tot_mc_syst_up[syst] = _htot_mc
+                elif "Down" in syst:
+                    hists_tot_mc_syst_down[syst] = _htot_mc
+                else:
+                    raise ValueError("Unhandled systematic " + syst)
+
+            #Draw the ratio plot with
+            do_norm = plot_def.get("normalize", False)
+            if not do_norm:
+                logger.warning("FIXME: Only the first systematic is taken into account at the moment")
+                hsyst_up = hists_tot_mc_syst_up.values()[0]
+                hsyst_down = hists_tot_mc_syst_down.values()[0]
+                ratio_pad, hratio = plot_data_mc_ratio(canv, htot_data, htot_mc, syst_hists=(hsyst_up, hsyst_down))
 
             #This is adopted in the AN
             if lepton_channel=="ele":
@@ -238,6 +308,7 @@ if __name__=="__main__":
                 subpath,
                 comments
             )
+
             output_folder.savePlot(canv, pinfo)
             save_yield_table(merged_hists, htot_data, output_folder.get("yields/%s" % _lepton_channel), plotname)
 
