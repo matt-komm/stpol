@@ -64,7 +64,7 @@ class ColorStyleGen:
         hist.SetLineStyle(style)
 
     def reset(self):
-        self.colstyles = itertools.product(colors, styles)
+        self.colstyles = itertools.product(self.colors, self.styles)
 
     @staticmethod
     def style_hists(hists):
