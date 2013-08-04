@@ -83,7 +83,6 @@ def SingleTopStep2():
     Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
     Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
     Config.systematic = options.systematic
-    Config.doSync = options.doSync
     Config.doDebug = Config.doDebug
 
 
@@ -463,64 +462,63 @@ def SingleTopStep2():
     #-----------------------------------------------
     # Outpath
     #-----------------------------------------------
-    if not Config.skipPatTupleOutput:
-        process.out = cms.OutputModule("PoolOutputModule",
-            dropMetaData=cms.untracked.string("DROPPED"),
-            splitLevel=cms.untracked.int32(99),
-            fileName=cms.untracked.string(options.outputFile),
-             SelectEvents=cms.untracked.PSet(
-                 SelectEvents=cms.vstring(["*"])
-             ),
-            outputCommands=cms.untracked.vstring(
-                'drop *',
-                'keep edmMergeableCounter_*__*',
-                'keep *_generator__*',
-                'keep edmTriggerResults_TriggerResults__*',
-                'keep *_flavourAnalyzer_*_STPOLSEL2',
-                'keep floats_patMETNTupleProducer_*_STPOLSEL2',
-                'keep floats_recoTopNTupleProducer_*_STPOLSEL2',
-                'keep floats_recoNuNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueTopNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueNuNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueLeptonNTupleProducer_*_STPOLSEL2',
-                'keep floats_goodSignalMuonsNTupleProducer_*_STPOLSEL2',
-                'keep floats_goodSignalElectronsNTupleProducer_*_STPOLSEL2',
-                'keep floats_goodJetsNTupleProducer_*_STPOLSEL2',
-                'keep floats_lowestBTagJetNTupleProducer_*_STPOLSEL2',
-                'keep floats_highestBTagJetNTupleProducer_*_STPOLSEL2',
-                'keep double_*__STPOLSEL2',
-                'keep float_*__STPOLSEL2',
-                'keep double_*_*_STPOLSEL2',
-                'keep float_*_*_STPOLSEL2',
-                'keep double_cosTheta_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueAll_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueTop_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueLepton_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueJet_*_STPOLSEL2',
-                'keep *_bTagWeightProducerNJMT_*_STPOLSEL2',
-                'keep int_*__STPOLSEL2',
-                'keep int_*_*_STPOLSEL2',
-                'keep int_*_*_*',
-                'keep String_*_*_*', #the decay trees
-                'keep *_pdfInfo1_*_STPOLSEL2',
-                'keep *_pdfInfo2_*_STPOLSEL2',
-                'keep *_pdfInfo3_*_STPOLSEL2',
-                'keep *_pdfInfo4_*_STPOLSEL2',
-                'keep *_pdfInfo5_*_STPOLSEL2',
-                #'keep *',
-                #'keep *_recoTop_*_*',
-                #'keep *_goodSignalMuons_*_*',
-                #'keep *_goodSignalElectrons_*_*',
-                #'keep *_goodJets_*_*',
-                #'keep *_bTaggedJets_*_*',
-                #'keep *_untaggedJets_*_*',
-            )
+    process.out = cms.OutputModule("PoolOutputModule",
+        dropMetaData=cms.untracked.string("DROPPED"),
+        splitLevel=cms.untracked.int32(99),
+        fileName=cms.untracked.string(options.outputFile),
+         SelectEvents=cms.untracked.PSet(
+             SelectEvents=cms.vstring(["*"])
+         ),
+        outputCommands=cms.untracked.vstring(
+            'drop *',
+            'keep edmMergeableCounter_*__*',
+            'keep *_generator__*',
+            'keep edmTriggerResults_TriggerResults__*',
+            'keep *_flavourAnalyzer_*_STPOLSEL2',
+            'keep floats_patMETNTupleProducer_*_STPOLSEL2',
+            'keep floats_recoTopNTupleProducer_*_STPOLSEL2',
+            'keep floats_recoNuNTupleProducer_*_STPOLSEL2',
+            'keep floats_trueTopNTupleProducer_*_STPOLSEL2',
+            'keep floats_trueNuNTupleProducer_*_STPOLSEL2',
+            'keep floats_trueLeptonNTupleProducer_*_STPOLSEL2',
+            'keep floats_goodSignalMuonsNTupleProducer_*_STPOLSEL2',
+            'keep floats_goodSignalElectronsNTupleProducer_*_STPOLSEL2',
+            'keep floats_goodJetsNTupleProducer_*_STPOLSEL2',
+            'keep floats_lowestBTagJetNTupleProducer_*_STPOLSEL2',
+            'keep floats_highestBTagJetNTupleProducer_*_STPOLSEL2',
+            'keep double_*__STPOLSEL2',
+            'keep float_*__STPOLSEL2',
+            'keep double_*_*_STPOLSEL2',
+            'keep float_*_*_STPOLSEL2',
+            'keep double_cosTheta_*_STPOLSEL2',
+            'keep double_cosThetaProducerTrueAll_*_STPOLSEL2',
+            'keep double_cosThetaProducerTrueTop_*_STPOLSEL2',
+            'keep double_cosThetaProducerTrueLepton_*_STPOLSEL2',
+            'keep double_cosThetaProducerTrueJet_*_STPOLSEL2',
+            'keep *_bTagWeightProducerNJMT_*_STPOLSEL2',
+            'keep int_*__STPOLSEL2',
+            'keep int_*_*_STPOLSEL2',
+            'keep int_*_*_*',
+            'keep String_*_*_*', #the decay trees
+            'keep *_pdfInfo1_*_STPOLSEL2',
+            'keep *_pdfInfo2_*_STPOLSEL2',
+            'keep *_pdfInfo3_*_STPOLSEL2',
+            'keep *_pdfInfo4_*_STPOLSEL2',
+            'keep *_pdfInfo5_*_STPOLSEL2',
+            #'keep *',
+            #'keep *_recoTop_*_*',
+            #'keep *_goodSignalMuons_*_*',
+            #'keep *_goodSignalElectrons_*_*',
+            #'keep *_goodJets_*_*',
+            #'keep *_bTaggedJets_*_*',
+            #'keep *_untaggedJets_*_*',
         )
-        if Config.doDebug:
-            process.out.outputCommands.append("keep *")
-        process.outpath = cms.EndPath(process.out)
-        process.out.SelectEvents.SelectEvents.append("elePath")
-        process.out.SelectEvents.SelectEvents.append("muPath")
+    )
+    if Config.doDebug:
+        process.out.outputCommands.append("keep *")
+    process.outpath = cms.EndPath(process.out)
+    process.out.SelectEvents.SelectEvents.append("elePath")
+    process.out.SelectEvents.SelectEvents.append("muPath")
 
     #-----------------------------------------------
     # Final printout

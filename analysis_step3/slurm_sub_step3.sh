@@ -24,8 +24,12 @@ if [[ ! -s $INFILE ]]; then
 fi
 
 #split input file into N-line pieces
+#Special treatment for signal and nominal samples
+#Signal is produced unskimmed and contains very many events, nominal samples must run PDFs which are slow
 if [[ "$INFILE" == *T_t* ]] || [[ "$INFILE" == *Tbar_t* ]]; then
-    N=1
+    N=1;
+elif [[ "$INFILE" == *nominal* ]]; then
+    N=5;
 else
     N=50;
 fi
@@ -36,12 +40,9 @@ do
     echo "Submitting step3 job $CONF on file $file"
 
 #save the task
-    CMD="sbatch -p cms,phys,ied,prio $STPOL_DIR/analysis_step3/run_step3_eventloop.sh `readlink -f $file` $OUTDIR $CONF > task_$file"
-
+    CMD="sbatch -p prio,main $STPOL_DIR/analysis_step3/run_step3_eventloop.sh `readlink -f $file` $OUTDIR $CONF"
+    echo $CMD > task_$file
+    
 #try to submit until successfully submitted
-    until `eval $CMD`
-    do 
-        echo "ERROR!: could not submit slurm job on file $file, retrying after sleep..." >&2
-        sleep 0.5
-    done 
+    eval $CMD
 done
