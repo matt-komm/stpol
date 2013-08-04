@@ -127,6 +127,7 @@ const std::vector<double> BTagSystematicsWeightProducer::SFb_ptBins (
 });
 
 //https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_payload_Moriond13.txt
+//FIXME: Update to https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_WITHttbar_payload_EPS13.txt
 const std::vector<double> BTagSystematicsWeightProducer::SFb_CSVM_Err (
 {
     0.0554504,

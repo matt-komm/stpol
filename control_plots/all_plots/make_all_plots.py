@@ -161,7 +161,7 @@ if __name__=="__main__":
             args.plots = filter(lambda x: x!=n, args.plots)
 
     #If there are no plots defined, do all of them
-    if len(args.plots) == 0:
+    if len(args.tags)==0 and len(args.plots) == 0:
         args.plots = plot_defs.keys()
         logging.info("No plots specified, plotting everything")
     logger.info("Plotting: %s" % str(args.plots))

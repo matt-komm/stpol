@@ -111,6 +111,8 @@ class Sample:
 
     def drawHistogram(self, var, cut_str, **kwargs):
         logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
+        if not isinstance(var, basestring):
+            raise TypeError("Sample.drawHistogram expects variable as a plain string, but received: %s" % str(var))
         name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)
@@ -236,7 +238,7 @@ class Sample:
     def fromDirectory(directory, out_type="dict", prefix="", tree_name="Events"):
         import glob
         file_names = glob.glob(directory + "/*.root")
-        logging.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
+        logger.debug("Sample.fromDirectory saw file names %s in %s" % (str(file_names), directory))
         if out_type=="list":
             samples = [Sample.fromFile(file_name, tree_name) for file_name in file_names]
         elif out_type=="dict":

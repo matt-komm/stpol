@@ -6,22 +6,31 @@ Single top polarization analysis
 ### Clone the repo
 
 For read-only access you can use
->git clone git://github.com/HEP-KBFI/stpol.git
+> git clone git://github.com/HEP-KBFI/stpol.git
 
 If you also wish to commit, you'll have to have a github account and be added to the group, then you can use
->git clone git@github.com:HEP-KBFI/stpol.git
+> git clone git@github.com:HEP-KBFI/stpol.git
 
 ### Make sure you have sourced cmsset
 
->source /cvmfs/cms.cern.ch/cmsset_default.sh
-or by using the following script
->source setenv.sh
+> source /cvmfs/cms.cern.ch/cmsset_default.sh
 
-### Create the workspace
+or by using the following command
+
+> source setenv.sh
+
+### Create the workspace (lite)
+
+If you only need to install the python dependencies without CMSSW, you can executel the following
+
+> ./setup/install_pylibs.sh
+
+### Create the workspace (full)
 
 Run the following to create the CMSSW directory, link the SingleTopPolarization source code folder to it and compile everything
->. ./setup.sh
+> source setup.sh
 
+# Anything below needs to be updated
 ---
 Note, your showtags output after the setup should be the following:          
 ``` bash
