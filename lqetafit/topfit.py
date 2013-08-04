@@ -3,11 +3,16 @@ from theta_auto import *
 import logging
 logging.basicConfig(level=logging.INFO)
 signal = 'tchan'
-infile = 'histos/lqeta.root'
+infile = 'histos/mu_mva_BDT/lqeta.root'
 outfile = 'histos_fitted.root'
+import math
 
 def histofilter(s):
     if '__up' in s or '__down' in s:
+        if 'top__Res' in s and 'ele_mva' in infile:
+            return False
+        if 'ttbar_matching' in s or '__En' in s or 'Res' in s or 'ttbar_scale' in s:#
+            return True
         return False
     return True
 
@@ -28,7 +33,7 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
 
 
 def get_model():
-    model = build_model_from_rootfile(infile, include_mc_uncertainties = False, histogram_filter = histofilter)
+    model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = histofilter)    
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
     return model
@@ -45,15 +50,19 @@ if __name__=="__main__":
     execfile('uncertainties.py')
 
     options = Options()
-    #options.set("minimizer","strategy","newton_vanilla")
+    options.set("minimizer","strategy","newton_vanilla")
     #options.set("minimizer","strategy","tminuit")
+    #options.set("minimizer","strategy","robust")
+    #nuisance_constraint="shape:free;rate:free"
+    options.set("global", "debug", "true")
 
     # maximum likelihood estimate
     # FIXME pseudo data
-    #result = mle(model, input = 'toys-asimov:1.0', n=1, with_covariance = True)
+    #result = mle(model, input = 'toys-asimov:1.0', n=1, with_covariance = True, nuisance_constraint = None)
     # data
     result = mle(model, input = 'data', n=1, with_covariance = True, options=options)
-
+    print "Fit result"
+    print result
     fitresults = {}
     values = {}
     for process in result[signal]:
@@ -77,7 +86,10 @@ if __name__=="__main__":
     n = len(pars)
     print pars
 
+    #print result[signal]
     cov = result[signal]['__cov'][0]
+    p = []
+    
     #print cov
 
     # write out covariance matrix
@@ -87,10 +99,13 @@ if __name__=="__main__":
     fcov = ROOT.TFile("cov.root","RECREATE")
     canvas = ROOT.TCanvas("c1","Covariance")
     h = ROOT.TH2D("covariance","covariance",n,0,n,n,0,n)
-
+    cor = ROOT.TH2D("correlation","correlation",n,0,n,n,0,n)
+    
     for i in range(n):
         h.GetXaxis().SetBinLabel(i+1,pars[i]);
         h.GetYaxis().SetBinLabel(i+1,pars[i]);
+        cor.GetXaxis().SetBinLabel(i+1,pars[i])
+        cor.GetYaxis().SetBinLabel(i+1,pars[i])
 
     for i in range(n):
         for j in range(n):
@@ -103,8 +118,27 @@ if __name__=="__main__":
         pass
     canvas.Print("plots/cov.png")
     canvas.Print("plots/cov.pdf")
+    #fcov.Close()
+
+    for i in range(n):
+        for j in range(n):
+            cor.SetBinContent(i+1,j+1,cov[i][j]/math.sqrt(cov[i][i]*cov[j][j]))
+            #print i, j, cov[i][j], cov[i][i], cov[j][j], math.sqrt(cov[i][i]*cov[j][j]), cov[i][j]/math.sqrt(cov[i][i]*cov[j][j])
+
+    
+    #canvas2 = ROOT.TCanvas("c1","Correlation")
+    #fcorr = ROOT.TFile("corr.root","RECREATE")
+    cor.Draw("COLZ TEXT")
+    try:
+        os.makedirs("plots")
+    except:
+        pass
+    canvas.Print("plots/corr.png")
+    canvas.Print("plots/corr.pdf")
+    cor.Write()
     h.Write()
     fcov.Close()
+
 
     model_summary(model)
     report.write_html('htmlout_fit')
@@ -140,12 +174,14 @@ if __name__=="__main__":
     hists_mc_post = OrderedDict()
     fi1 = File(infile)
     fi2 = File(outfile)
-    hist_data = fi1.Get("eta_lj__DATA")
+    #hist_data = fi1.Get("mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__DATA")
+    hist_data = fi1.Get("mva_BDT__DATA")
 
     def loadhists(f):
         out = OrderedDict()
         for k in procnames.keys():
-            out[k] = f.Get("eta_lj__" + k)
+            #out[k] = f.Get("mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__" + k)
+            out[k] = f.Get("mva_BDT__" + k)
             out[k].SetTitle(procnames[k])
             Styling.mc_style(out[k], procstyles[k])
         return out

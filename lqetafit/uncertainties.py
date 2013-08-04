@@ -20,10 +20,10 @@
 # added top wzjets
 # gaussian uncertainties
 ##add_normal_uncertainty(model, 'qcd', 0.5, 'qcd')
-add_normal_uncertainty(model, 'qcd', 0.1, 'qcd')
+add_normal_uncertainty(model, 'qcd', 1.0, 'qcd')
 add_normal_uncertainty(model, 'top', 0.1, 'top')
-##add_normal_uncertainty(model, 'wzjets', inf, 'wzjets')
-add_normal_uncertainty(model, 'wzjets', 0.3, 'wzjets')
+#add_normal_uncertainty(model, 'other', inf, 'other')
+add_normal_uncertainty(model, 'wzjets', inf, 'wzjets')
 
 #
 ##add_normal_uncertainty(model, 'wjets_heavy', inf, 'wjets_heavy')
