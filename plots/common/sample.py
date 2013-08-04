@@ -34,7 +34,7 @@ def get_process_name(sn):
     return sn
 
 logger = logging.getLogger("sample.py")
-logger.setLevel(logging.INFO)
+#logger.setLevel(logging.WARNING)
 
 class Sample:
     def __del__(self):
@@ -62,7 +62,7 @@ class Sample:
         except Exception as e:
             raise e
         try:
-            self.tree = self.tfile.Get("trees/"+tree_name)            
+            self.tree = self.tfile.Get("trees/"+tree_name)
         except Exception as e:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.file_name, self.tfile))
 
@@ -85,6 +85,7 @@ class Sample:
         self.isMC = not self.file_name.split("/")[-1].startswith("Single")
 
         logger.debug("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
+        logger.debug("Sample path is %s" % self.tfile.GetPath())
 
     def getEventCount(self):
         if self.event_count is None:
@@ -111,6 +112,8 @@ class Sample:
 
     def drawHistogram(self, var, cut_str, **kwargs):
         logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
+        if not isinstance(var, basestring):
+            raise TypeError("Sample.drawHistogram expects variable as a plain string, but received: %s" % str(var))
         name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)

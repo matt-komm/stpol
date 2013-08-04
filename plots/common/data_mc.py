@@ -11,8 +11,7 @@ from plots.common.histogram import calc_int_err
 from plots.common.legend import legend
 from plots.common.odict import OrderedDict
 from plots.common.stack_plot import plot_hists_stacked
-from plots.common.hist_plots import plot_data_mc_ratio
-
+import pdb
 
 def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     """
@@ -50,11 +49,14 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     #Id var is a list/tuple, assume
     if not isinstance(var, basestring):
-        if lepton_channel == 'ele':
-            var = var[0]
-        else:
-            var = var[1]
-
+        try:
+            if lepton_channel == 'ele':
+                var = var[0]
+            elif lepton_channel == 'mu':
+                var = var[1]
+        except Exception as e:
+            logger.error("Plot variable 'var' specification incorrect for multi-variable plot: %s" % str(var))
+            raise e
     cut = None
     if lepton_channel == 'ele':
         cut = plot_def['elecut']
@@ -94,6 +96,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
             qcd_extra_cut = Cuts.deltaR(0.3)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
 
             # Make loose template
+            #Y U NO LOOP :) -JP
             region = '2j1t'
             if '2j0t' in plot_def['estQcd']: region='2j0t'
             if '3j0t' in plot_def['estQcd']: region='3j0t'
@@ -141,6 +144,9 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     merged_hists = merge_hists(hists_mc, merge_cmds, order=order)
 
     if hist_data.Integral()<=0:
+        logger.error(hists_data)
+        logger.error("hist_data.entries = %d" % hist_data.GetEntries())
+        logger.error("hist_data.integral = %d" % hist_data.Integral())
         raise Exception("Histogram for data was empty. Something went wrong, please check.")
 
     if do_norm:
@@ -227,13 +233,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     leg.Draw()
     canv.Draw()
 
-    #Draw the ratio plot with
-    if not do_norm:
-        ratio_pad, hratio, hline = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
-        canv.PAD2 = ratio_pad
-        canv.HRATIO = hratio
-        canv.HLINE = hline
-
+    #Keep the handles just in case
     canv.PAD1 = p1
     canv.STACKS = stacks
     canv.LEGEND = legend

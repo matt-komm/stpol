@@ -35,6 +35,7 @@ addpkg RecoBTau/JetTagComputer  V02-03-02
 addpkg RecoBTag/Configuration   V00-07-05
 addpkg RecoParticleFlow/PFProducer V15-02-06
 addpkg RecoLuminosity/LumiDB V04-02-08 #For lumicalc
+addpkg PhysicsTools/CandUtils V09-01-05 #For event shape
 #For electron MVA https://twiki.cern.ch/twiki/bin/view/CMS/MultivariateElectronIdentification#Recipe_for_5_3_X
 cvs co -r V00-00-09 EgammaAnalysis/ElectronTools
 cvs co -r V09-00-01 RecoEgamma/EgammaTools
@@ -53,6 +54,8 @@ addpkg RecoMET/METAnalyzers V00-00-08
 
 #LHAPDF setup must be done prior to full compile
 cmsenv
+mkdir -p $STPOL_DIR/local/lib
+mkdir -p $STPOL_DIR/local/include
 scram setup lhapdffull
 cmsenv
 

@@ -28,6 +28,9 @@ class Config(C):
     #Either running over MC or Data
     isMC = True
 
+    #Either running over MC or Data
+    doSkim = True
+
     #Enable debugging modules
     doDebug = False
 
@@ -44,7 +47,7 @@ class Config(C):
     systematic = None
 
     #A string to specify the dta period (RunA, RunB, RunC, RunD)
-    dataRun = None
+    dataRun = "RunABCD" #non-discriminating between runs
 
     """
     Specifies the jet configuration.

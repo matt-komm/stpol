@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-def TopRecoSetup(process, leptonSource="goodSignalLeptons", bTagSource="highestBTagJet", untaggedJetSource="lowestBTagJet"):
+def TopRecoSetup(process, conf, leptonSource="goodSignalLeptons", bTagSource="highestBTagJet", untaggedJetSource="lowestBTagJet"):
     #Reconstruct the 4-momentum of the top quark by adding the momenta of the b-jet, the neutrino and the charged lepton
 
     #Combine the METs to a single collection
@@ -11,6 +11,7 @@ def TopRecoSetup(process, leptonSource="goodSignalLeptons", bTagSource="highestB
          minOut=cms.uint32(1),
          logErrors=cms.bool(True)
     )
+
 
     #Combine the neutrino collections produced in the electron and muon paths, taking exactly 1 neutrino per event
     process.recoNu = cms.EDProducer(
