@@ -48,8 +48,8 @@ logger = logging.getLogger("make_all_plots")
 
 #FIXME: take the lumis from a central database
 lumis = {
-    "mu": 19800,
-    "ele": 19800,
+    "mu": 1094 + 5319 + 4918 + 6823,
+    "ele": 917 + 12396 + 6434
 }
 
 def yield_string(h, hn=None):
@@ -98,7 +98,7 @@ def save_yield_table(hmerged_mc, hdata, ofdir, name):
             try:
                 hist.SetTitle(physics_processes[procname].pretty_name)
             except KeyError:
-            #QCD does not have a defined PhysicsProcess but that's fine because 
+            #QCD does not have a defined PhysicsProcess but that's fine because
             #we take it separately
                 pass
 
@@ -169,6 +169,10 @@ if __name__=="__main__":
     )
 
     parser.add_argument(
+        "--systUpDown", required=False, default=None, action="store", dest="systUpDown",
+        help="A comma separated list of the systematic variations that you want to consider on the ratio plot"
+    )
+    parser.add_argument(
         "-T", "--tags", type=str, required=False, default=[], action='append',
         help="""
         The plotting tags to enable.
@@ -220,8 +224,13 @@ if __name__=="__main__":
 
     tree = args.tree
 
-    #The enabled systematic channels
-    systs = ["EnUp", "EnDown"]
+    #The enabled systematic up/down variation sample prefixes to put on the ratio plot
+    if args.systUpDown:
+        systs = args.systUpDown.split(",")
+        if len(systs)!=2:
+            raise Exception("Must specify systematics as list=up,down, but you had %s" % str*args.systUpDown)
+    else:
+        systs = []
 
     for lepton_channel in args.channels:
         logger.info("Plotting lepton channel %s" % lepton_channel)
@@ -256,7 +265,7 @@ if __name__=="__main__":
             samples_syst[syst] = {}
             for f in change_syst(flist, syst):
                 samples_syst[syst][f] = Sample.fromFile(f, tree_name=tree)
- 
+
         for plotname in args.plots:
 
             plot_def = plot_defs[plotname]
@@ -281,9 +290,13 @@ if __name__=="__main__":
             do_norm = plot_def.get("normalize", False)
             if not do_norm:
                 logger.warning("FIXME: Only the first systematic is taken into account at the moment")
-                hsyst_up = hists_tot_mc_syst_up.values()[0]
-                hsyst_down = hists_tot_mc_syst_down.values()[0]
-                ratio_pad, hratio = plot_data_mc_ratio(canv, htot_data, htot_mc, syst_hists=(hsyst_up, hsyst_down))
+                if len(hists_tot_mc_syst_up.values())==1 and len(hists_tot_mc_syst_down.values())==1:
+                    hsyst_up = hists_tot_mc_syst_up.values()[0]
+                    hsyst_down = hists_tot_mc_syst_down.values()[0]
+                    syst_hists = (hsyst_up, hsyst_down)
+                else:
+                    syst_hists = None
+                ratio_pad, hratio = plot_data_mc_ratio(canv, htot_data, htot_mc, syst_hists=syst_hists)
 
             #This is adopted in the AN
             if lepton_channel=="ele":
