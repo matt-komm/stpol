@@ -14,6 +14,7 @@ from plots.common.hist_plots import plot_hists
 from plots.common.output import OutputFolder
 from plots.common.metainfo import PlotMetaInfo
 from plots.common.legend import legend
+from plots.common.histogram import calc_int_err
 import argparse
 
 def find_bin_idx(binning, val):
@@ -92,6 +93,8 @@ if __name__=="__main__":
         posterior.SetBinContent(i+1, np.mean(bins[:,i]))
         posterior.SetBinError(i+1, np.std(bins[:,i]))
 
+    I, E = calc_int_err(posterior)
+    logger.info("Posterior costheta integral=%.2f" % I)
     of = OutputFolder(subdir='unfolding')
 
     canv = plot_hists([posterior], x_label="cos #Theta")
@@ -104,4 +107,3 @@ if __name__=="__main__":
     pmi = PlotMetaInfo('asymmetry_pseudoexp', 'final_2J1T', 'None', fi.GetPath())
     of.savePlot(canv, pmi)
     print "All done"
-    
