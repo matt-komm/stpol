@@ -53,8 +53,8 @@ from rootpy.extern.progressbar import *
 logger = logging.getLogger("make_all_plots")
 mc_sf=1.
 lumis = {
-    "mu": 6784+6398+5277,
-    "ele":12410+6144
+    "mu": 19800,
+    "ele": 19800,
 }
 
 def yield_string(h, hn=None):
@@ -86,6 +86,7 @@ def save_yield_table(hmerged_mc, hdata, ofdir, name):
 
 if __name__=="__main__":
     logger.setLevel(logging.DEBUG)
+    logging.basicConfig(level=level)
 
     tdrstyle.tdrstyle()
 
@@ -195,14 +196,12 @@ if __name__=="__main__":
             merge_cmds,
             args.indir + "/%s/mc/iso/nominal/Jul15/" % lepton_channel
         )
-        flist += get_file_list(
-            merge_cmds,
-            args.indir + "/%s/data/iso/Jul15/" % lepton_channel
-        )
-        flist += get_file_list(
-            {'data':merge_cmds['data']},
-            args.indir + "/%s/data/antiiso/Jul15/" % lepton_channel
-        )
+        for iso in ['iso', 'antiiso']:
+            for ds in ['Jul15', 'Aug1']:
+                flist += get_file_list(
+                    merge_cmds,
+                    args.indir + "/%s/data/%s/%s/" % (lepton_channel, iso, ds)
+                )
         if len(flist)==0:
             raise Exception("Couldn't open any files. Are you sure that %s exists and contains root files?" % args.indir)
 

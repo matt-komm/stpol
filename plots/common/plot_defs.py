@@ -72,6 +72,7 @@ varnames["BDT_uncat"] = 'BDT'
 varnames["n_tags"] = 'N_{tags}'
 varnames["n_jets"] = 'N_{jets}'
 varnames["rms_lj"] = 'RMS_{lj}'
+varnames["met_phi"] = '#Phi_{MET}'
 
 #plot_defs['lep_pt']={
 #    'enabled': True,
@@ -428,7 +429,7 @@ plot_defs['invar_mass_lj'] = cp(plot_defs['invar_mass_bj'])
 plot_defs['invar_mass_lj']['var'] = 'mass_lj'
 plot_defs['invar_mass_lj']['xlab'] = 'm_{lq-jet} [GeV]'
 
-from mvatools.sampleList import varRank 
+from mvatools.sampleList import varRank
 vlist = varRank['mu']
 vlist.remove('mu_pt')
 vlist.remove('mt_mu')
@@ -604,8 +605,9 @@ plot_defs['final_etaLj_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_topMass_fit'] = cp(plot_defs['final_topMass'])
 plot_defs['final_topMass_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_cosTheta_fit'] = cp(plot_defs['final_cosTheta'])
+plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
 plot_defs['final_met_fit']={
-    'tags': ["an", "control.tex", "mva"],
+    'tags': ["an", "control.tex"],
     'enabled': True,
     'var': 'met',
     'range': [20, 40, 200],
@@ -616,10 +618,15 @@ plot_defs['final_met_fit']={
     'xlab': varnames["met"],
     'labloc': 'top-right',
     'elecut': plot_defs['final_etaLj_fit']['elecut'],
-    'mucut': plot_defs['final_etaLj_fit']['mucut']
+    'mucut': plot_defs['final_etaLj_fit']['mucut'],
+    'fitpars': fitpars['final_2j1t']
 }
+plot_defs['final_met_phi_fit']= cp(plot_defs['final_met_fit'])
+plot_defs['final_met_phi_fit']['var'] = 'phi_met'
+plot_defs['final_met_phi_fit']['range'] = [20, -4, 4]
+plot_defs['final_met_phi_fit']['xlab'] = varnames['met_phi']
 
-plot_defs['final_cosTheta_fit']['fitpars'] = fitpars['final_2j1t']
+
 
 plot_defs['final_cosTheta_mva_loose'] = {
     'tags': ["an", "control.tex", "mva"],

@@ -226,6 +226,8 @@ process.weights = cms.PSet(
 
     bWeightNominalSrc = cms.InputTag("bTagWeightProducerNoCut", "bTagWeight"),
     puWeightSrc = cms.InputTag("puWeightProducer", "PUWeightNtrue"),
+    puWeightUpSrc = cms.InputTag("puWeightProducer", "PUWeightNtrueUp"),
+    puWeightDownSrc = cms.InputTag("puWeightProducer", "PUWeightNtrueDown"),
     ttbarWeightSrc = cms.InputTag("ttbarTopWeight", "weight"),
 
     muonIDWeightSrc = cms.InputTag("muonWeightsProducer", "muonIDWeight"),

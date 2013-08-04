@@ -144,6 +144,9 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     merged_hists = merge_hists(hists_mc, merge_cmds, order=order)
 
     if hist_data.Integral()<=0:
+        logger.error(hists_data)
+        logger.error("hist_data.entries = %d" % hist_data.GetEntries())
+        logger.error("hist_data.integral = %d" % hist_data.Integral())
         raise Exception("Histogram for data was empty. Something went wrong, please check.")
 
     if do_norm:

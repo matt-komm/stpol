@@ -12,6 +12,10 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(
         description='Runs step3 trees on the cluster'
     )
+    parser.add_argument("indir",
+        default=None, type=str,
+        help="Input directory with the file lists"
+    )
     parser.add_argument(
         "-o", "--ofdir", type=str, default="out/step3", required=False,
         help="the output directory for the step3 trees"
@@ -28,9 +32,9 @@ if __name__=="__main__":
         default=False, action="store_true",
         help="Don't really submit the jobs."
     )
-    parser.add_argument("--indir",
-        default="filelists/Jul15_partial", type=str, required=False,
-        help="Input directory with the file lists"
+    parser.add_argument("--syst-on", dest="syst",
+        default=False, required=False, action="store_true",
+        help="Do the systematics"
     )
     cmdline_args = parser.parse_args()
     print cmdline_args
@@ -59,9 +63,14 @@ if __name__=="__main__":
                     #!!!!!!!FIXME: cleverer way of getting the systematic scenario
                     if "nominal" in root:
                         args += " --systematic=nominal"
+                    elif not cmdline_args.syst:
+                        continue
                     else:
                         spl = root.split("/")
-                        idx = spl.index("mc")
+                        try:
+                            idx = spl.index("mc")
+                        except:
+                            idx = spl.index("mc_syst")
                         syst = spl[idx+2]
                         args += " --systematic="+syst
 

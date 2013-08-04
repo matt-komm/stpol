@@ -114,6 +114,7 @@ def MuonPath(process, conf):
 
     process.muPath = cms.Path(
         process.muPathPreCount *
+        process.leptonSequence *
 
         #Select one isolated muon and veto additional loose muon/electron
         process.oneIsoMu *
