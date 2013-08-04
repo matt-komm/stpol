@@ -113,7 +113,8 @@ def LeptonSetup(process, conf):
          logErrors=cms.bool(False)
     )
 
-    process.leptonPath = cms.Path(
+    process.leptonSequence = cms.Sequence(
+        process.HLTprefilter *
         process.muonBeforeSelectionSequence *
         process.electronBeforeSelectionSequence *
         process.goodSignalMuons *

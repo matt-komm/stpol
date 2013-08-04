@@ -80,6 +80,7 @@ def SingleTopStep2():
     Config.subChannel = options.subChannel
     Config.doDebug = options.doDebug
     Config.isMC = options.isMC
+    Config.doSkim = not sample_types.is_signal(Config.subChannel)
     Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
     Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
     Config.systematic = options.systematic
@@ -192,7 +193,7 @@ def SingleTopStep2():
     #-----------------------------------------------
 
     from SingleTopPolarization.Analysis.top_step2_cfi import TopRecoSetup
-    TopRecoSetup(process)
+    TopRecoSetup(process, Config)
 
     process.allEventObjects = cms.EDProducer(
          'CandRefCombiner',
@@ -281,9 +282,23 @@ def SingleTopStep2():
         process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
             src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
         )
-    process.patMETNTupleProducer = process.recoTopNTupleProducer.clone(
-        src=cms.InputTag("goodMETs"),
+    process.patMETNTupleProducer = cms.EDProducer(
+        "CandViewNtpProducer2",
+        src = cms.InputTag("goodMETs"),
+        lazyParser = cms.untracked.bool(True),
+        prefix = cms.untracked.string(""),
+        variables = ntupleCollection(
+            [
+                ["Pt", "pt"],
+                ["Eta", "eta"],
+                ["Phi", "phi"],
+                ["Px", "p4().Px()"],
+                ["Py", "p4().Py()"],
+                ["Pz", "p4().Pz()"],
+            ]
+      )
     )
+
     process.trueLeptonNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueLepton", "STPOLSEL2"),
     )
@@ -417,6 +432,9 @@ def SingleTopStep2():
     # Paths
     #-----------------------------------------------
 
+    from SingleTopPolarization.Analysis.hlt_step2_cfi import HLTSetup
+    HLTSetup(process, Config)
+
     from SingleTopPolarization.Analysis.leptons_cfg import LeptonSetup
     LeptonSetup(process, Config)
 
@@ -517,6 +535,8 @@ def SingleTopStep2():
     if Config.doDebug:
         process.out.outputCommands.append("keep *")
     process.outpath = cms.EndPath(process.out)
+    if Config.doSkim:
+        process.out.SelectEvents.SelectEvents = []
     process.out.SelectEvents.SelectEvents.append("elePath")
     process.out.SelectEvents.SelectEvents.append("muPath")
 

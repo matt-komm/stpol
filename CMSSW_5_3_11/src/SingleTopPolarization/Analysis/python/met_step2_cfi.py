@@ -25,6 +25,7 @@ def metSequence(process, conf, prefix, met_src, lepton_src):
         MTW
     )
 
+    #Set the met processes as attributes to the main process
     goodMETdest = sa(process, prefix, "goodMETs", goodMETs)
     sa(process, prefix, "MTW", MTW)
     sa(process, prefix, "metSequence", seq)
