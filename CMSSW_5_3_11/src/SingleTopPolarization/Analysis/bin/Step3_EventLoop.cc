@@ -1085,7 +1085,7 @@ int main(int argc, char *argv[])
     out_tree = dir.make<TTree>("Events", "Events");
     TH1I *count_hist = dir.make<TH1I>("count_hist", "Event counts", count_map.size(), 0, count_map.size() - 1);
 
-    TFileDirectory dir_effs = fs.mkdir("b_eff_hists");
+    //TFileDirectory dir_effs = fs.mkdir("b_eff_hists");
     //BEffCalcs b_eff_calcs(b_eff_pars, branch_vars, dir_effs);
 
     TFile::SetOpenTimeout(60000);
@@ -1289,7 +1289,6 @@ int main(int argc, char *argv[])
     TNamed *inflist = new TNamed("infiles", ss.str().c_str());
     pdesc->Write();
     inflist->Write();
-
-
+    
     return 0;
 }
