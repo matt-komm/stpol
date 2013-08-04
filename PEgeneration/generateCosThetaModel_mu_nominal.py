@@ -19,7 +19,8 @@ if __name__=="__main__":
     
     
     signalNameList={
-        "cos_theta__tchan": {"yield":1.082186,"unc":0.066}
+        #"cos_theta__tchan": {"yield":1.082186,"unc":0.066}
+        "cos_theta__tchan": {"yield":1.00,"unc":0.0001}
     }
    
     backgroundNameList={
@@ -29,23 +30,23 @@ if __name__=="__main__":
     }
     ntupleNameList={}
     ntupleNameList.update(signalNameList)
-    ntupleNameList.update(backgroundNameList)
+    #ntupleNameList.update(backgroundNameList)
     
                            
     
     
-    shapeSystematicDict={"En":Distribution("delta_JES", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+    shapeSystematicDict={#"En":Distribution("delta_JES", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
                         
-                        "Res":Distribution("delta_JER", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"Res":Distribution("delta_JER", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
                         
-                        "UnclusteredEn":Distribution("delta_EN", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "btaggingBC":Distribution("delta_BCtagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "btaggingL":Distribution("delta_Ltagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "leptonID":Distribution("delta_leptonID", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "leptonIso":Distribution("delta_leptonIso", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "leptonTrigger":Distribution("delta_leptonTrigger", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),                                                
-                        "wjets_flat":Distribution("delta_wjetFLAT", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "wjets_shape":Distribution("delta_wjetSHAPE", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"})
+                        #"UnclusteredEn":Distribution("delta_EN", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"btaggingBC":Distribution("delta_BCtagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"btaggingL":Distribution("delta_Ltagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"leptonID":Distribution("delta_leptonID", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"leptonIso":Distribution("delta_leptonIso", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"leptonTrigger":Distribution("delta_leptonTrigger", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),                                                
+                        #"wjets_flat":Distribution("delta_wjetFLAT", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"wjets_shape":Distribution("delta_wjetSHAPE", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"})
                         
     }
     
@@ -58,7 +59,7 @@ if __name__=="__main__":
     yields=MultiDistribution("beta_yields")
     for ntuple in ntupleNameList:
         yields.addParameter("beta_"+ntuple,ntupleNameList[ntuple]["yield"],ntupleNameList[ntuple]["unc"])
-    yields.setCorrelation("beta_cos_theta__wzjets","beta_cos_theta__top",-0.925)
+    #yields.setCorrelation("beta_cos_theta__wzjets","beta_cos_theta__top",-0.925)
     
     file.write(yields.toConfigString())
     
@@ -164,7 +165,7 @@ if __name__=="__main__":
     file.write('    type="model_source";\n')
     file.write('    model="@model_cosTheta";\n')
     file.write('    name="source";\n')
-    file.write('    dice_poisson=true;\n')
+    file.write('    dice_poisson=false;\n')
     file.write('    rnd_gen={\n')
     file.write('         seed=126;//default of-1 means: use current time.\n')
     file.write('      };\n')

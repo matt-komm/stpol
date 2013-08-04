@@ -215,7 +215,7 @@ int main( int argc, const char* argv[] )
     TH1D* histo_output_tunfold = new TH1D("output","",nbinsT,binningT);
     tree_output->Branch("tunfold",&histo_output_tunfold);
 
-    double tau = scanTau(response);
+    double tau = scanTau(response)*0.11;
     printf("tau: %f\r\n",tau);
 
     int nevents = tree_input->GetEntries();
@@ -237,11 +237,14 @@ int main( int argc, const char* argv[] )
         TCanvas* canvas = new TCanvas("canvas","",800,600);
         
         
-        histo_input->Draw();
-        measured->Draw("P*Same");
-        
-        //histo_output_tunfold->Draw();
+        //histo_input->Draw();
+        //measured->Draw("P*Same");
+        histo_output_tunfold->Add(truth,-1.0);
+        histo_output_tunfold->Draw();
+        //truth->Scale(0.9);
         //truth->Draw("P*Same");
+        
+        
         
         canvas->Update();
         canvas->WaitPrimitive();

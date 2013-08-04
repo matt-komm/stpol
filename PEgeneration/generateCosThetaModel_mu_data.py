@@ -10,8 +10,8 @@ if __name__=="__main__":
     (options, args)=parser.parse_args()
 
     histograminputfile="/home/fynu/mkomm/mu_cos_theta_mva_0_09/data.root"
-    modelfilename="PE_muon.cfg"
-    outputfilename="PE_muon.root"
+    modelfilename="data_muon.cfg"
+    outputfilename="data_muon.root"
     
     binning=14
     range=[-1.0,1.0]
@@ -19,13 +19,11 @@ if __name__=="__main__":
     
     
     signalNameList={
-        "cos_theta__tchan": {"yield":1.082186,"unc":0.066}
+        "cos_theta__DATA": {"yield":1.00,"unc":0.000000001}
     }
    
     backgroundNameList={
-        "cos_theta__wzjets": {"yield":1.511,"unc":0.187},
-        "cos_theta__qcd": {"yield":0.782740,"unc":0.730},
-        "cos_theta__top": {"yield":0.979,"unc":0.090}
+
     }
     ntupleNameList={}
     ntupleNameList.update(signalNameList)
@@ -34,20 +32,7 @@ if __name__=="__main__":
                            
     
     
-    shapeSystematicDict={"En":Distribution("delta_JES", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        
-                        "Res":Distribution("delta_JER", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        
-                        "UnclusteredEn":Distribution("delta_EN", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "btaggingBC":Distribution("delta_BCtagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "btaggingL":Distribution("delta_Ltagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "leptonID":Distribution("delta_leptonID", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "leptonIso":Distribution("delta_leptonIso", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "leptonTrigger":Distribution("delta_leptonTrigger", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),                                                
-                        "wjets_flat":Distribution("delta_wjetFLAT", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "wjets_shape":Distribution("delta_wjetSHAPE", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"})
-                        
-    }
+    shapeSystematicDict={}
     
     
     file=open(modelfilename, "w")
@@ -58,7 +43,7 @@ if __name__=="__main__":
     yields=MultiDistribution("beta_yields")
     for ntuple in ntupleNameList:
         yields.addParameter("beta_"+ntuple,ntupleNameList[ntuple]["yield"],ntupleNameList[ntuple]["unc"])
-    yields.setCorrelation("beta_cos_theta__wzjets","beta_cos_theta__top",-0.925)
+    #yields.setCorrelation("beta_cos_theta__wzjets","beta_cos_theta__top",-0.925)
     
     file.write(yields.toConfigString())
     
@@ -164,7 +149,7 @@ if __name__=="__main__":
     file.write('    type="model_source";\n')
     file.write('    model="@model_cosTheta";\n')
     file.write('    name="source";\n')
-    file.write('    dice_poisson=true;\n')
+    file.write('    dice_poisson=false;\n')
     file.write('    rnd_gen={\n')
     file.write('         seed=126;//default of-1 means: use current time.\n')
     file.write('      };\n')
@@ -172,7 +157,7 @@ if __name__=="__main__":
     
     
     
-    file.write('    n-events=10000;\n')
+    file.write('    n-events=1;\n')
     file.write('    model="@model_cosTheta";\n')
     file.write('    output_database={\n')
     file.write('        type="rootfile_database";\n')
