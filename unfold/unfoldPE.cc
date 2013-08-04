@@ -234,6 +234,7 @@ int main( int argc, const char* argv[] )
         histo_output_tunfold->Scale(0.0);
         tunfold->GetOutput(histo_output_tunfold);
         
+        /*
         TCanvas* canvas = new TCanvas("canvas","",800,600);
         
         
@@ -243,11 +244,11 @@ int main( int argc, const char* argv[] )
         histo_output_tunfold->Draw();
         //truth->Scale(0.9);
         //truth->Draw("P*Same");
+        */
         
         
-        
-        canvas->Update();
-        canvas->WaitPrimitive();
+        //canvas->Update();
+        //canvas->WaitPrimitive();
         
         tree_output->Fill();
     }
