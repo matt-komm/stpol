@@ -17,7 +17,7 @@ def plot_hists(hists, name="canv", **kwargs):
     Keywords:
         name: the name of the canvas to create.
         draw_cmd: the ROOT draw command. Can be a single command
-            (use the same for all) or a list with the length of hists 
+            (use the same for all) or a list with the length of hists
         x_label: a string with the title for the x axis.
         y_label: ditto for the y axis.
         do_log_y: a boolean to specify if the y axis should be logarithmic.
@@ -118,7 +118,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3, syst_hists=None):
         syst_hists: a 2-tuple (syst_up, syst_down) with Hist instances to
             draw as the systematic error band
 
-    Returns:  
+    Returns:
         A tuple with (pad, histogram) where pad is the new TPad and histogram is
         the TH1F ratio histogram that were created
 
@@ -186,7 +186,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3, syst_hists=None):
             hr.Divide(hist_data)
 
             hr.SetFillStyle(0)
-            #hr.SetFillColor(ROOT.kGray)
+            hr.SetFillColor(ROOT.kGray)
             hr.SetLineColor(ROOT.kGray)
 
             hr.Draw("hist same")
@@ -204,7 +204,7 @@ def plot_hists_dict(hist_dict, setNames=True, **kwargs):
 
     Args:
         hist_dict: a str, Hist dictionary of the histograms to be drawn.
-    
+
     Keywords:
         setNames: a bool to specify whether the keys of the dict will be used as
             titles in the legend.

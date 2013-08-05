@@ -170,7 +170,7 @@ if __name__=="__main__":
     )
 
     parser.add_argument(
-        "--systUpDown", required=False, default=None, action="store", dest="systUpDown",
+        "--systs", required=False, default=None, action="store", dest="syst",
         help="A comma separated list of the systematic variations that you want to consider on the ratio plot"
     )
     parser.add_argument(
@@ -226,12 +226,11 @@ if __name__=="__main__":
     tree = args.tree
 
     #The enabled systematic up/down variation sample prefixes to put on the ratio plot
-    if args.systUpDown:
-        systs = args.systUpDown.split(",")
-        if len(systs)!=2:
-            raise Exception("Must specify systematics as list=up,down, but you had %s" % str*args.systUpDown)
-    else:
-        systs = []
+    systs = {
+        "JES": ["EnUp", "EnDown"],
+        "JER": ["ResUp", "ResDown"],
+        "MET": ["UnclusteredEnUp", "UnclusteredEnDown"],
+    }
 
     for lepton_channel in args.channels:
         logger.info("Plotting lepton channel %s" % lepton_channel)
@@ -262,10 +261,12 @@ if __name__=="__main__":
             samples[f] = Sample.fromFile(f, tree_name=tree)
 
         samples_syst = {}
-        for syst in systs:
-            samples_syst[syst] = {}
-            for f in change_syst(flist, syst):
-                samples_syst[syst][f] = Sample.fromFile(f, tree_name=tree)
+        for name, syst in systs.items():
+            samples_syst[name] = {}
+            for s in syst:
+                samples_syst[name][s] = {}
+                for f in change_syst(flist, s):
+                    samples_syst[name][s][f] = Sample.fromFile(f, tree_name=tree)
 
         for plotname in args.plots:
 
@@ -276,7 +277,8 @@ if __name__=="__main__":
             #Draw the histograms from systematically variated samples
             hists_tot_mc_syst_up = {}
             hists_tot_mc_syst_down = {}
-            for syst, samps in samples_syst.items():
+            for name, samps in samples_syst.items():
+                pdb.set_trace()
                 _canv, _merged_hists, _htot_mc, _htot_data = data_mc_plot(samps, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
                 chi2 = htot_mc.Chi2Test(_htot_mc, "WW CHI2/NDF")
                 logger.info("Chi2 between nominal and %s is %.2f" % (syst, chi2))

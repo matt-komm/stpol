@@ -117,6 +117,7 @@ class Sample:
         name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)
+        frac_entries = kwargs.get("frac_entries", 1.0)
         binning = kwargs.get("binning", None)
 
         weight_str = kwargs.get("weight", None)
@@ -144,7 +145,7 @@ class Sample:
 
         logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
 
-        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH", int(self.getEventCount()*frac_entries))
         logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
         if n_entries<0:
