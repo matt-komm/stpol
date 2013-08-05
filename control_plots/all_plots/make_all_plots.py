@@ -312,12 +312,15 @@ if __name__=="__main__":
             do_norm = plot_def.get("normalize", False)
             if not do_norm and len(hists_tot_mc_syst.items())>0:
                 syst_hists = total_syst(htot_mc, hists_tot_mc_syst)
-                
+
                 for h in list(syst_hists):
-                    logger.info("Chi2 = %.2f" % (htot_mc.Chi2Test(h, "WW CHI2/NDF")))
+                    try:
+                        logger.info("Chi2 = %.2f" % (htot_mc.Chi2Test(h, "WW CHI2/NDF")))
+                    except rootpy.ROOTError as e:
+                        logger.error("Couldn't calculate the chi2: %s" % str(e))
             else:
                 syst_hists = None
-                
+
             ratio_pad, hratio = plot_data_mc_ratio(canv, htot_data, htot_mc, syst_hists=syst_hists)
 
             #This is adopted in the AN
