@@ -139,6 +139,8 @@ if __name__=="__main__":
     s1 = Sample.fromFile("data/Jul26/mu/mc/iso/nominal/Jul15/Tbar_t_ToLeptons.root")
     htrue1 = s1.drawHistogram("true_cos_theta", str(Cuts.true_lepton("mu")), binning=binning)
     htrue = htrue + htrue1
+
+    #FIXME: correct scale factor
     htrue.Scale(1.082186)
 
     htrue.SetTitle("generated")
