@@ -46,6 +46,9 @@ def get_file_list(merge_cmds, dir, fullpath=True, permissive=True):
     if not fullpath:
         out_files = map(lambda x: x.split("/")[-1], out_files)
 
+    # remove files ending in _mva.root, which contain friend trees with mva outputs
+    out_files = filter(lambda x: not x.endswith("_mva.root"), out_files)
+    
     #If you called this method and got nothing, then probably womething went wrong and you don't want the output
     if len(out_files)==0 and not permissive:
         raise Exception("Couldn't match any files to merge_cmds %s in directory %s" % (str(merge_cmds), dir))

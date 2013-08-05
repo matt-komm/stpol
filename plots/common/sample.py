@@ -79,6 +79,11 @@ class Sample:
             self.tree.AddFriend("trees/MVA")
         #self.tree.AddBranchToCache("*", 1)
 
+        # add friend tree from another file containing mva values
+        self.file_name_mva = file_name[:-5] + "_mva.root"
+        if os.path.isfile(self.file_name_mva):
+            self.tree.AddFriend("trees/MVA", self.file_name_mva)
+        
         self.event_count = None
         self.event_count = self.getEventCount()
         if self.event_count<=0:
