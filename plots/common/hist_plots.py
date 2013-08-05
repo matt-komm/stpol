@@ -176,7 +176,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3, syst_hists=None):
             hr.Add(hist_data, -1)
             hr.Divide(hist_data)
 
-            #hr.fillstyle = "/"
+            hr.SetFillStyle(0)
             #hr.SetFillColor(ROOT.kGray)
             hr.SetLineColor(ROOT.kGray)
 
