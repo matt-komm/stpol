@@ -118,11 +118,32 @@ def change_syst(paths, dest):
 
 def total_syst(nominal, systs):
 
-    for systn, hists in systs.items():
-        
-    bins_nom = numpy.array(hnominal.y())
-    bins_syst = map(numpy.array, map(lambda h: h.y(), hists))
-    bins_diff = map(lambda b: b-bins_nom, bins_syst)
+    bins = numpy.array(list(nominal.y()))
+
+    diff_up_tot = numpy.zeros(bins.shape)
+    diff_down_tot = numpy.zeros(bins.shape)
+    for systn, (hup, hdown) in systs.items():
+        bins_up = numpy.array(list(hup.y()))
+        bins_down = numpy.array(list(hdown.y()))
+        diff_up = bins - bins_up
+        diff_down = bins - bins_down
+        diff_up_tot += numpy.power(diff_up, 2)
+        diff_down_tot += numpy.power(diff_down, 2)
+
+    diff_up_tot = numpy.sqrt(diff_up_tot)
+    diff_down_tot = numpy.sqrt(diff_down_tot)
+
+    hup = nominal.Clone("syst_up")
+    hdown = nominal.Clone("syst_down")
+
+    bins_up = bins + diff_up_tot
+    bins_down = bins - diff_down_tot
+
+    for i in range(len(bins)):
+        hup.SetBinContent(i+1, bins_up[i])
+        hdown.SetBinContent(i+1, bins_down[i])
+
+    return hup, hdown
 
 
 
@@ -169,8 +190,8 @@ if __name__=="__main__":
     )
 
     parser.add_argument(
-        "--systs", required=False, default=None, action="store", dest="syst",
-        help="A comma separated list of the systematic variations that you want to consider on the ratio plot"
+        "--do_systs", required=False, action="store_true", dest="do_systs",
+        help="Do you want to plot the systematic error band."
     )
     parser.add_argument(
         "-T", "--tags", type=str, required=False, default=[], action='append',
@@ -225,12 +246,14 @@ if __name__=="__main__":
     tree = args.tree
 
     #The enabled systematic up/down variation sample prefixes to put on the ratio plot
-    systs = {
-        "JES": ["EnUp", "EnDown"],
-        "JES1": ["EnUp", "EnDown"],
-        #"JER": ["ResUp", "ResDown"],
-        #"MET": ["UnclusteredEnUp", "UnclusteredEnDown"],
-    }
+    if args.do_systs:
+        systs = {
+            "JES": ("EnUp", "EnDown"),
+            "JER": ["ResUp", "ResDown"],
+            "MET": ["UnclusteredEnUp", "UnclusteredEnDown"],
+        }
+    else:
+        systs = {}
 
     for lepton_channel in args.channels:
         logger.info("Plotting lepton channel %s" % lepton_channel)
@@ -263,7 +286,7 @@ if __name__=="__main__":
         samples_syst = {}
         for name, syst in systs.items():
             samples_syst[name] = {}
-            for s in syst:
+            for s in list(syst):
                 samples_syst[name][s] = {}
                 for f in change_syst(flist, s):
                     samples_syst[name][s][f] = Sample.fromFile(f, tree_name=tree)
@@ -278,23 +301,24 @@ if __name__=="__main__":
             hists_tot_mc_syst = {}
             for name, subsysts in samples_syst.items():
                 hists_tot_mc_syst[name] = {}
+                tots = []
                 for subsyst_name, samps in subsysts.items():
                     _canv, _merged_hists, _htot_mc, _htot_data = data_mc_plot(samps, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
                     chi2 = htot_mc.Chi2Test(_htot_mc, "WW CHI2/NDF")
-                    hists_tot_mc_syst[name][subsyst_name] = _htot_mc
-            pdb.set_trace()
+                    tots.append(_htot_mc)
+                hists_tot_mc_syst[name] = tuple(tots)
 
-            #Draw the ratio plot with
+            #Draw the ratio plot with the systematics
             do_norm = plot_def.get("normalize", False)
-            if not do_norm:
-                logger.warning("FIXME: Only the first systematic is taken into account at the moment")
-                if len(hists_tot_mc_syst_up.values())==1 and len(hists_tot_mc_syst_down.values())==1:
-                    hsyst_up = hists_tot_mc_syst_up.values()[0]
-                    hsyst_down = hists_tot_mc_syst_down.values()[0]
-                    syst_hists = (hsyst_up, hsyst_down)
-                else:
-                    syst_hists = None
-                ratio_pad, hratio = plot_data_mc_ratio(canv, htot_data, htot_mc, syst_hists=syst_hists)
+            if not do_norm and len(hists_tot_mc_syst.items())>0:
+                syst_hists = total_syst(htot_mc, hists_tot_mc_syst)
+                
+                for h in list(syst_hists):
+                    logger.info("Chi2 = %.2f" % (htot_mc.Chi2Test(h, "WW CHI2/NDF")))
+            else:
+                syst_hists = None
+                
+            ratio_pad, hratio = plot_data_mc_ratio(canv, htot_data, htot_mc, syst_hists=syst_hists)
 
             #This is adopted in the AN
             if lepton_channel=="ele":
