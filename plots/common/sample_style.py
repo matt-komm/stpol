@@ -6,6 +6,13 @@ from SingleTopPolarization.Analysis import sample_types
 
 class Styling:
     @staticmethod
+    def mc_style_nostack(hist, sample_name):
+        color = sample_colors[sample_name]
+        hist.SetLineColor(color)
+        hist.SetLineWidth(4)
+        hist.SetMarkerStyle(0)
+
+    @staticmethod
     def mc_style(hist, sample_name):
         color = sample_colors[sample_name]
         hist.SetLineColor(color)
@@ -57,7 +64,7 @@ class ColorStyleGen:
         hist.SetLineStyle(style)
 
     def reset(self):
-        self.colstyles = itertools.product(colors, styles)
+        self.colstyles = itertools.product(self.colors, self.styles)
 
     @staticmethod
     def style_hists(hists):

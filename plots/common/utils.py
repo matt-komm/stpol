@@ -3,11 +3,13 @@ from odict import OrderedDict
 import string
 import logging
 logger = logging.getLogger("utils")
+logger.setLevel(logging.WARNING)
 import os
 import re
 import glob
 from copy import deepcopy
 import pdb
+logger.debug('Importing rootpy...')
 from rootpy.plotting.hist import Hist, Hist2D
 
 
@@ -26,7 +28,7 @@ class NestedDict(OrderedDict):
             out_d[k] = r
         return out_d
 
-def get_file_list(merge_cmds, dir, fullpath=True):
+def get_file_list(merge_cmds, dir, fullpath=True, permissive=True):
     """
     Returns the file list from the input directory that matches the corresponding merge pattern
     dir - the input directory path
@@ -44,8 +46,11 @@ def get_file_list(merge_cmds, dir, fullpath=True):
     if not fullpath:
         out_files = map(lambda x: x.split("/")[-1], out_files)
 
+    # remove files ending in _mva.root, which contain friend trees with mva outputs
+    out_files = filter(lambda x: not x.endswith("_mva.root"), out_files)
+    
     #If you called this method and got nothing, then probably womething went wrong and you don't want the output
-    if len(out_files)==0:
+    if len(out_files)==0 and not permissive:
         raise Exception("Couldn't match any files to merge_cmds %s in directory %s" % (str(merge_cmds), dir))
     return sorted(out_files)
 
@@ -105,7 +110,7 @@ class PhysicsProcess:
     @staticmethod
     def name_histograms(processes_d, hist_d):
         """
-        Names the histograms in a dicionary according to the 
+        Names the histograms in a dicionary according to the
         """
         for procname, hist in hist_d.items():
             try:
@@ -113,7 +118,7 @@ class PhysicsProcess:
                 logger.debug("Setting histogram %s title to %s" % (hist, processes_d[procname].pretty_name))
             except KeyError: #QCD does not have a defined PhysicsProcess but that's fine because we take it separately
                 logger.warning("Process %s not in the process dict %s" % (procname, str(processes_d.keys())))
-                
+
     systematic = {}
 
 PhysicsProcess.SingleMu = PhysicsProcess("SingleMu", ["SingleMu.*"], pretty_name="data")
@@ -218,8 +223,8 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
             raise ValueError("First argument(hists_d) must be a dict of Histograms, but found %s" % v)
 
     out_d = OrderedDict()
-    logging.debug("merge_hists: input histograms %s" % str(hists_d))
-    
+    logger.debug("merge_hists: input histograms %s" % str(hists_d))
+
     for merge_name, items in merge_groups.items():
         # if name in merge_groups.keys():
         #     merge_name=name
@@ -329,4 +334,12 @@ def filter_hists(indict, pat):
 
 def escape(s):
     return re.sub("[\/ \( \) \\ \. \* \+ \> \< \# \{ \}]", "", s)
+
+def setErrors(histo):
+    factor = 1.0    
+    if histo.GetEntries()>0:
+        factor = histo.Integral()/histo.GetEntries()
+    for i in range(1, histo.GetNbinsX()+1):
+        if histo.GetBinError(i) < factor:
+            histo.SetBinError(i, factor)
 

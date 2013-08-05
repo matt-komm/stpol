@@ -11,8 +11,7 @@ from plots.common.histogram import calc_int_err
 from plots.common.legend import legend
 from plots.common.odict import OrderedDict
 from plots.common.stack_plot import plot_hists_stacked
-from plots.common.hist_plots import plot_data_mc_ratio
-
+import pdb
 
 def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     """
@@ -50,11 +49,14 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     #Id var is a list/tuple, assume
     if not isinstance(var, basestring):
-        if lepton_channel == 'ele':
-            var = var[0]
-        else:
-            var = var[1]
-
+        try:
+            if lepton_channel == 'ele':
+                var = var[0]
+            elif lepton_channel == 'mu':
+                var = var[1]
+        except Exception as e:
+            logger.error("Plot variable 'var' specification incorrect for multi-variable plot: %s" % str(var))
+            raise e
     cut = None
     if lepton_channel == 'ele':
         cut = plot_def['elecut']
@@ -65,6 +67,9 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     plot_range = plot_def['range']
 
+    do_norm = False
+    if 'normalize' in plot_def.keys() and plot_def['normalize']:
+        do_norm = True
     hists_mc = dict()
     hists_data = dict()
     for name, sample in samples.items():
@@ -73,7 +78,10 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
             hist = sample.drawHistogram(var, cut_str, weight=str(weight), plot_range=plot_range)
             hist.Scale(sample.lumiScaleFactor(lumi))
             hists_mc[sample.name] = hist
-            Styling.mc_style(hists_mc[sample.name], sample.name)
+            if do_norm:
+                Styling.mc_style_nostack(hists_mc[sample.name], sample.name)
+            else:
+                Styling.mc_style(hists_mc[sample.name], sample.name)
 
             if "fitpars" in plot_def.keys():
                 rescale_to_fit(sample.name, hist, plot_def["fitpars"][lepton_channel])
@@ -88,6 +96,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
             qcd_extra_cut = Cuts.deltaR(0.3)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
 
             # Make loose template
+            #Y U NO LOOP :) -JP
             region = '2j1t'
             if '2j0t' in plot_def['estQcd']: region='2j0t'
             if '3j0t' in plot_def['estQcd']: region='3j0t'
@@ -110,7 +119,10 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
             hists_mc[sampn] = hist_qcd
             hists_mc[sampn].SetTitle('QCD')
-            Styling.mc_style(hists_mc[sampn], 'QCD')
+            if do_norm:
+                Styling.mc_style_nostack(hists_mc[sampn], 'QCD')
+            else:
+                Styling.mc_style(hists_mc[sampn], 'QCD')
 
         #Real ordinary data in the isolated region
         elif not "antiiso" in name:
@@ -132,7 +144,15 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     merged_hists = merge_hists(hists_mc, merge_cmds, order=order)
 
     if hist_data.Integral()<=0:
+        logger.error(hists_data)
+        logger.error("hist_data.entries = %d" % hist_data.GetEntries())
+        logger.error("hist_data.integral = %d" % hist_data.Integral())
         raise Exception("Histogram for data was empty. Something went wrong, please check.")
+
+    if do_norm:
+        for k,v in merged_hists.items():
+            v.Scale(1./v.Integral())
+        hist_data.Scale(1./hist_data.Integral())
 
     htot = sum(merged_hists.values())
 
@@ -151,7 +171,10 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
     PhysicsProcess.name_histograms(physics_processes, merged_hists)
 
-    leg = legend([hist_data] + list(reversed(merged_hists_l)), legend_pos=plot_def['labloc'], style=['p','f'])
+    leg_style = ['p','f']
+    if do_norm:
+        leg_style=['p','l']
+    leg = legend([hist_data] + list(reversed(merged_hists_l)), legend_pos=plot_def['labloc'], styles=leg_style)
 
     canv = ROOT.TCanvas()
 
@@ -174,15 +197,19 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     if plot_def['log']:
         fact = 10
 
+    plow=0.3
+    if do_norm:
+        plow=0
+
     #Make a separate pad for the stack plot
-    p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
+    p1 = ROOT.TPad("p1", "p1", 0, plow, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
     p1.SetGrid();
     p1.SetFillStyle(0);
     p1.cd()
 
-    stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_def['log'])
+    stacks = plot_hists_stacked(p1, stacks_d, x_label=xlab, y_label=ylab, max_bin_mult = fact, do_log_y = plot_def['log'], stack = (not do_norm))
 
     #Put the the lumi box where the legend is not
     boxloc = 'top-right'
@@ -206,15 +233,10 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     leg.Draw()
     canv.Draw()
 
-    #Draw the ratio plot with
-    ratio_pad, hratio, hline = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
-
+    #Keep the handles just in case
     canv.PAD1 = p1
     canv.STACKS = stacks
     canv.LEGEND = legend
     canv.LUMIBOX = lbox
-    canv.PAD2 = ratio_pad
-    canv.HRATIO = hratio
-    canv.HLINE = hline
 
     return canv, merged_hists, htot, hist_data

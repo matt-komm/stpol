@@ -11,83 +11,83 @@ import SingleTopPolarization.Analysis.sample_types as sample_types
 
 def SingleTopStep2():
 
-    if not Config.onGrid:
-        options = VarParsing('analysis')
-        options.register ('subChannel', 'T_t',
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "The sample that you are running on")
-        options.register ('reverseIsoCut', False,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Consider anti-isolated region")
-        options.register ('doDebug', False,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Turn on debugging messages")
-        options.register ('isMC', True,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Run on MC"
-        )
-        options.register ('doGenParticlePath', True,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Run the gen particle paths (only works on specific MC)"
-        )
-        options.register ('globalTag', Config.globalTagMC,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "Global tag"
-        )
-        options.register ('srcPUDistribution', "S10",
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "Source pile-up distribution"
-        )
-        options.register ('destPUDistribution', "data",
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "destination pile-up distribution"
-        )
+    options = VarParsing('analysis')
+    options.register ('subChannel', 'T_t',
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "The sample that you are running on")
+    options.register ('reverseIsoCut', False,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Consider anti-isolated region")
+    options.register ('doDebug', False,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Turn on debugging messages")
+    options.register ('isMC', True,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Run on MC"
+    )
+    options.register ('doGenParticlePath', True,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Run the gen particle paths (only works on specific MC)"
+    )
+    options.register ('globalTag', Config.globalTagMC,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "Global tag"
+    )
+    options.register ('srcPUDistribution', "S10",
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "Source pile-up distribution"
+    )
+    options.register ('destPUDistribution', "data",
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "destination pile-up distribution"
+    )
 
-        options.register ('isComphep', False,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Use CompHep-specific processing")
+    options.register ('isComphep', False,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Use CompHep-specific processing")
 
-        options.register ('isSherpa', False,
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.bool,
-                  "Use sherpa-specific processing")
+    options.register ('isSherpa', False,
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.bool,
+              "Use sherpa-specific processing")
 
-        options.register ('systematic', "",
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "Apply Systematic variation")
+    options.register ('systematic', "",
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "Apply Systematic variation")
 
-        options.register ('dataRun', "RunABCD",
-                  VarParsing.multiplicity.singleton,
-                  VarParsing.varType.string,
-                  "A string Run{A,B,C,D} to specify the data period")
+    options.register ('dataRun', "RunABCD",
+              VarParsing.multiplicity.singleton,
+              VarParsing.varType.string,
+              "A string Run{A,B,C,D} to specify the data period")
 
-        options.parseArguments()
-
-
-        if options.isMC:
-            Config.srcPUDistribution = pileUpDistributions.distributions[options.srcPUDistribution]
-            Config.destPUDistribution = pileUpDistributions.distributions[options.destPUDistribution]
+    options.parseArguments()
 
 
-        Config.Leptons.reverseIsoCut = options.reverseIsoCut
-        Config.subChannel = options.subChannel
-        Config.doDebug = options.doDebug
-        Config.isMC = options.isMC
-        Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
-        Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
-        Config.systematic = options.systematic
-        Config.dataRun = options.dataRun
-        print "Systematic! ",Config.systematic
+    if options.isMC:
+        Config.srcPUDistribution = pileUpDistributions.distributions[options.srcPUDistribution]
+
+    Config.Leptons.reverseIsoCut = options.reverseIsoCut
+    Config.subChannel = options.subChannel
+    Config.doDebug = options.doDebug
+    Config.isMC = options.isMC
+    Config.doSkim = not sample_types.is_signal(Config.subChannel)
+    Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
+    Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
+    Config.systematic = options.systematic
+    Config.doDebug = Config.doDebug
+
+
+    print "Systematic: ",Config.systematic
 
     if Config.isMC:
         logging.info("Changing jet source from %s to smearedPatJetsWithOwnRef" % Config.Jets.source)
@@ -144,10 +144,11 @@ def SingleTopStep2():
     process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
 
     process.source = cms.Source("PoolSource",
-        # replace 'myfile.root' with the source file you want to use
         fileNames=cms.untracked.vstring(options.inputFiles),
-        cacheSize = cms.untracked.uint32(10*1024*1024),
+        cacheSize = cms.untracked.uint32(50*1024*1024),
     )
+
+    print options
 
 
     #-------------------------------------------------
@@ -192,7 +193,7 @@ def SingleTopStep2():
     #-----------------------------------------------
 
     from SingleTopPolarization.Analysis.top_step2_cfi import TopRecoSetup
-    TopRecoSetup(process)
+    TopRecoSetup(process, Config)
 
     process.allEventObjects = cms.EDProducer(
          'CandRefCombiner',
@@ -206,8 +207,8 @@ def SingleTopStep2():
         src = cms.InputTag("allEventObjects")
     )
     process.eventShapeSequence = cms.Sequence(
-        process.allEventObjects *
-        process.eventShapeVars
+        process.allEventObjects
+        * process.eventShapeVars
     )
 
     #-----------------------------------------------
@@ -281,9 +282,23 @@ def SingleTopStep2():
         process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
             src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
         )
-    process.patMETNTupleProducer = process.recoTopNTupleProducer.clone(
-        src=cms.InputTag(Config.metSource),
+    process.patMETNTupleProducer = cms.EDProducer(
+        "CandViewNtpProducer2",
+        src = cms.InputTag("goodMETs"),
+        lazyParser = cms.untracked.bool(True),
+        prefix = cms.untracked.string(""),
+        variables = ntupleCollection(
+            [
+                ["Pt", "pt"],
+                ["Eta", "eta"],
+                ["Phi", "phi"],
+                ["Px", "p4().Px()"],
+                ["Py", "p4().Py()"],
+                ["Pz", "p4().Pz()"],
+            ]
+      )
     )
+
     process.trueLeptonNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueLepton", "STPOLSEL2"),
     )
@@ -412,9 +427,13 @@ def SingleTopStep2():
         )
 
 
+
     #-----------------------------------------------
     # Paths
     #-----------------------------------------------
+
+    from SingleTopPolarization.Analysis.hlt_step2_cfi import HLTSetup
+    HLTSetup(process, Config)
 
     from SingleTopPolarization.Analysis.leptons_cfg import LeptonSetup
     LeptonSetup(process, Config)
@@ -461,64 +480,65 @@ def SingleTopStep2():
     #-----------------------------------------------
     # Outpath
     #-----------------------------------------------
-    if not Config.skipPatTupleOutput:
-        process.out = cms.OutputModule("PoolOutputModule",
-            dropMetaData=cms.untracked.string("DROPPED"),
-            splitLevel=cms.untracked.int32(99),
-            fileName=cms.untracked.string(options.outputFile),
-             SelectEvents=cms.untracked.PSet(
-                 SelectEvents=cms.vstring(["*"])
-             ),
-            outputCommands=cms.untracked.vstring(
-                'drop *',
-                'keep edmMergeableCounter_*__*',
-                'keep *_generator__*',
-                'keep edmTriggerResults_TriggerResults__*',
-                'keep *_flavourAnalyzer_*_STPOLSEL2',
-                'keep floats_patMETNTupleProducer_*_STPOLSEL2',
-                'keep floats_recoTopNTupleProducer_*_STPOLSEL2',
-                'keep floats_recoNuNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueTopNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueNuNTupleProducer_*_STPOLSEL2',
-                'keep floats_trueLeptonNTupleProducer_*_STPOLSEL2',
-                'keep floats_goodSignalMuonsNTupleProducer_*_STPOLSEL2',
-                'keep floats_goodSignalElectronsNTupleProducer_*_STPOLSEL2',
-                'keep floats_goodJetsNTupleProducer_*_STPOLSEL2',
-                'keep floats_lowestBTagJetNTupleProducer_*_STPOLSEL2',
-                'keep floats_highestBTagJetNTupleProducer_*_STPOLSEL2',
-                'keep double_*__STPOLSEL2',
-                'keep float_*__STPOLSEL2',
-                'keep double_*_*_STPOLSEL2',
-                'keep float_*_*_STPOLSEL2',
-                'keep double_cosTheta_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueAll_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueTop_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueLepton_*_STPOLSEL2',
-                'keep double_cosThetaProducerTrueJet_*_STPOLSEL2',
-                'keep *_bTagWeightProducerNJMT_*_STPOLSEL2',
-                'keep int_*__STPOLSEL2',
-                'keep int_*_*_STPOLSEL2',
-                'keep int_*_*_*',
-                'keep String_*_*_*', #the decay trees
-                'keep *_pdfInfo1_*_STPOLSEL2',
-                'keep *_pdfInfo2_*_STPOLSEL2',
-                'keep *_pdfInfo3_*_STPOLSEL2',
-                'keep *_pdfInfo4_*_STPOLSEL2',
-                'keep *_pdfInfo5_*_STPOLSEL2',
-                #'keep *',
-                #'keep *_recoTop_*_*',
-                #'keep *_goodSignalMuons_*_*',
-                #'keep *_goodSignalElectrons_*_*',
-                #'keep *_goodJets_*_*',
-                #'keep *_bTaggedJets_*_*',
-                #'keep *_untaggedJets_*_*',
-            )
+    process.out = cms.OutputModule("PoolOutputModule",
+        dropMetaData=cms.untracked.string("DROPPED"),
+        splitLevel=cms.untracked.int32(99),
+        fileName=cms.untracked.string(options.outputFile),
+         SelectEvents=cms.untracked.PSet(
+             SelectEvents=cms.vstring(["*"])
+         ),
+        outputCommands=cms.untracked.vstring(
+            'drop *',
+            'keep edmMergeableCounter_*__*',
+            'keep *_generator__*',
+            'keep edmTriggerResults_TriggerResults__*',
+            'keep *_flavourAnalyzer_*_STPOLSEL2',
+            'keep floats_patMETNTupleProducer_*_STPOLSEL2',
+            'keep floats_recoTopNTupleProducer_*_STPOLSEL2',
+            'keep floats_recoNuNTupleProducer_*_STPOLSEL2',
+            'keep floats_trueTopNTupleProducer_*_STPOLSEL2',
+            'keep floats_trueNuNTupleProducer_*_STPOLSEL2',
+            'keep floats_trueLeptonNTupleProducer_*_STPOLSEL2',
+            'keep floats_goodSignalMuonsNTupleProducer_*_STPOLSEL2',
+            'keep floats_goodSignalElectronsNTupleProducer_*_STPOLSEL2',
+            'keep floats_goodJetsNTupleProducer_*_STPOLSEL2',
+            'keep floats_lowestBTagJetNTupleProducer_*_STPOLSEL2',
+            'keep floats_highestBTagJetNTupleProducer_*_STPOLSEL2',
+            'keep double_*__STPOLSEL2',
+            'keep float_*__STPOLSEL2',
+            'keep double_*_*_STPOLSEL2',
+            'keep float_*_*_STPOLSEL2',
+            'keep double_cosTheta_*_STPOLSEL2',
+            'keep double_cosThetaProducerTrueAll_*_STPOLSEL2',
+            'keep double_cosThetaProducerTrueTop_*_STPOLSEL2',
+            'keep double_cosThetaProducerTrueLepton_*_STPOLSEL2',
+            'keep double_cosThetaProducerTrueJet_*_STPOLSEL2',
+            'keep *_bTagWeightProducerNJMT_*_STPOLSEL2',
+            'keep int_*__STPOLSEL2',
+            'keep int_*_*_STPOLSEL2',
+            'keep int_*_*_*',
+            'keep String_*_*_*', #the decay trees
+            'keep *_pdfInfo1_*_STPOLSEL2',
+            'keep *_pdfInfo2_*_STPOLSEL2',
+            'keep *_pdfInfo3_*_STPOLSEL2',
+            'keep *_pdfInfo4_*_STPOLSEL2',
+            'keep *_pdfInfo5_*_STPOLSEL2',
+            #'keep *',
+            #'keep *_recoTop_*_*',
+            #'keep *_goodSignalMuons_*_*',
+            #'keep *_goodSignalElectrons_*_*',
+            #'keep *_goodJets_*_*',
+            #'keep *_bTaggedJets_*_*',
+            #'keep *_untaggedJets_*_*',
         )
-        if Config.doDebug:
-            process.out.outputCommands.append("keep *")
-        process.outpath = cms.EndPath(process.out)
-        process.out.SelectEvents.SelectEvents.append("elePath")
-        process.out.SelectEvents.SelectEvents.append("muPath")
+    )
+    if Config.doDebug:
+        process.out.outputCommands.append("keep *")
+    process.outpath = cms.EndPath(process.out)
+    if Config.doSkim:
+        process.out.SelectEvents.SelectEvents = []
+    process.out.SelectEvents.SelectEvents.append("elePath")
+    process.out.SelectEvents.SelectEvents.append("muPath")
 
     #-----------------------------------------------
     # Final printout
@@ -530,3 +550,11 @@ def SingleTopStep2():
     print "Step2 configured"
 
     return process
+
+if __name__=="__main__":
+    process = SingleTopStep2()
+    from SingleTopPolarization.Analysis.test_files import testfiles
+    process.source.fileNames=cms.untracked.vstring(testfiles["step1"]["signal"])
+    process.maxEvents.input=-1
+
+    print str(process.source)

@@ -91,18 +91,8 @@ GenericPointerCombiner<inClass, outClass>::GenericPointerCombiner(const edm::Par
 template <class inClass, class outClass>
 GenericPointerCombiner<inClass, outClass>::~GenericPointerCombiner()
 {
- 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
-
 }
 
-
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
 template <class inClass, class outClass>
 void
 GenericPointerCombiner<inClass, outClass>::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -128,24 +118,16 @@ GenericPointerCombiner<inClass, outClass>::produce(edm::Event& iEvent, const edm
     }
    }
    if (logErrors) {
-   if((uint)(pOut->size()) < minOut) {
-    LogError("produce()") << "Output collection has too few items: " << pOut->size() << "<" << minOut;
+        if((uint)(pOut->size()) < minOut) {
+         LogError("produce()") << "Output collection has too few items: " << pOut->size() << "<" << minOut;
 
+        }
+        else if( (uint)(pOut->size()) > maxOut) {
+         LogError("produce()") << "Output collection has too many items: " << pOut->size() << ">" << maxOut;
+        }
    }
-   else if( (uint)(pOut->size()) > maxOut) {
-    LogError("produce()") << "Output collection has too many items: " << pOut->size() << ">" << maxOut;
-   }
-   }
-   else {
-    iEvent.put(pOut);
-   }
-
-/* this is an EventSetup example
-   //Read SetupData from the SetupRecord in the EventSetup
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
-*/
- 
+   LogDebug("produce()") << "Combined collection has " << pOut->size() << " items" << std::endl;
+   iEvent.put(pOut);
 }
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -155,7 +137,6 @@ GenericPointerCombiner<inClass, outClass>::beginJob()
 {
 }
 
-// ------------ method called once each job just after ending the event loop  ------------
 template <class inClass, class outClass>
 void 
 GenericPointerCombiner<inClass, outClass>::endJob() {

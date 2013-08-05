@@ -8,7 +8,7 @@ if __name__=="__main__":
         description='Checks the status of step3 processing'
     )
     parser.add_argument(
-        "-i", "--indir", type=str, default="out/step3", required=True,
+        "indir", type=str, default="out/step3",
         help="the input directory for the step3 trees and slurmfiles"
     )
     args = parser.parse_args()
@@ -44,8 +44,10 @@ if __name__=="__main__":
             f.close()
         if len(donefiles)!=len(slurmfiles):
             stat = "running"
-        else:
+        elif len(slurmfiles)>0:
             stat = "done"
+        else:
+            stat = "submitting"
         runningfiles = list(set(slurmfiles).difference(set(donefiles)).difference(set(failedfiles)))
         total["all"] += len(slurmfiles)
         total["done"] += len(donefiles)

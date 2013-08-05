@@ -7,31 +7,42 @@ except ImportError:
     from odict import OrderedDict
 import logging
 logger = logging.getLogger("stack_plot")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 def plot_hists_stacked(canv, hist_groups, **kwargs):
     """
-    ***Mandatory arguments
-    canv - a TCanvas instance to use
-    hist_groups - a dictionary with the list of histograms to use as different stacks.
-                For example:
-                {
-                "data": [data_hist],
-                "mc:" [mc_hist1, mc_hist2, ...]
-                }
-                Each key will become a different stack that is compared side-by-side.
-                Each list will be inside the stack on top of each other in the order specified.
-    ***Optional arguments
-    draw_styles - a dictionary with the stack names and the corresponding TH1::Draw styles
-    title - plot title (set on the first stack)
-    x_label - label of the x axis
-    y_label - label of the y axis
-    do_log_y - True/False to set log scale on y axis
-    min_bin - the lower cutoff on the y axis, which may be necessary for log y scale
-    max_bin_mult - the y axis upper limit will be this multipier times the maimal bin height
-    ***returns
-    a dictionary with the instances of the drawn TStacks. NB: you must keep the output of this
-    method until you print the TCanvas, otherwise the stack references are destroyed.
+    Draws a collection of Hist instances on a canvas as stacks.
+
+
+    Args:
+        canv: a canvas or pad to use. 
+        hist_groups:
+            a dictionary with the list of histograms to use as different stacks.
+            For example:
+            {
+            "data": [data_hist],
+            "mc:" [mc_hist1, mc_hist2, ...]
+            }
+            Each key will become a different stack that is compared side-by-side.
+            Each list will be inside the stack on top of each other in the order
+            specified.
+
+    Keywords:
+        draw_styles: a dict with the stack names and the corresponding TH1::Draw
+            styles to use.
+        title: plot title (set on the first stack)
+        x_label: label of the x axis
+        y_label: label of the y axis
+        do_log_y: True/False to set log scale on y axis
+        min_bin: the lower cutoff on the y axis, which may be necessary for log y scale
+        max_bin_mult: the y axis upper limit will be this multipier times the maimal bin height
+        stack: whether we actually stack or not.
+            FIXME: I don't think it's a good idea to have a swiss army chainsaw.
+    
+    Returns:
+        a dictionary with the instances of the drawn TStacks.
+        NB: you must keep the output of this method until you print the TCanvas,
+        otherwise the stack references are destroyed.
     """
 
     logger.debug("plot_hists_stacked: %s %s %s" % (str(canv), str(hist_groups), str(kwargs)))
@@ -47,10 +58,8 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
     x_label = kwargs.get("x_label", "x_label")
     y_label = kwargs.get("y_label", "")
 
-    min_bin = kwargs.get("min_bin", 10)
+    min_bin = kwargs.get("min_bin", -1)
     max_bin_mult = kwargs.get("max_bin_mult", 1.8)
-
-
 
     for name, group in hist_groups.items():
         if len(group)==0:
@@ -60,26 +69,50 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
             stacks[name].Add(hist)
 
     max_bin = max([st.GetMaximum() for st in stacks.values()])
+    logger.info('Maximal bin: %1.3f' % max_bin)
+    logger.info('Stack info: %s' % str([(k,v.GetMaximum()) for k,v in stacks.items()]))
+    if min_bin == -1:
+        min_bin = 0.3*min([st.GetMinimum() for st in stacks.values()])
 
-    #Need to draw the stacks one time to initialize everything
+    do_stack = kwargs.get('stack', True)
+    if not do_stack:
+        max_bin = max([st.GetMaximum("nostack") for st in stacks.values()])
+        min_bin = 0.1*min([st.GetMinimum("nostack") for st in stacks.values()])
+
+    if min_bin == 0:
+        if not do_stack:
+            min_bin = 0.001
+        else: 
+            min_bin = 1
+
+    #Need to draw the stacks one time to initialize everything (crazy ROOT)
     for name, stack in stacks.items():
         stack.Draw()
     canv.Draw()
+    logger.info("do_stack: %s" % str(do_stack))
 
     #Now draw really
     first = True
     for name, stack in stacks.items():
         logger.debug("Drawing stack %s" % name)
+        if name == 'data' and not do_stack:
+            continue
         if name in draw_styles.keys():
             drawcmd = draw_styles[name]
         else:
             drawcmd = "BAR HIST goff" #default stack style
+
+        if not do_stack:
+            drawcmd = "nostack hist"
         if not first:
             drawcmd += " SAME"
+        logger.info('name: %s drawcmd: %s' % (name,drawcmd))
+        logger.info('options: %s' % str(stack.GetOption()))
         stack.Draw(drawcmd)
 
         #Set the plot style on the first stack
         if first:
+            logger.info('minimum: %1.3f maximum: %1.3f' % (min_bin, max_bin_mult*max_bin))
             stack.SetMaximum(max_bin_mult*max_bin)
             if do_log_y:
                 stack.SetMinimum(min_bin)

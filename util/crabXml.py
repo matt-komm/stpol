@@ -57,7 +57,8 @@ class JobStats:
         s = "%s: (tot %d| comp %d| PD %d | RS %d | S %d) | %.2f %%" % (
             self.name, self.jobs_total, self.jobs_completed, self.jobs_pending,
             self.jobs_to_resubmit, self.jobs_to_submit,
-            100.0*(float(self.jobs_completed) / float(self.jobs_total)))
+            100.0*(float(self.jobs_completed) / float(self.jobs_total)) if self.jobs_total>0 else 0,
+        )
         if self.jobs_total != (self.jobs_pending + self.jobs_completed + self.jobs_to_resubmit + self.jobs_to_submit):
             s = ">>>" + s
         return s
@@ -137,9 +138,11 @@ class Task:
         jobs_a = dom.getElementsByTagName("Job")
         jobs_b = dom.getElementsByTagName("RunningJob")
         if len(jobs_a)==0 or len(jobs_b) == 0 or len(jobs_a) != len(jobs_b):
-            raise ValueError("No jobs in XML")
-        self.prev_jobs = self.jobs
-        self.jobs = map(Task.parseJob, zip(jobs_a, jobs_b))
+            self.prev_jobs = []
+            self.jobs = []
+        else:
+            self.prev_jobs = self.jobs
+            self.jobs = map(Task.parseJob, zip(jobs_a, jobs_b))
         self.name = re.match(".*WD_(.*)/share/RReport.xml", self.fname).group(1)
 
     @staticmethod
@@ -167,7 +170,7 @@ class Task:
 
     def printStats(self):
         stats = JobStats(self)
-        print str(stats)
+        print str(stats), self.fname
 
 def maketime(s):
     if s:
@@ -243,7 +246,6 @@ if __name__=="__main__":
     for r in reports:
         t = Task()
         t.updateJobs(r)
-
         js = JobStats(t)
         match = re.match("(.*)/WD_(.*)/share/RReport.xml", r)
         if not match:
@@ -256,7 +258,7 @@ if __name__=="__main__":
         of.close()
         if t.isCompleted():
             completed.append(t)
-        print js.summary()
+        print js.summary(), t.fname
         t_tot += t
     tot_stats = JobStats(t_tot)
     tot_stats.name = "total"

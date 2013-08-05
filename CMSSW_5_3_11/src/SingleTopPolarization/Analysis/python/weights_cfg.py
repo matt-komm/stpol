@@ -1,11 +1,14 @@
 import FWCore.ParameterSet.Config as cms
+from SingleTopPolarization.Analysis import sample_types
+import logging
 
 def WeightSetup(process, conf):
     if not conf.isMC:
         raise ValueError("Weighting is defined only for MC!")
 
     process.weightSequence = cms.Sequence()
-    if conf.subChannel.lower() == "ttbar":
+    if sample_types.is_ttbar(conf.subChannel):
+        logging.info("Enabling top pt reweighting for subchannel %s" % conf.subChannel)
         channel = dict()
         channel["TTJets_FullLept"] = "FullLept"
         channel["TTJets_SemiLept"] = "SemiLept"
@@ -20,6 +23,8 @@ def WeightSetup(process, conf):
     process.puWeightProducer = cms.EDProducer('PUWeightProducer'
         , maxVertices = cms.uint32(50)
         , srcDistribution = cms.vdouble(conf.srcPUDistribution)
-        , destDistribution = cms.vdouble(conf.destPUDistribution)
+        , weightFileNominal=cms.FileInPath("data/pu_weights/data_PU_nominal.root")
+        , weightFileUp=cms.FileInPath("data/pu_weights/data_PU_up.root")
+        , weightFileDown=cms.FileInPath("data/pu_weights/data_PU_down.root")
     )
     process.weightSequence += process.puWeightProducer
