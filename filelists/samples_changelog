@@ -1,4 +1,8 @@
 -------
+Sample: /hdfs/local/stpol/step3/Aug4_c6a4b11_puw_Jul29_MVA
+git hash: 80f408e used for MVA adding, MVA trainig same as 39a2ddb (i.e. /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/)
+Explanation: New step3 based on modified step2 (only nominal done). For changes in step2 see previous sample. MVA same as prior sample, no new training. 
+-------
 Sample: FIXME
 git hash: 5a0165 processing, 0eb8c59 extra configuration
 Explanation:
