@@ -77,19 +77,6 @@ if __name__=="__main__":
         file.write(hist.toConfigString())
         comp.setNominalHistogram(hist)
         
-        for shapeSystematic in shapeSystematicDict.keys():
-            if ntuple=="cos_theta__qcd":
-                continue
-            histUP=RootHistogram(ntuple+"-"+shapeSystematic+"-UP")
-            histUP.setFileName(histograminputfile)
-            histUP.setHistoName(ntuple+"__"+shapeSystematic+"__up")
-            histDOWN=RootHistogram(ntuple+"-"+shapeSystematic+"-DOWN")
-            histDOWN.setFileName(histograminputfile)
-            histDOWN.setHistoName(ntuple+"__"+shapeSystematic+"__down")
-            comp.addUncertaintyHistograms(histUP, histDOWN, shapeSystematicDict[shapeSystematic])
-            file.write(histUP.toConfigString())
-            file.write(histDOWN.toConfigString())
-        file.write("\n")
         
         obs.addComponent(comp)
     model.addObservable(obs)

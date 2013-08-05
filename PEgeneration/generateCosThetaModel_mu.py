@@ -1,3 +1,6 @@
+
+
+
 from ModelClasses import *
 from optparse import OptionParser
 import math
@@ -57,7 +60,7 @@ if __name__=="__main__":
         
     yields=MultiDistribution("beta_yields")
     for ntuple in ntupleNameList:
-        yields.addParameter("beta_"+ntuple,ntupleNameList[ntuple]["yield"],ntupleNameList[ntuple]["unc"])
+        yields.addParameter("beta_"+ntuple,str(ntupleNameList[ntuple]["yield"]),ntupleNameList[ntuple]["unc"])
     yields.setCorrelation("beta_cos_theta__wzjets","beta_cos_theta__top",-0.925)
     
     file.write(yields.toConfigString())
@@ -71,12 +74,13 @@ if __name__=="__main__":
     
     
     obs=Observable("cosTheta", binning, range)
+    obsBG=Observable("cosThetaBG", binning, range)
     for ntuple in ntupleNameList.keys():
         comp=ObservableComponent("comp_"+ntuple)
         coeff=CoefficientMultiplyFunction()
         
         '''
-        betaDist=Distribution("beta_"+ntuple, "log_normal", {"mu":str(ntupleNameList[ntuple]["yield"]), "sigma":str(ntupleNameList[ntuple]["unc"])})
+        betaDist=Distribution("beta_"+ntuple, "log_normal", {"mu":str(math.log(ntupleNameList[ntuple]["yield"])), "sigma":str(ntupleNameList[ntuple]["unc"])})
         file.write(betaDist.toConfigString())
         coeff.addDistribution(betaDist)
         '''
@@ -107,8 +111,36 @@ if __name__=="__main__":
         file.write("\n")
         
         obs.addComponent(comp)
+        
+        
+        
+        
+        
+        if (ntuple not in signalNameList):
+            compBG=ObservableComponent("comp_"+ntuple)
+            coeffBG=CoefficientMultiplyFunction()
+            
+            
+            betaDist=Distribution("betaBG_"+ntuple, "log_normal", {"mu":str(math.log(ntupleNameList[ntuple]["yield"])), "sigma":str(0.00000001)})
+            file.write(betaDist.toConfigString())
+            coeffBG.addDistribution(betaDist)
+            
+            #coeff.addDistribution(yields,"beta_"+ntuple)
+            
+            #coeff.addDistribution(yield_lumi)
+            
+            
+            compBG.setCoefficientFunction(coeffBG)
+            histBG=RootHistogram(ntuple+"-BG")
+            histBG.setFileName(histograminputfile)
+            histBG.setHistoName(ntuple)
+            file.write(histBG.toConfigString())
+            compBG.setNominalHistogram(histBG)
+            obsBG.addComponent(compBG)
+        
+        
     model.addObservable(obs)
-    
+    model.addObservable(obsBG)
     file.write(model.toConfigString())
 
 
@@ -118,7 +150,7 @@ if __name__=="__main__":
     file.write('pd = {\n')
     file.write('    type = "pseudodata_writer";\n')
     file.write('    name = "pd";\n')
-    file.write('    observables = ("obs_cosTheta");\n')
+    file.write('    observables = ("obs_cosTheta","obs_cosThetaBG");\n')
     file.write('    write-data = true;\n')
     file.write('};\n')
     
@@ -186,3 +218,4 @@ if __name__=="__main__":
     file.write('           plugin_files = ("$THETA_DIR/lib/root.so", "$THETA_DIR/lib/core-plugins.so");\n')
     file.write('};\n')
     file.close()
+    

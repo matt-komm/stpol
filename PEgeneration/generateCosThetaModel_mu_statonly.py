@@ -10,8 +10,8 @@ if __name__=="__main__":
     (options, args)=parser.parse_args()
 
     histograminputfile="/home/fynu/mkomm/mu_cos_theta_mva_0_09/data.root"
-    modelfilename="PE_muon_nominal.cfg"
-    outputfilename="PE_muon_nominal.root"
+    modelfilename="PE_muon_statonly.cfg"
+    outputfilename="PE_muon_statonly.root"
     
     binning=14
     range=[-1.0,1.0]
@@ -28,7 +28,6 @@ if __name__=="__main__":
         "cos_theta__qcd": {"yield":0.782740,"unc":0.0000001},
         "cos_theta__top": {"yield":0.979,"unc":0.0000000001}
     }
-    
     ntupleNameList={}
     ntupleNameList.update(signalNameList)
     ntupleNameList.update(backgroundNameList)
@@ -149,7 +148,7 @@ if __name__=="__main__":
     file.write('pd = {\n')
     file.write('    type = "pseudodata_writer";\n')
     file.write('    name = "pd";\n')
-    #file.write('    observables = ("obs_cosTheta","obs_cosThetaBG");\n')
+    file.write('    observables = ("obs_cosTheta","obs_cosThetaBG");\n')
     file.write('    write-data = true;\n')
     file.write('};\n')
     
@@ -195,7 +194,7 @@ if __name__=="__main__":
     file.write('    type="model_source";\n')
     file.write('    model="@model_cosTheta";\n')
     file.write('    name="source";\n')
-    file.write('    dice_poisson=false;\n')
+    file.write('    dice_poisson=true;\n')
     file.write('    rnd_gen={\n')
     file.write('         seed=126;//default of-1 means: use current time.\n')
     file.write('      };\n')

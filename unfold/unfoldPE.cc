@@ -173,9 +173,11 @@ int main( int argc, const char* argv[] )
     TFile input(argv[1],"r");
 
     TTree* tree_input = (TTree*)input.Get(argv[2]);
+    
     TH1D* histo_input = new TH1D();
     tree_input->SetBranchAddress(argv[3],&histo_input);
     tree_input->GetEntry(0);
+    
     /*
     TCanvas* canvas = new TCanvas("canvas","",800,600);  
     histo_input->Draw();
@@ -220,14 +222,14 @@ int main( int argc, const char* argv[] )
     
     TH1D* histo_output_tunfold = new TH1D("output","",nbinsT,binningT);
     tree_output->Branch("tunfold",&histo_output_tunfold);
-
-    double tau = scanTau(response)*0.11;
+    gErrorIgnoreLevel = kPrint | kInfo | kWarning;
+    double tau = scanTau(response)*0.35;
     printf("tau: %f\r\n",tau);
 
     int nevents = tree_input->GetEntries();
     //nevents=10000;
     printf("events: %i\r\n",nevents);
-    gErrorIgnoreLevel = kPrint | kInfo | kWarning;
+    
     
     for (int cnt=0; cnt<nevents;++cnt) {
         
@@ -243,19 +245,14 @@ int main( int argc, const char* argv[] )
         
         /*
         TCanvas* canvas = new TCanvas("canvas","",800,600);
-        
-        
-        //histo_input->Draw();
-        //measured->Draw("P*Same");
-        histo_output_tunfold->Add(truth,-1.0);
-        histo_output_tunfold->Draw();
+        histo_input->Draw();
+        measured->Draw("P*Same");
+        //histo_output_tunfold->Add(truth,-1.0);
+        //histo_output_tunfold->Draw();
         //truth->Scale(0.9);
         //truth->Draw("P*Same");
-        */
-        
-        
-        //canvas->Update();
-        //canvas->WaitPrimitive();
+        canvas->Update();
+        canvas->WaitPrimitive();*/
         
         tree_output->Fill();
     }

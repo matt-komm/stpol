@@ -1,3 +1,6 @@
+
+
+
 from ModelClasses import *
 from optparse import OptionParser
 import math
@@ -9,9 +12,9 @@ if __name__=="__main__":
     
     (options, args)=parser.parse_args()
 
-    histograminputfile="/home/fynu/mkomm/ele_cos_theta_mva_0_13/data.root"
-    modelfilename="PE_ele.cfg"
-    outputfilename="PE_ele.root"
+    histograminputfile="/home/fynu/mkomm/mu_cos_theta_mva_0_09/data.root"
+    modelfilename="PE_muon_yieldonly.cfg"
+    outputfilename="PE_muon_yieldonly.root"
     
     binning=14
     range=[-1.0,1.0]
@@ -19,13 +22,13 @@ if __name__=="__main__":
     
     
     signalNameList={
-        "cos_theta__tchan": {"yield":1.2988,"unc":0.102}
+        "cos_theta__tchan": {"yield":1.082186,"unc":0.066}
     }
    
     backgroundNameList={
         "cos_theta__wzjets": {"yield":1.511,"unc":0.187},
-        "cos_theta__qcd": {"yield":0.000,"unc":0.891},
-        "cos_theta__top": {"yield":0.987,"unc":0.0965}
+        "cos_theta__qcd": {"yield":0.782740,"unc":0.730},
+        "cos_theta__top": {"yield":0.979,"unc":0.090}
     }
     ntupleNameList={}
     ntupleNameList.update(signalNameList)
@@ -34,17 +37,18 @@ if __name__=="__main__":
                            
     
     
-    shapeSystematicDict={"En":Distribution("delta_JES", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+    shapeSystematicDict={#"En":Distribution("delta_JES", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
                         
-                        "Res":Distribution("delta_JER", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"Res":Distribution("delta_JER", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
                         
-                        "UnclusteredEn":Distribution("delta_EN", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "btaggingBC":Distribution("delta_BCtagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "btaggingL":Distribution("delta_Ltagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "leptonID":Distribution("delta_leptonID", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "leptonTrigger":Distribution("delta_leptonTrigger", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),                                                
-                        "wjets_flat":Distribution("delta_wjetFLAT", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
-                        "wjets_shape":Distribution("delta_wjetSHAPE", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"})
+                        #"UnclusteredEn":Distribution("delta_EN", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"btaggingBC":Distribution("delta_BCtagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"btaggingL":Distribution("delta_Ltagging", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"leptonID":Distribution("delta_leptonID", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"leptonIso":Distribution("delta_leptonIso", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"leptonTrigger":Distribution("delta_leptonTrigger", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),                                                
+                        #"wjets_flat":Distribution("delta_wjetFLAT", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"}),
+                        #"wjets_shape":Distribution("delta_wjetSHAPE", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"})
                         
     }
     
@@ -56,9 +60,8 @@ if __name__=="__main__":
         
     yields=MultiDistribution("beta_yields")
     for ntuple in ntupleNameList:
-        yields.addParameter("beta_"+ntuple,ntupleNameList[ntuple]["yield"],ntupleNameList[ntuple]["unc"])
-    yields.setCorrelation("beta_cos_theta__wzjets","beta_cos_theta__top",-0.91)
-    yields.setCorrelation("beta_cos_theta__tchan","beta_cos_theta__qcd",-0.85)
+        yields.addParameter("beta_"+ntuple,str(ntupleNameList[ntuple]["yield"]),ntupleNameList[ntuple]["unc"])
+    yields.setCorrelation("beta_cos_theta__wzjets","beta_cos_theta__top",-0.925)
     
     file.write(yields.toConfigString())
     
@@ -71,12 +74,13 @@ if __name__=="__main__":
     
     
     obs=Observable("cosTheta", binning, range)
+    obsBG=Observable("cosThetaBG", binning, range)
     for ntuple in ntupleNameList.keys():
         comp=ObservableComponent("comp_"+ntuple)
         coeff=CoefficientMultiplyFunction()
         
         '''
-        betaDist=Distribution("beta_"+ntuple, "log_normal", {"mu":str(ntupleNameList[ntuple]["yield"]), "sigma":str(ntupleNameList[ntuple]["unc"])})
+        betaDist=Distribution("beta_"+ntuple, "log_normal", {"mu":str(math.log(ntupleNameList[ntuple]["yield"])), "sigma":str(ntupleNameList[ntuple]["unc"])})
         file.write(betaDist.toConfigString())
         coeff.addDistribution(betaDist)
         '''
@@ -107,8 +111,36 @@ if __name__=="__main__":
         file.write("\n")
         
         obs.addComponent(comp)
+        
+        
+        
+        
+        
+        if (ntuple not in signalNameList):
+            compBG=ObservableComponent("comp_"+ntuple)
+            coeffBG=CoefficientMultiplyFunction()
+            
+            
+            betaDist=Distribution("betaBG_"+ntuple, "log_normal", {"mu":str(math.log(ntupleNameList[ntuple]["yield"])), "sigma":str(0.00000001)})
+            file.write(betaDist.toConfigString())
+            coeffBG.addDistribution(betaDist)
+            
+            #coeff.addDistribution(yields,"beta_"+ntuple)
+            
+            #coeff.addDistribution(yield_lumi)
+            
+            
+            compBG.setCoefficientFunction(coeffBG)
+            histBG=RootHistogram(ntuple+"-BG")
+            histBG.setFileName(histograminputfile)
+            histBG.setHistoName(ntuple)
+            file.write(histBG.toConfigString())
+            compBG.setNominalHistogram(histBG)
+            obsBG.addComponent(compBG)
+        
+        
     model.addObservable(obs)
-    
+    model.addObservable(obsBG)
     file.write(model.toConfigString())
 
 
@@ -118,7 +150,7 @@ if __name__=="__main__":
     file.write('pd = {\n')
     file.write('    type = "pseudodata_writer";\n')
     file.write('    name = "pd";\n')
-    file.write('    observables = ("obs_cosTheta");\n')
+    file.write('    observables = ("obs_cosTheta","obs_cosThetaBG");\n')
     file.write('    write-data = true;\n')
     file.write('};\n')
     
@@ -186,3 +218,4 @@ if __name__=="__main__":
     file.write('           plugin_files = ("$THETA_DIR/lib/root.so", "$THETA_DIR/lib/core-plugins.so");\n')
     file.write('};\n')
     file.close()
+    
