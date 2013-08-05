@@ -41,6 +41,7 @@ import re
 
 from plots.common.output import OutputFolder
 from plots.common.metainfo import PlotMetaInfo
+from plots.common.cross_sections import lumis as xslumis
 
 from rootpy.extern.progressbar import *
 
@@ -48,8 +49,8 @@ logger = logging.getLogger("make_all_plots")
 
 #FIXME: take the lumis from a central database
 lumis = {
-    "mu": 1094 + 5319 + 4918 + 6823,
-    "ele": 917 + 12396 + 6434
+    "mu": xslumis["83a02e9_Jul22"]["iso"]["mu"],
+    "ele": xslumis["83a02e9_Jul22"]["iso"]["ele"]
 }
 
 def yield_string(h, hn=None):
