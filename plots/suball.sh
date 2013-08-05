@@ -4,5 +4,5 @@
 CMD=$STPOL_DIR/control_plots/all_plots/make_all_plots.py
 python $STPOL_DIR/plots/common/plot_defs.py | while read line
 do
-    sbatch -p short $CMD -p $line --cluster -i ~joosep/singletop/stpol/Aug4_c6a4b11_puw
+    sbatch -p short $CMD -p $line --do_systs --cluster -i /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1
 done
