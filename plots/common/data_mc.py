@@ -75,7 +75,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
     for name, sample in samples.items():
         logger.debug("Starting to plot %s" % name)
         if sample.isMC:
-            hist = sample.drawHistogram(var, cut_str, weight=str(weight), plot_range=plot_range, frac_entries=0.0001)
+            hist = sample.drawHistogram(var, cut_str, weight=str(weight), plot_range=plot_range)
             hist.Scale(sample.lumiScaleFactor(lumi))
             hists_mc[sample.name] = hist
             if do_norm:
