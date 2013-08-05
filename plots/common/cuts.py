@@ -38,6 +38,8 @@ class Cuts:
     def true_lepton(lep):
         if lep=="mu":
             return Cut("abs(true_lepton_pdgId)==13")
+        elif lep=="ele":
+            return Cut("abs(true_lepton_pdgId)==11")
         else:
             raise ValueError("Incorrect lepton type %s" % lep)
 

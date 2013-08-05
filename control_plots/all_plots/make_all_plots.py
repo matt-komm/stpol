@@ -116,11 +116,10 @@ def change_syst(paths, dest):
     """
     return map(lambda x: x.replace("nominal", dest) if "nominal" in x else x, paths)
 
-def total_syst(hnominal, hists, corr=None):
-    #FIXME: implement addition of correlated histograms
-    if not corr:
-        corr = numpy.identity(len(hists))
+def total_syst(nominal, systs):
 
+    for systn, hists in systs.items():
+        
     bins_nom = numpy.array(hnominal.y())
     bins_syst = map(numpy.array, map(lambda h: h.y(), hists))
     bins_diff = map(lambda b: b-bins_nom, bins_syst)
@@ -228,8 +227,9 @@ if __name__=="__main__":
     #The enabled systematic up/down variation sample prefixes to put on the ratio plot
     systs = {
         "JES": ["EnUp", "EnDown"],
-        "JER": ["ResUp", "ResDown"],
-        "MET": ["UnclusteredEnUp", "UnclusteredEnDown"],
+        "JES1": ["EnUp", "EnDown"],
+        #"JER": ["ResUp", "ResDown"],
+        #"MET": ["UnclusteredEnUp", "UnclusteredEnDown"],
     }
 
     for lepton_channel in args.channels:
@@ -275,19 +275,14 @@ if __name__=="__main__":
             canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
 
             #Draw the histograms from systematically variated samples
-            hists_tot_mc_syst_up = {}
-            hists_tot_mc_syst_down = {}
-            for name, samps in samples_syst.items():
-                pdb.set_trace()
-                _canv, _merged_hists, _htot_mc, _htot_data = data_mc_plot(samps, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
-                chi2 = htot_mc.Chi2Test(_htot_mc, "WW CHI2/NDF")
-                logger.info("Chi2 between nominal and %s is %.2f" % (syst, chi2))
-                if "Up" in syst:
-                    hists_tot_mc_syst_up[syst] = _htot_mc
-                elif "Down" in syst:
-                    hists_tot_mc_syst_down[syst] = _htot_mc
-                else:
-                    raise ValueError("Unhandled systematic " + syst)
+            hists_tot_mc_syst = {}
+            for name, subsysts in samples_syst.items():
+                hists_tot_mc_syst[name] = {}
+                for subsyst_name, samps in subsysts.items():
+                    _canv, _merged_hists, _htot_mc, _htot_data = data_mc_plot(samps, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
+                    chi2 = htot_mc.Chi2Test(_htot_mc, "WW CHI2/NDF")
+                    hists_tot_mc_syst[name][subsyst_name] = _htot_mc
+            pdb.set_trace()
 
             #Draw the ratio plot with
             do_norm = plot_def.get("normalize", False)

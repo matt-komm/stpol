@@ -83,24 +83,26 @@ def plot_hists(hists, name="canv", **kwargs):
 
     return canv
 
-def subpad(low=0.3):
+def subpad(canv, low=0.3):
     """
     Makes a new subpad on a TCanvas in the upper region
 
     Args:
+        canv: the parent canvas instance
         low: a floating point fraction for the area to cut off in the lower part
 
     Returns:
         a handle to the new TPad
     """
     #Make a separate pad for the stack plot
+    canv.cd()
     p1 = ROOT.TPad("p1", "p1", 0, low, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
     p1.SetGrid();
     p1.SetFillStyle(0);
     p1.cd()
-    return subpad
+    return p1
 
 def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3, syst_hists=None):
     """
@@ -245,10 +247,13 @@ if __name__=="__main__":
 
     c = ROOT.TCanvas("c1")
 
-    p1 = subpad()
+    p1 = subpad(c)
 
-    hdata.Draw("h")
-    hmc.Draw("hsame")
+    from plots.common.sample_style import Styling
+    Styling.mc_style(hmc, "T_t")
+    Styling.data_style(hdata)
+    hmc.Draw("hist")
+    hdata.Draw("e1 same")
 
     hsyst_up = hmc.Clone()
     hsyst_up.Scale(1.02)
@@ -256,6 +261,6 @@ if __name__=="__main__":
     hsyst_down.Scale(0.98)
 
     p2, hist_ratio = plot_data_mc_ratio(c, hmc, hdata, syst_hists=(hsyst_up, hsyst_down))
-    c.Update()
-    c.Show()
+    #c.Update()
+    #c.Show()
     c.SaveAs("hist_plots_test1.png")

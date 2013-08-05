@@ -20,6 +20,7 @@ from plots.common.utils import lumi_textbox
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts
 from plots.fit_scale_factors import fitpars
+from plots.common.cross_sections import lumis
 import argparse
 
 def find_bin_idx(binning, val):
@@ -127,21 +128,22 @@ if __name__=="__main__":
         logger.debug("Posterior binning B = %s" % (str(get_binning(posterior))))
         return posterior, hasym, binning
 
-    lumi = 18600
+    lep = "mu"
+    lumi = lumis["83a02e9_Jul22"]["iso"][lep]
 
     pe_post, pe_asym, binning = get_posterior(args.infileMC)
     data_post, data_asym, binning = get_posterior(args.infileD)
     data_post.SetTitle("unfolded data")
     data_asym.SetTitle("unfolded data")
 
-    s = Sample.fromFile("data/Jul26/mu/mc/iso/nominal/Jul15/T_t_ToLeptons.root")
-    htrue = s.drawHistogram("true_cos_theta", str(Cuts.true_lepton("mu")), binning=binning)
-    s1 = Sample.fromFile("data/Jul26/mu/mc/iso/nominal/Jul15/Tbar_t_ToLeptons.root")
-    htrue1 = s1.drawHistogram("true_cos_theta", str(Cuts.true_lepton("mu")), binning=binning)
+    s = Sample.fromFile("data/Jul26/%s/mc/iso/nominal/Jul15/T_t_ToLeptons.root" % lep)
+    htrue = s.drawHistogram("true_cos_theta", str(Cuts.true_lepton(lep)), binning=binning)
+    s1 = Sample.fromFile("data/Jul26/%s/mc/iso/nominal/Jul15/Tbar_t_ToLeptons.root" % lep)
+    htrue1 = s1.drawHistogram("true_cos_theta", str(Cuts.true_lepton(lep)), binning=binning)
     htrue = htrue + htrue1
 
     #FIXME: correct scale factor
-    htrue.Scale(1.082186)
+    htrue.Scale(fitpars['final_2j1t_mva'][lep][0][1])
 
     htrue.SetTitle("generated")
     print "gen binning", get_binning(htrue)
@@ -189,7 +191,7 @@ if __name__=="__main__":
     of.savePlot(canv, pmi)
     print "Expected %.2f ± %.2f, measured %.2f" % (pe_asym.GetMean(), pe_asym.GetRMS(), data_asym.GetMean())
 
-    htrue1 = s.drawHistogram("true_cos_theta", str(Cuts.true_lepton("mu")), plot_range=[20, -1, 1])
+    htrue1 = s.drawHistogram("true_cos_theta", str(Cuts.true_lepton(lep)), plot_range=[20, -1, 1])
     idx= find_bin_idx(list(htrue1.x()), 0)
     print asymmetry(htrue1, idx), idx
     # I, E = calc_int_err(posterior)
