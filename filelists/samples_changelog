@@ -1,12 +1,38 @@
 -------
-Sample: FIXME
+Sample: /hdfs/local/stpol/step3/Aug4_c6a4b11_puw_Jul29_MVA
+git hash: 80f408e used for MVA adding, MVA trainig same as 39a2ddb (i.e. /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/)
+Explanation: New step3 based on modified step2 (only nominal done). For changes in step2 see previous sample. MVA same as prior sample, no new training. 
+FIXME: Joosep, clarify which step2 was used for this step3
+-------
+Sample: Aug4_0eb863_full
+step: step2
+git hash: 0eb863
+filelist: ???
+Explanation: as Aug4_c6a4b11, but with all sustematics
+-------
+Sample: Aug4_c6a4b11_puw
+step: step3
+git hash: ???
+filelist: ~joosep/singletop/stpol/Aug4_c6a4b11_puw
+Explanation: as Aug4_c6a4b11 but the pile-up weight with variations is correctly saved 
+-------
+Sample: Aug4_c6a4b11
+step: step2
+git hash: c6a4b11
+filelist: filelists/Aug4_c6a4b11/step2
+Explanation: nominal run with MET fix
+-------
+Sample: Aug1_5a0165
+step: step2
 git hash: 5a0165 processing, 0eb8c59 extra configuration
+filelist: filelists/Aug1_5a0165/step2
 Explanation:
-Added missing data.
-Reorganized the MET sequences in step2, making them call a common method.
-Incorporated the phi-modulation correction using standard modules.
-PU weight variations now calculated using variated data PU histograms.
-Using conservative scale factors on lepton weights by default.
+    Added missing data.
+    Reorganized the MET sequences in step2, making them call a common method.
+    Incorporated the phi-modulation correction using standard modules.
+    PU weight variations now calculated using variated data PU histograms.
+    Using conservative scale factors on lepton weights by default.
+    MET is missing from the output, bugfix 64fab0
 -------
 Sample: datasets/step2/data/Aug1
 git hash: ?????
@@ -15,10 +41,10 @@ Explanation: processed some 0.9/fb of data that was missing from the previous it
 Sample: /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
 git hash: 39a2ddb
 Explanation:
-Changed the MVA training fundamentally. Now we're using inclusive samples for training and exclusive samples for testing/plotting. In addition, this is the first MVA training where we do multiple MVAs in accordance to variable ranking allowing us to choose also partial variable list if we want to. What has also changed is the BDT variable naming in the trees:
-* Electrons, the best is: mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj
-* Muons, the best is: mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj
-If one wants one can remove part of the names ending to get an MVA with smaller list of vars. For example an MVA with only top three vars would be:
-* Electrons: mva_BDT_with_top_mass_C_eta_lj
-* Muons: mva_BDT_with_top_mass_eta_lj_C
+    Changed the MVA training fundamentally. Now we're using inclusive samples for training and exclusive samples for testing/plotting. In addition, this is the first MVA training where we do multiple MVAs in accordance to variable ranking allowing us to choose also partial variable list if we want to. What has also changed is the BDT variable naming in the trees:
+    * Electrons, the best is: mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj
+    * Muons, the best is: mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj
+    If one wants one can remove part of the names ending to get an MVA with smaller list of vars. For example an MVA with only top three vars would be:
+    * Electrons: mva_BDT_with_top_mass_C_eta_lj
+    * Muons: mva_BDT_with_top_mass_eta_lj_C
 -------
