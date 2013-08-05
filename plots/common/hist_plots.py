@@ -16,6 +16,8 @@ def plot_hists(hists, name="canv", **kwargs):
 
     Keywords:
         name: the name of the canvas to create.
+        draw_cmd: the ROOT draw command. Can be a single command
+            (use the same for all) or a list with the length of hists 
         x_label: a string with the title for the x axis.
         y_label: ditto for the y axis.
         do_log_y: a boolean to specify if the y axis should be logarithmic.
@@ -29,6 +31,9 @@ def plot_hists(hists, name="canv", **kwargs):
 
     Returns:
         a handle to the new canvas.
+    Raises:
+        ValueError: when the number of draw commands did not equal the number
+            of hists
     """
 
     canv = ROOT.TCanvas(name, name)
@@ -44,9 +49,13 @@ def plot_hists(hists, name="canv", **kwargs):
 
     max_bin_val = get_max_bin([hist for hist in hists])
 
+    if isinstance(draw_cmd, basestring):
+        draw_cmd = [draw_cmd]*len(hists)
+    if len(draw_cmd) != len(hists):
+        raise ValueError("Must have the same number of draw commands as hists: %s vs %s" % (str(draw_cmd), str(hists)))
     first = False
-    for hist in hists:
-        hist.Draw(draw_cmd + (" SAME" if first else ""))
+    for dc, hist in zip(draw_cmd, hists):
+        hist.Draw(dc + (" SAME" if first else ""))
         first = True
 
     hists[0].SetStats(False)
@@ -62,7 +71,7 @@ def plot_hists(hists, name="canv", **kwargs):
     if do_chi2:
         for h in hists[1:]:
             chi2 = hists[0].Chi2Test(h, "WW CHI2/NDF")
-            h.SetTitle(h.GetTitle() + " #chi^{2}/ndf=%.2f" % chi2)
+            h.SetTitle(h.GetTitle() + " #chi^{2}/ndf=%.1f" % chi2)
 
     if do_ks:
         for h in hists[1:]:
@@ -176,7 +185,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3, syst_hists=None):
             hr.Add(hist_data, -1)
             hr.Divide(hist_data)
 
-            #hr.fillstyle = "/"
+            hr.SetFillStyle(0)
             #hr.SetFillColor(ROOT.kGray)
             hr.SetLineColor(ROOT.kGray)
 

@@ -35,6 +35,13 @@ class Cuts:
     no_cut = Cut("1")
 
     @staticmethod
+    def true_lepton(lep):
+        if lep=="mu":
+            return Cut("abs(true_lepton_pdgId)==13")
+        else:
+            raise ValueError("Incorrect lepton type %s" % lep)
+
+    @staticmethod
     def lepton(lepton):
         if lepton=="mu":
             cut = Cuts.one_muon*Cuts.lepton_veto
@@ -114,23 +121,23 @@ class Cuts:
         return Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton)*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
         
     @staticmethod
-    def mva_cut(cut):
+    def mva_cut(cut, mva_var = "mva_BDT"):
         if cut <= -1:
             return Cut("1")
         else:
-            return Cut("mva_BDT > %s" % cut)    
+            return Cut("%s >= %s" % (mva_var, cut))    
 
     @staticmethod
-    def mva_iso(lepton, mva_cut="-1"):
+    def mva_iso(lepton, mva_cut="-1", mva_var="mva_BDT"):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.mt_or_met(lepton)*Cuts.mva_cut(mva_cut)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.mt_or_met(lepton)*Cuts.mva_cut(mva_cut, mva_var)
 
     @staticmethod
-    def mva_antiiso(lepton, mva_cut="-1"):
+    def mva_antiiso(lepton, mva_cut="-1", mva_var="mva_BDT"):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)*Cuts.mt_or_met(lepton)*Cuts.mva_cut(mva_cut)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)*Cuts.mt_or_met(lepton)*Cuts.mva_cut(mva_cut, mva_var)
 
     @staticmethod
     def eta_fit(lepton, nj=2, nb=1):
@@ -191,6 +198,10 @@ class Weight:
 
     def __mul__(self, other):
         weight_str = '('+self.weight_str+') * ('+other.weight_str+')'
+        return Weight(weight_str)
+    
+    def __sub__(self, other):
+        weight_str = '('+self.weight_str+' - '+other.weight_str+')'
         return Weight(weight_str)
 
     def __str__(self):
