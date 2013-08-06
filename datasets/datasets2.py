@@ -53,6 +53,9 @@ class Dataset:
         self.global_tag = global_tag
         self.lumi_file = lumi_file
 
+    def __repr__(self):
+        return str((self.name, self.ds))
+
     def parseTemplate(self, tag, cmdline, subdir):
         out = open(self.template_fn).read()
         workdir = "WD_{0}".format(self.name)
