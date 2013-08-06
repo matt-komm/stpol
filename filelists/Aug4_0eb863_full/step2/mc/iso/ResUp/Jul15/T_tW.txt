@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResUp/T_tW/output_1_1_vmi.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResUp/T_tW/output_2_1_GiH.root

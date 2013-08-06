@@ -1,0 +1,13 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_1_1_jsy.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_2_1_ilX.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_3_1_ouj.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_4_1_RPo.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_5_1_OFn.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_6_1_xY8.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_7_1_mOb.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_8_1_x4i.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_9_1_edi.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_10_1_teP.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_11_1_KTu.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_12_1_lu1.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/T_t_ToLeptons/output_13_1_x1N.root
