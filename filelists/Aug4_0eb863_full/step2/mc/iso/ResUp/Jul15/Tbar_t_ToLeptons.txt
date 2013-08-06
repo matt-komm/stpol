@@ -1,0 +1,6 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResUp/Tbar_t_ToLeptons/output_1_1_rnQ.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResUp/Tbar_t_ToLeptons/output_2_1_3vL.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResUp/Tbar_t_ToLeptons/output_3_1_sVz.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResUp/Tbar_t_ToLeptons/output_4_1_jtf.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResUp/Tbar_t_ToLeptons/output_5_1_sPB.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResUp/Tbar_t_ToLeptons/output_6_1_QUt.root

@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_t/output_1_1_nJm.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_t/output_2_1_Q4I.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_t/output_3_1_LT5.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_t/output_4_1_BGg.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_t/output_5_1_LqY.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_t/output_6_1_JKC.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_t/output_7_1_WqX.root

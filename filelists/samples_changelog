@@ -1,4 +1,22 @@
 -------
+Sample: /hdfs/local/stpol/step3/Aug4_c6a4b11_puw_Jul29_MVA
+git hash: 80f408e used for MVA adding, MVA trainig same as 39a2ddb (i.e. /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/)
+Explanation: New step3 based on modified step2 (only nominal done). For changes in step2 see previous sample. MVA same as prior sample, no new training. 
+parent: Aug4_c6a4b11_puw
+-------
+Sample: Aug4_0eb863_full
+step: step2
+git hash: 0eb863
+filelist: filelists/Aug4_0eb863_full/
+Explanation: as Aug4_c6a4b11, but with all sustematics.i
+There was a slight issue with data luminosity, but this was mostly solved by a crab resubmit. There is a very minor overlap between Aug1 and July15/Single*1 which is to be removed. 
+-------
+Sample: Aug4_c6a4b11_puw
+step: step3
+git hash: ???
+filelist: ~joosep/singletop/stpol/Aug4_c6a4b11_puw
+Explanation: as Aug4_c6a4b11 but the pile-up weight with variations is correctly saved 
+-------
 Sample: Aug4_c6a4b11
 step: step2
 git hash: c6a4b11
@@ -19,7 +37,9 @@ Explanation:
 -------
 Sample: datasets/step2/data/Aug1
 git hash: ?????
-Explanation: processed some 0.9/fb of data that was missing from the previous iteration of step1 (Jul15)
+Explanation:
+processed some 0.9/fb of data that was missing from the previous iteration of step1 (Jul15)
+Note: due to incorrect lumi sections there is a very slight overlap between Aug1 and Jul15 which is not yet fixed (FIXME).
 -------
 Sample: /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
 git hash: 39a2ddb

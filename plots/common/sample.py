@@ -34,7 +34,7 @@ def get_process_name(sn):
     return sn
 
 logger = logging.getLogger("sample.py")
-logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.WARNING)
 
 class Sample:
     def __del__(self):
@@ -69,13 +69,21 @@ class Sample:
         if not self.tree:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
+        self.tree.SetBranchStatus("*", 1)
         self.tree.SetCacheSize(100*1024*1024)
+        self.tree.AddBranchToCache("*")
+
         if self.tfile.Get("trees/WJets_weights"):
             self.tree.AddFriend("trees/WJets_weights")
         if self.tfile.Get("trees/MVA"):
             self.tree.AddFriend("trees/MVA")
         #self.tree.AddBranchToCache("*", 1)
 
+        # add friend tree from another file containing mva values
+        self.file_name_mva = file_name[:-5] + "_mva.root"
+        if os.path.isfile(self.file_name_mva):
+            self.tree.AddFriend("trees/MVA", self.file_name_mva)
+        
         self.event_count = None
         self.event_count = self.getEventCount()
         if self.event_count<=0:
@@ -85,6 +93,7 @@ class Sample:
         self.isMC = not self.file_name.split("/")[-1].startswith("Single")
 
         logger.debug("Opened sample %s with %d final events, %d processed" % (self.name, self.getEventCount(), self.getTotalEventCount()))
+        logger.debug("Sample path is %s" % self.tfile.GetPath())
 
     def getEventCount(self):
         if self.event_count is None:
@@ -109,6 +118,25 @@ class Sample:
         scale_factor = float(expected_events)/float(total_events)
         return scale_factor
 
+    def cacheEntries(self, name, cut_str):
+        """
+        Creates a TEntryList event cache corresponding to a cut.
+        This will allow subsequent operations to be speeded up if the same
+        phase space is considered. Created in the mem dir of the sample file.
+
+        Args:
+            name: the name of the new event list. Should be unique in the
+                ROOT sense of the word.
+            cut_str: a cut string according to which to select the events.
+
+        Returns:
+            an instance of the created TEntryList.
+        """
+        self.tfile.cd()
+        elist = ROOT.TEntryList(name, name)
+        self.tree.Draw(">>" + elist.GetName(), cut_str, "entrylist")
+        return elist
+
     def drawHistogram(self, var, cut_str, **kwargs):
         logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
         if not isinstance(var, basestring):
@@ -116,10 +144,11 @@ class Sample:
         name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         plot_range = kwargs.get("plot_range", None)
+        frac_entries = kwargs.get("frac_entries", 1.0)
         binning = kwargs.get("binning", None)
-
         weight_str = kwargs.get("weight", None)
         dtype = kwargs.get("dtype", "F")
+        entrylist = kwargs.get("entrylist", None)
 
         ROOT.gROOT.cd()
         ROOT.TH1F.AddDirectory(True)
@@ -136,6 +165,12 @@ class Sample:
 
         draw_cmd = var + ">>%s" % hist.GetName()
 
+        if entrylist:
+            cut_str = "1.0"
+            self.tree.SetEntryList(entrylist)
+        else:
+            self.tree.SetEntryList(0)
+
         if weight_str:
             cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
         else:
@@ -143,7 +178,7 @@ class Sample:
 
         logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
 
-        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH", int(self.getEventCount()*frac_entries))
         logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
         if n_entries<0:
@@ -162,57 +197,58 @@ class Sample:
 
         return hist_new
 
-    def drawHistogram2D(self, var_x, var_y, cut_str, **kwargs):
-        logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
-        name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
+    # This should be unified with the above!
+    # def drawHistogram2D(self, var_x, var_y, cut_str, **kwargs):
+    #     logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
+    #     name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
 
-        plot_range_x = kwargs.get("plot_range_x", None)
-        plot_range_y = kwargs.get("plot_range_y", None)
-        binning_x = kwargs.get("binning_x", None)
-        binning_y = kwargs.get("binning_y", None)
+    #     plot_range_x = kwargs.get("plot_range_x", None)
+    #     plot_range_y = kwargs.get("plot_range_y", None)
+    #     binning_x = kwargs.get("binning_x", None)
+    #     binning_y = kwargs.get("binning_y", None)
 
-        weight_str = kwargs.get("weight", None)
-        dtype = kwargs.get("dtype", "F")
+    #     weight_str = kwargs.get("weight", None)
+    #     dtype = kwargs.get("dtype", "F")
 
-        ROOT.gROOT.cd()
-        ROOT.TH2F.AddDirectory(True)
-        if plot_range_x and plot_range_y:
-            pass
-            #TODO: make it work if needed
-            #hist = Hist2D(*plot_range_x, *plot_range_y, type=dtype, name="htemp")
-        elif binning_x is not None and binning_y is not None:
-            hist = Hist2D(binning_x, binning_y, type=dtype)
-        else:
-            raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
+    #     ROOT.gROOT.cd()
+    #     ROOT.TH2F.AddDirectory(True)
+    #     if plot_range_x and plot_range_y:
+    #         pass
+    #         #TODO: make it work if needed
+    #         #hist = Hist2D(*plot_range_x, *plot_range_y, type=dtype, name="htemp")
+    #     elif binning_x is not None and binning_y is not None:
+    #         hist = Hist2D(binning_x, binning_y, type=dtype)
+    #     else:
+    #         raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
 
-        hist.Sumw2()
+    #     hist.Sumw2()
 
-        draw_cmd = var_y+":"+var_x + ">>%s" % hist.GetName()
+    #     draw_cmd = var_y+":"+var_x + ">>%s" % hist.GetName()
 
-        if weight_str:
-            cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
-        else:
-            cutweight_cmd = "(" + cut_str + ")"
+    #     if weight_str:
+    #         cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
+    #     else:
+    #         cutweight_cmd = "(" + cut_str + ")"
 
-        logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
+    #     logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
 
-        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
-        logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
+    #     n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
+    #     logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
-        if n_entries<0:
-            raise HistogramException("Could not draw histogram: %s" % self.name)
+    #     if n_entries<0:
+    #         raise HistogramException("Could not draw histogram: %s" % self.name)
 
-        if hist.Integral() != hist.Integral():
-            raise HistogramException("Histogram had 'nan' Integral(), probably weight was 'nan'")
-        if not hist:
-            raise TObjectOpenException("Could not get histogram: %s" % hist)
-        if hist.GetEntries() != n_entries:
-            raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
-        ROOT.TH2F.AddDirectory(False)
+    #     if hist.Integral() != hist.Integral():
+    #         raise HistogramException("Histogram had 'nan' Integral(), probably weight was 'nan'")
+    #     if not hist:
+    #         raise TObjectOpenException("Could not get histogram: %s" % hist)
+    #     if hist.GetEntries() != n_entries:
+    #         raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+    #     ROOT.TH2F.AddDirectory(False)
 
-        hist_new = hist.Clone(filter_alnum(name))
+    #     hist_new = hist.Clone(filter_alnum(name))
 
-        return hist_new
+    #     return hist_new
 
     def getColumn(self, col, cut):
         N = self.tree.Draw(col, cut, "goff")
@@ -302,3 +338,36 @@ def get_paths(basedir=None, samples_dir="step3_latest", dataset=None):
         return fnames["Jul15"].as_dict()
     else:
         return fnames[dataset].as_dict()
+
+import unittest
+class TestSample(unittest.TestCase):
+    testfile = "step3_latest/mu/mc/iso/nominal/Jul15/T_t_ToLeptons.root"
+    def testDrawHistogramFixedBinning(self):
+        samp = Sample.fromFile(self.testfile)
+        hi = samp.drawHistogram("cos_theta", "n_jets==2 && n_tags==1 && abs(eta_lj)>2.5", plot_range=[20, -1, 1])
+        self.assertTrue(hi.Integral()>0)
+
+    def testDrawHistogramVariableBinning(self):
+        samp = Sample.fromFile(self.testfile)
+        def dr(**kw):
+            return samp.drawHistogram("cos_theta", "n_jets==2 && n_tags==1 && abs(eta_lj)>2.5", **kw)
+        hi = dr(plot_range=[20, -1, 1])
+        hi2 = dr(binning=[-1, 0, 0.25, 1])
+        self.assertNotEqual(hi.GetName(), hi2.GetName())
+        self.assertEqual(hi.Integral(), hi2.Integral())
+
+    def testDrawHistogramCached(self):
+        samp = Sample.fromFile(self.testfile)
+        cut = "n_jets==2 && n_tags==1 && abs(eta_lj)>2.5"
+        cache = samp.cacheEntries("2j1t", cut)
+        hi = samp.drawHistogram("cos_theta", cut, plot_range=[20, -1, 1], entrylist=cache)
+        self.assertTrue(hi.Integral()>0)
+        for v in ["n_jets", "n_tags", "true_cos_theta", "met", "mt_mu", "mt_el"]:
+            hi2 = samp.drawHistogram(v, cut, plot_range=[20, 0, 10], entrylist=cache)
+            self.assertTrue(hi2.Integral()>0)
+            logger.info("Mean = %.2f, RMS = %.2f" % (hi2.GetMean(), hi2.GetRMS()))
+
+        hi3 = samp.drawHistogram("cos_theta", cut, plot_range=[20, -1, 1])
+        self.assertNotEqual(hi.GetName(), hi3.GetName())
+        self.assertEqual(list(hi.x()), list(hi3.x()))
+        self.assertEqual(hi.GetEntries(), hi3.GetEntries())

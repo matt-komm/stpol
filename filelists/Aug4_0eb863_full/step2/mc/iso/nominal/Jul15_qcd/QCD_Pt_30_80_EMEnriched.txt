@@ -1,0 +1,6 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_30_80_EMEnriched/output_1_1_afr.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_30_80_EMEnriched/output_2_1_Cwn.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_30_80_EMEnriched/output_3_1_HLA.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_30_80_EMEnriched/output_4_1_uto.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_30_80_EMEnriched/output_5_1_Gik.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_30_80_EMEnriched/output_6_1_RqE.root
