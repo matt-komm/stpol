@@ -17,6 +17,7 @@ class Fit:
         self.rates = rates
         self.shapes = shapes
         self.correlations = correlations
+        self.rescale = {}
 
     def setRates(self, rates):
         self.rates = rates
@@ -35,7 +36,6 @@ class Fit:
 
     def add_uncertainties_to_model(self, model):
         for (channel, prior) in self.rates.items():
-            print self.name, channel, prior
             if channel == "tchan":
                 continue
             add_normal_uncertainty(model, channel, prior, channel)
@@ -136,6 +136,17 @@ class Fit:
             return False
         return True
 
+    """
+    A rescaling for all the histograms containing the string
+    """
+    def addRescale(self, name, scale):
+        self.rescale[name] = scale    
+
+    def transformHisto(self, h):
+        for (name, rescale) in self.rescale.items():
+            if name in h.get_name():
+                return h.scale(rescale, h.get_name())
+        return h
 
 
 
@@ -152,7 +163,6 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
             if procname != '*' and procname != p: continue
             model.get_coeff(o,p).add_factor('id', parameter = par_name)
             found_match = True
-            print "model", o, p, model.get_coeff(o,p), par_name
     if not found_match: raise RuntimeError, 'did not find obname, procname = %s, %s' % (obsname, procname)
 
     
@@ -163,6 +173,7 @@ Fit.mu_mva_BDT = Fit("mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj
 Fit.ele_mva_BDT = Fit("ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj")
 Fit.ele_mva_BDT_qcdfix = deepcopy(Fit.ele_mva_BDT)
 Fit.ele_mva_BDT_qcdfix.setName("QCD fix")
+Fit.ele_mva_BDT_qcdfix.addRescale("qcd", 0.5)
 Fit.ele_mva_BDT_qcdfix.setRates({"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 0.01})
 Fit.mu_C = Fit("mu__C")
 Fit.ele_C = Fit("ele__C")

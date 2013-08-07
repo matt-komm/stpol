@@ -14,7 +14,7 @@ SIGNAL = 'tchan'
 
 
 def get_model(infile, fit):
-    model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = fit.histofilter)    
+    model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = fit.histofilter, transform_histo = fit.transformHisto)    
     model.fill_histogram_zerobins()
     model.set_signal_processes(SIGNAL)
     return model
