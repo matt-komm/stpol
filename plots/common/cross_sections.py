@@ -12,7 +12,7 @@ xs = {
 	, "Tbar_s": 1.76
 	, "T_tW": 11.1
 	, "Tbar_tW": 11.1
-	, "TTJets_MassiveBinDECAY": 234 #inclusive
+	, "TTJets_MassiveBinDECAY": 245.8 #inclusive
     , "WJets_inclusive": 37509 #30400.0 LO
 
 	#FIXME: ttbar branching ratio
@@ -89,6 +89,10 @@ xs["TToBENu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
 xs["TToBMuNu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
 xs["TToBTauNu_anomWtb-unphys_t-channel"] = xs["TToBMuNu_t-channel"]
 
+xs["WJetsToLNu_matchingdown"] = xs["WJets_inclusive"]
+xs["WJetsToLNu_matchingup"] = xs["WJets_inclusive"]
+xs["WJetsToLNu_scaledown"] = xs["WJets_inclusive"]
+xs["WJetsToLNu_scaleup"] = xs["WJets_inclusive"]
 
 
 #Use this dict to create lumis corresponding to processings. Please don't overwrite old lumis

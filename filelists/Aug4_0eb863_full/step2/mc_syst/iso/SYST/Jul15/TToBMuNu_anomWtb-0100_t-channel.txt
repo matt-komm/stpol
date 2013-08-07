@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBMuNu_anomWtb-0100_t-channel/output_1_1_EWn.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBMuNu_anomWtb-0100_t-channel/output_2_1_ADP.root

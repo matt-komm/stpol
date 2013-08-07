@@ -1,0 +1,17 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_1_1_oeB.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_2_1_eAx.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_3_1_MvD.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_4_1_Bka.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_5_1_Lfr.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_6_1_nO8.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_7_1_sQp.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_8_1_ZMK.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_9_1_xSw.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_10_1_DS7.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_11_1_7Pa.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_12_1_GbE.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_13_1_Gvm.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_14_1_A9D.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_15_1_KUh.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_16_1_Uc3.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/WZ/output_17_1_puq.root
