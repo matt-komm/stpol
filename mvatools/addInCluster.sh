@@ -11,7 +11,8 @@ do
    if [ `echo $i|grep 'mu'|wc -l` -eq 1 ]; then
 	  ch='mu'
    fi
-   fn=/tmp/`basename $i`.sh
+   #fn=`basename $i`.sh
+   fn=MVA_ADD.sh
    sed "s+FILE+$i+g;s+CHAN+$ch+g" template > $fn
    chmod 755 $fn
    sbatch -p prio $fn
