@@ -24,7 +24,7 @@ xs = {
 	, "W2Jets_exclusive": 1750.0 * WJets_lo_nnlo_scale_factor
 	, "W3Jets_exclusive": 519.0 * WJets_lo_nnlo_scale_factor
 	, "W4Jets_exclusive": 214.0 * WJets_lo_nnlo_scale_factor
-    
+
     #http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa
     ,"WJets_sherpa": 30503.0 * WJets_lo_nnlo_scale_factor / WJets_sherpa_weight_factor
 
@@ -64,7 +64,7 @@ xs = {
 xs["TTJets_scaleup"] = xs["TTJets_MassiveBinDECAY"]
 xs["TTJets_scaledown"] = xs["TTJets_MassiveBinDECAY"]
 xs["TTJets_matchingup"] = xs["TTJets_MassiveBinDECAY"]
-xs["TTJets_matchingdown"] = xs["TTJets_MassiveBinDECAY"]	
+xs["TTJets_matchingdown"] = xs["TTJets_MassiveBinDECAY"]
 xs["TTJets_mass166_5"] = xs["TTJets_MassiveBinDECAY"]
 xs["TTJets_mass178_5"] = xs["TTJets_MassiveBinDECAY"]
 xs["TToLeptons_t-channel_scaleup"] = xs["T_t_ToLeptons"]
@@ -100,12 +100,21 @@ lumis["83a02e9_Jul22"]["iso"]["mu"] = 6784+6398+5277
 lumis["83a02e9_Jul22"]["iso"]["ele"] = 12410+6144
 lumis["83a02e9_Jul22"]["antiiso"] = lumis["83a02e9_Jul22"]["iso"]
 
+#FIXME
+lumis["Aug4_0eb863_full"] = dict()
+lumis["Aug4_0eb863_full"]["iso"] = dict()
+lumis["Aug4_0eb863_full"]["antiiso"] = dict()
+lumis["Aug4_0eb863_full"]["iso"]["mu"] = 1094 + 5319 + 6512 + 6823
+lumis["Aug4_0eb863_full"]["iso"]["ele"] = 917 + 12378 + 6421
+lumis["Aug4_0eb863_full"]["antiiso"]["mu"] = 1094 + 5319 + 6528 + 6823
+lumis["Aug4_0eb863_full"]["antiiso"]["ele"] = 917 + 12409 + 6482
+
 lumi_iso = {
     "ele": lumis["83a02e9_Jul22"]["iso"]["ele"],
     "mu": lumis["83a02e9_Jul22"]["iso"]["mu"]
 }
- 
+
 lumi_antiiso = {
     "ele": lumis["83a02e9_Jul22"]["antiiso"]["ele"],
     "mu": lumis["83a02e9_Jul22"]["antiiso"]["mu"]
-} 
+}
