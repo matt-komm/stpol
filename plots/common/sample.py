@@ -134,6 +134,7 @@ class Sample:
         """
         self.tfile.cd()
         elist = ROOT.TEntryList(name, name)
+        self.tree.SetEntryList(0)
         self.tree.Draw(">>" + elist.GetName(), cut_str, "entrylist")
         return elist
 
@@ -143,21 +144,24 @@ class Sample:
             raise TypeError("Sample.drawHistogram expects variable as a plain string, but received: %s" % str(var))
         name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
-        plot_range = kwargs.get("plot_range", None)
+        #Internally use the same variable name, but for backwards compatibility still keep plot_range available
+        #To be phased out
+        binning = kwargs.get("plot_range", None)
+        binning = kwargs.get("binning", binning)
+
         frac_entries = kwargs.get("frac_entries", 1.0)
-        binning = kwargs.get("binning", None)
         weight_str = kwargs.get("weight", None)
         dtype = kwargs.get("dtype", "F")
         entrylist = kwargs.get("entrylist", None)
 
         ROOT.gROOT.cd()
         ROOT.TH1F.AddDirectory(True)
-        if plot_range:
-            hist = Hist(*plot_range, type=dtype)
-        elif binning is not None:
+        if len(binning)==3 and isinstance(binning, tuple):
+            hist = Hist(*list(binning), type=dtype)
+        elif isinstance(binning, list):
             hist = Hist(binning, type=dtype)
         else:
-            raise ValueError("Must specify either plot_range=(nbinbs, min, max) or binning=numpy.array(..)")
+            raise ValueError("binning must be a 3-tuple (nbins, min, max) or a list [low1, low2, ..., highN]")
 
         hist.Sumw2()
         name += "_" + hist.GetName()
@@ -167,6 +171,7 @@ class Sample:
 
         if entrylist:
             cut_str = "1.0"
+            self.tree.SetEntryList(0)
             self.tree.SetEntryList(entrylist)
         else:
             self.tree.SetEntryList(0)

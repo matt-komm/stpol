@@ -11,7 +11,7 @@ class Cut:
         return Cut(cut_str)
 
     def __repr__(self):
-        return "<Cut(%s)>" % '('+self.cut_str+')'
+        return "<Cut(%s)>" % self.cut_str
 
     def __str__(self):
         return '('+self.cut_str+')'
@@ -209,6 +209,9 @@ class Weight:
     def __str__(self):
         return self.weight_str
 
+    def __repr__(self):
+        return "<Weight(%s)>" % self.weight_str
+
 class Weights:
     @staticmethod
     def total(lepton, systematic="nominal"):
@@ -226,8 +229,14 @@ class Weights:
         return w
 
     @staticmethod
-    def pu():
-        return Weight("pu_weight")
+    def pu(systematic="nominal"):
+        if systematic=="nominal":
+            return Weight("pu_weight")
+        elif systematic=="up":
+            return Weight("pu_weight_up")
+        elif systematic=="down":
+            return Weight("pu_weight_down")
+        assert(False)
 
     @staticmethod
     def b_weight(systematic="nominal", sys_type=""):
@@ -321,9 +330,13 @@ class Weights:
     def total_weight(lepton):
         return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight()
 
+
+class Var:
+    def __init__(self, varfn, binning):
+        self.varfn = varfn
+        self.binning = binning
+
 flavour_scenarios = dict()
 flavour_scenarios[0] = ["Wbb", "Wcc", "Wbc", "WbX", "WcX", "WgX", "Wgg", "WXX"]
 flavour_scenarios[1] = ["W_heavy", "W_light"]
 flavour_scenarios[2] = ["W_HH", "W_Hl", "W_ll"]
-
-
