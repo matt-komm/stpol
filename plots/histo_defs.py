@@ -5,18 +5,18 @@ A list of hierarchical cuts
 cuts = [
     ("CHANNEL", [
         ("mu", Cuts.lepton("mu")),
-        #("ele", Cuts.lepton("ele"))
+        ("ele", Cuts.lepton("ele"))
     ]),
     ("NJETS", [
-        #("none", Cuts.no_cut),
+        ("none", Cuts.no_cut),
         ("2J", Cuts.n_jets(2)),
-        #("3J", Cuts.n_jets(3))
+        ("3J", Cuts.n_jets(3))
     ]),
     ("NTAGS", [
-        #("none", Cuts.no_cut),
+        ("none", Cuts.no_cut),
         ("0T", Cuts.n_tags(0)),
         ("1T", Cuts.n_tags(1)),
-        #("2T", Cuts.n_tags(2))
+        ("2T", Cuts.n_tags(2))
     ]),
     ("MET", [
         # ("met", [
@@ -25,9 +25,9 @@ cuts = [
         #     ("40", Cut("met>40"))
         # ]),
         ("mtw", [
-            #("none", Cuts.no_cut),
-            #("30", Cut("mt_mu>30")),
-            ("40", Cut("mt_mu>40"))
+            ("nominal", Cuts.mt_mu()),
+            ("up", Cuts.mt_mu("up")),
+            ("down", Cuts.mt_mu("down")),
         ])
     ]),
     ]
@@ -36,7 +36,8 @@ weights = [
     ("PU", [
         ("nominal", Weights.pu()),
         ("up", Weights.pu("up")),
-        ("down", Weights.pu("down"))
+        ("down", Weights.pu("down")),
+        ("none", Weights.no_weight),
     ]),
     ("BTAG", [
             ("nominal", Weights.b_weight()),
@@ -47,17 +48,20 @@ weights = [
             ("L", [
                 ("up", Weights.b_weight("L", "up")),
                 ("down", Weights.b_weight("L", "down"))
-            ])
+            ]),
+            ("none", Weights.no_weight),
     ]),
     ("WJETS.yield", [
         ("nominal", Weights.wjets_madgraph_flat_weight("nominal")),
         ("up", Weights.wjets_madgraph_flat_weight("wjets_up")),
-        ("down", Weights.wjets_madgraph_flat_weight("wjets_down"))
+        ("down", Weights.wjets_madgraph_flat_weight("wjets_down")),
+        ("none", Weights.no_weight),
     ]),
     ("WJETS.shape", [
         ("nominal", Weights.wjets_madgraph_shape_weight("nominal")),
         ("up", Weights.wjets_madgraph_shape_weight("wjets_up")),
-        ("down", Weights.wjets_madgraph_shape_weight("wjets_down"))
+        ("down", Weights.wjets_madgraph_shape_weight("wjets_down")),
+        ("none", Weights.no_weight),
     ]),
 ]
 
