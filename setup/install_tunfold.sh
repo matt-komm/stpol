@@ -1,5 +1,5 @@
 #!/bin/bash
-
+$STPOL_DIR=/nfs/home/fynu/mkomm/stpol
 echo "Setting up TUnfold in $STPOL_DIR/unfold/tunfold"
 cd $STPOL_DIR
 cd unfold
