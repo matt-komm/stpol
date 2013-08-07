@@ -3,9 +3,11 @@ import logging
 import sys, os, copy, itertools, imp
 import ROOT
 
+logging.basicConfig(level=logging.WARNING)
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts, Cut, Weights, Var
 from plots.common.odict import OrderedDict
+import rootpy
 from rootpy.plotting import Hist
 from plots import histo_defs
 
@@ -13,7 +15,6 @@ from plots import histo_defs
 from SingleTopPolarization.Analysis import tree
 
 logger = logging.getLogger("make_histo")
-logging.basicConfig(level=logging.INFO)
 cp = copy.deepcopy
 
 class Plottable:
@@ -146,6 +147,7 @@ def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
             except rootpy.ROOTError as e:
                 logger.info(str(e))
             d = ofi.Get(path)
+            print "PATH=", path, d
             hist.SetDirectory(d)
             d.cd()
 
