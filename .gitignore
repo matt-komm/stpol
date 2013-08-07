@@ -23,6 +23,10 @@ CMSSW_5_3_11/src/*
 CMSSW_5_3_11/src/PhysicsTools/PatAlgos
 CMSSW_5_3_11/src/PhysicsTools/PatUtils
 
+# The automatically downloaded exempi tool
+exempi-2.2.1.tar.bz2
+exempi-2.2.1
+
 /bin/*
 *.png
 *.pickle
