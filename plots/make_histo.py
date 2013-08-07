@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import argparse
 import logging
 import sys, os, copy, itertools, imp
@@ -100,6 +101,11 @@ def sampleBaseName(sample):
 def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
     samp = Sample.fromFile(samp_fname)
     samp_base, samp_dir, samp_name = sampleBaseName(samp_fname)
+    strip = "/hdfs/local/stpol/step3/"
+    if samp_base.startswith(strip):
+        samp_base.replace(strip, "")
+    if samp_base.startswith("/"):
+        samp_base = samp_base[1:]
     ofdir = os.path.join(ofdir, samp_base, samp_dir)
     print ofdir
 
@@ -120,11 +126,12 @@ def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
     histo_defs = list(mult_prod(cutlist, varlist))
     print "Projecting out %d histograms" % (len(histo_defs)*len(weights))
 
+    n = 0
     for cuts, variables in histo_defs:
         assert len(variables)==1
         cut_name, cut = totalFromList(cuts)
         var_name, variable = variables[0]
-        logger.info(", ".join([cut_name, var_name]))
+        logger.info(", ".join([cut_name, var_name]) + ": %d done" % n)
         for weight_name, weight in weights:
             logger.debug(weight_name)
             logger.debug("Plotting %s, %s, %s" % (cuts, weight, variables))
@@ -157,7 +164,7 @@ def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
             d.cd()
 
             hist.Write("", ROOT.TObject.kOverwrite)
-
+            n += 1
     ofi.Close()
     print ofi.GetPath()
 
