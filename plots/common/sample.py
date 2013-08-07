@@ -156,7 +156,7 @@ class Sample:
 
         ROOT.gROOT.cd()
         ROOT.TH1F.AddDirectory(True)
-        if len(binning)==3 and isinstance(binning, tuple):
+        if len(binning)==3 and (isinstance(binning, tuple) or isinstance(binning, list)):
             hist = Hist(*list(binning), type=dtype)
         elif isinstance(binning, list):
             hist = Hist(binning, type=dtype)

@@ -26,9 +26,9 @@ cutlist['presel_mu'] = cutlist['presel_mu_no_rms']*Cuts.rms_lj
 cutlist['nomet_ele']=cutlist['presel_ele']*Cuts.top_mass_sig*Cuts.eta_lj
 cutlist['nomt_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.eta_lj
 cutlist['noeta_ele']=cutlist['presel_ele']*Cuts.top_mass_sig*Cuts.met
-cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu
+cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu()
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
-cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu
+cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu()
 
 mva_var = {}
 mva_var['ele']='mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj'
@@ -41,9 +41,9 @@ bdt['mu']['tight'] = 0.6
 bdt['ele']['loose'] = 0.13
 bdt['ele']['tight'] = 0.6
 bdt = bdt.as_dict()
-cutlist['bdt_mu_loose'] = Cuts.mt_mu*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
+cutlist['bdt_mu_loose'] = Cuts.mt_mu()*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
 cutlist['bdt_ele_loose'] = Cuts.met*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))
-cutlist['bdt_mu_tight'] = Cuts.mt_mu*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['tight']))
+cutlist['bdt_mu_tight'] = Cuts.mt_mu()*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['tight']))
 cutlist['bdt_ele_tight'] = Cuts.met*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['tight']))
 
 #Load the scale factors externally for better factorisation
@@ -336,7 +336,7 @@ plot_defs['mva_bdt'] = {
     'xlab': varnames["BDT_uncat"],
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu(),
     #'cutname': '2J1T',
     'dir': 'BDT'
 }
@@ -380,7 +380,7 @@ plot_defs['invar_top_mass'] = {
         'xlab': varnames['top_mass'],
         'labloc': 'top-right',
         'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
-        'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
+        'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu(),
         #'cutname': '2J1T',
         'dir': 'BDT'
 }
@@ -463,7 +463,7 @@ plot_defs['2j1t_topMass']={
     'xlab': varnames["top_mass"],
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu(),
     #'cutname': '2J1T',
     'dir': "selection"
 }
@@ -479,7 +479,7 @@ plot_defs['2j1t_etaLj']={
     'xlab': varnames["eta_lj"],
     'labloc': 'top-right',
     'elecut': cutlist['2j1t']*cutlist['presel_ele']*Cuts.met,
-    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu,
+    'mucut': cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu(),
     #'cutname': '2J1T',
     'dir': "selection"
 }
@@ -569,7 +569,7 @@ plot_defs['2j1t_cosTheta'] = cp(plot_defs['final_cosTheta'])
 plot_defs['2j1t_cosTheta']['estQcd'] = '2j1t'
 plot_defs['2j1t_cosTheta']['fitpars'] = fitpars['final_2j1t']
 plot_defs['2j1t_cosTheta']['elecut'] = cutlist['2j1t']*cutlist["presel_ele"]*Cuts.met
-plot_defs['2j1t_cosTheta']['mucut'] = cutlist['2j1t']*cutlist["presel_mu"]*Cuts.mt_mu
+plot_defs['2j1t_cosTheta']['mucut'] = cutlist['2j1t']*cutlist["presel_mu"]*Cuts.mt_mu()
 
 plot_defs['final_topMass']={
     'tags': ["an", "control.tex"],
@@ -744,7 +744,7 @@ for v in ["cosTheta", "topMass", "etaLj", "BDT"]:
             plot_defs[s + "_" + v] = cp(plot_defs['final_' + v])
             plot_defs[s + "_" + v]["range"] = extranges[v]
             plot_defs[s + "_" + v]['elecut'] = cutlist["presel_ele"]*cutlist[s]*Cuts.met#*cutlist['final_ele']
-            plot_defs[s + "_" + v]['mucut'] = cutlist["presel_mu"]*cutlist[s]*Cuts.mt_mu#*cutlist['final_mu']
+            plot_defs[s + "_" + v]['mucut'] = cutlist["presel_mu"]*cutlist[s]*Cuts.mt_mu()#*cutlist['final_mu']
             plot_defs[s + "_" + v]['estQcd'] = "final_" + s
 
 if __name__=="__main__":
