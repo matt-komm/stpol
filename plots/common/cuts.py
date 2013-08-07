@@ -16,11 +16,26 @@ class Cut:
     def __str__(self):
         return '('+self.cut_str+')'
 
+class SystematicException(Exception):
+    def __init__(self, syst):
+        self.msg = "Incorrect systematic specified: " + str(syst)
+
 class Cuts:
     hlt_isomu = Cut("(HLT_IsoMu24_eta2p1_v11 == 1 || HLT_IsoMu24_eta2p1_v12 == 1 || HLT_IsoMu24_eta2p1_v13 == 1 || HLT_IsoMu24_eta2p1_v14 == 1 || HLT_IsoMu24_eta2p1_v15 == 1 || HLT_IsoMu24_eta2p1_v16 == 1  || HLT_IsoMu24_eta2p1_v17 == 1)")
     hlt_isoele = Cut("( (HLT_Ele27_WP80_v10 ==1) || (HLT_Ele27_WP80_v11 == 1) || (HLT_Ele27_WP80_v9==1) || (HLT_Ele27_WP80_v8==1) )")
     eta_lj = Cut("abs(eta_lj) > 2.5")
-    mt_mu = Cut("mt_mu > 50")
+
+    @staticmethod    
+    def mt_mu(syst="nominal"):
+        if syst == "nominal":
+            return Cut("mt_mu > 50")
+        elif syst == "up":
+            return Cut("mt_mu > 70")   
+        elif syst == "down":
+            return Cut("mt_mu > 30")
+        raise SystematicException(syst)
+
+    #mt_mu = Cut("mt_mu > 50")
     rms_lj = Cut("rms_lj < 0.025")
     eta_jet = Cut("abs(eta_lj) < 4.5")*Cut("abs(eta_bj) < 4.5")
     pt_jet = Cut("pt_lj > 40")*Cut("pt_bj > 40")
@@ -213,6 +228,7 @@ class Weight:
         return "<Weight(%s)>" % self.weight_str
 
 class Weights:
+    no_weight = Weight("1.0")
     @staticmethod
     def total(lepton, systematic="nominal"):
 
