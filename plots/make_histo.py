@@ -141,7 +141,10 @@ def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
 
             path = os.path.join(cut_name, weight_name, hcmd.var_name)
 
-            d = ofi.mkdir(path)
+            try:
+                d = ofi.mkdir(path)
+            except rootpy.ROOTError as e:
+                logger.info(str(e))
             d = ofi.Get(path)
             hist.SetDirectory(d)
             d.cd()
