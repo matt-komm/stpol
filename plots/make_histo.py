@@ -15,6 +15,7 @@ from plots import histo_defs
 from SingleTopPolarization.Analysis import tree
 
 logger = logging.getLogger("make_histo")
+logger.setLevel(logging.INFO)
 cp = copy.deepcopy
 
 class Plottable:
@@ -142,12 +143,16 @@ def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
 
             path = os.path.join(cut_name, weight_name, hcmd.var_name)
 
-            try:
-                d = ofi.mkdir(path)
-            except rootpy.ROOTError as e:
-                logger.info(str(e))
+            #In older ROOT we have to make the directory tree manually
+            d = ofi
+            for _dir in path.split("/"):
+                _d = d.Get(_dir)
+                if not _d:
+                    _d = d.mkdir(_dir)
+
+                d = _d
+                d.cd()
             d = ofi.Get(path)
-            print "PATH=", path, d
             hist.SetDirectory(d)
             d.cd()
 
