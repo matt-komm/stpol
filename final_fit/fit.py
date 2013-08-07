@@ -115,6 +115,17 @@ class Fit:
         cov.Write()
         fcov.Close()
 
+    def histofilter(self, s):
+        if '__up' in s or '__down' in s:
+            if 'top__Res' in s and self.name.startswith("ele"):
+                return False
+            if 'ttbar_matching' in s or '__En' in s or 'Res' in s or 'ttbar_scale' in s:#
+                return True
+            return False
+        return True
+
+
+
 
 def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'):
     found_match = False
@@ -132,6 +143,7 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
             print "model", o, p, model.get_coeff(o,p), par_name
     if not found_match: raise RuntimeError, 'did not find obname, procname = %s, %s' % (obsname, procname)
 
+    
 
 
 
@@ -149,6 +161,6 @@ Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj])
 Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj])
 
 Fit.all_fits = deepcopy(Fit.fits["mu"])
-Fit.all_fits = Fit.all_fits.union(Fit.fits["mu"])
+Fit.all_fits = Fit.all_fits.union(Fit.fits["ele"])
 
 

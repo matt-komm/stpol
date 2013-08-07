@@ -13,19 +13,8 @@ SIGNAL = 'tchan'
 
 import math
 
-def histofilter(s):
-    if '__up' in s or '__down' in s:
-        #if 'top__Res' in s and 'ele_mva' in infile:
-        #    return False
-        if 'ttbar_matching' in s or '__En' in s or 'Res' in s or 'ttbar_scale' in s:#
-            return True
-        return False
-    return True
-
-
-
-def get_model(infile):
-    model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = histofilter)    
+def get_model(infile, fit):
+    model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = fit.histofilter)    
     model.fill_histogram_zerobins()
     model.set_signal_processes(SIGNAL)
     return model
@@ -43,7 +32,7 @@ def get_options():
 
 def do_fit(fit, path):
     infile = path+"/"+fit.name+"/lqeta.root"
-    model = get_model(infile)
+    model = get_model(infile, fit)
 
     fit.add_uncertainties_to_model(model)
     
