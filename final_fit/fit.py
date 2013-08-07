@@ -31,7 +31,7 @@ class Fit:
     def get_type(self, name, name2 = None):
         if name2 is not None:
             return "corr"
-        elif name in self.rates:
+        elif name.replace("beta_signal", "tchan") in self.rates:
             return "rate"
         elif name in self.shapes:
             return "shape"
@@ -46,10 +46,10 @@ class Fit:
             pass
         f = open("results/"+self.name+".txt",'w')
         for key in sorted(fitresults.keys()):
-            if key not in self.rates.keys() and key not in self.shapes:
+            if key.replace("beta_signal", "tchan") not in self.rates.keys() and key not in self.shapes:
                 continue
             st_type = self.get_type(key)            
-            line = '%s, costheta__%s, %f, %f\n' % (st_type, key.replace("beta_signal", "tchan"), fitresults[key][0], fitresults[key][1])
+            line = '%s, %s, %f, %f\n' % (st_type, key.replace("beta_signal", "tchan"), fitresults[key][0], fitresults[key][1])
         
             print line,
             f.write(line)
@@ -61,7 +61,7 @@ class Fit:
                 ylabel = cor.GetYaxis().GetBinLabel(j).replace("beta_signal", "tchan")
                 if (xlabel, ylabel) in self.correlations:
                     cor_value = cor.GetBinContent(i,j)
-                    line = 'corr, costheta__%s, costheta__%s, %f\n' % (xlabel, ylabel, cor_value)
+                    line = 'corr, %s, %s, %f\n' % (xlabel, ylabel, cor_value)
                     f.write(line)        
         f.close()
 
