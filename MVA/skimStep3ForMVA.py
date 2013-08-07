@@ -27,7 +27,7 @@ else:
 
 cut = str(cutlist['2j1t']*cutlist['presel_ele']*Cuts.met)
 if '/mu/' in dir:
-    cut = str(cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu)
+    cut = str(cutlist['2j1t']*cutlist['presel_mu']*Cuts.mt_mu())
 
 for f in flist:
     print "Starting:",f
