@@ -70,7 +70,7 @@ class Sample:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
         self.tree.SetBranchStatus("*", 1)
-        self.tree.SetCacheSize(100*1024*1024)
+        self.tree.SetCacheSize(500*1024*1024)
         self.tree.AddBranchToCache("*")
 
         if self.tfile.Get("trees/WJets_weights"):
@@ -83,7 +83,7 @@ class Sample:
         self.file_name_mva = file_name[:-5] + "_mva.root"
         if os.path.isfile(self.file_name_mva):
             self.tree.AddFriend("trees/MVA", self.file_name_mva)
-        
+
         self.event_count = None
         self.event_count = self.getEventCount()
         if self.event_count<=0:
