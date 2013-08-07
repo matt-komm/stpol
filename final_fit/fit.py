@@ -4,26 +4,38 @@ from copy import deepcopy
 
 class Fit:
     def __init__(self
-            , name
+            , filename
+            , name = None
             , rates = {"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 1.0}
             , shapes = ["En", "Res", "ttbar_scale", "ttbar_matching"] 
             , correlations = [("wzjets", "top")]):
-        self.name = name        
+        
+        self.filename = filename
+        self.name = name
+        if name == None:
+            self.name = filename
         self.rates = rates
         self.shapes = shapes
         self.correlations = correlations
 
     def setRates(self, rates):
-        self.setRates = rates
+        self.rates = rates
 
     def setShapes(self, shapes):
-        self.setShapes = shapes
+        self.shapes = shapes
 
-    def setCorrelations(self, shapes):
-        self.setShapes = shapes
+    def setCorrelations(self, correlations):
+        self.correlations = correlations
+
+    def setName(self, name):
+        self.name = name
+
+    def setFileName(self, filename):
+        self.filename = filename
 
     def add_uncertainties_to_model(self, model):
         for (channel, prior) in self.rates.items():
+            print self.name, channel, prior
             if channel == "tchan":
                 continue
             add_normal_uncertainty(model, channel, prior, channel)
@@ -147,18 +159,21 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
 
 
 
-Fit.mu_mva_BDT = Fit("mu_mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj")
-Fit.ele_mva_BDT = Fit("ele_mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj")
-Fit.mu_C = Fit("mu_C")
-Fit.ele_C = Fit("ele_C")
-Fit.mu_eta_lj = Fit("mu_eta_lj")
-Fit.ele_eta_lj = Fit("ele_eta_lj")
+Fit.mu_mva_BDT = Fit("mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj")
+Fit.ele_mva_BDT = Fit("ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj")
+Fit.ele_mva_BDT_qcdfix = deepcopy(Fit.ele_mva_BDT)
+Fit.ele_mva_BDT_qcdfix.setName("QCD fix")
+Fit.ele_mva_BDT_qcdfix.setRates({"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 0.01})
+Fit.mu_C = Fit("mu__C")
+Fit.ele_C = Fit("ele__C")
+Fit.mu_eta_lj = Fit("mu__eta_lj")
+Fit.ele_eta_lj = Fit("ele__eta_lj")
 
 Fit.fits = {}
 Fit.fits["mva_BDT"] = set([Fit.mu_mva_BDT, Fit.ele_mva_BDT])
 Fit.fits["eta_lj"] = set([Fit.mu_eta_lj, Fit.ele_eta_lj])
 Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj])
-Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj])
+Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_mva_BDT_qcdfix])
 
 Fit.all_fits = deepcopy(Fit.fits["mu"])
 Fit.all_fits = Fit.all_fits.union(Fit.fits["ele"])

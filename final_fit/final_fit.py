@@ -1,17 +1,17 @@
 import sys, os
 from theta_auto import *
+import math
 import logging
 import ROOT
 #from final_fit.fit_systematics import *
 from final_fit.fit import *
 import argparse
+from final_fit.plot_fit import plot_fit
 
 logging.basicConfig(level=logging.INFO)
 
 SIGNAL = 'tchan'
 
-
-import math
 
 def get_model(infile, fit):
     model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = fit.histofilter)    
@@ -31,7 +31,7 @@ def get_options():
 
 
 def do_fit(fit, path):
-    infile = path+"/"+fit.name+"/lqeta.root"
+    infile = path+"/"+fit.filename+".root"
     model = get_model(infile, fit)
 
     fit.add_uncertainties_to_model(model)
@@ -72,7 +72,10 @@ def do_fit(fit, path):
         pass
         
     outfile = "histos_fitted/"+fit.name+"/fitted.root"
+    spl = fit.filename.split("__")
+    var = spl[1]
     write_histograms_to_rootfile(pred, outfile)
+    #plot_fit(var, infile, outfile, result)
 
 if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
@@ -104,4 +107,5 @@ if __name__=="__main__":
     for fit in fits:
             print "Fitting", fit.name
             do_fit(fit, args.path)
+            print 
     
