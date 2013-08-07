@@ -54,7 +54,7 @@ def do_fit(fit, path):
     cov = result[SIGNAL]['__cov'][0]
     
     (covm, corrm) = fit.makeCovMatrix(cov, pars)
-    fit.write_results(fitresults, corrm)
+    fit.write_results(fitresults, corrm, fit)
     fit.plotMatrices(covm, corrm)
 
     #TODO fix
@@ -72,10 +72,9 @@ def do_fit(fit, path):
         pass
         
     outfile = "histos_fitted/"+fit.name+"/fitted.root"
-    spl = fit.filename.split("__")
-    var = spl[1]
     write_histograms_to_rootfile(pred, outfile)
-    #plot_fit(var, infile, outfile, result)
+    #FIXME: Secgmentation faults for more than 2 fits...    
+    #plot_fit(fit, infile, outfile, result)
 
 if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
