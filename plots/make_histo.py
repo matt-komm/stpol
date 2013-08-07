@@ -10,7 +10,7 @@ from rootpy.plotting import Hist
 from plots import histo_defs
 
 #FIXME: put to subpath
-import tree
+from SingleTopPolarization.Analysis import tree
 
 logger = logging.getLogger("make_histo")
 logging.basicConfig(level=logging.INFO)
@@ -77,7 +77,7 @@ class HistPlottable(Plottable):
             logger.debug("Starting to cache entry list for cut %s" % self.cut_name)
             elist = sample.cacheEntries(elist_name, str(self.cut))
             logger.debug("Done caching entry list: %d entries" % elist.GetN())
-        
+
         try:
             hist = sample.drawHistogram(
                 self.var.varfn, str(self.cut), weight=str(self.weight),
@@ -100,7 +100,7 @@ def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
     samp_base, samp_dir, samp_name = sampleBaseName(samp_fname)
     ofdir = os.path.join(ofdir, samp_base, samp_dir)
     print ofdir
-    
+
     try:
         os.makedirs(ofdir)
     except:
@@ -117,7 +117,7 @@ def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
 
     histo_defs = list(mult_prod(cutlist, varlist))
     print "Projecting out %d histograms" % (len(histo_defs)*len(weights))
-    
+
     for cuts, variables in histo_defs:
         assert len(variables)==1
         cut_name, cut = totalFromList(cuts)
@@ -135,10 +135,10 @@ def draw(cutlist, weightlist, varlist, samp_fname, ofdir="hists"):
             if not hist:
                 logger.warning("Couldn't draw histogram.")
                 continue
-            
+
             if samp.isMC:
                 hist.Scale(samp.lumiScaleFactor(1))
-            
+
             path = os.path.join(cut_name, weight_name, hcmd.var_name)
 
             d = ofi.mkdir(path)
