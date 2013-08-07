@@ -9,7 +9,7 @@ do
     MERGEDOUT="${i:3}.root"
     crab -c $i -report &> /dev/null
     #if [ ! -f $i/res/lumiSummary.json ]; then crab -c $i -report &> /dev/null; fi
-    lumiCalc2.py -i $i/res/lumiSummary.json --without-checkforupdate -o lumi.out overview &> $i/lumiCalc.out
+    lumiCalc2.py -i $i/res/lumiSummary.json -o lumi.out overview &> $i/lumiCalc.out
     if [ -f lumi.out ]
     then
         LUMI=`$STPOL_DIR/util/addLumis.py lumi.out`

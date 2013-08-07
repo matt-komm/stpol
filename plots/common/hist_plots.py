@@ -17,7 +17,7 @@ def plot_hists(hists, name="canv", **kwargs):
     Keywords:
         name: the name of the canvas to create.
         draw_cmd: the ROOT draw command. Can be a single command
-            (use the same for all) or a list with the length of hists 
+            (use the same for all) or a list with the length of hists
         x_label: a string with the title for the x axis.
         y_label: ditto for the y axis.
         do_log_y: a boolean to specify if the y axis should be logarithmic.
@@ -83,50 +83,59 @@ def plot_hists(hists, name="canv", **kwargs):
 
     return canv
 
-def subpad(low=0.3):
+def subpad(canv, low=0.3):
     """
-    Makes a new subpad on a TCanvas in the upper region
+    Makes a new subpad on a TCanvas in the upper region.
 
     Args:
-        low: a floating point fraction for the area to cut off in the lower part
+        canv: the parent canvas or pad instance.
+        low: a floating point fraction for the area to cut off in the lower part.
 
     Returns:
-        a handle to the new TPad
+        a handle to the new TPad.
     """
     #Make a separate pad for the stack plot
+    canv.cd()
     p1 = ROOT.TPad("p1", "p1", 0, low, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
     p1.SetGrid();
     p1.SetFillStyle(0);
     p1.cd()
-    return subpad
+    return p1
 
-def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3, syst_hists=None):
+def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
     """
     Puts the data/MC ratio plot on the TCanvas canv. A new TPad is created at
     the bottom with the specified height.
 
     Args:
         canv: a TCanvas instance on which to draw the ratio plot. A subpad will
-            be created on this canvas
-        hist_data: A Hist instance with the data
-        hist_mc: A Hist instance with the MC
+            be created on this canvas.
+        hist_data: A Hist instance with the data.
+        hist_mc: A Hist instance with the MC.
 
     Keywords:
         height: the floating value fraction of the height of the new pad
         syst_hists: a 2-tuple (syst_up, syst_down) with Hist instances to
-            draw as the systematic error band
+            draw as the systematic error band.
+        min_max: a 2-tuple specifying the (low, up) with the minimum
+            and maximum of the y axis of the ratio plot
 
-    Returns:  
+    Returns:
         A tuple with (pad, histogram) where pad is the new TPad and histogram is
-        the TH1F ratio histogram that were created
+        the TH1F ratio histogram that were created.
 
     Raises:
         ValueError: when the format of the supplied systematic histograms was
-            not a 2-tuple
+            not a 2-tuple.
     """
     canv.cd()
+
+    height = kwargs.get("height", 0.3)
+    syst_hists = kwargs.get("syst_hists", None)
+    min_max = kwargs.get("min_max", (-0.2, 0.2))
+
     p2 = ROOT.TPad("p2", "p2", 0, 0, 1, height)
     #p2.SetLeftMargin(height / p2.GetWNDC());
     #p2.SetRightMargin(height / p2.GetWNDC());
@@ -169,7 +178,9 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3, syst_hists=None):
     yAxis.SetNdivisions(405)
 
     hist_ratio.Draw("p0e1")
-    logger.debug(list(hist_ratio.y()))
+    hist_ratio.SetMinimum(min_max[0])
+    hist_ratio.SetMaximum(min_max[1])
+    #logger.debug(list(hist_ratio.y()))
 
     hist_line = ROOT.TH1F("0line","0line",hist_mc.GetNbinsX(),hist_mc.GetBinLowEdge(1),hist_mc.GetBinLowEdge(hist_mc.GetNbinsX()+1))
     hist_line.Draw("lsame")
@@ -186,7 +197,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, height=0.3, syst_hists=None):
             hr.Divide(hist_data)
 
             hr.SetFillStyle(0)
-            #hr.SetFillColor(ROOT.kGray)
+            hr.SetFillColor(ROOT.kGray)
             hr.SetLineColor(ROOT.kGray)
 
             hr.Draw("hist same")
@@ -204,7 +215,7 @@ def plot_hists_dict(hist_dict, setNames=True, **kwargs):
 
     Args:
         hist_dict: a str, Hist dictionary of the histograms to be drawn.
-    
+
     Keywords:
         setNames: a bool to specify whether the keys of the dict will be used as
             titles in the legend.
@@ -245,17 +256,24 @@ if __name__=="__main__":
 
     c = ROOT.TCanvas("c1")
 
-    p1 = subpad()
+    p1 = subpad(c)
 
-    hdata.Draw("h")
-    hmc.Draw("hsame")
+    from plots.common.sample_style import Styling
+    Styling.mc_style(hmc, "T_t")
+    Styling.data_style(hdata)
+    hmc.Draw("hist")
+    hdata.Draw("e1 same")
 
     hsyst_up = hmc.Clone()
     hsyst_up.Scale(1.02)
+
+    #FIXME: do random smearing
+    for i in range(1, hsyst_up.nbins()):
+        pass
     hsyst_down = hmc.Clone()
     hsyst_down.Scale(0.98)
 
     p2, hist_ratio = plot_data_mc_ratio(c, hmc, hdata, syst_hists=(hsyst_up, hsyst_down))
-    c.Update()
-    c.Show()
+    #c.Update()
+    #c.Show()
     c.SaveAs("hist_plots_test1.png")

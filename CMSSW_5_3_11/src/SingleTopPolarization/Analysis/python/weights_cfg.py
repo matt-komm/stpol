@@ -12,7 +12,10 @@ def WeightSetup(process, conf):
         channel = dict()
         channel["TTJets_FullLept"] = "FullLept"
         channel["TTJets_SemiLept"] = "SemiLept"
-        channel["TTbar"] = "FullSemiLept"
+
+        for s in ["TTbar", "TTJets", "TTJets_MassiveBinDECAY", "TTJets_mass166_5", "TTJets_mass178_5", "TTJets_matchingdown", "TTJets_matchingup", "TTJets_scaleup", "TTJets_scaledown"]:
+            channel[s] = "FullSemiLept"
+
         process.ttbarTopWeight = cms.EDProducer(
             'TopPtReweightProducer',
             src=cms.InputTag("genParticles"),

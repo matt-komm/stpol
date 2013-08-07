@@ -108,7 +108,11 @@ class Task:
         submission = get(running_job, "submission", int)
         schedulerId = get(running_job, "schedulerId", str)
         submissionTime = get(running_job, u'submissionTime', str)
-
+        outputFiles = get(job, "outputFiles", str)
+        if outputFiles:
+            outputFiles = outputFiles.split(",")
+        else:
+            outputFiles = []
         getOutputTime = get(running_job, "getOutputTime", str)
         try:
             wrapperReturnCode = get(running_job, "wrapperReturnCode", int)
@@ -123,7 +127,11 @@ class Task:
         if lfn:
             lfn = lfn[2:-2]
         state = get(running_job, "state", str)
-        return Job(name, id, submission, schedulerId, submissionTime, getOutputTime, applicationReturnCode, wrapperReturnCode, state, lfn)
+        return Job(
+            name, id, submission, schedulerId,
+            submissionTime, getOutputTime, applicationReturnCode,
+            wrapperReturnCode, state, lfn, outputFiles
+        )
 
 
     def updateJobs(self, fname):
@@ -134,6 +142,8 @@ class Task:
             print e
             return
         self.fname = fname
+
+        self.output_dir = get(dom.getElementsByTagName("TaskAttributes")[0], "outputDirectory", str)
 
         jobs_a = dom.getElementsByTagName("Job")
         jobs_b = dom.getElementsByTagName("RunningJob")
@@ -188,7 +198,8 @@ class Job:
         wrapper_ret_code,
         app_ret_code,
         state,
-        lfn
+        lfn,
+        outputFiles
     ):
         self.name = name
         self.job_id = job_id
@@ -200,6 +211,7 @@ class Job:
         self.app_ret_code = app_ret_code if app_ret_code is not None else -1
         self.state = state
         self.lfn = lfn
+        self.outputFiles = outputFiles
 
     def isCompleted(self):
         return self.wrapper_ret_code == 0 and self.app_ret_code == 0
