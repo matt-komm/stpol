@@ -157,10 +157,10 @@ double scanTau(TH2D* response)
 int main( int argc, const char* argv[] )
 {
     TApplication* rootapp = new TApplication("example",0,0);
-    if (argc<6) {
+    if (argc<7) {
         printf("Usage:\r\n");
         printf("\tunfold \t[inputFile] [treeName] [branchName] [reponseFile] \r\n");
-        printf("\t\t[reponseMatrixName] [outputFile]\r\n");
+        printf("\t\t[reponseMatrixName] [outputFile] [reg]\r\n");
         return -1;
     }
     printf("use: inputFile='%s'\r\n",argv[1]);
@@ -169,7 +169,8 @@ int main( int argc, const char* argv[] )
     printf("use: responseFile='%s'\r\n",argv[4]);
     printf("use: responseMatrixName='%s'\r\n",argv[5]);
     printf("use: outputFile='%s'\r\n",argv[6]);
-
+    printf("use: regScale='%f'\r\n",atof(argv[7]));
+    
     TFile input(argv[1],"r");
 
     TTree* tree_input = (TTree*)input.Get(argv[2]);
@@ -223,7 +224,7 @@ int main( int argc, const char* argv[] )
     TH1D* histo_output_tunfold = new TH1D("output","",nbinsT,binningT);
     tree_output->Branch("tunfold",&histo_output_tunfold);
     gErrorIgnoreLevel = kPrint | kInfo | kWarning;
-    double tau = scanTau(response)*0.35;
+    double tau = scanTau(response)*atof(argv[7]);
     printf("tau: %f\r\n",tau);
 
     int nevents = tree_input->GetEntries();
@@ -245,15 +246,15 @@ int main( int argc, const char* argv[] )
         
         /*
         TCanvas* canvas = new TCanvas("canvas","",800,600);
-        histo_input->Draw();
-        measured->Draw("P*Same");
+        //histo_input->Draw();
+        //measured->Draw("P*Same");
         //histo_output_tunfold->Add(truth,-1.0);
-        //histo_output_tunfold->Draw();
-        //truth->Scale(0.9);
-        //truth->Draw("P*Same");
+        histo_output_tunfold->Draw();
+        //truth->Scale(1.06);
+        truth->Draw("P*Same");
         canvas->Update();
-        canvas->WaitPrimitive();*/
-        
+        canvas->WaitPrimitive();
+        */
         tree_output->Fill();
     }
     

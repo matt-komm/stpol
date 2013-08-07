@@ -9,9 +9,9 @@ if __name__=="__main__":
     
     (options, args)=parser.parse_args()
 
-    histograminputfile="/home/fynu/mkomm/el_cos_theta_mva_0_13/data.root"
-    modelfilename="PE_el.cfg"
-    outputfilename="PE_el.root"
+    histograminputfile="/home/fynu/mkomm/ele_cos_theta_mva_0_13/data.root"
+    modelfilename="data_ele.cfg"
+    outputfilename="data_ele.root"
     
     binning=14
     range=[-1.0,1.0]
