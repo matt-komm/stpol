@@ -2,10 +2,12 @@ CC=g++
 CXXFLAGS= -Wall -O2 -g -I./tunfold -L./tunfold -Wl,-rpath=./tunfold -lunfold `root-config --cflags --libs` -lMinuit -lXMLIO -lXMLParser  
 LDFLAGS=-L./tunfold -Wl,-rpath=./tunfold -lunfold -lMinuit
 
-all: unfold calc_asymmetry makehistos bkg_asymmetry findbinning efficiency rebin plotfit pseudodata reweight unfold_syst calc_asymmetry_syst makehistos2
+all: unfold unfoldPE calc_asymmetry makehistos bkg_asymmetry findbinning efficiency rebin plotfit pseudodata reweight unfold_syst calc_asymmetry_syst makehistos2
 
 unfold: unfold.cc binnings.h utils.hpp
 unfold_syst: unfold_syst.cc binnings.h utils.hpp
+
+unfoldPE: unfoldPE.cc
 
 calc_asymmetry: calc_asymmetry.C binnings.h utils.hpp
 calc_asymmetry_syst: calc_asymmetry_syst.C binnings.h utils.hpp
@@ -26,4 +28,4 @@ plotfit: plotfit.C binnings.h utils.hpp
 pseudodata: pseudodata.C binnings.h utils.hpp
 
 clean:
-	rm unfold calc_asymmetry bkg_asymmetry makehistos findbinning efficiency rebin plotfit eigenvalues pseudodata
+	rm unfold unfoldPE calc_asymmetry bkg_asymmetry makehistos findbinning efficiency rebin plotfit eigenvalues pseudodata
