@@ -81,11 +81,21 @@ if __name__=="__main__":
         "mu": 0.06,
         "ele": 0.13
     }
-    fit_results = {
+
+    dfit_results = dict()
+
+    suffix = 'top_plus_qcd'
+    dfit_results['top_plus_qcd'] = {
+        "mu": "mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__top_plus_qcd",
+        "ele": "ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd"
+    }
+
+    dfit_results['default'] = {
         "mu": "mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj",
         "ele": "ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj"
-
     }
+    fit_results = dfit_results[suffix]
+
 
     styles = {'tchan': 'T_t', 'top': 'TTJets_FullLept', 'wzjets': 'WJets_inclusive', 'qcd':'QCD'}
     for channel in ['mu', 'ele']:
@@ -203,7 +213,7 @@ if __name__=="__main__":
         leg = legend(stacks_d['data']+list(reversed(stacks_d['mc']))+[syst_up], legend_pos='top-left')
         lb = lumi_textbox(lumi,
             line2="%s channel, BDT>%.2f, sf applied" % (channel_pretty[channel], mva_cut[channel]), pos='top-right')
-        c.SaveAs("out/plots/cos_theta_%s.pdf" % channel)
+        c.SaveAs("out/plots/cos_theta_%s_%s.png" % (channel, suffix))
         c.Close()
         print "Systs:", systs_to_consider
     #canv = plot_hists_dict(h)
