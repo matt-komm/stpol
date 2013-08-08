@@ -565,7 +565,11 @@ plot_defs['final_cosTheta']={
     #'cutname': '2J1T signal region',
     'dir': "control"
 }
-
+plot_defs['2j1t_cosTheta'] = cp(plot_defs['final_cosTheta'])
+plot_defs['2j1t_cosTheta']['estQcd'] = '2j1t'
+plot_defs['2j1t_cosTheta']['fitpars'] = fitpars['final_2j1t']
+plot_defs['2j1t_cosTheta']['elecut'] = cutlist['2j1t']*cutlist["presel_ele"]*Cuts.met
+plot_defs['2j1t_cosTheta']['mucut'] = cutlist['2j1t']*cutlist["presel_mu"]*Cuts.mt_mu
 
 plot_defs['final_topMass']={
     'tags': ["an", "control.tex"],

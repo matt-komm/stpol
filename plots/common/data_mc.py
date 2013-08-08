@@ -22,13 +22,13 @@ def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     hist - the Hist to be scaled
     fitpars - a list with tuple contents
         [
-            ([patA1, patA2, ...], sfA),
-            ([patB1, patB2, ...], sfB),
+            ([patA1, patA2, ...], sfA, errA),
+            ([patB1, patB2, ...], sfB, errB),
         ]
 
     returns - nothing
     """
-    for patterns, sf in fitpars:
+    for patterns, sf, err in fitpars:
         for pat in patterns:
             if re.match(pat, sample_name):
                 logger.debug("Rescaling sample %s to lepton_channeless %s, sf=%.2f" % (sample_name, pat, sf))

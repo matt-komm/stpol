@@ -1,0 +1,6 @@
+file:/hdfs/cms/store/user/joosep/Aug4_c6a4b11/iso/nominal/Tbar_t_ToLeptons/output_1_1_eCi.root
+file:/hdfs/cms/store/user/joosep/Aug4_c6a4b11/iso/nominal/Tbar_t_ToLeptons/output_2_1_QQL.root
+file:/hdfs/cms/store/user/joosep/Aug4_c6a4b11/iso/nominal/Tbar_t_ToLeptons/output_3_1_Z6w.root
+file:/hdfs/cms/store/user/joosep/Aug4_c6a4b11/iso/nominal/Tbar_t_ToLeptons/output_4_1_Qkj.root
+file:/hdfs/cms/store/user/joosep/Aug4_c6a4b11/iso/nominal/Tbar_t_ToLeptons/output_5_1_iYB.root
+file:/hdfs/cms/store/user/joosep/Aug4_c6a4b11/iso/nominal/Tbar_t_ToLeptons/output_6_1_UAs.root

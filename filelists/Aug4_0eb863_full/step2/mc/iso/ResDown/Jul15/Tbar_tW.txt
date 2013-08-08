@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/Tbar_tW/output_1_1_hf2.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/Tbar_tW/output_2_1_H67.root

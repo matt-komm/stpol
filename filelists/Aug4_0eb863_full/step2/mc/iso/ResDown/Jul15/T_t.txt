@@ -1,0 +1,13 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_1_1_bOp.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_2_1_Uzy.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_3_1_3Ty.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_4_1_8ub.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_5_1_fmY.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_6_1_8BG.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_7_1_KHW.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_8_1_1Ij.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_9_1_GVM.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_10_1_wRe.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_11_1_a6R.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_12_1_Pqu.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/ResDown/T_t/output_13_1_l5s.root

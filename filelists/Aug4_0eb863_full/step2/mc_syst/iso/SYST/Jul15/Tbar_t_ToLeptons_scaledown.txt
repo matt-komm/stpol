@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/Tbar_t_ToLeptons_scaledown/output_1_1_8j7.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/Tbar_t_ToLeptons_scaledown/output_2_1_TDh.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/Tbar_t_ToLeptons_scaledown/output_3_1_Ocy.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/Tbar_t_ToLeptons_scaledown/output_4_1_Smd.root

@@ -1,0 +1,3 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBTauNu_anomWtb-0100_t-channel/output_1_1_BAY.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBTauNu_anomWtb-0100_t-channel/output_2_1_3gB.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBTauNu_anomWtb-0100_t-channel/output_3_1_BUh.root

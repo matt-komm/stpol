@@ -551,6 +551,24 @@ def SingleTopStep2():
 
     return process
 
+import unittest
+from subprocess import check_call
+class TestStep2Conf(unittest.TestCase):
+    def testSubChannelsTTJets(self):
+        print "Testing TTJets samples"
+        subch = [
+            "TTbar", "TTJets", "TTJets_MassiveBinDECAY",
+            "TTJets_mass166_5", "TTJets_mass178_5", "TTJets_matchingdown",
+            "TTJets_matchingup", "TTJets_scaleup", "TTJets_scaledown"
+        ]
+
+        def conf(s):
+            check_call(["python", __file__, "subChannel=" + s])
+
+        for s in subch:
+            conf(s)
+        self.assertEquals(True)
+
 if __name__=="__main__":
     process = SingleTopStep2()
     from SingleTopPolarization.Analysis.test_files import testfiles
@@ -558,3 +576,6 @@ if __name__=="__main__":
     process.maxEvents.input=-1
 
     print str(process.source)
+
+
+
