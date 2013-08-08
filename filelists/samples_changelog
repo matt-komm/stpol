@@ -1,4 +1,11 @@
 -------
+Sample: /hdfs/local/stpol/systematics_0708_2013/
+step: histograms
+luminosity: same as /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
+git hash: ?
+Explanation: Costheta histograms with all available systematics
+parent: /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
+-------
 Sample: /hdfs/local/stpol/step3/Aug4_0eb863_full/
 step: step3
 luminosity: filelists/Aug4_0eb863_full/step2/data/overview, also in plots/common/cross_sections.py already 

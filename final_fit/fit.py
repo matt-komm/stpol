@@ -7,7 +7,7 @@ class Fit:
             , filename
             , name = None
             , rates = {"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 1.0}
-            , shapes = ["En", "Res", "ttbar_scale", "ttbar_matching"] 
+            , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] 
             , correlations = [("wzjets", "top")]):
         
         self.filename = filename
@@ -25,7 +25,7 @@ class Fit:
 
     @staticmethod
     def getShapeSystematics(fit):
-        systematics = ["Res", "__En", "UnclusteredEn", "ttbar_matching", "ttbar_scale", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape", "btaggingBC", "btaggingL", "tchan_scale", "wjets_scale", "wjets_matching"]
+        systematics = ["Res", "__En", "UnclusteredEn", "ttbar_matching", "ttbar_scale", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape", "btaggingBC", "btaggingL", "tchan_scale", "wjets_scale", "wjets_matching", "iso"]
         if fit.filename.startswith("mu"):
             systematics.append("leptonIso")
         return systematics
@@ -73,12 +73,14 @@ class Fit:
             st_type = self.get_type(fit, syst)
             if syst in fitresults.keys() or (syst == "tchan" and "beta_signal" in fitresults.keys()):
                 line = '%s, %s, %f, %f\n' % (st_type, syst, fitresults[syst.replace("tchan", "beta_signal")][0], fitresults[syst.replace("tchan", "beta_signal")][1])
-                print line
+                print line,
             else:
                 line = '%s, %s, %f, %f\n' % (st_type, syst, 1.0, prior)
             f.write(line)
         for syst in Fit.getShapeSystematics(fit):
             st_type = self.get_type(fit, syst)
+            if syst in fitresults.keys():
+                print '%s, %s, %f, %f\n' % (st_type, syst, fitresults[syst][0], fitresults[syst][1]),
             line = '%s, %s, %f, %f\n' % (st_type, syst, 0.0, 1.0)
             f.write(line)
 
@@ -96,7 +98,7 @@ class Fit:
     def makeCovMatrix(self, cov, pars):
     # write out covariance matrix
         n = len(pars)
-        print pars
+        #print pars
 
         #fcov = ROOT.TFile("cov.root","RECREATE")
         canvas = ROOT.TCanvas("c1","Covariance")
@@ -147,8 +149,9 @@ class Fit:
         if '__up' in s or '__down' in s:
             if 'top__Res' in s and self.name.startswith("ele__eta"):
                 return False
-            if 'ttbar_matching' in s or '__En' in s or 'Res' in s or 'ttbar_scale' in s:#
-                return True
+            for shape in self.shapes:
+                if shape in s:
+                    return True
             return False
         return True
 
@@ -187,10 +190,28 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
 
 Fit.mu_mva_BDT = Fit("mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj")
 Fit.ele_mva_BDT = Fit("ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj")
-Fit.ele_mva_BDT_qcdfix = deepcopy(Fit.ele_mva_BDT)
-Fit.ele_mva_BDT_qcdfix.setName("QCD_fix")
-Fit.ele_mva_BDT_qcdfix.addRescale("qcd", 0.5)
-Fit.ele_mva_BDT_qcdfix.setRates({"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 0.01})
+
+Fit.ele_mva_BDT_qcd_0 = deepcopy(Fit.ele_mva_BDT)
+Fit.ele_mva_BDT_qcd_0.setName("QCD fixed to 0")
+Fit.ele_mva_BDT_qcd_0.addRescale("qcd", 0.)
+Fit.ele_mva_BDT_qcd_0.setRates({"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 0.01})
+
+Fit.ele_mva_BDT_qcd_0_5 = deepcopy(Fit.ele_mva_BDT_qcd_0)
+Fit.ele_mva_BDT_qcd_0_5.setName("QCD fixed to 0.5")
+Fit.ele_mva_BDT_qcd_0_5.addRescale("qcd", 0.5)
+
+Fit.ele_mva_BDT_qcd_1_0 = deepcopy(Fit.ele_mva_BDT_qcd_0)
+Fit.ele_mva_BDT_qcd_1_0.setName("QCD fixed to 1.")
+Fit.ele_mva_BDT_qcd_1_0.addRescale("qcd", 1.)
+
+Fit.ele_mva_BDT_qcd_1_5 = deepcopy(Fit.ele_mva_BDT_qcd_0)
+Fit.ele_mva_BDT_qcd_1_5.setName("QCD fixed to 1.5")
+Fit.ele_mva_BDT_qcd_1_5.addRescale("qcd", 1.5)
+
+Fit.ele_mva_BDT_qcd_2_0 = deepcopy(Fit.ele_mva_BDT_qcd_0)
+Fit.ele_mva_BDT_qcd_2_0.setName("QCD fixed to 2")
+Fit.ele_mva_BDT_qcd_2_0.addRescale("qcd", 2.)
+
 Fit.mu_C = Fit("mu__C")
 Fit.ele_C = Fit("ele__C")
 Fit.mu_eta_lj = Fit("mu__eta_lj")
@@ -199,8 +220,9 @@ Fit.ele_eta_lj = Fit("ele__eta_lj")
 Fit.fits = {}
 Fit.fits["mva_BDT"] = set([Fit.mu_mva_BDT, Fit.ele_mva_BDT])
 Fit.fits["eta_lj"] = set([Fit.mu_eta_lj, Fit.ele_eta_lj])
-Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj, Fit.mu_C])
-Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_C])
+Fit.fits["C"] = set([Fit.ele_C])
+Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj], Fit.mu_C)
+Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_mva_BDT_qcd_0, Fit.ele_mva_BDT_qcd_0_5, Fit.ele_mva_BDT_qcd_1_0, Fit.ele_mva_BDT_qcd_1_5, Fit.ele_mva_BDT_qcd_2_0, Fit.ele_C])
 
 Fit.all_fits = deepcopy(Fit.fits["mu"])
 Fit.all_fits = Fit.all_fits.union(Fit.fits["ele"])

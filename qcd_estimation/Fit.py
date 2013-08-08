@@ -20,6 +20,7 @@ class Fit:
         self.nonqcd_uncert = None
         self.qcd = None
         self.qcd_uncert = None
+        self.qcd_histo = None
    
     def __str__(self):
         string = self.getTitle()+"\n" 
