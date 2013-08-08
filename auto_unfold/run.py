@@ -91,22 +91,22 @@ def getMeasuredHistogramBinning(histogram):
     return binning
     
     
-def subtrackNominalBackground(modelName,modelNominalName,histPrefix,binningMeasured,folder):
+def subtrackNominalBackground(fileName,nominalFileName,histPrefix,binningMeasured,folder):
     histo=ROOT.TH1D()
     histoBG=ROOT.TH1D()
-    file=ROOT.TFile(os.path.join(folder,modelName+".root"))
+    file=ROOT.TFile(os.path.join(folder,fileName))
     tree=file.Get("products")
     
     tree.SetBranchAddress("pd__data_obs_"+histPrefix, histo)
     #histo.SetDirectory(0)
     
-    file2=ROOT.TFile(os.path.join(folder,modelNominalName+".root"))
+    file2=ROOT.TFile(os.path.join(folder,nominalFileName))
     
     tree2=file2.Get("products")
-    tree2.SetBranchAddress("pd__data_obs_"+histPrefix+"BG", histoBG)
+    tree2.SetBranchAddress("pd__data_obs_"+histPrefix, histoBG)
     #histoBG.SetDirectory(0)
     
-    fileOut=ROOT.TFile(os.path.join(folder,"subtracted_"+modelName+".root"),"RECREATE")
+    fileOut=ROOT.TFile(os.path.join(folder,"subtracted_"+fileName),"RECREATE")
     treeOut=ROOT.TTree("subtracted","subtracted")
 
 
@@ -115,7 +115,7 @@ def subtrackNominalBackground(modelName,modelNominalName,histPrefix,binningMeasu
     
     for cnt in range(int(tree.GetEntries())):
         tree.GetEntry(cnt)
-        tree2.GetEntry(cnt)
+        tree2.GetEntry(0)
         
         for ibin in range(len(binningMeasured)-1):
             y=histo.GetBinContent(ibin+1)-histoBG.GetBinContent(ibin+1)
@@ -218,12 +218,13 @@ if __name__=="__main__":
     parser.add_option("--histogramPrefix",action="store", type="string", default="cos_theta", dest="histogramPrefix", help="prefix for all histograms")
     parser.add_option("-f","--force",action="store_true", default=False, dest="force", help="deletes old output folder")
     parser.add_option("--output",action="store", type="string", default=None, dest="output", help="output directory, default is {modelName}")
+    parser.add_option("--data",action="store", type="string", dest="dataHistogram", help="input data sample, e.g. data.root:cos_theta__DATA")
+    parser.add_option("--runOnData",action="store_true", dest="runOnData",default=False, help="should data be unfolded (PEs otherwise)")
+
+    
     
     ### currently not yet supported options
     parser.add_option("--signal",action="store", type="string", dest="signalHistogram", help="input signal sample, e.g. data.root:cos_theta__tchan")
-    parser.add_option("--data",action="store", type="string", dest="dataHistogram", help="input data sample, e.g. data.root:cos_theta__DATA")
-    #TODO: runOnData
-    parser.add_option("--runOnData",action="store_true", dest="runOnData",default=False, help="should data be unfolded (PEs otherwise)")
 
     (options, args)=parser.parse_args()
     #-----------------------------------------------------------------------------
@@ -242,6 +243,7 @@ if __name__=="__main__":
             sys.exit(-1)
     os.mkdir(options.output)
             
+    
     filesToCheck=[]
     if (options.histFile==None):
         logging.error("Error - 'histfile' needs to be specified")
@@ -257,11 +259,13 @@ if __name__=="__main__":
     if options.dataHistogram:
         logging.warning("will use '"+options.dataHistogram+"' for data instead")
         filesToCheck.append(options.dataHistogram.rsplit(":",1)[0]) #removes root path to object within root file
-        logging.error("separate data histogram not supported yet")
-        sys.exit(-1)
+    else:
+        options.dataHistogram=options.histFile+":"+options.histogramPrefix+"__DATA"
 
     logging.info("run on data: "+str(options.runOnData))
-    if (not options.runOnData):
+    if (options.runOnData):
+        logging.info("will run on data from '"+options.dataHistogram+"'")
+    else:
         logging.info("will run PE")
   
     if (options.fitResult==None):
@@ -298,12 +302,12 @@ if __name__=="__main__":
             sys.exit(-1)
             
     #-----------------------------------------------------------------------------
-    logging.info("!!! parse fit result !!!")
-    yieldSys,shapeSysList,correlations=parseFitResult(options.fitResult,options.excludedSystematic)
     signalYieldList=[]
     backgroundYieldList=[]
     sysList=[]
     corrList=[]
+    logging.info("!!! parse fit result !!!")
+    yieldSys,shapeSysList,correlations=parseFitResult(options.fitResult,options.excludedSystematic)
     for systematic in yieldSys:
         if systematic["name"] in SIGNAL:
             logging.debug("signal: "+systematic["name"]+": "+str(systematic["mean"])+" +- "+str(systematic["unc"])+" (rate)")
@@ -321,8 +325,22 @@ if __name__=="__main__":
             corrList.append(systematic)
     #-----------------------------------------------------------------------------
     logging.info("!!! generate theta models !!!")
-    #generateModelData(name=,histFile=,signalYieldList=,backgroundYieldList=,shapeSysList=,correlations=,dicePoisson=,)
-    generateModelPE(  modelName=options.modelName,
+    generateNominalBackground(modelName=options.modelName+"_backgroundNominal",
+                    outputFolder=options.output,
+                    histFile=options.histFile,
+                    histPrefix=options.histogramPrefix,
+                    backgroundYieldList=backgroundYieldList,
+                    binning=len(binningHist)-1,
+                    ranges=[binningHist[0],binningHist[-1]])
+    if options.runOnData:
+        generateModelData(modelName=options.modelName,
+                    outputFolder=options.output,
+                    dataHist=options.dataHistogram,
+                    histPrefix=options.histogramPrefix,
+                    binning=len(binningHist)-1,
+                    ranges=[binningHist[0],binningHist[-1]])
+    else:
+        generateModelPE(  modelName=options.modelName,
                         outputFolder=options.output,
                         histFile=options.histFile,
                         histPrefix=options.histogramPrefix,
@@ -335,9 +353,18 @@ if __name__=="__main__":
                         dicePoisson=True,
                         bbUncertainties=True)
     
+    
     #-----------------------------------------------------------------------------
     logging.info("!!! run theta !!!")
     shutil.copy("execute_theta.sh", os.path.join(options.output,"execute_theta.sh"))    
+    options.modelName+"_backgroundNominal"
+    err,out=runCommand(["./execute_theta.sh",options.modelName+"_backgroundNominal.cfg"],cwd=options.output)
+    if not os.path.exists(os.path.join(options.output,options.modelName+"_backgroundNominal.root")):
+        logging.error("theta output was not created")
+        logging.error(err)
+        logging.error(out)
+        sys.exit(-1)
+    
     err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"],cwd=options.output)
     if not os.path.exists(os.path.join(options.output,options.modelName+".root")):
         logging.error("theta output was not created")
@@ -345,10 +372,11 @@ if __name__=="__main__":
         logging.error(out)
         sys.exit(-1)
         
+    
     #-----------------------------------------------------------------------------
     logging.info("!!! run subtract !!!")
     #change for data the nominal model name!
-    subtrackNominalBackground(options.modelName,options.modelName,options.histogramPrefix,binningMeasured,options.output)
+    subtrackNominalBackground(options.modelName+".root",options.modelName+"_backgroundNominal.root",options.histogramPrefix,binningMeasured,options.output)
     if not os.path.exists(os.path.join(options.output,"subtracted_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
@@ -358,7 +386,7 @@ if __name__=="__main__":
     logging.info("!!! run unfolding !!!")
     responseMatrixFile,responseMatrixName=options.responseMatrix.split(":",1)
     shutil.copy("execute_unfolding.sh", os.path.join(options.output,"execute_unfolding.sh"))  
-    err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=0.25,cwd=options.output)
+    err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=0.35,cwd=options.output)
     if not os.path.exists(os.path.join(options.output,"unfolded_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
