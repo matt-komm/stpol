@@ -15,6 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 gNodes = dict()
 
+import pdb
 
 def variateOneWeight(weights):
     sts = []
@@ -26,7 +27,7 @@ def variateOneWeight(weights):
             subs.append(w)
             for w2 in weights[i+1:]:
                 subs.append(w2[0])
-            sts.append(subs)
+            sts.append((w.name, subs))
     return sts
 
 
@@ -61,8 +62,8 @@ class Node(object):
 
     def process(self, obj, parentage):
         parentage = parentage[:-1]
-        # if self.isLeaf():
-        #     print self.parentsName(parentage), "*" if self.isLeaf() else ""
+        if self.isLeaf():
+            print self.parentsName(parentage), "*" if self.isLeaf() else ""
         return self.name
 
     def parentsName(self, parentage, upto=0):
@@ -109,8 +110,6 @@ class HistNode(Node):
         cut = last_cut.getCutsTotal(parentage)
         weights = self.getParents(parentage, WeightNode)
 
-        import pdb
-        pdb.set_trace()
         wtot = mul([w.weight for w in weights])
 
         hi = obj.sample.drawHistogram(self.hist_desc["var"], str(cut), weight=wtot.weight_str, binning=self.hist_desc["binning"], entrylist=cache)
@@ -304,16 +303,18 @@ if __name__=="__main__":
     weights_total = dict()
     syst_weights = []
     for lepton, w in weights_lepton.items():
+        print lepton
         weights_var_by_one = variateOneWeight([x[1] for x in (weights+w)])
         wtot = []
-        for s in weights_var_by_one:
+        for wn, s in weights_var_by_one:
             j = mul(s)
-            wtot.append(j)
-        for j in wtot:
+            wtot.append((wn, j))
+        for name, j in wtot:
+            print name
             syst = WeightNode(
-                j, "weight_" + j.name,
+                j, "weight_" + name + "_" + lepton,
                 [], [],
-                filter_funcs=[lambda x: is_chan(x, lep)]
+                filter_funcs=[lambda x,lepton=lepton: is_chan(x, lepton)]
             )
             syst_weights.append(syst)
 
@@ -331,6 +332,4 @@ if __name__=="__main__":
         }
         final_plots[name] = HistNode(hdesc, name, plot_nodes, [])
         final_plots[name] = reweigh(final_plots[name], syst_weights)
-        print final_plots[name].parents
-
     r = sample.recurseDown(sample)
