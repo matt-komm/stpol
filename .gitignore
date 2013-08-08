@@ -6,10 +6,26 @@
 /log*
 
 *__init__.py
-CMSSW_5_3_11/.SCRAM
-CMSSW_5_3_11/config
-CMSSW_5_3_11/python
-CMSSW_5_3_11/tmp
+
+# Ignoring most of the stuff in CMSSW_5_3_11, except:
+#  -- CMSSW_5_3_11/src/SingleTopPolarization
+#  -- CMSSW_5_3_11/src/data
+#  -- CMSSW_5_3_11/src/PhysicsTools
+# Under PhysicsTools we will ignore a few automatically downloaded packages.
+# If more packages are added (that are automatically downloaded), they
+# should be added here.
+CMSSW_5_3_11/*
+!CMSSW_5_3_11/src
+CMSSW_5_3_11/src/*
+!CMSSW_5_3_11/src/SingleTopPolarization
+!CMSSW_5_3_11/src/data
+!CMSSW_5_3_11/src/PhysicsTools
+CMSSW_5_3_11/src/PhysicsTools/PatAlgos
+CMSSW_5_3_11/src/PhysicsTools/PatUtils
+
+# The automatically downloaded exempi tool
+exempi-2.2.1.tar.bz2
+exempi-2.2.1
 
 /bin/*
 *.png
