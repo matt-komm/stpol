@@ -51,4 +51,4 @@ if __name__=="__main__":
     dsl = datasets2.parse_file(args.infile)
     for ds in dsl:
         files = local_ds_files(ds.ds)
-        print ds.name, len(files)
+        print ds.ds, ds.name, len(files)
