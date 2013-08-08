@@ -333,16 +333,23 @@ class Weights:
         return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight()
 
 
-    muon_id = (
+    muon_sel = dict()
+    muon_sel["id"] = (
         Weight("muon_IDWeight"), Weight("muon_IDWeight_up"), Weight("muon_IDWeight_down")
-    )
-    
-    muon_trigger = (
+    )   
+    muon_sel["trigger"] = (
         Weight("muon_TriggerWeight"), Weight("muon_TriggerWeight_up"), Weight("muon_TriggerWeight_down")
     )
-
-    muon_iso = (
+    muon_sel["iso"] = (
         Weight("muon_IsoWeight"), Weight("muon_IsoWeight_up"), Weight("muon_IsoWeight_down")
+    )
+
+    electron_sel = dict()
+    electron_sel["id"] = (
+        Weight("electron_IDWeight"), Weight("electron_IDWeight_up"), Weight("electron_IDWeight_down")
+    )   
+    electron_sel["trigger"] = (
+        Weight("electron_TriggerWeight"), Weight("electron_TriggerWeight_up"), Weight("electron_TriggerWeight_down")
     )
 
 

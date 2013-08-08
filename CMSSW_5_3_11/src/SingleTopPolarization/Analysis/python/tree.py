@@ -14,6 +14,22 @@ logger = logging.getLogger("tree")
 logger.setLevel(logging.DEBUG)
 
 gNodes = dict()
+
+
+def variateOneWeight(weights):
+    sts = []
+    for i in range(len(weights)):
+        st = [x[0] for x in weights[:i]]
+        for w in weights[i][1:]:
+            subs = []
+            subs += st
+            subs.append(w)
+            for w2 in weights[i+1:]:
+                subs.append(w2[0])
+            sts.append(subs)
+    return sts
+
+
 class Node(object):
     def __init__(self, name, parents, children, filter_funcs=[]):
         self.name = name
@@ -93,6 +109,8 @@ class HistNode(Node):
         cut = last_cut.getCutsTotal(parentage)
         weights = self.getParents(parentage, WeightNode)
 
+        import pdb
+        pdb.set_trace()
         wtot = mul([w.weight for w in weights])
 
         hi = obj.sample.drawHistogram(self.hist_desc["var"], str(cut), weight=wtot.weight_str, binning=self.hist_desc["binning"], entrylist=cache)
@@ -186,11 +204,17 @@ def reweigh(node, weights):
         #w.children += [node]
     return node
 
-eleChan = lambda p: hasParent(channels['ele'], p)
-muChan = lambda p: hasParent(channels['mu'], p)
+def is_chan(p, lep):
+    """
+    There must be a parent which is the corresponding lepton cut node.
+    """
+    return hasParent(gNodes[lep], p)
 
-eleSamp = lambda p: "/ele/" in sample.name
-muSamp = lambda p: "/mu/" in sample.name
+def is_samp(p, lep):
+    """
+    The first parent must be a sample and contain the lepton.
+    """
+    return ("/%s/" % lep) in p[0]
 
 if __name__=="__main__":
 
@@ -199,29 +223,33 @@ if __name__=="__main__":
 
     channel = Node("channel", [sample], [])
     channels = dict()
+
+    # sample --> channels['mu'], channels['ele']
     channels['mu'] = CutNode(
         Cuts.hlt("mu")*Cuts.lepton("mu"),
-        "mu", [channel], [], filter_funcs=[muSamp]
+        "mu", [channel], [], filter_funcs=[lambda x: is_samp(x, 'mu')]
     )
     channels['ele'] = CutNode(
         Cuts.hlt("ele")*Cuts.lepton("ele"),
-        "ele", [channel], [], filter_funcs=[eleSamp]
+        "ele", [channel], [], filter_funcs=[lambda x: is_samp(x, 'ele')]
     )
-    weights_lepton = dict()
-    weights_lepton['mu'] = Node("weights_muon", [channels['mu']], [])
-    for w in [("id", muon_id), ("iso", muon_iso), ("trigger", muon_trigger)]:
-        
 
+    # muons: channels['mu'] --> [iso, antiiso]
+    # electrons: channels['ele'] --> [iso, antiiso]
     isos = dict()
     isol = []
-    for lep in ['mu', 'ele']:
-        par = [channels[lep]]
+    for lep, par in [
+        ('mu', [channels['mu']]),
+        ('ele', [channels['ele']])
+        ]:
+
         isos[lep] = dict()
         isos[lep]['iso'] = Node(lep + "_iso", par, [])
         isos[lep]['antiiso'] = CutNode(Cuts.antiiso(lep), lep + "_antiiso", par, [])
         isol.append(isos[lep]['iso'])
         isol.append(isos[lep]['antiiso'])
 
+    # [iso, antiiso] --> jet --> [jets2-3]
     jet = Node("jet", isol, [])
     jets = dict()
     for i in [2,3]:
@@ -237,10 +265,10 @@ if __name__=="__main__":
     mets = dict()
 
     mets['met'] = CutNode(Cuts.met(), "met_met", [met], [],
-        filter_funcs=[eleChan]
+        filter_funcs=[lambda x: is_chan(x, 'ele')]
     )
     mets['mtw'] = CutNode(Cuts.mt_mu(), "met_mtw", [met], [],
-        filter_funcs=[muChan]
+        filter_funcs=[lambda x: is_chan(x, 'mu')]
     )
 
     purification = Node("signalenr", met.children, [])
@@ -263,34 +291,33 @@ if __name__=="__main__":
 
     plot_nodes = mtop.children+etalj.children+met.children+tag.children+jet.children
 
+    weights_lepton = dict()
+    weights_lepton['mu'] = Weights.muon_sel.items()
+    weights_lepton['ele'] = Weights.electron_sel.items()
+
     weights = [
-        Weights.wjets_btag_syst,
-        Weights.wjets_yield_syst,
-        Weights.wjets_shape_syst,
+        ("btag", Weights.wjets_btag_syst),
+        ("wjets_yield", Weights.wjets_yield_syst),
+        ("shape", Weights.wjets_shape_syst),
     ]
 
-    sts = []
-    for i in range(len(weights)):
-        st = [x[0] for x in weights[:i]]
-        for w in weights[i][1:]:
-            subs = []
-            subs += st
-            subs.append(w)
-            for w2 in weights[i+1:]:
-                subs.append(w2[0])
-            sts.append(subs)
-
-    weights_total = []
-    for s in sts:
-        j = mul(s)
-        weights_total.append(j)
-
+    weights_total = dict()
     syst_weights = []
-    for j in weights_total:
+    for lepton, w in weights_lepton.items():
+        weights_var_by_one = variateOneWeight([x[1] for x in (weights+w)])
+        wtot = []
+        for s in weights_var_by_one:
+            j = mul(s)
+            wtot.append(j)
+        for j in wtot:
+            syst = WeightNode(
+                j, "weight_" + j.name,
+                [], [],
+                filter_funcs=[lambda x: is_chan(x, lep)]
+            )
+            syst_weights.append(syst)
 
-        syst = WeightNode(j, "weight_" + j.name, [], [])
-        syst_weights.append(syst)
-
+    print syst_weights
     final_plot_descs = [
         ("cos_theta", "cos_theta", [20, -1, 1]),
         ("abs_eta_lj", "abs(eta_lj)", [20, 2.5, 5])
@@ -304,5 +331,6 @@ if __name__=="__main__":
         }
         final_plots[name] = HistNode(hdesc, name, plot_nodes, [])
         final_plots[name] = reweigh(final_plots[name], syst_weights)
+        print final_plots[name].parents
 
     r = sample.recurseDown(sample)
