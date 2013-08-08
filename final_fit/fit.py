@@ -190,10 +190,28 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
 
 Fit.mu_mva_BDT = Fit("mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj")
 Fit.ele_mva_BDT = Fit("ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj")
-Fit.ele_mva_BDT_qcdfix = deepcopy(Fit.ele_mva_BDT)
-Fit.ele_mva_BDT_qcdfix.setName("QCD_fix")
-Fit.ele_mva_BDT_qcdfix.addRescale("qcd", 0.5)
-Fit.ele_mva_BDT_qcdfix.setRates({"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 0.01})
+
+Fit.ele_mva_BDT_qcd_0 = deepcopy(Fit.ele_mva_BDT)
+Fit.ele_mva_BDT_qcd_0.setName("QCD fixed to 0")
+Fit.ele_mva_BDT_qcd_0.addRescale("qcd", 0.)
+Fit.ele_mva_BDT_qcd_0.setRates({"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 0.01})
+
+Fit.ele_mva_BDT_qcd_0_5 = deepcopy(Fit.ele_mva_BDT_qcd_0)
+Fit.ele_mva_BDT_qcd_0_5.setName("QCD fixed to 0.5")
+Fit.ele_mva_BDT_qcd_0_5.addRescale("qcd", 0.5)
+
+Fit.ele_mva_BDT_qcd_1_0 = deepcopy(Fit.ele_mva_BDT_qcd_0)
+Fit.ele_mva_BDT_qcd_1_0.setName("QCD fixed to 1.")
+Fit.ele_mva_BDT_qcd_1_0.addRescale("qcd", 1.)
+
+Fit.ele_mva_BDT_qcd_1_5 = deepcopy(Fit.ele_mva_BDT_qcd_0)
+Fit.ele_mva_BDT_qcd_1_5.setName("QCD fixed to 1.5")
+Fit.ele_mva_BDT_qcd_1_5.addRescale("qcd", 1.5)
+
+Fit.ele_mva_BDT_qcd_2_0 = deepcopy(Fit.ele_mva_BDT_qcd_0)
+Fit.ele_mva_BDT_qcd_2_0.setName("QCD fixed to 2")
+Fit.ele_mva_BDT_qcd_2_0.addRescale("qcd", 2.)
+
 Fit.mu_C = Fit("mu__C")
 Fit.ele_C = Fit("ele__C")
 Fit.mu_eta_lj = Fit("mu__eta_lj")
@@ -202,8 +220,9 @@ Fit.ele_eta_lj = Fit("ele__eta_lj")
 Fit.fits = {}
 Fit.fits["mva_BDT"] = set([Fit.mu_mva_BDT, Fit.ele_mva_BDT])
 Fit.fits["eta_lj"] = set([Fit.mu_eta_lj, Fit.ele_eta_lj])
-Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj, Fit.mu_C])
-Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_C])
+Fit.fits["C"] = set([Fit.ele_C])
+Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj], Fit.mu_C)
+Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_mva_BDT_qcd_0, Fit.ele_mva_BDT_qcd_0_5, Fit.ele_mva_BDT_qcd_1_0, Fit.ele_mva_BDT_qcd_1_5, Fit.ele_mva_BDT_qcd_2_0, Fit.ele_C])
 
 Fit.all_fits = deepcopy(Fit.fits["mu"])
 Fit.all_fits = Fit.all_fits.union(Fit.fits["ele"])
