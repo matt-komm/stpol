@@ -5,6 +5,7 @@ import numpy
 import os
 import logging
 import ROOT
+import shutil
 import subprocess
 from generateCosThetaModel import *
 
@@ -15,7 +16,11 @@ logging.basicConfig(format="%(levelname)s - %(message)s",level=logging.DEBUG)
 SIGNAL=["tchan"]
 BACKGROUND=["top","wzjets","qcd",]
 #will search which of the following systematics are present in the input root file
-SYS=["Res","En","UnclusteredEn","btaggingBD","btaggingL","leptonID","leptonIso","leptonTrigger","wjets_flat","wjets_shape"]
+SYS=["Res","En","UnclusteredEn","btaggingBD","btaggingL","leptonID",
+     "leptonIso","leptonTrigger","wjets_flat","wjets_shape"]
+     #"ttbar_matching","ttbar_scale"]
+
+ROOT.gROOT.SetBatch(True)
 
 def parseFitResult(inputfile,excludeSysList):
     yieldSys=[]
@@ -86,22 +91,22 @@ def getMeasuredHistogramBinning(histogram):
     return binning
     
     
-def subtrackNominalBackground(modelName,modelNominalName,histPrefix,binningMeasured):
+def subtrackNominalBackground(modelName,modelNominalName,histPrefix,binningMeasured,folder):
     histo=ROOT.TH1D()
     histoBG=ROOT.TH1D()
-    file=ROOT.TFile(modelName+".root")
+    file=ROOT.TFile(os.path.join(folder,modelName+".root"))
     tree=file.Get("products")
     
     tree.SetBranchAddress("pd__data_obs_"+histPrefix, histo)
     #histo.SetDirectory(0)
     
-    file2=ROOT.TFile(modelNominalName+".root")
+    file2=ROOT.TFile(os.path.join(folder,modelNominalName+".root"))
     
     tree2=file2.Get("products")
     tree2.SetBranchAddress("pd__data_obs_"+histPrefix+"BG", histoBG)
     #histoBG.SetDirectory(0)
     
-    fileOut=ROOT.TFile("subtracted_"+modelName+".root","RECREATE")
+    fileOut=ROOT.TFile(os.path.join(folder,"subtracted_"+modelName+".root"),"RECREATE")
     treeOut=ROOT.TTree("subtracted","subtracted")
 
 
@@ -128,8 +133,8 @@ def subtrackNominalBackground(modelName,modelNominalName,histPrefix,binningMeasu
     
     
     
-def runCommand(cmd,breakOnErr=True):
-    process = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+def runCommand(cmd,breakOnErr=True,cwd=""):
+    process = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd)
     process.wait()
     err=""
     while (True):
@@ -151,7 +156,7 @@ def runCommand(cmd,breakOnErr=True):
         sys.exit(-1)
     return err,cout
     
-def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,outputFile,reg=1.0):
+def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,outputFile,reg=1.0,cwd=""):
     return runCommand(["./execute_unfolding.sh",
                         inputFile,
                         treeName,
@@ -160,29 +165,83 @@ def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,out
                         reponseMatrixName,
                         outputFile,
                         str(reg)],
-                        False)
+                        False,cwd=cwd)
 
+def calcAsymmetry(histo):
+    sumUp=0.0
+    sumDown=0.0
+    for i in range(histo.GetNbinsX()):
+        if histo.GetBinCenter(i+1)>0:
+            sumUp+=histo.GetBinContent(i+1)
+        else:
+            sumDown+=histo.GetBinContent(i+1)
+    return (sumUp-sumDown)/(sumUp+sumDown)
+                        
+def getAsymmetry(fileName,branchName,histoTreeName,outputName=None):
+    file=ROOT.TFile(fileName)
+    tree=file.Get(branchName)
+    histo=ROOT.TH1D()
+    tree.SetBranchAddress(histoTreeName, histo)
+    n=int(tree.GetEntries())
+    asymmetryList=numpy.zeros(n)
+    for cnt in range(n):
+        tree.GetEntry(cnt)
+        asy=calcAsymmetry(histo)
+        asymmetryList[cnt]=asy
+    sortedList=numpy.sort(asymmetryList)
+    asymmetryHist = ROOT.TH1F("asymmetryHist","",200,sortedList[0]-0.1,sortedList[-1]+0.1)
+    for cnt in range(n):
+        asymmetryHist.Fill(sortedList[cnt])
+            
+    if outputName!=None:
+        canvas=ROOT.TCanvas("canvas","",800,600)
+        asymmetryHist.Draw();
+        canvas.Print(outputName)
+    
+
+    quantilProb=numpy.zeros(3)
+    quantilProb[0]=0.1584
+    quantilProb[1]=0.5000
+    quantilProb[2]=0.8415
+    quantiles=numpy.zeros(len(quantilProb))
+    index=numpy.zeros(n,dtype=numpy.int32)
+    ROOT.TMath.Quantiles(n, 3,asymmetryList,quantiles, quantilProb, False, index,4)
+    return {"mean":asymmetryHist.GetMean(),"rms":asymmetryHist.GetRMS()}
      
 if __name__=="__main__":
     parser=OptionParser()
     parser.add_option("--modelName",action="store", type="string", default="mymodel", dest="modelName", help="name of the model, all subsequent produced files will included that name")
     parser.add_option("--histFile",action="store", type="string", dest="histFile", help="input file from where all histogramms are taken, e.g. data.root")
-    #TODO: runOnData
-    parser.add_option("--runOnData",action="store_true", dest="runOnData",default=False, help="should data be unfolded (PEs otherwise)")
     parser.add_option("--responseMatrix",action="store", type="string", dest="responseMatrix", help="point to response matrix, e.g. martix.root:matrix")
     parser.add_option("--fitResult",action="store", type="string", dest="fitResult", help="the file which contains the fit result")
     parser.add_option("--excludeSys",action="append", type="string", default=[], dest="excludedSystematic", help="point to response matrix, e.g. martix.root:matrix")
     parser.add_option("--histogramPrefix",action="store", type="string", default="cos_theta", dest="histogramPrefix", help="prefix for all histograms")
-    
+    parser.add_option("-f","--force",action="store_true", default=False, dest="force", help="deletes old output folder")
+    parser.add_option("--output",action="store", type="string", default=None, dest="output", help="output directory, default is {modelName}")
     
     ### currently not yet supported options
     parser.add_option("--signal",action="store", type="string", dest="signalHistogram", help="input signal sample, e.g. data.root:cos_theta__tchan")
     parser.add_option("--data",action="store", type="string", dest="dataHistogram", help="input data sample, e.g. data.root:cos_theta__DATA")
+    #TODO: runOnData
+    parser.add_option("--runOnData",action="store_true", dest="runOnData",default=False, help="should data be unfolded (PEs otherwise)")
 
     (options, args)=parser.parse_args()
     #-----------------------------------------------------------------------------
     logging.info("!!! checking specified run options !!!")
     logging.info("use modelname: "+options.modelName)
+    if options.output==None:
+        options.output=options.modelName
+    options.output=os.path.abspath(options.output)
+    logging.info("output path: "+options.output)
+    if os.path.exists(options.output):
+        logging.warning("output directory '"+options.output+"'")
+        if options.force:
+            logging.warning("force specified - old folder will be deleted")
+            shutil.rmtree(options.output)
+        else:
+            sys.exit(-1)
+    os.mkdir(options.output)
+            
     filesToCheck=[]
     if (options.histFile==None):
         logging.error("Error - 'histfile' needs to be specified")
@@ -243,6 +302,8 @@ if __name__=="__main__":
     yieldSys,shapeSysList,correlations=parseFitResult(options.fitResult,options.excludedSystematic)
     signalYieldList=[]
     backgroundYieldList=[]
+    sysList=[]
+    corrList=[]
     for systematic in yieldSys:
         if systematic["name"] in SIGNAL:
             logging.debug("signal: "+systematic["name"]+": "+str(systematic["mean"])+" +- "+str(systematic["unc"])+" (rate)")
@@ -251,29 +312,34 @@ if __name__=="__main__":
             logging.debug("background: "+systematic["name"]+": "+str(systematic["mean"])+" +- "+str(systematic["unc"])+" (rate)")
             backgroundYieldList.append(systematic)
     for systematic in shapeSysList:
-        logging.debug(systematic["name"]+": "+str(systematic["mean"])+" +- "+str(systematic["unc"])+" (shape)")
+        if systematic["name"] in SYS:
+            sysList.append(systematic)
+            logging.debug(systematic["name"]+": "+str(systematic["mean"])+" +- "+str(systematic["unc"])+" (shape)")
     for systematic in correlations:
-        logging.debug(str(systematic["name"])+": "+str(systematic["rho"])+" (correlation)")  
-    
+        if ((systematic["name"][0] in SYS) or (systematic["name"][0] in SIGNAL) or(systematic["name"][0] in BACKGROUND)) and((systematic["name"][1] in SYS) or (systematic["name"][1] in SIGNAL) or(systematic["name"][1] in BACKGROUND)):
+            logging.debug(str(systematic["name"])+": "+str(systematic["rho"])+" (correlation)")  
+            corrList.append(systematic)
     #-----------------------------------------------------------------------------
     logging.info("!!! generate theta models !!!")
     #generateModelData(name=,histFile=,signalYieldList=,backgroundYieldList=,shapeSysList=,correlations=,dicePoisson=,)
     generateModelPE(  modelName=options.modelName,
+                        outputFolder=options.output,
                         histFile=options.histFile,
                         histPrefix=options.histogramPrefix,
                         signalYieldList=signalYieldList,
                         backgroundYieldList=backgroundYieldList,
-                        shapeSysList=shapeSysList,
-                        correlations=correlations,
+                        shapeSysList=sysList,
+                        correlations=corrList,
                         binning=len(binningHist)-1,
                         ranges=[binningHist[0],binningHist[-1]],
-                        dicePoisson=False,
+                        dicePoisson=True,
                         bbUncertainties=True)
     
     #-----------------------------------------------------------------------------
-    logging.info("!!! run theta !!!")           
-    err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"])
-    if not os.path.exists(options.modelName+".root"):
+    logging.info("!!! run theta !!!")
+    shutil.copy("execute_theta.sh", os.path.join(options.output,"execute_theta.sh"))    
+    err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"],cwd=options.output)
+    if not os.path.exists(os.path.join(options.output,options.modelName+".root")):
         logging.error("theta output was not created")
         logging.error(err)
         logging.error(out)
@@ -282,8 +348,8 @@ if __name__=="__main__":
     #-----------------------------------------------------------------------------
     logging.info("!!! run subtract !!!")
     #change for data the nominal model name!
-    subtrackNominalBackground(options.modelName,options.modelName,options.histogramPrefix,binningMeasured)
-    if not os.path.exists("subtracted_"+options.modelName+".root"):
+    subtrackNominalBackground(options.modelName,options.modelName,options.histogramPrefix,binningMeasured,options.output)
+    if not os.path.exists(os.path.join(options.output,"subtracted_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
         logging.error(out)
@@ -291,11 +357,20 @@ if __name__=="__main__":
     #-----------------------------------------------------------------------------
     logging.info("!!! run unfolding !!!")
     responseMatrixFile,responseMatrixName=options.responseMatrix.split(":",1)
-    err,out=runUnfolding("subtracted_"+options.modelName+".root","subtracted","histos",responseMatrixFile,responseMatrixName,"unfolded_"+options.modelName+".root",reg=0.35)
-    if not os.path.exists("unfolded_"+options.modelName+".root"):
+    shutil.copy("execute_unfolding.sh", os.path.join(options.output,"execute_unfolding.sh"))  
+    err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=0.25,cwd=options.output)
+    if not os.path.exists(os.path.join(options.output,"unfolded_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
         logging.error(out)
         sys.exit(-1)
+    #-----------------------------------------------------------------------------
+    logging.info("!!! calculate asymmetry !!!")
+    asymmetry = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",os.path.join(options.output,options.modelName+"_asymmetry.pdf"))
+    logging.info("final asymmetry: "+str(asymmetry))
+    file=open(os.path.join(options.output,"asymmetry.txt"),"w")
+    file.write("mean, "+str(round(asymmetry["mean"],4))+"\n")
+    file.write("rms, "+str(round(asymmetry["rms"],4))+"\n")
+    file.close()
     
     

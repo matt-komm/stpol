@@ -5,7 +5,9 @@ from ModelClasses import *
 from optparse import OptionParser
 import math
 import sys
+import os
 import logging
+import ROOT
 
 if __name__=="__main__":
     parser=OptionParser()
@@ -39,9 +41,25 @@ if __name__=="__main__":
                         "wjets_shape":Distribution("delta_wjetSHAPE", "gauss", {"mean":"0.0", "width":"1.0", "range":"(\"-inf\",\"inf\")"})         
     }
     
-    generateModel(histograminputfile,modelfilename,outputfilename,signalNameList,backgroundNameList)
+    generateModel(histograminputfile,"",modelfilename,outputfilename,signalNameList,backgroundNameList)
 
+
+def checkHistogramExistence(fileName,histoName):
+    if not os.path.exists(fileName):
+        logging.warning("file '"+fileName+"' does not exists containing histogram '"+histoName+"', will be ignored")
+        return False
+    file = ROOT.TFile(fileName,"r")
+    obj=file.Get(histoName)
+    if (obj==None):
+        logging.warning("histogram '"+histoName+"' does not exits in file '"+fileName+"', will be ignored")
+        return False
+    if obj.GetEntries()==0:
+        logging.warning("histogram '"+histoName+"' in file '"+fileName+"' contains 0 entries, will be ignored")
+        return False
+    return True
+    
 def generateModelPE(modelName="mymodel",
+                    outputFolder="mymodel",
                     histFile=None,
                     histPrefix="cos_theta",
                     signalYieldList=[],
@@ -58,7 +76,7 @@ def generateModelPE(modelName="mymodel",
         sys.exit(-1)
     
     
-    file=open(modelName+".cfg", "w")
+    file=open(os.path.join(outputFolder,modelName+".cfg"), "w")
     '''
     for shapeSystematic in shapeSysList:
         
@@ -107,6 +125,8 @@ def generateModelPE(modelName="mymodel",
     obsBG=Observable(histPrefix+"BG", binning, ranges)
     for ntuple in ntupleNameList:
         name=ntuple["name"]
+        if not checkHistogramExistence(histFile,histPrefix+"__"+name):
+            continue
         comp=ObservableComponent("comp_"+name)
         coeff=CoefficientMultiplyFunction()
         
@@ -129,7 +149,9 @@ def generateModelPE(modelName="mymodel",
         
         for shapeSystematic in shapeSysList:
             sysName=shapeSystematic["name"]
-            if name=="qcd":
+            if not checkHistogramExistence(histFile,histPrefix+"__"+name+"__"+sysName+"__up"):
+                continue
+            if not checkHistogramExistence(histFile,histPrefix+"__"+name+"__"+sysName+"__down"):
                 continue
             histUP=RootHistogram(name+"-"+sysName+"-UP")
             histUP.setFileName(histFile)
@@ -203,7 +225,7 @@ def generateModelPE(modelName="mymodel",
     file.write('    model="@model_'+modelName+'";\n')
     file.write('    output_database={\n')
     file.write('        type="rootfile_database";\n')
-    file.write('        filename="'+modelName+'.root";\n')
+    file.write('        filename="'+os.path.join(outputFolder,modelName+'.root')+'";\n')
     file.write('    };\n')
     file.write('    producers=("@pd"\n')
     file.write('    );\n')
