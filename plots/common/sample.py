@@ -118,7 +118,7 @@ class Sample:
         scale_factor = float(expected_events)/float(total_events)
         return scale_factor
 
-    def cacheEntries(self, name, cut_str):
+    def cacheEntries(self, name, cut_str, cache=0):
         """
         Creates a TEntryList event cache corresponding to a cut.
         This will allow subsequent operations to be speeded up if the same
@@ -134,7 +134,7 @@ class Sample:
         """
         self.tfile.cd()
         elist = ROOT.TEntryList(name, name)
-        self.tree.SetEntryList(0)
+        self.tree.SetEntryList(cache)
         self.tree.Draw(">>" + elist.GetName(), cut_str, "entrylist")
         return elist
 
