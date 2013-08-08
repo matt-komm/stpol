@@ -13,55 +13,6 @@ import ROOT
 logger = logging.getLogger("tree")
 logger.setLevel(logging.DEBUG)
 
-def flatten(l):
-    l2 = [([x] if isinstance(x,str) or isinstance(x, tuple) else x) for x in l]
-    return list(itertools.chain(*l2))
-t = ("root",[
-    ("childA", "leaf1"),
-    ("childB", [
-        ("ccA", "leaf2"),
-        ("ccB", [
-            ("cccA", "leaf4")
-        ])
-    ])
-])
-
-def isNode(node):
-    return isinstance(node, tuple) and len(node)==2
-
-def isNodeList(l):
-    isl = isinstance(l, list)
-    if not isl:
-        return isl
-    for n in l:
-        isl = isl and isNode(n)
-    return isl
-
-def isLeaf(node):
-    #return isinstance(node[1], basestring)
-    return not (isNode(node[1]) or isNodeList(node[1]))
-
-# def getNode(root, nodelist):
-#     print "+", root, nodelist
-#     if len(nodelist)==0:
-#         return root[1][0]
-#     nodename = nodelist.popleft()
-#     parname, children = root
-#     if parname==nodename:
-#         return itertools_flatten([getNode((name, nodes), nodelist) for name, nodes in children if name==nodename])
-
-def getPathLeaves(root, path=''):
-    assert(isNode(root))
-    name, children = root
-    if path:
-        _path = path + "." + name
-    else:
-        _path = name
-    if isLeaf(root):
-        return (_path, children)
-    assert(isNodeList(children))
-    return flatten([getPathLeaves(child, _path) for child in children])
-
 gNodes = dict()
 class Node(object):
     def __init__(self, name, parents, children, filter_funcs=[]):
@@ -226,6 +177,15 @@ class WeightNode(Node):
 def hasParent(node, p):
     return node.name in p
 
+def reweigh(node, weights):
+    pars = copy.copy(node.parents)
+    node.delParents(node.parents)
+    for w in weights:
+        w.addParents(pars)
+        node.addParents([w])
+        #w.children += [node]
+    return node
+
 eleChan = lambda p: hasParent(channels['ele'], p)
 muChan = lambda p: hasParent(channels['mu'], p)
 
@@ -236,19 +196,20 @@ if __name__=="__main__":
 
     hsaver = ObjectSaver("hists.root")
     sample = SampleNode(hsaver, "step3_latest/mu/mc/iso/nominal/Jul15/T_t_ToLeptons.root", [], [])
+
     channel = Node("channel", [sample], [])
     channels = dict()
-
     channels['mu'] = CutNode(
-        Cuts.hlt("mu")*Cuts.lepton("mu"), "mu", [channel], [], filter_funcs=[muSamp]
+        Cuts.hlt("mu")*Cuts.lepton("mu"),
+        "mu", [channel], [], filter_funcs=[muSamp]
     )
-
     channels['ele'] = CutNode(
         Cuts.hlt("ele")*Cuts.lepton("ele"),
         "ele", [channel], [], filter_funcs=[eleSamp]
     )
+    weights_lepton = dict()
+    weights_lepton['mu'] = 
 
-    #iso = Node("iso", channel.children, [])
     isos = dict()
     isol = []
     for lep in ['mu', 'ele']:
@@ -300,7 +261,13 @@ if __name__=="__main__":
 
     plot_nodes = mtop.children+etalj.children+met.children+tag.children+jet.children
 
-    weights = [
+    weights = dict()
+    weights['mu'] = [
+        Weights.wjets_btag_syst,
+        Weights.wjets_yield_syst,
+        Weights.wjets_shape_syst,
+    ]
+    weights['ele'] = [
         Weights.wjets_btag_syst,
         Weights.wjets_yield_syst,
         Weights.wjets_shape_syst,
@@ -327,15 +294,6 @@ if __name__=="__main__":
 
         syst = WeightNode(j, "weight_" + j.name, [], [])
         syst_weights.append(syst)
-
-    def reweigh(node, weights):
-        pars = copy.copy(node.parents)
-        node.delParents(node.parents)
-        for w in weights:
-            w.addParents(pars)
-            node.addParents([w])
-            #w.children += [node]
-        return node
 
     final_plot_descs = [
         ("cos_theta", "cos_theta", [20, -1, 1]),
