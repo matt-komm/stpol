@@ -48,7 +48,12 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     hQCDShapeOrig.Scale(hQCD.Integral()/hQCDShapeOrig.Integral())
     #print fit_result
     err = array('d',[0.])
-    
+    #hQCD.SetDirectory(0)
+    #fit_result.isoCut = hQCD.Clone()
+    #fit_result.qcd_histo = hQCD.Clone()
+    print "ft",fit_result
+    print hQCD
+    print "QCD", fit_result.qcd_histo
     bin1 = hQCD.FindBin(mtMinValue)
     bin2 = hQCD.GetNbinsX() + 1
     #print hQCD.Integral(), y.Integral()
@@ -76,6 +81,8 @@ def get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGro
     dataHisto = dataGroup.getHistogram(var,  "Nominal", "iso", cuts.name)
     fit.var = var
     fit.dataHisto = dataHisto
+    print "QCD2", fit.qcd_histo
+    #fit.qcd_histo = 
     return (get_yield(var, cuts.name, cutMT, mtMinValue, fit, dataGroup), fit)
 
 def getMtMinValue(channel):
@@ -176,8 +183,9 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path=(os
     #Before Running make sure you have 'templates' and 'fits' subdirectories where you're running
     #Root files with templates and fit results will be saved there.
     #Name from FitConfig will be used in file names
-
-    return get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup)
+    (a, b) = get_qcd_yield_with_fit(var, cuts, cutMT, mtMinValue, dataGroup, lumis, MCGroups, systematics, openedFiles, useMCforQCDTemplate, QCDGroup)
+    print "QCD2.5",b, b.qcd_histo
+    return (a,b)
 
 if __name__=="__main__":
     try:
@@ -244,20 +252,19 @@ if __name__=="__main__":
     parser.add_argument('--doSystematics', action="store_true", default=False)
     parser.add_argument('--doSystematicCuts', action="store_true", default=False, help="Various anti-iso regions etc.")
 
-    #FIXME: now that the script outputs the fit results both before and after the M_t cut, isn't this a bit redundant? -JP
-    parser.add_argument('--mtcut',dest='mtcut',action='store_true', default=True, help="Apply the corresponding MET/MtW cut")
-    parser.add_argument('--no-mtcut',dest='mtcut',action='store_false', help="Don't apply the corresponding MET/MtW cut")
     args = parser.parse_args()
 
     if args.doSystematicCuts == True and args.channel == "mu":
-        args.cuts = systematics_cuts_mu()#.keys()
-        print "Considering the systematic variations: " + str(args.cuts.keys())
+        cuts = systematics_cuts_mu()
+        args.cuts = cuts.keys()
+        print "Considering the systematic variations: " + str(args.cuts)
     if args.doSystematicCuts == True and args.channel == "ele":
-        args.cuts = systematics_cuts_ele()
-        print "Considering the systematic variations: " + str(args.cuts.keys())
+        cuts = systematics_cuts_ele()
+        args.cuts = cuts.keys()
+        print "Considering the systematic variations: " + str(args.cuts)
         
     elif not args.cuts: #No cuts specified, do them all
-        args.cuts = cuts#.keys()
+        args.cuts = cuts.keys()
 
     ofdir = "fitted/" + args.channel
     try:
@@ -267,33 +274,56 @@ if __name__=="__main__":
 
 
     failed = []
+    print args.cuts
     for cutn in args.cuts:
-        cut = args.cuts[cutn]
+        print cutn
+        cut = cuts[cutn]
         try:
-            (results, fit) = get_qcd_yield_with_selection(cut, args.mtcut, args.channel, base_path=args.path, do_systematics=args.doSystematics)
+            (results, fit) = get_qcd_yield_with_selection(cut, True, args.channel, base_path=args.path, do_systematics=args.doSystematics)
         except rootpy.ROOTError:
             failed += [cutn]
             continue
         (y, error) = results["mt"]
         (y_nomtcut, error_nomtcut) = results["nomt"]
-        
+        print "FT2", fit
+        print "QCD3", fit.qcd_histo
         qcd_sf = y/fit.orig["qcd_no_mc_sub"]
         qcd_sf_nomt = y_nomtcut/fit.orig["qcd_no_mc_sub_nomtcut"]
         
         print "QCD scale factor, with m_t/met cut:", qcd_sf, "from", fit.orig["qcd_no_mc_sub"], "to ", y
         print "QCD scale factor, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_no_mc_sub_nomtcut"], "to ", y_nomtcut
         print "Fit information", fit
+        print "QCD scale factor with MC subtraction, with m_t/met cut:", y/fit.orig["qcd"], "from", fit.orig["qcd"], "to ", y
+        #print "QCD scale factor with MC subtraction, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_nomtcut"], "to ", y_nomtcut
         
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         
-        with open(ofdir + "/%s.txt" % cut.name, "w") as of:
-            of.write("%f %f %f\n" % (qcd_sf, y, error))
-            of.write("Iso data yield %f\n" % (get_yield_withMT(fit.dataHisto, getMtMinValue(args.channel))))
-            of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
-        with open(ofdir + "/%s_nomtcut.txt" % cut.name, "w") as of:
+        n_bins = fit.dataHisto.GetNbinsX()
+    
+        print "n_bins", n_bins
+        infile = "fits/"+fit.var.shortName+"_fit_"+cut.name+".root"
+        f = TFile(infile)
+        error = array('d',[0.])
+        hQCD = f.Get(fit.var.shortName+"__qcd")
+        
+        #fit.orig_shape["qcd"]
+        for bin in range(1, n_bins+1):
+            lowedge = fit.dataHisto.GetBinLowEdge(bin)
+            y = hQCD.IntegralAndError(bin, n_bins+1, error)
+            with open(ofdir + "/%s_no_MC_subtraction_mt_%i_plus.txt" % (cut.name, int(lowedge)), "w") as of:
+                qcd_sf = y / fit.orig_shape["qcd_no_mc_sub"].Integral(bin, n_bins+1)
+                of.write("%f %f %f\n" % (qcd_sf, y, error[0]))
+                of.write("Iso data yield %f\n" % fit.dataHisto.Integral(bin, n_bins+1))
+                of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
+            with open(ofdir + "/%s_mt_%i_plus.txt" % (cut.name, int(lowedge)), "w") as of:
+                qcd_sf = y / fit.orig_shape["qcd"].Integral(bin, n_bins+1)
+                of.write("%f %f %f\n" % (qcd_sf, y, error[0]))
+                of.write("Iso data yield %f\n" % fit.dataHisto.Integral(bin, n_bins+1))
+                of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
+        """with open(ofdir + "/%s_nomtcut.txt" % cut.name, "w") as of:
             of.write("%f %f %f\n" % (qcd_sf_nomt, y_nomtcut, error_nomtcut))
             of.write("Iso data yield %f\n" % (fit.dataHisto.Integral()))
-            of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
+            of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))"""
 
     print "Failed to converge: ", str(failed)
 

@@ -332,6 +332,20 @@ class Weights:
     def total_weight(lepton):
         return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight()
 
+
+    muon_id = (
+        Weight("muon_IDWeight"), Weight("muon_IDWeight_up"), Weight("muon_IDWeight_down")
+    )
+    
+    muon_trigger = (
+        Weight("muon_TriggerWeight"), Weight("muon_TriggerWeight_up"), Weight("muon_TriggerWeight_down")
+    )
+
+    muon_iso = (
+        Weight("muon_IsoWeight"), Weight("muon_IsoWeight_up"), Weight("muon_IsoWeight_down")
+    )
+
+
     pu_syst = (
         Weight("pu_weight"), Weight("pu_weight_up"), Weight("pu_weight_down")
     )

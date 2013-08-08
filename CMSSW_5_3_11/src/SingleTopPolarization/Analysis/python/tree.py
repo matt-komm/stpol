@@ -208,7 +208,9 @@ if __name__=="__main__":
         "ele", [channel], [], filter_funcs=[eleSamp]
     )
     weights_lepton = dict()
-    weights_lepton['mu'] = 
+    weights_lepton['mu'] = Node("weights_muon", [channels['mu']], [])
+    for w in [("id", muon_id), ("iso", muon_iso), ("trigger", muon_trigger)]:
+        
 
     isos = dict()
     isol = []
@@ -261,13 +263,7 @@ if __name__=="__main__":
 
     plot_nodes = mtop.children+etalj.children+met.children+tag.children+jet.children
 
-    weights = dict()
-    weights['mu'] = [
-        Weights.wjets_btag_syst,
-        Weights.wjets_yield_syst,
-        Weights.wjets_shape_syst,
-    ]
-    weights['ele'] = [
+    weights = [
         Weights.wjets_btag_syst,
         Weights.wjets_yield_syst,
         Weights.wjets_shape_syst,

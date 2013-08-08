@@ -1,4 +1,18 @@
 -------
+Sample: /hdfs/local/stpol/systematics_0708_2013/
+step: histograms
+luminosity: same as /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
+git hash: ?
+Explanation: Costheta histograms with all available systematics
+parent: /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
+-------
+Sample: /hdfs/local/stpol/step3/Aug4_0eb863_full/
+step: step3
+luminosity: filelists/Aug4_0eb863_full/step2/data/overview, also in plots/common/cross_sections.py already 
+git hash: 0eb863
+Explanation: Full systematics processing with top pt reweighting, met-phi corrections, 19.7/fb int.lumi, new MVA (as in Aug4_c6a4b11_puw_Jul29_MVA) 
+parent: Aug4_0eb863_full
+-------
 Sample: /hdfs/local/stpol/step3/Aug4_c6a4b11_puw_Jul29_MVA
 git hash: 80f408e used for MVA adding, MVA trainig same as 39a2ddb (i.e. /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/)
 Explanation: New step3 based on modified step2 (only nominal done). For changes in step2 see previous sample. MVA same as prior sample, no new training. 
