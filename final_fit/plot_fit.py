@@ -13,8 +13,12 @@ import ROOT
 SIGNAL = "tchan"
 
 #Plot the fit before and after
-def plot_fit(var, infile, outfile, result):
+def plot_fit(fit, infile, outfile, result):
     tdrstyle()
+
+    spl = fit.filename.split("__")
+    var = spl[1]    
+
     procstyles = OrderedDict()
     procstyles["tchan"] = "T_t"
     procstyles["wzjets"] = "WJets_inclusive"
@@ -29,6 +33,8 @@ def plot_fit(var, infile, outfile, result):
 
     hists_mc_pre = OrderedDict()
     hists_mc_post = OrderedDict()
+    print "IN",infile
+    print outfile
     fi1 = File(infile)
     fi2 = File(outfile)
     hist_data = fi1.Get(var+"__DATA")
@@ -47,7 +53,7 @@ def plot_fit(var, infile, outfile, result):
 
 
 
-    of = OutputFolder(subdir="plots")
+    of = OutputFolder(subdir="plots/final_fit")
     def plot_data_mc(hists_mc, hist_data, name):
         canv = ROOT.TCanvas()
         p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
@@ -58,6 +64,8 @@ def plot_fit(var, infile, outfile, result):
         p1.cd()
 
         stacks_d = OrderedDict()
+        print "MC",hists_mc
+        print "VAL",hists_mc.values()
         stacks_d["mc"] = hists_mc.values()
         stacks_d["data"] = [hist_data]
         stacks = plot_hists_stacked(
@@ -68,6 +76,8 @@ def plot_fit(var, infile, outfile, result):
             do_log_y=True
         )
         leg = legend([hist_data] + list(reversed(hists_mc.values())), styles=["p", "f"])
+        print canv, hist_data
+        print get_stack_total_hist(stacks["mc"])
         ratio_pad, hratio = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
 
         plot_info = PlotMetaInfo(
@@ -75,7 +85,7 @@ def plot_fit(var, infile, outfile, result):
             "CUT",
             "WEIGHT",
             [infile],
-            subdir="lqetafit",
+            subdir=fit.name,
             comments=str(result[SIGNAL])
         )
         of.savePlot(canv, plot_info)

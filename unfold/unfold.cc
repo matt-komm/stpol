@@ -55,6 +55,7 @@ void minimizeRhoAverage(TUnfoldSys *unfold, TH1F *hdata, int nsteps, double log1
   double bestlogtau = -1000;
   double bestlogtau_err = -1000; // error is meaningless because we don't have a likelihood, but method expects it
   minuit.GetParameter(0, bestlogtau, bestlogtau_err);
+  printf("tau: %f\r\n",bestlogtau);
   unfold->DoUnfold(pow(10, bestlogtau), hdata, scaleBias); 
   
 }

@@ -19,6 +19,18 @@ class Fit:
         self.correlations = correlations
         self.rescale = {}
 
+    @staticmethod
+    def getRateSystematics():
+        return {"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 1.0}
+
+    @staticmethod
+    def getShapeSystematics(fit):
+        systematics = ["Res", "__En", "UnclusteredEn", "ttbar_matching", "ttbar_scale", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape", "btaggingBC", "btaggingL", "tchan_scale", "wjets_scale", "wjets_matching"]
+        if fit.filename.startswith("mu"):
+            systematics.append("leptonIso")
+        return systematics
+
+
     def setRates(self, rates):
         self.rates = rates
 
@@ -40,30 +52,34 @@ class Fit:
                 continue
             add_normal_uncertainty(model, channel, prior, channel)
 
-    def get_type(self, name, name2 = None):
+    def get_type(self, fit, name, name2 = None):
         if name2 is not None:
             return "corr"
-        elif name.replace("beta_signal", "tchan") in self.rates:
+        elif name.replace("beta_signal", "tchan") in Fit.getRateSystematics():
             return "rate"
-        elif name in self.shapes:
+        elif name in Fit.getShapeSystematics(fit):
             return "shape"
         else:
             raise ValueError("unknown uncertainty")
 
     # export sorted fit values
-    def write_results(self,fitresults, cor):
+    def write_results(self, fitresults, cor, fit):
         try:
             os.makedirs("results")
         except:
             pass
         f = open("results/"+self.name+".txt",'w')
-        for key in sorted(fitresults.keys()):
-            if key.replace("beta_signal", "tchan") not in self.rates.keys() and key not in self.shapes:
-                continue
-            st_type = self.get_type(key)            
-            line = '%s, %s, %f, %f\n' % (st_type, key.replace("beta_signal", "tchan"), fitresults[key][0], fitresults[key][1])
-        
-            print line,
+        for (syst, prior) in Fit.getRateSystematics().items():
+            st_type = self.get_type(fit, syst)
+            if syst in fitresults.keys() or (syst == "tchan" and "beta_signal" in fitresults.keys()):
+                line = '%s, %s, %f, %f\n' % (st_type, syst, fitresults[syst.replace("tchan", "beta_signal")][0], fitresults[syst.replace("tchan", "beta_signal")][1])
+                print line
+            else:
+                line = '%s, %s, %f, %f\n' % (st_type, syst, 1.0, prior)
+            f.write(line)
+        for syst in Fit.getShapeSystematics(fit):
+            st_type = self.get_type(fit, syst)
+            line = '%s, %s, %f, %f\n' % (st_type, syst, 0.0, 1.0)
             f.write(line)
 
         n = cor.GetNbinsX()
@@ -116,20 +132,20 @@ class Fit:
         fcov = ROOT.TFile("plots/"+self.name+"/corr.root","RECREATE")
         canvas = ROOT.TCanvas("Covariance","Covariance")
         cov.Draw("COLZ TEXT")
-        canvas.Print("plots/cov.png")
-        canvas.Print("plots/cov.pdf")
+        canvas.Print("plots/"+self.name+"/cov.png")
+        canvas.Print("plots/"+self.name+"/cov.pdf")
         
         canvas2 = ROOT.TCanvas("Correlation","Correlation")
         corr.Draw("COLZ TEXT")
-        canvas2.Print("plots/corr.png")
-        canvas2.Print("plots/corr.pdf")
+        canvas2.Print("plots/"+self.name+"/corr.png")
+        canvas2.Print("plots/"+self.name+"/corr.pdf")
         corr.Write()
         cov.Write()
         fcov.Close()
 
     def histofilter(self, s):
         if '__up' in s or '__down' in s:
-            if 'top__Res' in s and self.name.startswith("ele"):
+            if 'top__Res' in s and self.name.startswith("ele__eta"):
                 return False
             if 'ttbar_matching' in s or '__En' in s or 'Res' in s or 'ttbar_scale' in s:#
                 return True
@@ -202,7 +218,7 @@ Fit.fits = {}
 Fit.fits["mva_BDT"] = set([Fit.mu_mva_BDT, Fit.ele_mva_BDT])
 Fit.fits["eta_lj"] = set([Fit.mu_eta_lj, Fit.ele_eta_lj])
 Fit.fits["C"] = set([Fit.ele_C])
-Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj])
+Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj], Fit.mu_C)
 Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_mva_BDT_qcd_0, Fit.ele_mva_BDT_qcd_0_5, Fit.ele_mva_BDT_qcd_1_0, Fit.ele_mva_BDT_qcd_1_5, Fit.ele_mva_BDT_qcd_2_0, Fit.ele_C])
 
 Fit.all_fits = deepcopy(Fit.fits["mu"])
