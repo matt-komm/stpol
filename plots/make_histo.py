@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+"""
+This module supports making histograms from files containing TTrees
+in a systematic fashion.
+"""
 import argparse
 import logging
 import sys, os, copy, itertools, imp
@@ -10,23 +14,35 @@ from plots.common.cuts import Cuts, Cut, Weights, Var
 from plots.common.odict import OrderedDict
 import rootpy
 from rootpy.plotting import Hist
+from rootpy.io import File
 from plots import histo_defs
-
-#FIXME: put to subpath
 from SingleTopPolarization.Analysis import tree
 
 logger = logging.getLogger("make_histo")
 logger.setLevel(logging.INFO)
-cp = copy.deepcopy
 
 class Plottable:
     def __init__(self, *args):
         self.args = args
 
-def totalFromList(l, leaf_type=None):
-    total_name = "__".join([c[0] for c in l])
+def totalFromList(input, leaf_type=None):
+    """
+    Given a list of pairs (name, obj), returns the tally
+    (name1__name2__... , obj1 * obj2 * ...). The type of
+    obj must support multiplication.
+
+    Args:
+        input: a list of pairs.
+
+    Keywords:
+        leaf_type: an optional leaf type which is enforced on obj.
+
+    Returns:
+        a tuple (total_name, total_obj)    
+    """
+    total_name = "__".join([c[0] for c in input])
     total = None
-    for cn, c in l:
+    for cn, c in input:
         if leaf_type:
             assert(isinstance(c, leaf_type))
         if not total:
@@ -36,6 +52,30 @@ def totalFromList(l, leaf_type=None):
     return total_name, total
 
 def totalUniVariation(weights):
+    """
+    Given a list of tuples with weights such as
+    [
+        (w1_nominal, w1_up, w1_down),
+        (w2_nominal, w2_up, w2s_down),
+        ...
+        (wN_nominal, wN_up, wN_down)
+    ]
+    this method returns the list of combinations where
+    exactly one weight is variated, such as
+    [
+        [w1_nominal, w2_up, w3_nominal, ...],
+        [w1_nominal, w2_nominal, w3_up, ...]
+    ].
+    Operates under the assumption that the first element
+    of the tuple is the nominal weight.
+
+    Args:
+        weights: a list of tuples with the different weight combinations
+
+    Returns:
+        a list with the variated weights.
+
+    """
     pl = [tree.getPathLeaves(c) for c in weights]
 
     weight_stacks = []
@@ -57,6 +97,21 @@ def totalUniVariation(weights):
     return [totalFromList(w) for w in weight_stacks]
 
 def mult_prod(*args):
+    """
+    Returns the combinatoric multiple of the root-to-leaf paths of
+    a list of trees.
+    [
+        (tree1, [
+            (c1, obj1),
+            (c2, obj2)
+        ]),
+    (tree1, [
+            (c1, obj1),
+            (c2, obj2)
+        ])
+    
+    ]
+    """
     prods = []
     for arg in args:
         pathleaves = [tree.getPathLeaves(c) for c in arg]
