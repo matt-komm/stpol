@@ -3,7 +3,7 @@ from collections import deque
 import copy
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts, Weights, mul
 import rootpy
@@ -11,7 +11,7 @@ from rootpy.io import File
 
 import ROOT
 logger = logging.getLogger("tree")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 gNodes = dict()
 
@@ -63,7 +63,7 @@ class Node(object):
     def process(self, obj, parentage):
         parentage = parentage[:-1]
         if self.isLeaf():
-            print self.parentsName(parentage), "*" if self.isLeaf() else ""
+            logger.debug(self.parentsName(parentage))
         return self.name
 
     def parentsName(self, parentage, upto=0):
@@ -243,8 +243,8 @@ if __name__=="__main__":
         ]:
 
         isos[lep] = dict()
-        isos[lep]['iso'] = Node(lep + "_iso", par, [])
-        isos[lep]['antiiso'] = CutNode(Cuts.antiiso(lep), lep + "_antiiso", par, [])
+        isos[lep]['iso'] = Node(lep + "__iso", par, [])
+        isos[lep]['antiiso'] = CutNode(Cuts.antiiso(lep), lep + "__antiiso", par, [])
         isol.append(isos[lep]['iso'])
         isol.append(isos[lep]['antiiso'])
 
@@ -263,10 +263,10 @@ if __name__=="__main__":
     met = Node("met", tag.children, [])
     mets = dict()
 
-    mets['met'] = CutNode(Cuts.met(), "met_met", [met], [],
+    mets['met'] = CutNode(Cuts.met(), "met__met", [met], [],
         filter_funcs=[lambda x: is_chan(x, 'ele')]
     )
-    mets['mtw'] = CutNode(Cuts.mt_mu(), "met_mtw", [met], [],
+    mets['mtw'] = CutNode(Cuts.mt_mu(), "met__mtw", [met], [],
         filter_funcs=[lambda x: is_chan(x, 'mu')]
     )
 
@@ -281,14 +281,14 @@ if __name__=="__main__":
 
     mtop = Node("mtop", [etaljs['greater__2_5']], [])
     mtops = dict()
-    mtops['SR'] = CutNode(Cuts.top_mass_sig, "mtop_SR", [mtop], [])
+    mtops['SR'] = CutNode(Cuts.top_mass_sig, "mtop__SR", [mtop], [])
 
     # mvas = dict()
     # for mva_cut in [0, 0.1, 0.2, 0.3]:
     #     cl = str(mva_cut).replace(".", "_")
     #     mvas[cl] = Node(cl, [purifications['mva']], [])
 
-    plot_nodes = mtop.children+etalj.children+met.children+tag.children+jet.children
+    plot_nodes = mtop.children
 
     weights_lepton = dict()
     weights_lepton['mu'] = Weights.muon_sel.items()
@@ -303,25 +303,24 @@ if __name__=="__main__":
     weights_total = dict()
     syst_weights = []
     for lepton, w in weights_lepton.items():
-        print lepton
         weights_var_by_one = variateOneWeight([x[1] for x in (weights+w)])
         wtot = []
         for wn, s in weights_var_by_one:
             j = mul(s)
             wtot.append((wn, j))
         for name, j in wtot:
-            print name
             syst = WeightNode(
-                j, "weight_" + name + "_" + lepton,
+                j, "weight__" + name + "__" + lepton,
                 [], [],
                 filter_funcs=[lambda x,lepton=lepton: is_chan(x, lepton)]
             )
             syst_weights.append(syst)
 
-    print syst_weights
     final_plot_descs = [
         ("cos_theta", "cos_theta", [20, -1, 1]),
-        ("abs_eta_lj", "abs(eta_lj)", [20, 2.5, 5])
+        ("true_cos_theta", "true_cos_theta", [20, -1, 1]),
+        ("abs_eta_lj", "abs(eta_lj)", [20, 2.5, 5]),
+        ("eta_lj", "eta_lj", [40, -5, 5]),
     ]
     final_plots = dict()
     for name, func, binning in final_plot_descs:
