@@ -6,7 +6,7 @@ from copy import deepcopy
 import pdb
 from datasets import datasets2
 from tempfile import TemporaryFile
-
+import argparse
 
 def call_das_cli(*args):
     oldarg = deepcopy(sys.argv)
@@ -42,9 +42,9 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(
         description='Gets the information on DAS datasets systematically'
     )
-    
+
     parser.add_argument('infile', action='store',
-        help="THe input file with the datasets"
+        help="The input file with the datasets"
     )
     args = parser.parse_args()
 
