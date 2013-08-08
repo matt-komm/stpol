@@ -7,6 +7,7 @@ import pdb
 from datasets import datasets2
 from tempfile import TemporaryFile
 import argparse
+import os
 
 def call_das_cli(*args):
     oldarg = deepcopy(sys.argv)
@@ -31,6 +32,8 @@ def local_ds_files(ds):
     for li in tf.readlines():
         if "/store/" in li:
             fl.append(li.strip())
+        else:
+            print "+++",li
     tf.close()
     return fl
 
@@ -51,4 +54,14 @@ if __name__=="__main__":
     dsl = datasets2.parse_file(args.infile)
     for ds in dsl:
         files = local_ds_files(ds.ds)
+        ofpath = args.infile.replace("datasets", "filelists")
+        try:
+            os.makedirs(ofpath)
+        except:
+            pass
+        ofn = os.path.join(ofpath, ds.ds.split("/")[1])
         print ds.ds, ds.name, len(files)
+        ofi = open(ofn, "w")
+        for fi in files:
+            ofi.write(fi + "\n")
+        ofi.close()
