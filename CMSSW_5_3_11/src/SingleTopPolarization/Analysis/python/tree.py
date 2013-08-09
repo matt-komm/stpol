@@ -577,4 +577,4 @@ if __name__=="__main__":
     r = sample.recurseDown(sample)
     t1 = time.clock()
     dt = t1-t0
-    print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms).dt)
+    print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms)/dt)
