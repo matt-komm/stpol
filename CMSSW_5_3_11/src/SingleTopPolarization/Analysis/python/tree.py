@@ -274,6 +274,8 @@ class HistNode(Node):
             raise TypeError("call object 'obj' must have a sample with a drawHistogram method.")
 
         hi = obj.sample.drawHistogram(self.hist_desc["var"], str(cut), weight=wtot.weight_str, binning=self.hist_desc["binning"], entrylist=cache)
+        if obj.sample.isMC:
+            hi.Scale(obj.sample.lumiScaleFactor(1))
         hdir = self.parentsName(parentage[:-1])
 
         logger.debug("%d %s %s" % (hi.GetEntries(), self.name, self.parentsName(parentage)))
