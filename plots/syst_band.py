@@ -1,4 +1,4 @@
-#!/usr/bin/env python]
+#!/usr/bin/env python
 """
 Uses the unfolding histograms to make a final plot with the systematic band.
 """
@@ -141,7 +141,7 @@ if __name__=="__main__":
 
         for sr in systs_to_remove:
             systs_to_consider.pop(systs_to_consider.index(sr))
-        
+
         nom = sum(hists_nom_mc)
 
         doScale = True
@@ -193,7 +193,7 @@ if __name__=="__main__":
         hists_nominal['top'].SetTitle("t#bar{t}, tW, s")
         hists_nominal['wzjets'].SetTitle("W, diboson, DY-jets")
         hists_nominal['qcd'].SetTitle("QCD")
-     
+
         c = ROOT.TCanvas()
         p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
         p1.Draw()
@@ -206,7 +206,7 @@ if __name__=="__main__":
 
         syst_up.Draw("SAME hist")
         syst_down.Draw("SAME hist")
-        
+
         ratio_pad, hratio = plot_data_mc_ratio(c, hists_nom_data, nom, syst_hists=(syst_up, syst_down), min_max=(-0.5, 0.5))
 
         p1.cd()

@@ -1,6 +1,4 @@
-
-
-
+#FIXME
 import sys
 s1 = r"""
 \begin{tabular}{ |c|c|c| }
