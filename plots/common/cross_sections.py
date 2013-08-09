@@ -67,16 +67,14 @@ xs["TTJets_matchingup"] = xs["TTJets_MassiveBinDECAY"]
 xs["TTJets_matchingdown"] = xs["TTJets_MassiveBinDECAY"]	
 xs["TTJets_mass166_5"] = xs["TTJets_MassiveBinDECAY"]
 xs["TTJets_mass178_5"] = xs["TTJets_MassiveBinDECAY"]
-xs["TToLeptons_t-channel_scaleup"] = xs["T_t_ToLeptons"]
-xs["TToLeptons_t-channel_scaledown"] = xs["T_t_ToLeptons"]
-xs["TBarToLeptons_t-channel_scaleup"] = xs["Tbar_t_ToLeptons"]
-xs["TBarToLeptons_t-channel_mass178_5"] = xs["Tbar_t_ToLeptons"]
-xs["TBarToLeptons_t-channel_mass166_5"] = xs["Tbar_t_ToLeptons"]
+xs["T_t_ToLeptons_scaleup"] = xs["T_t_ToLeptons"]
+xs["T_t_ToLeptons_scaledown"] = xs["T_t_ToLeptons"]
+xs["Tbar_t_ToLeptons_scaleup"] = xs["Tbar_t_ToLeptons"]
+xs["Tbar_t_ToLeptons_scaledown"] = xs["Tbar_t_ToLeptons"]
+xs["Tbar_t_ToLeptons_mass178_5"] = xs["Tbar_t_ToLeptons"]
+xs["Tbar_t_ToLeptons_mass166_5"] = xs["Tbar_t_ToLeptons"]
 
-xs["Tbar_t_scaleup"] = xs["Tbar_t_ToLeptons"]
-xs["Tbar_t_scaledown"] = xs["Tbar_t_ToLeptons"]
-
-xs["TToLeptons_t-channel_mass166_5"] = xs["T_t_ToLeptons"]
+xs["T_t_ToLeptons_mass166_5"] = xs["T_t_ToLeptons"]
 xs["T_t_ToLeptons_mass178_5"] = xs["T_t_ToLeptons"]
 
 xs["TToBMuNu_t-channel"] = (xs["T_t_ToLeptons"] + xs["Tbar_t_ToLeptons"]) / 3
