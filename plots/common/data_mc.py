@@ -39,7 +39,7 @@ def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     if not ignore_missing:
         raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
 
-def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_processes):
+def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_processes, use_antiiso=False):
 
     logger.info('Plot in progress %s' % name)
 
@@ -85,7 +85,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
             if "fitpars" in plot_def.keys():
                 rescale_to_fit(sample.name, hist, plot_def["fitpars"][lepton_channel])
-        elif "antiiso" in name and plot_def['estQcd']:
+        elif "antiiso" in name and plot_def['estQcd'] and not use_antiiso:
 
             #FIXME: it'd be nice to move the isolation cut to plots/common/cuts.py for generality :) -JP
             cv='mu_iso'
@@ -125,7 +125,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
                 Styling.mc_style(hists_mc[sampn], 'QCD')
 
         #Real ordinary data in the isolated region
-        elif not "antiiso" in name:
+        elif not "antiiso" in name or use_antiiso:
             hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
             hist_data.SetTitle('Data')
             Styling.data_style(hist_data)
