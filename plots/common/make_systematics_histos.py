@@ -10,15 +10,15 @@ from plots.common.load_samples import *
 from plots.common.cuts import *
 
 def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg", asymmetry=None):
-    dirname = channel + "_" +var
+    dirname = channel + "__" +var
     if float(mva_cut) > -1:    
-        mva = "_mva_"+str(mva_cut)
+        mva = "__mva_"+str(mva_cut)
         mva = mva.replace(".","_")
         dirname += mva
     if coupling != "powheg":
-        dirname += "_" + coupling
+        dirname += "__" + coupling
     if asymmetry is not None:
-        dirname += "_asymm_" + str(asymmetry)
+        dirname += "__asymm_" + str(asymmetry)
     return dirname
 
 def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"]), indir="/".join([os.environ["STPOL_DIR"], "step3_latest"]), channel="mu", coupling="powheg", binning=None, plot_range=None, asymmetry=None):
@@ -33,7 +33,6 @@ def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".joi
     mkdir_p(outdir)
     for main_syst, sub_systs in systematics.items():
         systname = main_syst
-        #print "A",main_syst, sub_systs
         if systname == "partial":
             for sub_syst, updown in sub_systs.items():
                 for (k, v) in updown.items():
@@ -67,7 +66,7 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                         weight_str = sys_types
                         hname = "%s__%s" % (var, sn)
                         write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
-                    elif sn in ["DATA", "qcd"] and sys != "nominal":
+                    elif sn in ["DATA"] and sys != "nominal":
                         #No systematics if data
                         continue
                     elif main_syst in ["Res", "En", "UnclusteredEn"]:
@@ -87,15 +86,39 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
 
 def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=None, plot_range=None, asymmetry=None):
     weight_str = weight
-    print hname, samples
+    #print hname, samples
     samp = samples[sampn]
     outfile = ROOT.TFile(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
-
     if sn=="DATA":
         weight_str = "1"
     if var == "eta_lj":
         var = "abs("+var+")"
-    hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
+    qcd_extra = None
+    
+    if "iso__down" in hname:
+        if var == "abs(eta_lj)":
+            cuts_antiiso = str(Cuts.eta_fit_antiiso_down(channel))
+            qcd_extra = str(Cuts.eta_fit_antiiso(channel)) #hack for now
+        else:
+            for x in str(cuts_antiiso).split("&&"):
+                if "mva" in x:
+                    cut = x
+            cut = cut.replace("(","").replace(")","")
+            cuts_antiiso = str(Cuts.mva_antiiso_down(channel, mva_var=var)) + " && ("+cut+")"
+            qcd_extra = str(Cuts.mva_antiiso(channel, mva_var=var)) + " && ("+cut+")" #hack for now
+    elif "iso__up" in hname:
+        if var == "abs(eta_lj)":
+            cuts_antiiso = str(Cuts.eta_fit_antiiso_up(channel))
+            qcd_extra = str(Cuts.eta_fit_antiiso(channel)) #hack for now
+        else:
+            for x in str(cuts_antiiso).split("&&"):
+                if "mva" in x:
+                    cut = x
+            cut = cut.replace("(","").replace(")","")
+            cuts_antiiso = str(Cuts.mva_antiiso_up(channel, mva_var=var)) + " && ("+cut+")"
+            qcd_extra = str(Cuts.mva_antiiso(channel, mva_var=var)) + " && ("+cut+")" #hack for now
+    #print "!", hname, cuts_antiiso    
+    hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=qcd_extra)
     outfile.cd() #Must cd after histogram creation
 
     #Write histogram to file
@@ -136,7 +159,7 @@ def generate_systematics(channel, coupling):
         systs_infile_file=["En", "Res", "UnclusteredEn"]
         for sys in systs_infile_file:
            systematics[sys] = {}
-
+    
     #FIXME: add pileup variations?
     #systematics["nominal"]["pileup"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
     #systematics["nominal"]["pileup"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
@@ -155,7 +178,7 @@ def generate_systematics(channel, coupling):
         systematics["nominal"]["leptonIso"]["down"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Iso", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     systematics["nominal"]["leptonTrigger"]["up"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     systematics["nominal"]["leptonTrigger"]["down"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-
+    
     #TODO: Add PDF-s
     
     systematics["partial"] = {}
@@ -171,12 +194,15 @@ def generate_systematics(channel, coupling):
     systematics["partial"]["ttbar_matching"] = {}
     systematics["partial"]["ttbar_matching"]["down"] = {}
     systematics["partial"]["ttbar_matching"]["up"] = {}
-    systematics["partial"]["wjets_scale"] = {}
+    """systematics["partial"]["wjets_scale"] = {}
     systematics["partial"]["wjets_scale"]["down"] = {}
-    systematics["partial"]["wjets_scale"]["up"] = {}
+    systematics["partial"]["wjets_scale"]["up"] = {}"""
     """systematics["partial"]["wjets_matching"] = {}
     systematics["partial"]["wjets_matching"]["down"] = {}
     systematics["partial"]["wjets_matching"]["up"] = {}"""
+    systematics["partial"]["iso"] = {}
+    systematics["partial"]["iso"]["down"] = {}
+    systematics["partial"]["iso"]["up"] = {}
 
     if coupling == "powheg":
         systematics["Res"]["down"]="ResDown"
@@ -184,5 +210,5 @@ def generate_systematics(channel, coupling):
         systematics["En"]["down"]="EnDown"
         systematics["En"]["up"]="EnUp"
         systematics["UnclusteredEn"]["down"]="UnclusteredEnDown"
-        systematics["UnclusteredEn"]["up"]="UnclusteredEnUp"    
+        systematics["UnclusteredEn"]["up"]="UnclusteredEnUp"
     return systematics
