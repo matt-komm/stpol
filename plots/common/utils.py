@@ -13,6 +13,23 @@ logger.debug('Importing rootpy...')
 from rootpy.plotting.hist import Hist, Hist2D
 
 
+class PatternDict(OrderedDict):
+    def __getitem__(self, k):
+        pat = re.compile(k)
+        ret = []
+        for key in self.keys():
+            m = pat.match(key)
+            if not m:
+                continue
+            if len(m.groups())>0:
+                ret.append((m.groups(), dict.__getitem__(self, key)))
+            else:
+                ret.append(dict.__getitem__(self, key))
+        if len(ret)==1:
+            ret = ret[0]
+        return ret
+
+
 class NestedDict(OrderedDict):
     def __missing__(self, key):
         self[key] = NestedDict()
