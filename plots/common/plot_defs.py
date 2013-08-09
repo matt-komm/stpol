@@ -359,6 +359,7 @@ plot_defs['mva_bdt_fit'] = cp(plot_defs['mva_bdt'] )
 plot_defs['mva_bdt_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 plot_defs['qcd_mva'] = cp(plot_defs['mva_bdt'])
+plot_defs['qcd_mva']['var']=[mva_var_qcd['ele'],mva_var_qcd['mu']]
 plot_defs['qcd_mva']['elecut']=cutlist['2j1t']*cutlist['presel_ele']
 plot_defs['qcd_mva']['mucut']=cutlist['2j1t']*cutlist['presel_mu']
 

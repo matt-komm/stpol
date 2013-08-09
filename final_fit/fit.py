@@ -6,7 +6,7 @@ class Fit:
     def __init__(self
             , filename
             , name = None
-            , rates = {"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 1.0}
+            , rates = {"tchan": inf,  "wzjets": inf, "other": 0.2}
             , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] 
             , correlations = [("wzjets", "top")]):
         
@@ -21,7 +21,7 @@ class Fit:
 
     @staticmethod
     def getRateSystematics():
-        return {"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 1.0}
+        return {"tchan": inf,  "wzjets": inf, "other": 0.2}
 
     @staticmethod
     def getShapeSystematics(fit):
@@ -51,6 +51,9 @@ class Fit:
             if channel == "tchan":
                 continue
             add_normal_uncertainty(model, channel, prior, channel)
+        #add_normal_uncertainty(model, "top", 0.2, "top")
+        #add_normal_uncertainty(model, "qcd", 0.2, "top")
+        #add_normal_uncertainty(model, "wzjets", inf, "wzjets")
 
     def get_type(self, fit, name, name2 = None):
         if name2 is not None:
@@ -221,7 +224,7 @@ Fit.fits = {}
 Fit.fits["mva_BDT"] = set([Fit.mu_mva_BDT, Fit.ele_mva_BDT])
 Fit.fits["eta_lj"] = set([Fit.mu_eta_lj, Fit.ele_eta_lj])
 Fit.fits["C"] = set([Fit.ele_C])
-Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj], Fit.mu_C)
+Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj, Fit.mu_C])
 Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_mva_BDT_qcd_0, Fit.ele_mva_BDT_qcd_0_5, Fit.ele_mva_BDT_qcd_1_0, Fit.ele_mva_BDT_qcd_1_5, Fit.ele_mva_BDT_qcd_2_0, Fit.ele_C])
 
 Fit.all_fits = deepcopy(Fit.fits["mu"])
