@@ -26,9 +26,9 @@ if __name__=="__main__":
         var = "eta_lj"
         plot_range = [15, 0, 4.5]
     indir = args.path
-    outdir = os.path.join(os.environ["STPOL_DIR"], "lqetafit", "histos", "input", generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry))
-    outdir_final = os.path.join(os.environ["STPOL_DIR"], "lqetafit", "histos", generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry))
+    outdir = os.path.join(os.environ["STPOL_DIR"], "final_fit", "histos", "input", generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry))
+    outdir_final = os.path.join(os.environ["STPOL_DIR"], "final_fit", "histos")
     systematics = generate_systematics(args.channel, args.coupling)
     make_systematics_histos(args.var, cut_str, cut_str_antiiso, systematics, outdir, indir, args.channel, args.coupling, plot_range=plot_range, asymmetry=args.asymmetry)
     mkdir_p(outdir_final)
-    shutil.move('/'.join([outdir, "lqeta.root"]), '/'.join([outdir_final, "/lqeta.root"]))
+    shutil.move('/'.join([outdir, "lqeta.root"]), '/'.join([outdir_final, generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry)+".root"]))
