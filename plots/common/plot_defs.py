@@ -30,20 +30,10 @@ cutlist['noeta_mu']=cutlist['presel_mu']*Cuts.top_mass_sig*Cuts.mt_mu()
 cutlist['final_ele']=cutlist['nomet_ele']*Cuts.met
 cutlist['final_mu']=cutlist['nomt_mu']*Cuts.mt_mu()
 
-mva_var = {}
-mva_var['ele']='mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj'
-mva_var['mu']='mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj'
-mva_var_qcd={}
-mva_var_qcd['ele']='mva_anti_QCD_MVA'
-mva_var_qcd['mu']='mva_anti_QCD_MVA'
+mva_var = Cuts.mva_var
+mva_var_qcd = Cuts.mva_var_qcd
 
-bdt = NestedDict()
-bdt['mu']['loose'] = 0.06
-bdt['mu']['tight'] = 0.6
-bdt['ele']['loose'] = 0.13
-bdt['ele']['tight'] = 0.6
-bdt['mu_qcd']=0.97
-bdt['ele_qcd']=0.74
+bdt = Cuts.mva_wps['bdt']
 bdt = bdt.as_dict()
 
 cutlist['bdt_mu_loose'] = Cuts.mt_mu()*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
