@@ -133,8 +133,14 @@ class Sample:
             an instance of the created TEntryList.
         """
         self.tfile.cd()
-        elist = ROOT.TEntryList(name, name)
+        elist = self.tfile.Get(name)
+        if not elist:
+            logger.debug("Event list does not exist.")
+            elist = ROOT.TEntryList(name, name)
+        else:
+            logger.debug("Event list exists.")
         self.tree.SetEntryList(cache)
+        logger.debug("Before caching entries %d events" % self.tree.GetEntries())
         self.tree.Draw(">>" + elist.GetName(), cut_str, "entrylist")
         return elist
 
