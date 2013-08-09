@@ -1,5 +1,5 @@
 from plots.common.utils import escape
-
+from plots.common.utils import NestedDict
 
 class Cut:
     def __init__(self, cut_str):
@@ -52,6 +52,27 @@ class Cuts:
     electron_iso = Cut("el_mva > 0.9 & el_reliso < 0.1")
     mu_antiiso = Cut("mu_iso>0.2 && mu_iso<0.5")
     electron_antiiso = Cut("el_iso > 0.15 & el_iso < 0.5")
+
+    #MVA variable names
+    mva_vars = {}
+    mva_vars['ele'] = 'mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj'
+    mva_vars['mu'] = 'mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj'
+    mva_vars_qcd = {}
+    mva_vars_qcd['ele']='mva_anti_QCD_MVA'
+    mva_vars_qcd['mu']='mva_anti_QCD_MVA'
+
+    #MVA working points
+    #FIXME: put a reference to where they came from
+    mva_wps = NestedDict()
+    mva_wps['bdt']['mu']['loose'] = 0.06
+    mva_wps['bdt']['mu']['tight'] = 0.6
+    mva_wps['bdt']['ele']['loose'] = 0.13
+    mva_wps['bdt']['ele']['tight'] = 0.6
+    mva_wps['bdt']['mu_qcd']=0.97
+    mva_wps['bdt']['ele_qcd']=0.74
+    mva_wps = mva_wps.as_dict()
+
+
     #met = Cut('met > 45')
     
     @staticmethod

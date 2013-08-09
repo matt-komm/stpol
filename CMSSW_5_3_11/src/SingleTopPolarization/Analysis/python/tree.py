@@ -5,7 +5,9 @@ import copy
 import logging
 logging.basicConfig(level=logging.WARNING)
 from plots.common.sample import Sample
-from plots.common.cuts import Cuts, Weights, mul
+from plots.common.cuts import Cuts, Weights, mul, Cut
+from plots.common.utils import NestedDict
+
 import rootpy
 from rootpy.io import File
 
@@ -30,6 +32,9 @@ def variateOneWeight(weights):
             sts.append((w.name, subs))
     return sts
 
+class Graph:
+    def __init__(self, nodes):
+        self.nodes = nodes
 
 class Node(object):
     def __init__(self, name, parents, children, filter_funcs=[]):
@@ -41,7 +46,6 @@ class Node(object):
         self.filter_funcs = filter_funcs
 
         #FIXME: global state
-        assert not name in gNodes.keys()
         gNodes[name] = self
 
     def __repr__(self):
@@ -88,19 +92,20 @@ class Node(object):
                 break
         return last_cut
 
-    def recurseDown(self, obj, parentage=[]):
+    def recurseDown(self, obj, parentage=[], dryRun=False):
         for f in self.filter_funcs:
             if not f(parentage):
                 return
         parentage = copy.deepcopy(parentage)
         parentage.append(self.name)
-        return [(parentage, self.process(obj, parentage)), [c.recurseDown(obj, parentage) for c in self.children]]
+        return [self.process(obj, parentage) if not dryRun else self.name, [c.recurseDown(obj, parentage) for c in self.children]]
 
 class HistNode(Node):
     
     def __init__(self, hist_desc, *args, **kwargs):
         super(HistNode, self).__init__(*args, **kwargs)
         self.hist_desc = hist_desc
+        self.hist = None
 
     def process(self, obj, parentage):
         r = Node.process(self, obj, parentage)
@@ -112,12 +117,15 @@ class HistNode(Node):
 
         wtot = mul([w.weight for w in weights])
 
+        if not "var" in self.hist_desc.keys() or not "binning" in self.hist_desc.keys():
+            raise KeyError("Incorrect hist desc: %s" % str(self.hist_desc))
         hi = obj.sample.drawHistogram(self.hist_desc["var"], str(cut), weight=wtot.weight_str, binning=self.hist_desc["binning"], entrylist=cache)
         hdir = self.parentsName(parentage[:-1])
         logger.debug("%d %s %s" % (hi.GetEntries(), self.name, self.parentsName(parentage[-6:-1])))
         hi.SetName(self.name)
         obj.saver.save(hdir, hi)
-        return ("hn", r)
+        self.hist = hi
+        return (hi, r)
 
 class ObjectSaver:
     def __init__(self, fname):
@@ -172,13 +180,14 @@ class CutNode(Node):
         return total_cut
 
     def process(self, obj, parentage):
-        logger.debug("Processing CutNode %s" % self.name)
+        logger.info("Processing cut %s%s" % (len(parentage)*".", self.name))
         r = super(CutNode, self).process(obj, parentage)
         total_cut = self.getCutsTotal(parentage)
         elist_name = "elist__" + self.parentsName(parentage[:-1]).replace("/", "__")
         prev_cache = self.getPreviousCache(parentage)
         self.cache = obj.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache) 
         logger.debug("%d => %d, %s" % (prev_cache.GetN() if prev_cache else obj.sample.getEventCount(), self.cache.GetN(), elist_name))
+        return (self.cache.GetN(), r)
 
 class SampleNode(Node):
     def __init__(self, saver, *args, **kwargs):
@@ -217,8 +226,10 @@ def is_samp(p, lep):
 
 if __name__=="__main__":
 
+
+
     hsaver = ObjectSaver("hists.root")
-    sample = SampleNode(hsaver, "step3_latest/mu/mc/iso/nominal/Jul15/T_t_ToLeptons.root", [], [])
+    sample = SampleNode(hsaver, "data/Aug4_0eb863_full/mu/mc/iso/nominal/Jul15/TTJets_FullLept.root", [], [])
 
     channel = Node("channel", [sample], [])
     channels = dict()
@@ -243,8 +254,12 @@ if __name__=="__main__":
         ]:
 
         isos[lep] = dict()
-        isos[lep]['iso'] = Node(lep + "__iso", par, [])
-        isos[lep]['antiiso'] = CutNode(Cuts.antiiso(lep), lep + "__antiiso", par, [])
+        isos[lep]['iso'] = Node(lep + "__iso", par, [],
+            filter_funcs=[lambda x: "/iso/" in x[0]]
+        )
+        isos[lep]['antiiso'] = CutNode(Cuts.antiiso(lep), lep + "__antiiso", par, [],
+            filter_funcs=[lambda x: "/antiiso/" in x[0]]
+        )
         isol.append(isos[lep]['iso'])
         isol.append(isos[lep]['antiiso'])
 
@@ -270,40 +285,60 @@ if __name__=="__main__":
         filter_funcs=[lambda x: is_chan(x, 'mu')]
     )
 
+    # purifications ---> cutbased, MVA
     purification = Node("signalenr", met.children, [])
     purifications = dict()
     purifications['cutbased'] = Node("cutbased", [purification], [])
-    #purifications['mva'] = Node("mva", [purification], [])
+    purifications['mva'] = Node("mva", [purification], [])
 
-    etalj = Node("etalj", [purifications['cutbased']], [])
-    etaljs = dict()
-    etaljs['greater__2_5'] = CutNode(Cuts.eta_lj,"etalj__g2_5", [etalj], [])
-
-    mtop = Node("mtop", [etaljs['greater__2_5']], [])
+    # cutbased ---> Mtop ---> SR
+    mtop = Node("mtop", [purifications['cutbased']], [])
     mtops = dict()
     mtops['SR'] = CutNode(Cuts.top_mass_sig, "mtop__SR", [mtop], [])
 
-    # mvas = dict()
-    # for mva_cut in [0, 0.1, 0.2, 0.3]:
-    #     cl = str(mva_cut).replace(".", "_")
-    #     mvas[cl] = Node(cl, [purifications['mva']], [])
+    # Mtop children ---> etalj ---> |etalj|>2.5
+    etalj = Node("etalj", mtop.children, [])
+    etaljs = dict()
+    etaljs['greater__2_5'] = CutNode(Cuts.eta_lj,"etalj__g2_5", [etalj], [])
 
-    plot_nodes = mtop.children
+    # MVA ---> MVA ele, MVA mu
+    mvas = NestedDict()
 
+    for lepton in ['mu', 'ele']:
+        for name, mva_cut in Cuts.mva_wps['bdt'][lepton].items():
+            cval = str(mva_cut).replace(".", "_")
+            mva_name = 'mva__%s__%s__%s' % (lepton, name, cval)
+            mvas[lepton][cval] = CutNode(
+                Cut("%s >= %f" % (Cuts.mva_vars[lepton], mva_cut)),
+                mva_name, [purifications['mva']], [],
+                filter_funcs=[lambda x,lepton=lepton: is_chan(x, lepton)]
+            )
+
+    #After which cuts do you want the reweighed plots?
+    plot_nodes = etalj.children + purifications['mva'].children
+
+    #Separate lepton weights for mu/ele
     weights_lepton = dict()
     weights_lepton['mu'] = Weights.muon_sel.items()
     weights_lepton['ele'] = Weights.electron_sel.items()
 
+    #Other weights are the same
     weights = [
         ("btag", Weights.wjets_btag_syst),
         ("wjets_yield", Weights.wjets_yield_syst),
-        ("shape", Weights.wjets_shape_syst),
+        ("wjets_shape", Weights.wjets_shape_syst),
     ]
 
+    #Now make all the weight combinations for mu/ele, variating one weight
     weights_total = dict()
     syst_weights = []
     for lepton, w in weights_lepton.items():
         weights_var_by_one = variateOneWeight([x[1] for x in (weights+w)])
+        #The unvariated weight is taken as the list of the 0th element of the weight tuples
+        weights_var_by_one.append(
+            ("nominal", [x[1][0] for x in (weights+w)])
+        )
+
         wtot = []
         for wn, s in weights_var_by_one:
             j = mul(s)
@@ -316,19 +351,50 @@ if __name__=="__main__":
             )
             syst_weights.append(syst)
 
-    final_plot_descs = [
-        ("cos_theta", "cos_theta", [20, -1, 1]),
-        ("true_cos_theta", "true_cos_theta", [20, -1, 1]),
-        ("abs_eta_lj", "abs(eta_lj)", [20, 2.5, 5]),
-        ("eta_lj", "eta_lj", [40, -5, 5]),
+    #Which distributions do you want to plot
+    final_plot_descs = dict()
+    final_plot_descs['all'] = [
+        ("cos_theta", "cos_theta", [60, -1, 1]),
+        #("true_cos_theta", "true_cos_theta", [20, -1, 1]),
+        ("abs_eta_lj", "abs(eta_lj)", [60, 2.5, 5]),
+        #("eta_lj", "eta_lj", [40, -5, 5]),
     ]
+
+    #Lepton channels need to be separated out
+    final_plot_descs['mu'] = [
+        (Cuts.mva_vars['mu'], Cuts.mva_vars['mu'], [60, -1, 1]),
+    ]
+    final_plot_descs['ele'] = [
+        (Cuts.mva_vars['ele'], Cuts.mva_vars['ele'], [60, -1, 1]),
+    ]
+
+    #define a LUT for type <-> filtering function
+    final_plot_lambdas = {
+        'mu': lambda x: is_chan(x, 'mu'),
+        'ele': lambda x: is_chan(x, 'ele')
+    }
+
+    #Add all the nodes for the final plots with all the possible reweighting combinations
     final_plots = dict()
-    for name, func, binning in final_plot_descs:
+    def hdesc(name, func, binning):
         hdesc = {
             "name": name,
             "var": func,
             "binning": binning
         }
-        final_plots[name] = HistNode(hdesc, name, plot_nodes, [])
-        final_plots[name] = reweigh(final_plots[name], syst_weights)
+        return hdesc
+
+    for t, descs in final_plot_descs.items():
+        for name, func, binning in descs:
+            hd = hdesc(name, func, binning)
+
+            #Make only the required plots par channel
+            lambdas = []
+            if t in final_plot_lambdas.keys():
+                lambdas.append(final_plot_lambdas[t])
+
+            final_plots[name] = HistNode(hd, name, plot_nodes, [], filter_funcs=lambdas)
+            final_plots[name] = reweigh(final_plots[name], syst_weights)
+
+    #Make everything
     r = sample.recurseDown(sample)
