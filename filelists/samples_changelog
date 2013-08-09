@@ -1,4 +1,12 @@
 -------
+Sample: /hdfs/local/stpol/fit_histograms/09_08_2013_3comp
+    /hdfs/local/stpol/unfolding_histograms/09_08_2013_comp
+step: histograms
+luminosity: same as /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
+git hash: ?
+Explanation: Histograms for fitting and unfolding with all available systematics, 3 components - signal, wzjets, other (top+qcd)
+parent: /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
+-------
 Sample: /hdfs/local/stpol/systematics_0708_2013/
 step: histograms
 luminosity: same as /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
