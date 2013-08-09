@@ -3,6 +3,7 @@
 Applies operations on a TFile systematically by defining the operations as a
 directed graph and evaluating all root-to-leaf paths.
 """
+print "Loading dependency libraries..."
 import itertools, copy, argparse, logging, time
 logging.basicConfig(level=logging.WARNING)
 
@@ -16,6 +17,7 @@ from rootpy.io import File
 import ROOT
 logger = logging.getLogger("tree")
 logger.setLevel(logging.INFO)
+print "Done loading dependency libraries..."
 
 """
 A per-module dict with the name and instance of every Node that was instantiated.
@@ -200,7 +202,7 @@ class Node(object):
 
     def recurseDown(self, obj, parentage=[], dryRun=False):
         """
-        Recursively processes the children of this node, calling the 
+        Recursively processes the children of this node, calling the
         Node.process method on each child. This node and it's children
         are only processed if all of the filter_funcs return True upon
         the parentage.
@@ -276,7 +278,7 @@ class HistNode(Node):
 
         logger.debug("%d %s %s" % (hi.GetEntries(), self.name, self.parentsName(parentage)))
 
-        #Save the histogram using the Saver that was passed down. 
+        #Save the histogram using the Saver that was passed down.
         hi.SetName(self.name)
         obj.saver.save(hdir, hi)
 
@@ -341,7 +343,7 @@ class CutNode(Node):
         total_cut = self.getCutsTotal(parentage)
         elist_name = "elist__" + self.parentsName(parentage[:-1]).replace("/", "__")
         prev_cache = self.getPreviousCache(parentage)
-        self.cache = obj.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache) 
+        self.cache = obj.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache)
         logger.debug("%d => %d, %s" % (prev_cache.GetN() if prev_cache else obj.sample.getEventCount(), self.cache.GetN(), elist_name))
         return (self.cache.GetN(), r)
 
@@ -381,6 +383,7 @@ def is_samp(p, lep):
     return ("/%s/" % lep) in p[0]
 
 if __name__=="__main__":
+    print "Constructing analysis tree..."
 
     parser = argparse.ArgumentParser(
         description='Produces a hierarchy of histograms corresponding to cuts and weights.'
@@ -572,6 +575,8 @@ if __name__=="__main__":
             final_plots[name] = HistNode(hd, name, plot_nodes, [], filter_funcs=lambdas)
             final_plots[name] = reweigh(final_plots[name], syst_weights)
 
+    print "Done constructing analysis tree..."
+    print "Starting projection..."
     #Make everything
     t0 = time.clock()
     r = sample.recurseDown(sample)
