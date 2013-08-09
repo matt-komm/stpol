@@ -16,9 +16,14 @@ logging.basicConfig(format="%(levelname)s - %(message)s",level=logging.DEBUG)
 SIGNAL=["tchan"]
 BACKGROUND=["top","wzjets","qcd",]
 #will search which of the following systematics are present in the input root file
-SYS=["Res","En","UnclusteredEn","btaggingBD","btaggingL","leptonID",
+SYS=["Res","En","UnclusteredEn","btaggingBC","btaggingL","leptonID",
      "leptonIso","leptonTrigger","wjets_flat","wjets_shape"]
      #"ttbar_matching","ttbar_scale"]
+FULL=[]
+FULL.extend(SIGNAL)
+FULL.extend(BACKGROUND)
+FULL.extend(SYS)
+
 
 ROOT.gROOT.SetBatch(True)
 
@@ -156,6 +161,14 @@ def runCommand(cmd,breakOnErr=True,cwd=""):
         sys.exit(-1)
     return err,cout
     
+def writeLogFile(filename,err,cout):
+    thetaLog=open(filename+".stdout","w")
+    thetaLog.write(cout)
+    thetaLog.close()
+    thetaLog=open(filename+".stderr","w")
+    thetaLog.write(err)
+    thetaLog.close()
+    
 def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,outputFile,reg=1.0,cwd=""):
     return runCommand(["./execute_unfolding.sh",
                         inputFile,
@@ -184,19 +197,50 @@ def getAsymmetry(fileName,branchName,histoTreeName,outputName=None):
     tree.SetBranchAddress(histoTreeName, histo)
     n=int(tree.GetEntries())
     asymmetryList=numpy.zeros(n)
+    tree.GetEntry(0)
+    
+    histoBinInfoList=[]
+    for ibin in range(histo.GetNbinsX()):
+        histoBinInfoList.append({"mean":0.0,"mean2":0.0, "max":histo.GetBinContent(ibin+1),"min":histo.GetBinContent(ibin+1)})  
     for cnt in range(n):
         tree.GetEntry(cnt)
+        for ibin in range(histo.GetNbinsX()):
+            content=histo.GetBinContent(ibin+1)
+            histoBinInfoList[ibin]["mean"]+=content
+            histoBinInfoList[ibin]["mean2"]+=content*content
+            if (histoBinInfoList[ibin]["min"])>content:
+                histoBinInfoList[ibin]["min"]=content
+            if (histoBinInfoList[ibin]["max"])<content:
+                histoBinInfoList[ibin]["max"]=content
         asy=calcAsymmetry(histo)
         asymmetryList[cnt]=asy
+    for ibin in range(histo.GetNbinsX()):   
+        histoBinInfoList[ibin]["rms"]=math.sqrt(histoBinInfoList[ibin]["mean2"]/n-histoBinInfoList[ibin]["mean"]**2/(n**2))
+        histoBinInfoList[ibin]["dist"]=ROOT.TH1F("dist_"+str(ibin),"bin "+str(ibin+1)+";yield;",100,histoBinInfoList[ibin]["min"],histoBinInfoList[ibin]["max"])
     sortedList=numpy.sort(asymmetryList)
-    asymmetryHist = ROOT.TH1F("asymmetryHist","",200,sortedList[0]-0.1,sortedList[-1]+0.1)
+    asymmetryHist = ROOT.TH1F("asymmetryHist",";asymmetry;",200,sortedList[0]-0.1,sortedList[-1]+0.1)
     for cnt in range(n):
+        tree.GetEntry(cnt)
         asymmetryHist.Fill(sortedList[cnt])
-            
+        if outputName!=None:
+            for ibin in range(histo.GetNbinsX()):
+                content=histo.GetBinContent(ibin+1)
+                histoBinInfoList[ibin]["dist"].Fill(content)
     if outputName!=None:
         canvas=ROOT.TCanvas("canvas","",800,600)
         asymmetryHist.Draw();
-        canvas.Print(outputName)
+        canvas.Print(outputName+"_asymmetry.pdf")
+        canvasBins=ROOT.TCanvas("canvasBins","",800,600)
+        nx=int(math.ceil(math.sqrt(histo.GetNbinsX())))
+        ny=int(math.floor(math.sqrt(histo.GetNbinsX())))
+        if nx*ny<histo.GetNbinsX():
+            nx+=1
+        canvasBins.Divide(nx,ny)
+        for ibin in range(histo.GetNbinsX()):
+            canvasBins.cd(ibin+1)
+            histoBinInfoList[ibin]["dist"].Draw()
+        canvasBins.Print(outputName+"_bins.pdf")
+            
     
 
     quantilProb=numpy.zeros(3)
@@ -214,14 +258,15 @@ if __name__=="__main__":
     parser.add_option("--histFile",action="store", type="string", dest="histFile", help="input file from where all histogramms are taken, e.g. data.root")
     parser.add_option("--responseMatrix",action="store", type="string", dest="responseMatrix", help="point to response matrix, e.g. martix.root:matrix")
     parser.add_option("--fitResult",action="store", type="string", dest="fitResult", help="the file which contains the fit result")
-    parser.add_option("--excludeSys",action="append", type="string", default=[], dest="excludedSystematic", help="point to response matrix, e.g. martix.root:matrix")
+    parser.add_option("--excludeSys",action="append", type="string", default=[], dest="excludedSystematic", help="exclude this or more systematics from the PE generation. Possible values: "+str(FULL))
+    parser.add_option("--includeSys",action="append", type="string", default=[], dest="includedSystematic", help="include only this or more systematics from PE generation. Possible values: "+str(FULL))
     parser.add_option("--histogramPrefix",action="store", type="string", default="cos_theta", dest="histogramPrefix", help="prefix for all histograms")
     parser.add_option("-f","--force",action="store_true", default=False, dest="force", help="deletes old output folder")
     parser.add_option("--output",action="store", type="string", default=None, dest="output", help="output directory, default is {modelName}")
     parser.add_option("--data",action="store", type="string", dest="dataHistogram", help="input data sample, e.g. data.root:cos_theta__DATA")
     parser.add_option("--runOnData",action="store_true", dest="runOnData",default=False, help="should data be unfolded (PEs otherwise)")
-
-    
+    parser.add_option("--noStatUncertainty",action="store_true",default=False, dest="noStatUncertainty", help="turn off statistical uncertainty")
+    parser.add_option("--noMCUncertainty",action="store_true",default=False, dest="noMCUncertainty", help="turn off MC statistics uncertainty")
     
     ### currently not yet supported options
     parser.add_option("--signal",action="store", type="string", dest="signalHistogram", help="input signal sample, e.g. data.root:cos_theta__tchan")
@@ -279,8 +324,24 @@ if __name__=="__main__":
         sys.exit(-1)
     logging.info("response matrix: "+options.responseMatrix)
     filesToCheck.append(options.responseMatrix.rsplit(":",1)[0])
-
+    
+    
+    if options.includedSystematic!=[]:
+        logging.info("include only the following systematics: "+str(options.includedSystematic))
+        for sys in SIGNAL:
+            if (sys not in options.excludedSystematic) and (sys not in options.includedSystematic):
+                options.excludedSystematic.append(sys)
+        for sys in BACKGROUND:
+            if (sys not in options.excludedSystematic) and (sys not in options.includedSystematic):
+                options.excludedSystematic.append(sys)
+        for sys in SYS:
+            if (sys not in options.excludedSystematic) and (sys not in options.includedSystematic):
+                options.excludedSystematic.append(sys)
     logging.info("excluded systematics: "+str(options.excludedSystematic))
+    
+    if not options.runOnData:
+        logging.info("run statistical uncertainty: "+str(not options.noStatUncertainty))
+        logging.info("run MC statstics uncertainty: "+str(not options.noMCUncertainty))
     
     #-----------------------------------------------------------------------------
     logging.info("!!! check if all input files exist !!!")
@@ -350,8 +411,8 @@ if __name__=="__main__":
                         correlations=corrList,
                         binning=len(binningHist)-1,
                         ranges=[binningHist[0],binningHist[-1]],
-                        dicePoisson=True,
-                        bbUncertainties=True)
+                        dicePoisson=not options.noStatUncertainty,
+                        mcUncertainty=not options.noMCUncertainty)
     
     
     #-----------------------------------------------------------------------------
@@ -364,6 +425,7 @@ if __name__=="__main__":
         logging.error(err)
         logging.error(out)
         sys.exit(-1)
+    writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
     
     err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"],cwd=options.output)
     if not os.path.exists(os.path.join(options.output,options.modelName+".root")):
@@ -371,6 +433,7 @@ if __name__=="__main__":
         logging.error(err)
         logging.error(out)
         sys.exit(-1)
+    writeLogFile(os.path.join(options.output,"theta_"+options.modelName),err,out)
         
     
     #-----------------------------------------------------------------------------
@@ -392,9 +455,10 @@ if __name__=="__main__":
         logging.error(err)
         logging.error(out)
         sys.exit(-1)
+    writeLogFile(os.path.join(options.output,"unfolding_"+options.modelName),err,out)
     #-----------------------------------------------------------------------------
     logging.info("!!! calculate asymmetry !!!")
-    asymmetry = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",os.path.join(options.output,options.modelName+"_asymmetry.pdf"))
+    asymmetry = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",os.path.join(options.output,options.modelName))
     logging.info("final asymmetry: "+str(asymmetry))
     file=open(os.path.join(options.output,"asymmetry.txt"),"w")
     file.write("mean, "+str(round(asymmetry["mean"],4))+"\n")

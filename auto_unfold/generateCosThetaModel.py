@@ -34,8 +34,8 @@ def generateModelPE(modelName="mymodel",
                     correlations=[],
                     binning=1,
                     ranges=[-1.0,1.0],
-                    dicePoisson=False,
-                    bbUncertainties=True):
+                    dicePoisson=True,
+                    mcUncertainty=True):
                     
     if histFile==None:
         logging.error("no input histfile specified during model generation")
@@ -72,7 +72,7 @@ def generateModelPE(modelName="mymodel",
     file.write(sysDistributions.toConfigString())
     
     model=Model(modelName)
-    if bbUncertainties:
+    if mcUncertainty:
         model=Model(modelName, {"bb_uncertainties":"true"})
 
     #yield_lumi=Distribution("beta_LUMI", "gauss", {"mean": "1.0", "width":"0.022", "range":"(\"-inf\",\"inf\")"})
@@ -80,7 +80,6 @@ def generateModelPE(modelName="mymodel",
     
     
     obs=Observable(histPrefix, binning, ranges)
-    obsBG=Observable(histPrefix+"BG", binning, ranges)
     for ntuple in ntupleNameList:
         name=ntuple["name"]
         if not checkHistogramExistence(histFile,histPrefix+"__"+name):
@@ -99,7 +98,7 @@ def generateModelPE(modelName="mymodel",
         
         
         comp.setCoefficientFunction(coeff)
-        hist=RootHistogram(name+"-NOMINAL")
+        hist=RootHistogram(name+"-NOMINAL",{"use_errors":"true"})
         hist.setFileName(histFile)
         hist.setHistoName(histPrefix+"__"+name)
         file.write(hist.toConfigString())
@@ -111,10 +110,10 @@ def generateModelPE(modelName="mymodel",
                 continue
             if not checkHistogramExistence(histFile,histPrefix+"__"+name+"__"+sysName+"__down"):
                 continue
-            histUP=RootHistogram(name+"-"+sysName+"-UP")
+            histUP=RootHistogram(name+"-"+sysName+"-UP",{"use_errors":"true"})
             histUP.setFileName(histFile)
             histUP.setHistoName(histPrefix+"__"+name+"__"+sysName+"__up")
-            histDOWN=RootHistogram(name+"-"+sysName+"-DOWN")
+            histDOWN=RootHistogram(name+"-"+sysName+"-DOWN",{"use_errors":"true"})
             histDOWN.setFileName(histFile)
             histDOWN.setHistoName(histPrefix+"__"+name+"__"+sysName+"__down")
             comp.addUncertaintyHistograms(histUP, histDOWN, sysDistributions,"sys_"+sysName)
@@ -123,24 +122,11 @@ def generateModelPE(modelName="mymodel",
         file.write("\n")
         
         obs.addComponent(comp)
-            
-    for ntuple in backgroundYieldList:
-        name=ntuple["name"]
-        compBG=ObservableComponent("comp_"+name)
-        coeffBG=CoefficientConstantFunction("betaBG_"+name,ntuple["mean"])
-        compBG.setCoefficientFunction(coeffBG)
-        histBG=RootHistogram(name+"-BG")
-        histBG.setFileName(histFile)
-        histBG.setHistoName(histPrefix+"__"+name)
-        file.write(histBG.toConfigString())
-        compBG.setNominalHistogram(histBG)
-        obsBG.addComponent(compBG)
-        
+           
         
     model.addObservable(obs)
-    model.addObservable(obsBG)
     file.write(model.toConfigString())
-    _writeFile(file,outputFolder,modelName,dicePoisson=True)
+    _writeFile(file,outputFolder,modelName,dicePoisson=dicePoisson,mcUncertainty=mcUncertainty)
     file.close()
     
 def generateNominalBackground(modelName="mymodel",
@@ -167,7 +153,7 @@ def generateNominalBackground(modelName="mymodel",
         compBG=ObservableComponent("comp_"+name)
         coeffBG=CoefficientConstantFunction("beta_"+name,ntuple["mean"])
         compBG.setCoefficientFunction(coeffBG)
-        histBG=RootHistogram(name)
+        histBG=RootHistogram(name,{"use_errors":"true"})
         histBG.setFileName(histFile)
         histBG.setHistoName(histPrefix+"__"+name)
         file.write(histBG.toConfigString())
@@ -177,7 +163,7 @@ def generateNominalBackground(modelName="mymodel",
         
     model.addObservable(obsBG)
     file.write(model.toConfigString())
-    _writeFile(file,outputFolder,modelName,dicePoisson=False,experiments=1)
+    _writeFile(file,outputFolder,modelName,dicePoisson=False,mcUncertainty=False,experiments=1)
     file.close()
     
     
@@ -209,7 +195,7 @@ def generateModelData(modelName="mymodel",
     coeff=CoefficientConstantFunction("beta-data")
     
     comp.setCoefficientFunction(coeff)
-    hist=RootHistogram("data-NOMINAL")
+    hist=RootHistogram("data-NOMINAL",{"use_errors":"false"})
     hist.setFileName(histFile)
     hist.setHistoName(histName)
     file.write(hist.toConfigString())
@@ -221,12 +207,12 @@ def generateModelData(modelName="mymodel",
       
     model.addObservable(obs)
     file.write(model.toConfigString())
-    _writeFile(file,outputFolder,modelName,dicePoisson=False,experiments=1)
+    _writeFile(file,outputFolder,modelName,dicePoisson=False,mcUncertainty=False,experiments=1)
     file.close() 
                     
                     
                     
-def _writeFile(file,outputFolder,modelName,dicePoisson=True,experiments=10000): 
+def _writeFile(file,outputFolder,modelName,dicePoisson=True,mcUncertainty=True,experiments=10000): 
 
     file.write("\n")
     file.write("\n")
@@ -254,6 +240,10 @@ def _writeFile(file,outputFolder,modelName,dicePoisson=True,experiments=10000):
         file.write('    dice_poisson=true;\n')
     else:
         file.write('    dice_poisson=false;\n')
+    if mcUncertainty:    
+        file.write('    dice_template_uncertainties = true;\n')
+    else:
+        file.write('    dice_template_uncertainties = false;\n')
     file.write('    rnd_gen={\n')
     file.write('         seed=126;//default of-1 means: use current time.\n')
     file.write('      };\n')
