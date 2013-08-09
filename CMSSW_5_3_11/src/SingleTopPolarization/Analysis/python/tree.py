@@ -1,9 +1,11 @@
-import itertools
-from collections import deque
-import copy
-
-import logging
+#!/usr/bin/env python
+"""
+Applies operations on a TFile systematically by defining the operations as a
+directed graph and evaluating all root-to-leaf paths.
+"""
+import itertools, copy, argparse, logging, time
 logging.basicConfig(level=logging.WARNING)
+
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts, Weights, mul, Cut
 from plots.common.utils import NestedDict
@@ -15,11 +17,39 @@ import ROOT
 logger = logging.getLogger("tree")
 logger.setLevel(logging.INFO)
 
+"""
+A per-module dict with the name and instance of every Node that was instantiated.
+TODO: this is a rather bad solution, make a separate Graph class which contains the
+nodes instead.
+"""
 gNodes = dict()
-
-import pdb
+gNhistograms = 0
 
 def variateOneWeight(weights):
+    """
+    Given a list of tuples with weights such as
+    [
+        (w1_nominal, w1_up, w1_down),
+        (w2_nominal, w2_up, w2s_down),
+        ...
+        (wN_nominal, wN_up, wN_down)
+    ]
+    this method returns the list of combinations where
+    exactly one weight is variated, such as
+    [
+        [w1_nominal, w2_up, w3_nominal, ...],
+        [w1_nominal, w2_nominal, w3_up, ...]
+    ].
+    Operates under the assumption that the first element
+    of the tuple is the nominal weight.
+
+    Args:
+        weights: a list of tuples with the different weight combinations
+
+    Returns:
+        a list with the variated weights.
+
+    """
     sts = []
     for i in range(len(weights)):
         st = [x[0] for x in weights[:i]]
@@ -32,12 +62,28 @@ def variateOneWeight(weights):
             sts.append((w.name, subs))
     return sts
 
-class Graph:
-    def __init__(self, nodes):
-        self.nodes = nodes
-
 class Node(object):
+    """
+    Represents a node in a directed graph by containing references to it's
+    parents and children.
+    A Node object is stateless, the state of processing is contained
+    within the Node.process method.
+    """
     def __init__(self, name, parents, children, filter_funcs=[]):
+        """
+        Construct a node with a given name and optionally parents and children.
+
+        Args:
+            name: a string specifying the unique name of this node
+            parents: a list of Node objects that are the parents of this Node.
+                This node is added to the list of children of the parents automatically.
+            children: a list of nodes with the children for this Node.
+
+        Keywords:
+            filter_funcs: a list of lambda functions taking the list of parent names
+                in the current processing chain and returning a boolean which decides if
+                this node and it's children will be processed.
+        """
         self.name = name
         self.parents = parents
         for p in parents:
@@ -52,25 +98,58 @@ class Node(object):
         return "<%s>" % self.name
 
     def isLeaf(self):
+        """
+        A leaf is a Node with no children.
+        """
         return len(self.children)==0
 
     def addParents(self, parents):
+        """
+        Adds this node to the list of children of the parents
+
+        Args:
+            parents: a list of Node objects to be added as parents.
+        """
         self.parents += parents
         for p in parents:
             p.children.append(self)
 
     def delParents(self, parents):
+        """
+        Removes the specified parents from this Node, also removing a reference
+        from the parent->child relationship of the parent.
+
+        Args:
+            parents: a list of parent Nodes to remove
+        """
         self.parents = filter(lambda x: x not in parents, self.parents)
         for p in parents:
             p.children = filter(lambda x: x!= self, p.children)
 
     def process(self, obj, parentage):
+        """
+        A default implementation of the Node.process method, which
+        is called when this Node is traversed using the recurseDown method.
+        """
         parentage = parentage[:-1]
         if self.isLeaf():
             logger.debug(self.parentsName(parentage))
         return self.name
 
     def parentsName(self, parentage, upto=0):
+        """
+        Returns a structured representation of the parents
+        of this node in the present iteration.
+
+        Args:
+            parentage: a list with the names of the parents in this iteration.
+
+        Keywords:
+            upto: Return up to N parents from the head
+
+        Returns:
+            A string representing the parentage
+        """
         if upto:
             pars = parentage[:upto]
         else:
@@ -78,21 +157,64 @@ class Node(object):
         return "/".join(pars + [self.name])
 
     def getParents(self, parentage, cls=None):
+        """
+        Gets the list of Node instances that are the parents
+        of this node in this iteration.
+
+        Args:
+            parentage: a list of string with the names of the parents
+                in the call order.
+
+        Keywords:
+            cls: an optional class/type by which the parent list will be filtered.
+
+        Returns:
+            A list of the parent Node instances.
+        """
         pars = [gNodes[p] for p in parentage]
         if cls:
             pars = filter(lambda x: isinstance(x, cls), pars)
         return pars
 
     def getPrevious(self, parentage, cls):
-        last_cut = None
+        """
+        Gets the previous node in the current call order.
+
+        Args:
+            parentage: a list of strings with the parentage in the call order.
+
+        Keywords:
+            cls: an optional class, the instance returned will be the first
+                instance in the parent chain of this class.
+
+        Returns:
+            an instance of the previous Node with the specified class.
+        """
+        last = None
         for p in parentage[::-1]:
             par = gNodes[p]
             if isinstance(par, cls):
-                last_cut = par
+                last = par
                 break
-        return last_cut
+        return last
 
     def recurseDown(self, obj, parentage=[], dryRun=False):
+        """
+        Recursively processes the children of this node, calling the 
+        Node.process method on each child. This node and it's children
+        are only processed if all of the filter_funcs return True upon
+        the parentage.
+
+        Args:
+            obj: an instance of an object that is passed down the recurse tree.
+            parentage: the list of names of the preceding nodes.
+
+        Keywords:
+            dryRun: a boolean to specify whether Node.process will actually be called.
+
+        Returns:
+            a nested list with the output of the Node.process of each node in the graph
+        """
         for f in self.filter_funcs:
             if not f(parentage):
                 return
@@ -101,30 +223,64 @@ class Node(object):
         return [self.process(obj, parentage) if not dryRun else self.name, [c.recurseDown(obj, parentage) for c in self.children]]
 
 class HistNode(Node):
-    
+    """
+    A Node that takes the passed object, assumes it's a SampleNode and draws a histogram
+    corresponding to the present event selection. Any preceding WeightNodes are multiplied
+    and the corresponding per-event weight is applied on the histogram.
+    """
     def __init__(self, hist_desc, *args, **kwargs):
+        """
+        Creates a HistNode with the histogram description dictionary.
+
+        Args:
+            hist_desc: a dictionary which must contain 'var' and 'binning' as keys.
+        """
         super(HistNode, self).__init__(*args, **kwargs)
         self.hist_desc = hist_desc
-        self.hist = None
 
     def process(self, obj, parentage):
+        global gNhistograms
+        """
+        Draws the histogram corresponding to the present cut and optionally the weighting
+        strategy.
+
+        Args:
+            obj: assumed to be a SampleNode whose underlying Sample will
+                be ued for projection.
+            parentage: the names of the call stack
+        Returns:
+            a tuple (Hist, Node.process()) with the projected histogram Hist and the parent Node class
+            process output.
+        """
         r = Node.process(self, obj, parentage)
 
+        #Use the cache of the previous CutNode in the call stack.
         last_cut = self.getPrevious(parentage, CutNode)
         cache = last_cut.cache
-        cut = last_cut.getCutsTotal(parentage)
-        weights = self.getParents(parentage, WeightNode)
 
+        #Get the total cut string from the call stack.
+        cut = last_cut.getCutsTotal(parentage)
+
+        #Get the total weight
+        weights = self.getParents(parentage, WeightNode)
         wtot = mul([w.weight for w in weights])
 
         if not "var" in self.hist_desc.keys() or not "binning" in self.hist_desc.keys():
             raise KeyError("Incorrect hist desc: %s" % str(self.hist_desc))
+
+        if not hasattr(obj, "sample") or not hasattr(obj.sample, "drawHistogram"):
+            raise TypeError("call object 'obj' must have a sample with a drawHistogram method.")
+
         hi = obj.sample.drawHistogram(self.hist_desc["var"], str(cut), weight=wtot.weight_str, binning=self.hist_desc["binning"], entrylist=cache)
         hdir = self.parentsName(parentage[:-1])
-        logger.debug("%d %s %s" % (hi.GetEntries(), self.name, self.parentsName(parentage[-6:-1])))
+
+        logger.debug("%d %s %s" % (hi.GetEntries(), self.name, self.parentsName(parentage)))
+
+        #Save the histogram using the Saver that was passed down. 
         hi.SetName(self.name)
         obj.saver.save(hdir, hi)
-        self.hist = hi
+
+        gNhistograms += 1
         return (hi, r)
 
 class ObjectSaver:
@@ -226,11 +382,27 @@ def is_samp(p, lep):
 
 if __name__=="__main__":
 
+    parser = argparse.ArgumentParser(
+        description='Produces a hierarchy of histograms corresponding to cuts and weights.'
+    )
+
+    parser.add_argument('infile', action='store',
+        help="The input file name with step3 TTrees."
+    )
+
+    parser.add_argument('outfile', action='store',
+        help="The output file name with histograms."
+    )
+    args = parser.parse_args()
 
 
-    hsaver = ObjectSaver("hists.root")
-    sample = SampleNode(hsaver, "data/Aug4_0eb863_full/mu/mc/iso/nominal/Jul15/TTJets_FullLept.root", [], [])
+    #Create the sink to a file
+    hsaver = ObjectSaver(args.outfile)
 
+    #Load the sample, which is the root of the tree
+    sample = SampleNode(hsaver, args.infile, [], [])
+
+    #Different lepton channels
     channel = Node("channel", [sample], [])
     channels = dict()
 
@@ -254,10 +426,14 @@ if __name__=="__main__":
         ]:
 
         isos[lep] = dict()
-        isos[lep]['iso'] = Node(lep + "__iso", par, [],
+        isos[lep]['iso'] = CutNode(
+            Cut("1.0"), #At present no special cuts have to be applied on the ISO region
+            lep + "__iso", par, [],
             filter_funcs=[lambda x: "/iso/" in x[0]]
         )
-        isos[lep]['antiiso'] = CutNode(Cuts.antiiso(lep), lep + "__antiiso", par, [],
+        isos[lep]['antiiso'] = CutNode(
+            Cuts.antiiso(lep), #Apply any additional anti-iso cuts (like dR)
+            lep + "__antiiso", par, [],
             filter_funcs=[lambda x: "/antiiso/" in x[0]]
         )
         isol.append(isos[lep]['iso'])
@@ -397,4 +573,8 @@ if __name__=="__main__":
             final_plots[name] = reweigh(final_plots[name], syst_weights)
 
     #Make everything
+    t0 = time.clock()
     r = sample.recurseDown(sample)
+    t1 = time.clock()
+    dt = t1-t0
+    print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms).dt)
