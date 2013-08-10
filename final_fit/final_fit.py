@@ -1,10 +1,11 @@
 import sys, os
-from theta_auto import *
 import math
 import logging
 import ROOT
 #from final_fit.fit_systematics import *
 from fit import *
+#import fit
+from theta_auto import *
 import argparse
 from plot_fit import plot_fit
 

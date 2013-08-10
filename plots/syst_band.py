@@ -67,7 +67,7 @@ if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
     tdrstyle()
 
-
+    inf = "final_fit/histos/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj_met30.root"
     files = {
         "mu": "mu__cos_theta__mva_0_06",
         "ele": "ele__cos_theta__mva_0_13"
@@ -97,10 +97,10 @@ if __name__=="__main__":
     fit_results = dfit_results[suffix]
 
 
-    styles = {'tchan': 'T_t', 'top': 'TTJets_FullLept', 'wzjets': 'WJets_inclusive', 'qcd':'QCD'}
+    styles = {'tchan': 'T_t', 'other': 'TTJets_FullLept', 'wzjets': 'WJets_inclusive'}
     for channel in ['mu', 'ele']:
         hists = NestedDict()
-        fi = File("systematics_0708_2013/%s/data.root" % files[channel])
+        fi = File(inf)
         rate_sfs = load_fit_results("final_fit/results/%s.txt" % fit_results[channel])
         for root, dirs, items in fi.walk():
             for it in items:
@@ -121,13 +121,13 @@ if __name__=="__main__":
                     Styling.mc_style(it, styles[sample])
                 else:
                     Styling.data_style(it)
-                if sample in rate_sfs.keys():
-                    it.Scale(rate_sfs[sample])
+                #if sample in rate_sfs.keys():
+                #    it.Scale(rate_sfs[sample])
                 hists[variable][syst][systdir][sample]= it
 
         hists = hists.as_dict()
 
-        hists = hists["cos_theta"]
+        hists = hists.values()[0]
         hists_nominal = hists.pop("nominal")['none']
         hists_nom_data = hists_nominal.pop('DATA')
         hists_nom_mc = hists_nominal.values()
@@ -178,7 +178,7 @@ if __name__=="__main__":
         h['down'] = syst_down
 
         stacks_d = OrderedDict()
-        stacks_d['mc'] = reorder(hists_nominal, ["tchan", "top", "wzjets", "qcd"])
+        stacks_d['mc'] = reorder(hists_nominal, ["tchan", "other", "wzjets"])
         stacks_d['data'] = [hists_nom_data]
 
         for s in [syst_up, syst_down]:
@@ -190,9 +190,9 @@ if __name__=="__main__":
 
         hists_nom_data.SetTitle('data')
         hists_nominal['tchan'].SetTitle("signal (t-channel)")
-        hists_nominal['top'].SetTitle("t#bar{t}, tW, s")
+        hists_nominal['other'].SetTitle("t#bar{t}, tW, s, QCD")
         hists_nominal['wzjets'].SetTitle("W, diboson, DY-jets")
-        hists_nominal['qcd'].SetTitle("QCD")
+        #hists_nominal['qcd'].SetTitle("QCD")
 
         c = ROOT.TCanvas()
         p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
@@ -202,7 +202,8 @@ if __name__=="__main__":
         p1.SetFillStyle(0);
         p1.cd()
 
-        stacks = plot_hists_stacked(p1, stacks_d, x_label="cos #theta")
+        stacks = plot_hists_stacked(p1, stacks_d, x_label="BDT", max_bin_mult=100)
+        p1.SetLogy()
 
         syst_up.Draw("SAME hist")
         syst_down.Draw("SAME hist")
