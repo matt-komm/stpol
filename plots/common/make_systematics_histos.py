@@ -6,10 +6,11 @@ from plots.common.cross_sections import lumi_iso, lumi_antiiso
 import logging
 import subprocess
 import shutil
-from plots.common.load_samples import *
+from plots.common.load_samples import load_samples, load_nominal_mc_samples, create_histogram_for_fit
 from plots.common.cuts import *
+from rootpy.io import File
 
-def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg", asymmetry=None):
+def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg", asymmetry=None, mtmetcut=None):
     dirname = channel + "__" +var
     if float(mva_cut) > -1:    
         mva = "__mva_"+str(mva_cut)
@@ -19,9 +20,13 @@ def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg", asymmetry=No
         dirname += "__" + coupling
     if asymmetry is not None:
         dirname += "__asymm_" + str(asymmetry)
+    if mtmetcut is not None:
+        dirname += "__mtmet_" + str(mtmetcut)
     return dirname
 
-def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"]), indir="/".join([os.environ["STPOL_DIR"], "step3_latest"]), channel="mu", coupling="powheg", binning=None, plot_range=None, asymmetry=None):
+
+
+def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".join([os.environ["STPOL_DIR"], "lqetafit", "histos"]), indir="/".join([os.environ["STPOL_DIR"], "step3_latest"]), channel="mu", coupling="powheg", binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
     #logging.basicConfig(level="INFO")
     logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.INFO)
     logging.debug('This message should appear on the console')
@@ -38,18 +43,18 @@ def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".joi
                 for (k, v) in updown.items():
                     ss = {}
                     ss[k] = v
-                    make_histos_for_syst(var, sub_syst, ss, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
+                    make_histos_for_syst(var, sub_syst, ss, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
         elif systname != "nominal":
             for sub_syst, path in sub_systs.items():
                 ss = {}
                 ss[sub_syst] = path
-                make_histos_for_syst(var, systname, ss, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
+                make_histos_for_syst(var, systname, ss, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
         else:
-            make_histos_for_syst(var, systname, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
+            make_histos_for_syst(var, systname, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
 
     hadd_histos(outdir)
 
-def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling, binning=None, plot_range=None, asymmetry=None):
+def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling, binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
         if sub_systs.keys()[0] in ["up", "down"] and main_syst in ["Res", "En", "UnclusteredEn"]:
             ss_type=sub_systs[sub_systs.keys()[0]]
         elif sub_systs.keys()[0] in ["up", "down"]:
@@ -57,6 +62,7 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
         else:
             ss_type=main_syst
         (samples, sampnames) = load_samples(ss_type, channel, indir, coupling)
+        
         outhists = {}
         for sn, samps in sampnames:
             hists = []
@@ -65,7 +71,7 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                     if sys == "nominal":
                         weight_str = sys_types
                         hname = "%s__%s" % (var, sn)
-                        write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
+                        write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
                     elif sn in ["DATA"] and sys != "nominal":
                         #No systematics if data
                         continue
@@ -73,18 +79,18 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                         if coupling != "powheg": #these systs not available for comphep (currently)
                             continue
                         hname = "%s__%s__%s__%s" % (var, sn, main_syst, sys)
-                        write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
+                        write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
                     elif main_syst=="nominal":
                         for st_name, st in sys_types.items():
                             weight_str = st
                             hname = "%s__%s__%s__%s" % (var, sn, sys, st_name)
-                            write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
+                            write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
                     else: #main_syst=="partial"
                         hname = "%s__%s__%s" % (var, sn, ss_type)
-                        write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel,  coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry)
+                        write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel,  coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
 
 
-def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=None, plot_range=None, asymmetry=None):
+def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
     weight_str = weight
     #print hname, samples
     samp = samples[sampn]
@@ -118,7 +124,7 @@ def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, 
             cuts_antiiso = str(Cuts.mva_antiiso_up(channel, mva_var=var)) + " && ("+cut+")"
             qcd_extra = str(Cuts.mva_antiiso(channel, mva_var=var)) + " && ("+cut+")" #hack for now
     #print "!", hname, cuts_antiiso    
-    hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=qcd_extra)
+    hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=qcd_extra, mtmetcut=mtmetcut)
     outfile.cd() #Must cd after histogram creation
 
     #Write histogram to file

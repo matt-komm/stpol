@@ -1,9 +1,10 @@
 import os
 from plots.common.sample import Sample
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
-from plots.common.utils import *
-from unfold.prepare_unfolding import asymmetry_weight
+from plots.common.utils import setErrors
+from unfold.utils import asymmetry_weight
 from copy import deepcopy
+from rootpy.io import File
 
 def load_nominal_mc_samples(path, channel):
     datadir = "/".join((path, channel, "mc", "iso", "nominal", "Jul15"))
@@ -66,9 +67,7 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
         
     wzjets = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
     wzjets_regular = deepcopy(wzjets_other)
-    print "A",wzjets_regular
     wzjets_regular.extend(wzjets)
-    print "Aa",wzjets_regular
     
     if systematic in "nominal":
         sampnames = (
@@ -235,9 +234,25 @@ def get_sampnames_for_components(sampnames, components, tchan, wzjets, top, qcd)
     return sampnames_new
 
 
-def get_qcd_scale_factor(var, channel, mva=False):
-    #FIXME - automate, take from some "central" file
+def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
+    datadir = "/".join(("$STPOL_DIR", "qcd_estimation", "fitted", channel))
+    if mtmetcut==None:
+        if channel == "mu":
+            mtmetcut = "50"
+        elif channel == "ele":
+            mtmetcut = "45"
     
+    if var == "cos_theta" and mva is None:  #final cut based
+        filename = "final__2j1t"
+    elif var == "abs(eta_lj)":
+        filename = "fit__2j1t"
+    else:
+        filename = "2j1t"
+    filename += ("_mt_%s_plus.txt" % mtmetcut)
+    f = open(filename, 'r')
+    sf = float(f.readline().split()[0])
+    print "QCD sf",sf
+    return sf
     if channel == "mu":
         if var == "cos_theta":
             if mva is None:
@@ -269,7 +284,7 @@ def change_to_mc(file_name):
     path = '/'.join(path)
     return path
 
-def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, coupling, var="abs(eta_lj)", plot_range=None, binning=None, asymmetry=None, qcd_extra=None):
+def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, coupling, var="abs(eta_lj)", plot_range=None, binning=None, asymmetry=None, qcd_extra=None, mtmetcut=None):
     lumi=lumi_iso[channel]
     weight_str = str(weight)
     
@@ -322,6 +337,6 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
                     hist.Scale(hist_nomi.Integral()/hist.Integral())
         else:
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
-        hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso))
+        hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso, mtmetcut))
     setErrors(hist)    #Set error in bins with 0 error to >0
     return hist
