@@ -11,5 +11,8 @@ if __name__=="__main__":
             continue
 
         for fi in files:
-            sf = float(open(os.path.join(root, fi)).readlines()[0].split(" ")[0])
+            try:
+                sf = float(open(os.path.join(root, fi)).readlines()[0].split(" ")[0])
+            except Exception as e:
+                print fi, e
             print "qcdScale['%s']['%s'] = %f" % (lep, fi.split(".")[0], sf)
