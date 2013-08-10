@@ -89,22 +89,26 @@ if __name__=="__main__":
 
 
     parser = argparse.ArgumentParser(description='Do the final fit')
-    parser.add_argument('--channel', dest='channel', default=None, help="The lepton channel used for the fit")
-    parser.add_argument('--path', dest='path', default="/hdfs/local/stpol/fit_histograms/07_08_2013/")
-    parser.add_argument('--var', dest='var', default=None, help="Variable to fit on")
+    parser.add_argument('--channel', default=None, help="The lepton channel used for the fit")
+    parser.add_argument('--path', default="./")
+    parser.add_argument('--var', default=None, help="Variable to fit on")
+    parser.add_argument('--infile', default=None, help="The input file")
     #TODO
     #parser.add_argument('--coupling', dest='coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
     #parser.add_argument('--asymmetry', dest='asymmetry', help="Asymmetry to reweight generated distribution to", default=None)
     args = parser.parse_args()
 
-    if args.channel == None and args.var == None:
-        fits = Fit.all_fits
-    elif args.channel is not None and args.var is not None:
-        fits = Fit.fits[args.channel].intersection(Fit.fits[args.var])
-    elif args.channel is not None:
-        fits = Fit.fits[args.channel]
-    elif args.var is not None :
-        fits = Fit.fits[args.var]
+    if args.infile:
+        fits = [Fit(args.infile.split(".root")[0])]
+    else:
+        if args.channel == None and args.var == None:
+            fits = Fit.all_fits
+        elif args.channel is not None and args.var is not None:
+            fits = Fit.fits[args.channel].intersection(Fit.fits[args.var])
+        elif args.channel is not None:
+            fits = Fit.fits[args.channel]
+        elif args.var is not None :
+            fits = Fit.fits[args.var]
 
     for fit in fits:
             print "Fitting", fit.name
