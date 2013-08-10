@@ -133,6 +133,11 @@ if __name__=="__main__":
     )
     args = parser.parse_args()
     lep = args.channel
+    channels = {
+        "mu": "Muon channel",
+        "ele": "Electron channel",
+    }
+    channel = channels[lep]
 
     ROOT.TH1F.AddDirectory(False)
     def get_posterior(fn):
