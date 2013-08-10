@@ -690,6 +690,7 @@ plot_defs['final_cosTheta_metdown']['elecut']=cutlist['2j1t']*cutlist['presel_el
 plot_defs['final_cosTheta_metdown']['mucut']=cutlist['2j1t']*cutlist['presel_mu']*Cut('mt_mu>30')
 
 
+
 plot_defs['final_met_mva_loose_fit'] = {
     'tags': ["an", "control.tex", "mva"],
     'enabled': True,
@@ -737,6 +738,14 @@ plot_defs['final_cosTheta_mva_tight_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 plot_defs['final_cosTheta_mva_loose_fit'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_loose_fit']['fitpars'] = fitpars['final_2j1t_mva']
+
+plot_defs['final_cosTheta_mva_loose_fit_metup'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_mva_loose_fit_metup']['mucut'] = cutlist['presel_mu']*Cut("mt_mu>70")*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
+plot_defs['final_cosTheta_mva_loose_fit_metup']['elecut'] = cutlist['presel_ele']*Cut("met>55")*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))
+
+plot_defs['final_cosTheta_mva_loose_fit_metdown'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_mva_loose_fit_metdown']['mucut'] = cutlist['presel_mu']*Cut("mt_mu>30")*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
+plot_defs['final_cosTheta_mva_loose_fit_metdown']['elecut'] = cutlist['presel_ele']*Cut("met>25")*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))
 
 extranges = {
     "cosTheta": [nbins_final, -1, 1],
