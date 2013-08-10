@@ -201,6 +201,10 @@ if __name__=="__main__":
         You can explicitly disable tags by prepending a dot(.), this overrides any enables.
         """
     )
+    parser.add_argument(
+        '-ai', '--anti_iso', required=False, action='store_true', dest='use_antiiso',
+        help='Change region to anti-isolated region'
+    )
 
     args = parser.parse_args()
 
@@ -265,10 +269,16 @@ if __name__=="__main__":
 
         lumi = lumis[lepton_channel]
 
+        isoreg='iso'
+        use_antiiso = False
+        if args.use_antiiso:
+            isoreg='antiiso'
+            use_antiiso = True
+
         #Get the file lists
         flist = get_file_list(
             merge_cmds,
-            args.indir + "/%s/mc/iso/nominal/Jul15/" % lepton_channel
+            args.indir + "/%s/mc/%s/nominal/Jul15/" % (lepton_channel,isoreg)
         )
         for iso in ['iso', 'antiiso']:
             for ds in ['Jul15', 'Aug1']:
@@ -295,7 +305,7 @@ if __name__=="__main__":
 
             plot_def = plot_defs[plotname]
 
-            canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
+            canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, physics_processes, use_antiiso)
 
             #Draw the histograms from systematically variated samples
             hists_tot_mc_syst = {}
@@ -328,6 +338,9 @@ if __name__=="__main__":
                 _lepton_channel = "el"
             else:
                 _lepton_channel = "mu"
+
+            if use_antiiso:
+                _lepton_channel+='_aiso'
 
             subpath = ""
             if "dir" in plot_def.keys():
