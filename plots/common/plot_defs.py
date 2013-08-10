@@ -359,6 +359,7 @@ plot_defs['mva_bdt_fit'] = cp(plot_defs['mva_bdt'] )
 plot_defs['mva_bdt_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 plot_defs['qcd_mva'] = cp(plot_defs['mva_bdt'])
+plot_defs['qcd_mva']['var']=[mva_var_qcd['ele'],mva_var_qcd['mu']]
 plot_defs['qcd_mva']['elecut']=cutlist['2j1t']*cutlist['presel_ele']
 plot_defs['qcd_mva']['mucut']=cutlist['2j1t']*cutlist['presel_mu']
 
@@ -678,6 +679,22 @@ plot_defs['final_cosTheta_mva_loose'] = {
 plot_defs['final_cosTheta_mva_loose_qcdmva'] = cp(plot_defs['final_cosTheta_mva_loose'])
 plot_defs['final_cosTheta_mva_loose_qcdmva']['elecut']=cutlist['2j1t']*cutlist['presel_ele']*cutlist['bdt_ele_loose_qcd']
 plot_defs['final_cosTheta_mva_loose_qcdmva']['mucut']=cutlist['2j1t']*cutlist['presel_mu']*cutlist['bdt_mu_loose_qcd']
+
+plot_defs['final_cosTheta_loose_metup'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_loose_metup']['elecut']=cutlist['2j1t']*cutlist['presel_ele']*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))*Cut('met>65')
+plot_defs['final_cosTheta_loose_metup']['mucut']=cutlist['2j1t']*cutlist['presel_mu']*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))*Cut('mt_mu>70')
+
+plot_defs['final_cosTheta_loose_metdown'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_loose_metdown']['elecut']=cutlist['2j1t']*cutlist['presel_ele']*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))*Cut('met>25')
+plot_defs['final_cosTheta_loose_metdown']['mucut']=cutlist['2j1t']*cutlist['presel_mu']*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))*Cut('mt_mu>30')
+
+plot_defs['final_cosTheta_metup'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_metup']['elecut']=cutlist['2j1t']*cutlist['presel_ele']*Cut('met>65')
+plot_defs['final_cosTheta_metup']['mucut']=cutlist['2j1t']*cutlist['presel_mu']*Cut('mt_mu>70')
+
+plot_defs['final_cosTheta_metdown'] = cp(plot_defs['final_cosTheta_mva_loose'])
+plot_defs['final_cosTheta_metdown']['elecut']=cutlist['2j1t']*cutlist['presel_ele']*Cut('met>24')
+plot_defs['final_cosTheta_metdown']['mucut']=cutlist['2j1t']*cutlist['presel_mu']*Cut('mt_mu>30')
 
 
 plot_defs['final_met_mva_loose_fit'] = {

@@ -24,6 +24,9 @@ def get_options():
     options = Options()
     options.set("minimizer","strategy","newton_vanilla")
     #options.set("minimizer","strategy","tminuit")
+    #options.set("minimizer","strategy","fast")
+    #options.set("minimizer","mcmc_iterations","10000000")
+    #options.set("minimizer","always_mcmc","true")
     #options.set("minimizer","strategy","robust")
     #nuisance_constraint="shape:free;rate:free"
     options.set("global", "debug", "true")
