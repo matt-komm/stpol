@@ -4,9 +4,9 @@ import math
 import logging
 import ROOT
 #from final_fit.fit_systematics import *
-from final_fit.fit import *
+from fit import *
 import argparse
-from final_fit.plot_fit import plot_fit
+from plot_fit import plot_fit
 
 logging.basicConfig(level=logging.INFO)
 
@@ -14,7 +14,7 @@ SIGNAL = 'tchan'
 
 
 def get_model(infile, fit):
-    model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = fit.histofilter, transform_histo = fit.transformHisto)    
+    model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = fit.histofilter, transform_histo = fit.transformHisto)
     model.fill_histogram_zerobins()
     model.set_signal_processes(SIGNAL)
     return model
@@ -35,10 +35,10 @@ def do_fit(fit, path):
     model = get_model(infile, fit)
 
     fit.add_uncertainties_to_model(model)
-    
+
     options = get_options()
     result = mle(model, input = 'data', n=1, with_covariance = True, options=options)
-    
+
     fitresults = {}
     values = {}
 
@@ -46,13 +46,13 @@ def do_fit(fit, path):
         if '__' not in process:
             fitresults[process] = [result[SIGNAL][process][0][0], result[SIGNAL][process][0][1]]
             values[process] = fitresults[process][0]
-    
+
     # covariance matrix
     pars = sorted(model.get_parameters([SIGNAL]))
-    
+
     #print result[signal]
     cov = result[SIGNAL]['__cov'][0]
-    
+
     (covm, corrm) = fit.makeCovMatrix(cov, pars)
     fit.write_results(fitresults, corrm, fit)
     fit.plotMatrices(covm, corrm)
@@ -70,10 +70,10 @@ def do_fit(fit, path):
         os.makedirs("histos_fitted/"+fit.name)
     except:
         pass
-        
+
     outfile = "histos_fitted/"+fit.name+"/fitted.root"
     write_histograms_to_rootfile(pred, outfile)
-    #FIXME: Secgmentation faults for more than 2 fits...    
+    #FIXME: Secgmentation faults for more than 2 fits...
     #plot_fit(fit, infile, outfile, result)
 
 if __name__=="__main__":
@@ -83,17 +83,17 @@ if __name__=="__main__":
         sys.argv.pop(sys.argv.index("final_fit.py"))
     except ValueError:
         pass
-    
+
 
     parser = argparse.ArgumentParser(description='Do the final fit')
     parser.add_argument('--channel', dest='channel', default=None, help="The lepton channel used for the fit")
     parser.add_argument('--path', dest='path', default="/hdfs/local/stpol/fit_histograms/07_08_2013/")
     parser.add_argument('--var', dest='var', default=None, help="Variable to fit on")
-    #TODO    
+    #TODO
     #parser.add_argument('--coupling', dest='coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
     #parser.add_argument('--asymmetry', dest='asymmetry', help="Asymmetry to reweight generated distribution to", default=None)
     args = parser.parse_args()
-    
+
     if args.channel == None and args.var == None:
         fits = Fit.all_fits
     elif args.channel is not None and args.var is not None:
@@ -106,5 +106,5 @@ if __name__=="__main__":
     for fit in fits:
             print "Fitting", fit.name
             do_fit(fit, args.path)
-            print 
-    
+            print
+

@@ -9,25 +9,29 @@ from plots.common.stack_plot import plot_hists_stacked
 from plots.common.utils import PhysicsProcess, merge_hists, PatternDict
 from plots.common.sample_style import Styling
 import SingleTopPolarization.Analysis.sample_types as sample_types
+import pdb
 
 def load_histos(filenames):
     if isinstance(filenames, basestring):
         filenames = [filenames]
-    outdict = PatternDict()
+    outdict = dict()
     for fn in filenames:
         fi = File(fn)
         for root, dirs, items in fi:
             for it in items:
                 k = "/".join([root, it])
                 item = fi.Get(k)
-                k = "/".join([fn, k.replace("__", "/").replace(".", "__")])
+                k = "/".join([fn, k.replace("__", "/")])
+                print k, item
+                if not isinstance(item, ROOT.TH1F):
+                    pdb.set_trace()
                 outdict[k] = item
     return outdict
 
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(
-        description='Produces a hierarchy of histograms corresponding to cuts and weights.'
+        description='FIXME'
     )
 
     parser.add_argument('infile', action='store',

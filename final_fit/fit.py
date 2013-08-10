@@ -7,9 +7,9 @@ class Fit:
             , filename
             , name = None
             , rates = {"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 1.0}
-            , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] 
+            , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"]
             , correlations = [("wzjets", "top")]):
-        
+
         self.filename = filename
         self.name = name
         if name == None:
@@ -92,7 +92,7 @@ class Fit:
                 if (xlabel, ylabel) in self.correlations:
                     cor_value = cor.GetBinContent(i,j)
                     line = 'corr, %s, %s, %f\n' % (xlabel, ylabel, cor_value)
-                    f.write(line)        
+                    f.write(line)
         f.close()
 
     def makeCovMatrix(self, cov, pars):
@@ -104,7 +104,7 @@ class Fit:
         canvas = ROOT.TCanvas("c1","Covariance")
         h = ROOT.TH2D("covariance","covariance",n,0,n,n,0,n)
         cor = ROOT.TH2D("correlation","correlation",n,0,n,n,0,n)
-        
+
         for i in range(n):
             h.GetXaxis().SetBinLabel(i+1,pars[i]);
             h.GetYaxis().SetBinLabel(i+1,pars[i]);
@@ -136,7 +136,7 @@ class Fit:
         cov.Draw("COLZ TEXT")
         canvas.Print("plots/"+self.name+"/cov.png")
         canvas.Print("plots/"+self.name+"/cov.pdf")
-        
+
         canvas2 = ROOT.TCanvas("Correlation","Correlation")
         corr.Draw("COLZ TEXT")
         canvas2.Print("plots/"+self.name+"/corr.png")
@@ -159,7 +159,7 @@ class Fit:
     A rescaling for all the histograms containing the string
     """
     def addRescale(self, name, scale):
-        self.rescale[name] = scale    
+        self.rescale[name] = scale
 
     def transformHisto(self, h):
         for (name, rescale) in self.rescale.items():
@@ -184,7 +184,7 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
             found_match = True
     if not found_match: raise RuntimeError, 'did not find obname, procname = %s, %s' % (obsname, procname)
 
-    
+
 
 
 
@@ -221,7 +221,7 @@ Fit.fits = {}
 Fit.fits["mva_BDT"] = set([Fit.mu_mva_BDT, Fit.ele_mva_BDT])
 Fit.fits["eta_lj"] = set([Fit.mu_eta_lj, Fit.ele_eta_lj])
 Fit.fits["C"] = set([Fit.ele_C])
-Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj], Fit.mu_C)
+Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj, Fit.mu_C])
 Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_mva_BDT_qcd_0, Fit.ele_mva_BDT_qcd_0_5, Fit.ele_mva_BDT_qcd_1_0, Fit.ele_mva_BDT_qcd_1_5, Fit.ele_mva_BDT_qcd_2_0, Fit.ele_C])
 
 Fit.all_fits = deepcopy(Fit.fits["mu"])

@@ -19,7 +19,6 @@ from plots.common.histogram import calc_int_err
 from plots.common.utils import lumi_textbox
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts
-from plots.fit_scale_factors import fitpars
 from plots.common.cross_sections import lumis
 import argparse
 
@@ -81,6 +80,8 @@ def post_normalize(hist):
     for i in range(1, hn.nbins()+1):
         hn.SetBinContent(i, hn.GetBinContent(i) / hn.GetBinWidth(i))
         hn.SetBinError(i, hn.GetBinError(i) / hn.GetBinWidth(i))
+        if hn.GetBinContent(i)<0:
+            hn.SetBinContent(i, 0)
     return hn
 
 def asymmetry(hist, center):
@@ -108,6 +109,10 @@ def asymmetry(hist, center):
     asy = (high-low)/(low+high)
     return asy
 
+
+fitpars = {}
+fitpars['mu'] = 1.03
+fitpars['ele'] = 0.95
 
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
@@ -138,7 +143,9 @@ if __name__=="__main__":
     def get_posterior(fn):
         logger.info("Loading pseudoexperiments from file %s" % fn)
         fi = ROOT.TFile(fn)
+        fi.ls()
         t = fi.Get("unfolded")
+        print "Tree:", t
 
         #Make a histogram with a nonspecific binning just to have a memory address
         hi = ROOT.TH1D()
@@ -225,7 +232,7 @@ if __name__=="__main__":
     htrue.SetTitle("generated")
 
     #Scale to the final fit
-    htrue.Scale(fitpars['final_2j1t_mva'][lep][0][1])
+    htrue.Scale(fitpars[lep])
 
     #Normalize to same area
     #htrue.Scale(data_post.Integral() / htrue.Integral())
