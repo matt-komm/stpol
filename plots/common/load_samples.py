@@ -251,6 +251,8 @@ def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
     filename += ("_mt_%s_plus.txt" % mtmetcut)
     f = open('/'.join([datadir, filename]), 'r')
     sf = float(f.readline().split()[0])
+    print "QCD SF", sf
+    return sf
 
 def change_to_mc(file_name):
     path = file_name.split("/")[:-1]
