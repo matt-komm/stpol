@@ -1,3 +1,5 @@
+from plots.common.utils import escape
+from plots.common.utils import NestedDict
 
 class Cut:
     def __init__(self, cut_str):
@@ -11,16 +13,36 @@ class Cut:
         return Cut(cut_str)
 
     def __repr__(self):
-        return "<Cut(%s)>" % '('+self.cut_str+')'
+        return "<Cut(%s)>" % self.cut_str
 
     def __str__(self):
         return '('+self.cut_str+')'
 
+class SystematicException(Exception):
+    def __init__(self, syst):
+        self.msg = "Incorrect systematic specified: " + str(syst)
+class ChannelException(Exception):
+    def __init__(self, chan):
+        self.msg = "Incorrect lepton channel: " + str(chan)
+
+#FIXME: Find a better way than static methods
+#FIXME: THIS IS CLASS HORRIBLE!!!!
 class Cuts:
     hlt_isomu = Cut("(HLT_IsoMu24_eta2p1_v11 == 1 || HLT_IsoMu24_eta2p1_v12 == 1 || HLT_IsoMu24_eta2p1_v13 == 1 || HLT_IsoMu24_eta2p1_v14 == 1 || HLT_IsoMu24_eta2p1_v15 == 1 || HLT_IsoMu24_eta2p1_v16 == 1  || HLT_IsoMu24_eta2p1_v17 == 1)")
     hlt_isoele = Cut("( (HLT_Ele27_WP80_v10 ==1) || (HLT_Ele27_WP80_v11 == 1) || (HLT_Ele27_WP80_v9==1) || (HLT_Ele27_WP80_v8==1) )")
     eta_lj = Cut("abs(eta_lj) > 2.5")
-    mt_mu = Cut("mt_mu > 50")
+
+    @staticmethod    
+    def mt_mu(syst="nominal"):
+        if syst == "nominal":
+            return Cut("mt_mu > 50")
+        elif syst == "up":
+            return Cut("mt_mu > 70")   
+        elif syst == "down":
+            return Cut("mt_mu > 30")
+        raise SystematicException(syst)
+
+    #mt_mu = Cut("mt_mu > 50")
     rms_lj = Cut("rms_lj < 0.025")
     eta_jet = Cut("abs(eta_lj) < 4.5")*Cut("abs(eta_bj) < 4.5")
     pt_jet = Cut("pt_lj > 40")*Cut("pt_bj > 40")
@@ -28,14 +50,45 @@ class Cuts:
     one_muon = Cut("n_muons==1 && n_eles==0")
     one_electron = Cut("n_muons==0 && n_eles==1")
     lepton_veto = Cut("n_veto_mu==0 && n_veto_ele==0")
+
     electron_iso = Cut("el_mva > 0.9 & el_reliso < 0.1")
+
     mu_antiiso = Cut("mu_iso>0.2 && mu_iso<0.5")
     mu_antiiso_up = Cut("mu_iso>0.2 && mu_iso<0.4")
     mu_antiiso_down = Cut("mu_iso>0.3 && mu_iso<0.5")
+
     electron_antiiso = Cut("el_iso > 0.15 && el_iso < 0.5")
     electron_antiiso_down = Cut("el_iso > 0.15 && el_iso < 0.45")
     electron_antiiso_up = Cut("el_iso > 0.165 && el_iso < 0.5")
-    met = Cut('met > 45')
+
+    #MVA variable names
+    mva_vars = {}
+    mva_vars['ele'] = 'mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj'
+    mva_vars['mu'] = 'mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj'
+    mva_vars_qcd = {}
+    mva_vars_qcd['ele']='mva_anti_QCD_MVA'
+    mva_vars_qcd['mu']='mva_anti_QCD_MVA'
+
+    #MVA working points
+    #FIXME: put a reference to where they came from
+    mva_wps = NestedDict()
+    mva_wps['bdt']['mu']['loose'] = 0.06
+    mva_wps['bdt']['mu']['tight'] = 0.6
+    mva_wps['bdt']['ele']['loose'] = 0.13
+    mva_wps['bdt']['ele']['tight'] = 0.6
+    mva_wps['bdt']['mu_qcd']=0.97
+    mva_wps['bdt']['ele_qcd']=0.74
+    mva_wps = mva_wps.as_dict()
+    
+    @staticmethod
+    def met(syst="nominal"):
+        if syst=="nominal":
+            return Cut("met>45")
+        elif syst=="up":
+            return Cut("met>60")
+        elif syst=="down":
+            return Cut("met<30")
+
     no_cut = Cut("1")
 
     @staticmethod
@@ -45,7 +98,7 @@ class Cuts:
         elif lep=="ele":
             return Cut("abs(true_lepton_pdgId)==11")
         else:
-            raise ValueError("Incorrect lepton type %s" % lep)
+            raise ChannelException(lep)
 
     @staticmethod
     def lepton(lepton):
@@ -53,11 +106,9 @@ class Cuts:
             cut = Cuts.one_muon*Cuts.lepton_veto
         elif lepton=="ele":
             cut = Cuts.one_electron*Cuts.lepton_veto
+        else:
+            raise ChannelException(lepton)
         return cut
-
-    @staticmethod
-    def mt_or_met(lepton, mtcut=None):
-        return Cuts.metmt(lepton, mtcut)
 
     @staticmethod
     def n_jets(n):
@@ -70,16 +121,7 @@ class Cuts:
         elif lepton=="ele":
             return Cuts.hlt_isoele
         else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
-
-    @staticmethod
-    def hlt(lepton):
-        if lepton == "mu":
-            return Cuts.hlt_isomu
-        elif lepton == "ele":
-            return Cuts.hlt_isoele
-        else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
+            raise ChannelException(lepton)
 
     @staticmethod
     def antiiso(lepton):
@@ -97,7 +139,7 @@ class Cuts:
         elif lepton == "ele":
             return Cuts.electron_antiiso_down
         else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
+            raise ChannelException(lepton)
 
     @staticmethod
     def antiiso_up(lepton):
@@ -106,9 +148,8 @@ class Cuts:
         elif lepton == "ele":
             return Cuts.electron_antiiso_up
         else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
+            raise ChannelException(lepton)
 
-    
     @staticmethod
     def deltaR(x):
         return Cut("deltaR_bj>{0} && deltaR_lj>{0}".format(x))
@@ -118,20 +159,20 @@ class Cuts:
         return Cut("n_tags == %d" % int(n))
 
     @staticmethod
-    def metmt(lepton, mtcut=None):
-        if mtcut is not None:
+    def metmt(lepton, mtcut_value=None):
+        if mtcut_value is not None:
             if lepton=="mu":
-                return Cut("mt_mu>%s" % mtcut)
+                return Cut("mt_mu>%s" % mtcut_value)
             elif lepton=="ele":
-                return Cut("met>%s" % mtcut)
+                return Cut("met>%s" % mtcut_value)
             else:
-                raise ValueError("lepton must be mu or ele:%s" % lepton)
+                raise ChannelException(lepton)
         if lepton=="mu":
-            return Cuts.mt_mu
+            return Cuts.mt_mu()
         elif lepton=="ele":
-            return Cuts.met
+            return Cuts.met()
         else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
+            raise ChannelException(lepton)
     
     @staticmethod
     def single_lepton(lepton):
@@ -140,12 +181,10 @@ class Cuts:
         elif lepton=="ele":
             return Cuts.one_electron*Cuts.lepton_veto
         else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
+            raise ChannelException(lepton)
 
     @staticmethod
     def final_jet(n, lepton="mu"):
-        if lepton not in ["mu", "ele"]:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
         return Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton)*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
         
     @staticmethod
@@ -155,6 +194,11 @@ class Cuts:
         else:
             return Cut("%s >= %s" % (mva_var, cut))    
 
+    ############################
+    #          FIXME           #
+    ############################
+    #Is there really no way to generate this programmatically?
+    #PLEASE TRY, because this is NOT maintainable!
     @staticmethod
     def mva_iso(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
@@ -204,16 +248,6 @@ class Cuts:
         return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)
 
     @staticmethod
-    def final_jet(n, lepton="mu"):
-        if lepton=="mu":
-            cut = Cuts.one_muon*Cuts.lepton_veto
-        elif lepton=="ele":
-            cut = Cuts.one_electron*Cuts.lepton_veto
-        else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
-
-        return cut*Cuts.metmt(lepton)*Cuts.rms_lj*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
-    @staticmethod
     def final(n, m, lepton="mu"):
         return Cuts.final_jet(n, lepton)*Cuts.n_tags(m)
 
@@ -223,7 +257,11 @@ class Cuts:
 
     @staticmethod
     def final_iso(lepton="mu", nj=2, nb=1):
-        return Cuts.eta_fit(lepton, nj, nb) * Cuts.eta_lj 
+        return Cuts.eta_fit(lepton, nj, nb) * Cuts.eta_lj
+
+    ############################
+    #         END FIXME        #
+    ############################
 
 
     Wbb = Cut("wjets_flavour_classification0 == 0")
@@ -245,12 +283,16 @@ class Cuts:
     W_light = Cut("wjets_flavour_classification1 == 1")
 
 class Weight:
-    def __init__(self, weight_str):
+    def __init__(self, weight_str, name=None):
+        if not name:
+            self.name = escape(weight_str)
+        else:
+            self.name = name
         self.weight_str = weight_str
 
     def __mul__(self, other):
         weight_str = '('+self.weight_str+') * ('+other.weight_str+')'
-        return Weight(weight_str)
+        return Weight(weight_str, "__".join([self.name, other.name]))
     
     def __sub__(self, other):
         weight_str = '('+self.weight_str+' - '+other.weight_str+')'
@@ -259,7 +301,11 @@ class Weight:
     def __str__(self):
         return self.weight_str
 
+    def __repr__(self):
+        return "<Weight(%s)>" % self.weight_str
+
 class Weights:
+    no_weight = Weight("1.0")
     @staticmethod
     def total(lepton, systematic="nominal"):
 
@@ -276,8 +322,14 @@ class Weights:
         return w
 
     @staticmethod
-    def pu():
-        return Weight("pu_weight")
+    def pu(systematic="nominal"):
+        if systematic=="nominal":
+            return Weight("pu_weight")
+        elif systematic=="up":
+            return Weight("pu_weight_up")
+        elif systematic=="down":
+            return Weight("pu_weight_down")
+        assert(False)
 
     @staticmethod
     def b_weight(systematic="nominal", sys_type=""):
@@ -371,9 +423,52 @@ class Weights:
     def total_weight(lepton):
         return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight()
 
+
+    muon_sel = dict()
+    muon_sel["id"] = (
+        Weight("muon_IDWeight"), Weight("muon_IDWeight_up"), Weight("muon_IDWeight_down")
+    )   
+    muon_sel["trigger"] = (
+        Weight("muon_TriggerWeight"), Weight("muon_TriggerWeight_up"), Weight("muon_TriggerWeight_down")
+    )
+    muon_sel["iso"] = (
+        Weight("muon_IsoWeight"), Weight("muon_IsoWeight_up"), Weight("muon_IsoWeight_down")
+    )
+
+    electron_sel = dict()
+    electron_sel["id"] = (
+        Weight("electron_IDWeight"), Weight("electron_IDWeight_up"), Weight("electron_IDWeight_down")
+    )   
+    electron_sel["trigger"] = (
+        Weight("electron_TriggerWeight"), Weight("electron_TriggerWeight_up"), Weight("electron_TriggerWeight_down")
+    )
+
+
+    pu_syst = (
+        Weight("pu_weight"), Weight("pu_weight_up"), Weight("pu_weight_down")
+    )
+
+    wjets_yield_syst = (
+        Weight("wjets_mg_flavour_flat_weight"), Weight("wjets_mg_flavour_flat_weight_up"), Weight("wjets_mg_flavour_flat_weight_down"),
+    )
+
+    wjets_shape_syst = (
+        Weight("wjets_mg_flavour_shape_weight"), Weight("wjets_mg_flavour_shape_weight_up"), Weight("wjets_mg_flavour_shape_weight_down"),
+    )
+
+    wjets_btag_syst = (
+        Weight("b_weight_nominal"), Weight("b_weight_nominal_BCup"), Weight("b_weight_nominal_BCdown"), Weight("b_weight_nominal_Lup"), Weight("b_weight_nominal_Ldown"), 
+    )
+
+
+class Var:
+    def __init__(self, varfn, binning):
+        self.varfn = varfn
+        self.binning = binning
+
+def mul(l):
+    return reduce(lambda x,y: x*y, l)
 flavour_scenarios = dict()
 flavour_scenarios[0] = ["Wbb", "Wcc", "Wbc", "WbX", "WcX", "WgX", "Wgg", "WXX"]
 flavour_scenarios[1] = ["W_heavy", "W_light"]
 flavour_scenarios[2] = ["W_HH", "W_Hl", "W_ll"]
-
-

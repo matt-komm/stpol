@@ -94,12 +94,16 @@ if __name__=="__main__":
     parser.add_argument('--var', default=None, help="Variable to fit on")
     parser.add_argument('--infile', default=None, help="The input file")
     #TODO
+    #FIXME: WHY is it necessary for the fitter to know the coupling?
     #parser.add_argument('--coupling', dest='coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
     #parser.add_argument('--asymmetry', dest='asymmetry', help="Asymmetry to reweight generated distribution to", default=None)
     args = parser.parse_args()
 
+    #If the input file is explicitly specified, just run a single fit on it
     if args.infile:
         fits = [Fit(args.infile.split(".root")[0])]
+
+    #Otherwise do some logic based on the input arguments (channel, path, var)
     else:
         if args.channel == None and args.var == None:
             fits = Fit.all_fits

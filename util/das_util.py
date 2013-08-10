@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+"""
+Performs operations programmatically using the das_cli.
+"""
 
 import das_cli
 import sys
@@ -10,6 +13,15 @@ import argparse
 import os
 
 def call_das_cli(*args):
+    """
+    Calls das_cli.py using the specified positional arguments.
+
+    Args:
+        *args: a positional list of command line arguments for das_cli.py
+
+    Returns:
+        The return code from the das_cli.py main method.
+    """
     oldarg = deepcopy(sys.argv)
     sys.argv += args
     print sys.argv
@@ -19,12 +31,23 @@ def call_das_cli(*args):
 
 
 def local_ds_files(ds):
+    """
+    Gets the list of files corresponding to a published dataset
+    stored on cms_dbs_ph_analysis_02.
+
+    Args:
+        ds: the path to the published dataset, ending in /USER
+
+    Returns:
+        A list of the LFN-s of the dataset.
+    """
     tf = TemporaryFile()
     stdout = sys.stdout
     stdout.flush()
     sys.stdout = tf
     print "Query"
-    call_das_cli('--query=file dataset=%s instance=cms_dbs_ph_analysis_02' % ds, '--limit=0')
+    ret = call_das_cli('--query=file dataset=%s instance=cms_dbs_ph_analysis_02' % ds, '--limit=0')
+    print ret
     tf.flush()
     tf.seek(0)
     sys.stdout = stdout
@@ -32,22 +55,17 @@ def local_ds_files(ds):
     for li in tf.readlines():
         if "/store/" in li:
             fl.append(li.strip())
-        else:
-            print "+++",li
     tf.close()
     return fl
 
 
-
 if __name__=="__main__":
-
-
     parser = argparse.ArgumentParser(
         description='Gets the information on DAS datasets systematically'
     )
 
     parser.add_argument('infile', action='store',
-        help="The input file with the datasets"
+        help="The input file with the list datasets to be parsed by datasets/datasets2.py"
     )
     args = parser.parse_args()
 
