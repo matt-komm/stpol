@@ -1,6 +1,9 @@
 import ROOT
 from theta_auto import *
 from copy import deepcopy
+import logging
+logger = logging.getLogger("fit.py")
+logger.setLevel(logging.INFO)
 
 class Fit:
     def __init__(self
@@ -9,7 +12,7 @@ class Fit:
             , rates = {"tchan": inf,  "wzjets": inf, "other": 0.2}
             , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] 
             , correlations = [("wzjets", "top")]):
-        
+
         self.filename = filename
         self.name = name
         if name == None:
@@ -67,11 +70,18 @@ class Fit:
 
     # export sorted fit values
     def write_results(self, fitresults, cor, fit):
+
+        fname = os.path.join("results", self.name+".txt")
         try:
-            os.makedirs("results")
+            os.makedirs(
+                os.path.dirname(
+                    fname
+                )
+            )
         except:
             pass
-        f = open("results/"+self.name+".txt",'w')
+        logging.info("Writing fit results to file %s" % fname) 
+        f = open(fname, 'w')
         for (syst, prior) in Fit.getRateSystematics().items():
             st_type = self.get_type(fit, syst)
             if syst in fitresults.keys() or (syst == "tchan" and "beta_signal" in fitresults.keys()):
@@ -95,7 +105,8 @@ class Fit:
                 if (xlabel, ylabel) in self.correlations:
                     cor_value = cor.GetBinContent(i,j)
                     line = 'corr, %s, %s, %f\n' % (xlabel, ylabel, cor_value)
-                    f.write(line)        
+                    f.write(line)
+        f.write(self.filename + "\n")
         f.close()
 
     def makeCovMatrix(self, cov, pars):
@@ -107,7 +118,7 @@ class Fit:
         canvas = ROOT.TCanvas("c1","Covariance")
         h = ROOT.TH2D("covariance","covariance",n,0,n,n,0,n)
         cor = ROOT.TH2D("correlation","correlation",n,0,n,n,0,n)
-        
+
         for i in range(n):
             h.GetXaxis().SetBinLabel(i+1,pars[i]);
             h.GetYaxis().SetBinLabel(i+1,pars[i]);
@@ -139,7 +150,7 @@ class Fit:
         cov.Draw("COLZ TEXT")
         canvas.Print("plots/"+self.name+"/cov.png")
         canvas.Print("plots/"+self.name+"/cov.pdf")
-        
+
         canvas2 = ROOT.TCanvas("Correlation","Correlation")
         corr.Draw("COLZ TEXT")
         canvas2.Print("plots/"+self.name+"/corr.png")
@@ -162,7 +173,7 @@ class Fit:
     A rescaling for all the histograms containing the string
     """
     def addRescale(self, name, scale):
-        self.rescale[name] = scale    
+        self.rescale[name] = scale
 
     def transformHisto(self, h):
         for (name, rescale) in self.rescale.items():
@@ -186,9 +197,6 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
             model.get_coeff(o,p).add_factor('id', parameter = par_name)
             found_match = True
     if not found_match: raise RuntimeError, 'did not find obname, procname = %s, %s' % (obsname, procname)
-
-    
-
 
 
 Fit.mu_mva_BDT = Fit("mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj")

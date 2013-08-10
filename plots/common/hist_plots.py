@@ -135,6 +135,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
     height = kwargs.get("height", 0.3)
     syst_hists = kwargs.get("syst_hists", None)
     min_max = kwargs.get("min_max", (-0.2, 0.2))
+    syst_fill = kwargs.get("syst_fill", 0)
 
     p2 = ROOT.TPad("p2", "p2", 0, 0, 1, height)
     #p2.SetLeftMargin(height / p2.GetWNDC());
@@ -196,7 +197,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
             hr.Add(hist_data, -1)
             hr.Divide(hist_data)
 
-            hr.SetFillStyle(0)
+            hr.SetFillStyle(syst_fill)
             hr.SetFillColor(ROOT.kGray)
             hr.SetLineColor(ROOT.kGray)
 

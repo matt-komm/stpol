@@ -13,6 +13,23 @@ logger.debug('Importing rootpy...')
 from rootpy.plotting.hist import Hist, Hist2D
 
 
+class PatternDict(OrderedDict):
+    def __getitem__(self, k):
+        pat = re.compile(k)
+        ret = []
+        for key in self.keys():
+            m = pat.match(key)
+            if not m:
+                continue
+            if len(m.groups())>0:
+                ret.append((m.groups(), dict.__getitem__(self, key)))
+            else:
+                ret.append(dict.__getitem__(self, key))
+        if len(ret)==1:
+            ret = ret[0]
+        return ret
+
+
 class NestedDict(OrderedDict):
     def __missing__(self, key):
         self[key] = NestedDict()
@@ -226,11 +243,6 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
     logger.debug("merge_hists: input histograms %s" % str(hists_d))
 
     for merge_name, items in merge_groups.items():
-        # if name in merge_groups.keys():
-        #     merge_name=name
-        #     items=merge_groups[name]
-        # else:
-        #     continue
         logger.debug("Merging %s to %s" % (items, merge_name))
 
         matching_keys = []
@@ -250,19 +262,18 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
         out_d[merge_name].SetName(merge_name)
 
     out_d_ordered = OrderedDict()
+    
     for elem in order:
-        #pdb.set_trace()
         try:
             out_d_ordered[elem] = out_d.pop(elem)
             if hasattr(PhysicsProcess, merge_name):
-                out_d_ordered[elem].SetTitle(getattr(PhysicsProcess, elem).pretty_name)
+                out_d_ordered[elem].SetTitle(getattr(PhysicsProcess, merge_name).pretty_name)
         except KeyError: #We don't care if there was an element in the order which was not present in the merge output
             pass
+
+    #Put anything that was not in the order list simply to the end
     for k, v in out_d.items():
         out_d_ordered[k] = v
-    # if len(out_d_ordered.keys())!= len(merge_groups.keys()):
-    #     raise Exception("Ordered output does not contain all the merged keys")
-    #     pdb.set_trace()
 
     return out_d_ordered
 
