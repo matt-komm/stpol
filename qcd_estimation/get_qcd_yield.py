@@ -311,12 +311,16 @@ if __name__=="__main__":
             lowedge = fit.dataHisto.GetBinLowEdge(bin)
             y = hQCD.IntegralAndError(bin, n_bins+1, error)
             with open(ofdir + "/%s_no_MC_subtraction_mt_%i_plus.txt" % (cut.name, int(lowedge)), "w") as of:
-                qcd_sf = y / fit.orig_shape["qcd_no_mc_sub"].Integral(bin, n_bins+1)
+                qcd_sf = 0
+                if fit.orig_shape["qcd_no_mc_sub"].Integral(bin, n_bins+1) > 0:
+                    qcd_sf = y / fit.orig_shape["qcd_no_mc_sub"].Integral(bin, n_bins+1)
                 of.write("%f %f %f\n" % (qcd_sf, y, error[0]))
                 of.write("Iso data yield %f\n" % fit.dataHisto.Integral(bin, n_bins+1))
                 of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
             with open(ofdir + "/%s_mt_%i_plus.txt" % (cut.name, int(lowedge)), "w") as of:
-                qcd_sf = y / fit.orig_shape["qcd"].Integral(bin, n_bins+1)
+                qcd_sf = 0
+                if fit.orig_shape["qcd"].Integral(bin, n_bins+1) > 0:
+                    qcd_sf = y / fit.orig_shape["qcd"].Integral(bin, n_bins+1)
                 of.write("%f %f %f\n" % (qcd_sf, y, error[0]))
                 of.write("Iso data yield %f\n" % fit.dataHisto.Integral(bin, n_bins+1))
                 of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
