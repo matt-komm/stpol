@@ -235,7 +235,7 @@ def get_sampnames_for_components(sampnames, components, tchan, wzjets, top, qcd)
 
 
 def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
-    datadir = "/".join(("$STPOL_DIR", "qcd_estimation", "fitted", channel))
+    datadir = "/".join((os.environ["STPOL_DIR"], "qcd_estimation", "fitted", channel))
     if mtmetcut==None:
         if channel == "mu":
             mtmetcut = "50"
@@ -249,32 +249,8 @@ def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
     else:
         filename = "2j1t"
     filename += ("_mt_%s_plus.txt" % mtmetcut)
-    f = open(filename, 'r')
+    f = open('/'.join([datadir, filename]), 'r')
     sf = float(f.readline().split()[0])
-    print "QCD sf",sf
-    return sf
-    if channel == "mu":
-        if var == "cos_theta":
-            if mva is None:
-                qcd_scale = 0.886077155677
-            else:
-                qcd_scale = 7.19018812321
-        elif var in ["abs(eta_lj)"]:
-            qcd_scale = 5.14037558883
-        elif var == "C" or var.startswith("mva"): #with mt cut
-            qcd_scale = 7.19018812321
-    elif channel == "ele":
-        if var == "cos_theta":    
-            if mva is None:
-                qcd_scale = 0.487353193424
-            else:
-                qcd_scale = 5.01953827556
-        elif var == "abs(eta_lj)":
-            qcd_scale = 2.88873446628
-        elif var == "C" or var.startswith("mva"): #with mt cut
-            qcd_scale = 5.01953827556
-    #print "QCD SCALE",qcd_scale
-    return qcd_scale
 
 def change_to_mc(file_name):
     path = file_name.split("/")[:-1]
