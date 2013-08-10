@@ -524,11 +524,15 @@ if __name__=="__main__":
         for wn, s in weights_var_by_one:
             j = mul(s)
             wtot.append((wn, j))
-        for name, j in wtot:
+
+        for name, j in wtot[]:
             syst = WeightNode(
                 j, "weight__" + name + "__" + lepton,
                 [], [],
-                filter_funcs=[lambda x,lepton=lepton: is_chan(x, lepton)]
+                filter_funcs=[
+                    lambda x,lepton=lepton: is_chan(x, lepton), #Apply the weights separately for the lepton channels
+                    lambda x: "/mc/" in x[0] #Apply only in MC
+                ] + ([lambda x: "/nominal/" in x[0]] if name != "nominal" else []) #And variate only if we're using the nominal samples.
             )
             syst_weights.append(syst)
 
@@ -536,7 +540,7 @@ if __name__=="__main__":
     final_plot_descs = dict()
     final_plot_descs['all'] = [
         ("cos_theta", "cos_theta", [60, -1, 1]),
-        #("true_cos_theta", "true_cos_theta", [20, -1, 1]),
+        ("true_cos_theta", "true_cos_theta", [60, -1, 1]),
         ("abs_eta_lj", "abs(eta_lj)", [60, 2.5, 5]),
         #("eta_lj", "eta_lj", [40, -5, 5]),
     ]
