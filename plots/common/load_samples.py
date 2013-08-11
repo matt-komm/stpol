@@ -178,8 +178,6 @@ def get_sampnames_for_components(sampnames, components, tchan, wzjets, top, qcd)
     other = []
     for entry in sampnames:
         (a,b) = entry
-        print entry, ":", a, b
-        
         if a in ["top", "qcd"] and components == 3:
             other.extend(b)
         elif a == "top":
