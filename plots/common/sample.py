@@ -224,7 +224,6 @@ class Sample:
         ROOT.gROOT.cd()
         ROOT.TH2F.AddDirectory(True)
         if plot_range_x and plot_range_y:
-            print "PR", plot_range_x, ":", plot_range_y
             hist = Hist2D(plot_range_x[0], plot_range_x[1], plot_range_x[2], plot_range_y[0], plot_range_y[1], plot_range_y[2], type=dtype, name="htemp")
         elif binning_x is not None and binning_y is not None:
             hist = Hist2D(binning_x, binning_y, type=dtype)
