@@ -1,4 +1,4 @@
-import ROOT
+from ROOT import TH1, TH2, TFile
 from binnings import *
 from plots.common.utils import get_file_list, PhysicsProcess, merge_hists, mkdir_p, setErrors
 from plots.common.sample import Sample
@@ -254,7 +254,7 @@ def rebin(cuts, weight, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "m
     #print proc, "cos_theta", mva_cut, coupling, tag
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling, asymmetry)])
     mkdir_p(outdir)
-    fo = ROOT.TFile(outdir+"/rebinned.root","RECREATE")
+    fo = TFile(outdir+"/rebinned.root","RECREATE")
     
     # histograms
     #binning_x=(bins_x, numpy.array(bin_list_x))
@@ -305,14 +305,14 @@ def rebin(cuts, weight, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "m
 
 def efficiency_norebin(cuts, weight, binning_x, indir, proc="mu", mva_cut = None, coupling="powheg", asymmetry=None):
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling, asymmetry)])
-    fo = ROOT.TFile(outdir+"/efficiency.root","RECREATE")
+    fo = TFile(outdir+"/efficiency.root","RECREATE")
     fo.cd()
     
     
 
 def efficiency(cuts, weight, binning_x, indir, proc="mu", mva_cut = None, coupling="powheg", asymmetry=None):
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling, asymmetry)])
-    fo = ROOT.TFile(outdir+"/efficiency.root","RECREATE")
+    fo = TFile(outdir+"/efficiency.root","RECREATE")
     fo.cd()
     
     ROOT.TH1.SetDefaultSumw2(True)
@@ -470,7 +470,7 @@ if __name__ == "__main__":
     #rebin(cut_str, weight, bins_gen, bin_list_gen, bins_rec, bin_list_rec, indir, args.channel, args.mva_cut, args.coupling, args.asymmetry)
     no_rebin(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.mva_cut, args.coupling, args.asymmetry)
     #efficiency(cut_str, weight, bin_list_gen, indir, args.channel, args.mva_cut, args.coupling, args.asymmetry)
-    efficiency_norebin(cut_str, weight, bins_gen, indir, args.channel, args.mva_cut, args.coupling, args.asymmetry)
+    #efficiency_norebin(cut_str, weight, bins_gen, indir, args.channel, args.mva_cut, args.coupling, args.asymmetry)
     #make_histos(bin_list_rec, cut_str, cut_str_antiiso, indir, args.channel, args.mva_cut, args.coupling, args.asymmetry)
     make_histos_norebin(bins_rec, cut_str, cut_str_antiiso, indir, args.channel, args.mva_cut, args.coupling, args.asymmetry)
     print "finished"
