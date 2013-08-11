@@ -1,4 +1,4 @@
-import ROOT
+#from ROOT
 import os
 from plots.common.sample import Sample
 from plots.common.utils import mkdir_p
@@ -94,7 +94,7 @@ def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, 
     weight_str = weight
     #print hname, samples
     samp = samples[sampn]
-    outfile = ROOT.TFile(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
+    outfile = File(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
     if sn=="DATA":
         weight_str = "1"
     if var == "eta_lj":
