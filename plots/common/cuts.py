@@ -185,7 +185,7 @@ class Cuts:
 
     @staticmethod
     def final_jet(n, lepton="mu"):
-        return Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton)*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
+        return Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton)*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
         
     @staticmethod
     def mva_cut(cut, mva_var = "mva_BDT"):
@@ -203,49 +203,49 @@ class Cuts:
     def mva_iso(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.mt_or_met(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
 
     @staticmethod
     def mva_antiiso(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)*Cuts.mt_or_met(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
 
     @staticmethod
     def mva_antiiso_down(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)*Cuts.mt_or_met(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
 
     @staticmethod
     def mva_antiiso_up(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)*Cuts.mt_or_met(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
 
     @staticmethod
     def eta_fit(lepton, nj=2, nb=1, mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.top_mass_sig
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.top_mass_sig
 
     @staticmethod
     def eta_fit_antiiso(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)
 
     @staticmethod
     def eta_fit_antiiso_down(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)
 
     @staticmethod
     def eta_fit_antiiso_up(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)
 
     @staticmethod
     def final(n, m, lepton="mu"):
