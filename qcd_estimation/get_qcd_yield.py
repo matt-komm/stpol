@@ -30,33 +30,15 @@ except Exception as e:
     sys.stderr.write("You need to run `source $STPOL_DIR/setenv.sh` to use the custom python libraries\n")
     raise e
 
-def get_yield_withMT(histo, mtMinValue):
-    bin1 = histo.FindBin(mtMinValue)
-    bin2 = histo.GetNbinsX() + 1
-    #print hQCD.Integral(), y.Integral()
-    error = array('d',[0.])
-    y = histo.IntegralAndError(bin1,bin2,error)
-    return y
-
 def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     infile = "fits/"+var.shortName+"_fit_"+filename+".root"
     f = TFile(infile)
-    #QCDRATE = fit_result.qcd
     hQCD = f.Get(var.shortName+"__qcd")
     hQCDShapeOrig = dataGroup.getHistogram(var, "Nominal", "antiiso")
-    #print "QCD scale factor, no m_t cut:", hQCD.Integral()/fit_result.orig["qcd_no_mc_sub"], "from", fit_result.orig["qcd_no_mc_sub"], "to ", hQCD.Integral()
     hQCDShapeOrig.Scale(hQCD.Integral()/hQCDShapeOrig.Integral())
-    #print fit_result
     err = array('d',[0.])
-    #hQCD.SetDirectory(0)
-    #fit_result.isoCut = hQCD.Clone()
-    #fit_result.qcd_histo = hQCD.Clone()
-    print "ft",fit_result
-    print hQCD
-    print "QCD", fit_result.qcd_histo
     bin1 = hQCD.FindBin(mtMinValue)
     bin2 = hQCD.GetNbinsX() + 1
-    #print hQCD.Integral(), y.Integral()
     error = array('d',[0.])
     y = hQCD.IntegralAndError(bin1,bin2,error)
     #no error??
@@ -64,8 +46,6 @@ def get_yield(var, filename, cutMT, mtMinValue, fit_result, dataGroup):
     print "QCD yield from original shape:", hQCDShapeOrig.IntegralAndError(bin1,bin2,err), "+-",err, " - use only in fit regions not covering whole mT/MET"
     result = {}
     result["mt"] = (y, error[0])
-    #return (hQCD.Integral(6,20), hQCD.Integral(6,20)*(fit_result.qcd_uncert/fit_result.qcd))
-    
     print "QCD yield from original shape, no M_T/MET cut,", hQCDShapeOrig.IntegralAndError(0, 100, err), "+-",err, " - use only in fit regions not covering whole mT/MET"
     result["nomt"] = (fit_result.qcd, fit_result.qcd_uncert)
     return result
@@ -166,7 +146,7 @@ def get_qcd_yield_with_selection(cuts, cutMT=True, channel = "mu", base_path=(os
 
     #Open files
     if do_systematics:
-        systematics = ["Nominal", "En"]
+        systematics = ["Nominal", "En", "Res", "UnclusteredEn"]
     else:
         systematics = ["Nominal"]
 
@@ -249,7 +229,8 @@ if __name__=="__main__":
         dest='cuts', choices=cuts.keys(), required=False, default=None,
         help="The cut region to use in the fit", action='append')
     parser.add_argument('--path', dest='path', default=(os.environ["STPOL_DIR"] + "/step3_latest/"), required=False)
-    parser.add_argument('--doSystematics', action="store_true", default=False)
+    parser.add_argument('--doSystematics', action="store_true", default=True)
+    parser.add_argument('--noSystematics', dest="doSystematics", action="store_false")
     parser.add_argument('--doSystematicCuts', action="store_true", default=False, help="Various anti-iso regions etc.")
 
     args = parser.parse_args()
@@ -274,9 +255,7 @@ if __name__=="__main__":
 
 
     failed = []
-    print args.cuts
     for cutn in args.cuts:
-        print cutn
         cut = cuts[cutn]
         try:
             (results, fit) = get_qcd_yield_with_selection(cut, True, args.channel, base_path=args.path, do_systematics=args.doSystematics)
@@ -285,8 +264,6 @@ if __name__=="__main__":
             continue
         (y, error) = results["mt"]
         (y_nomtcut, error_nomtcut) = results["nomt"]
-        print "FT2", fit
-        print "QCD3", fit.qcd_histo
         qcd_sf = y/fit.orig["qcd_no_mc_sub"]
         qcd_sf_nomt = y_nomtcut/fit.orig["qcd_no_mc_sub_nomtcut"]
         
@@ -300,7 +277,6 @@ if __name__=="__main__":
         
         n_bins = fit.dataHisto.GetNbinsX()
     
-        print "n_bins", n_bins
         infile = "fits/"+fit.var.shortName+"_fit_"+cut.name+".root"
         f = TFile(infile)
         error = array('d',[0.])
@@ -323,28 +299,6 @@ if __name__=="__main__":
                     qcd_sf = y / fit.orig_shape["qcd"].Integral(bin, n_bins+1)
                 of.write("%f %f %f\n" % (qcd_sf, y, error[0]))
                 of.write("Iso data yield %f\n" % fit.dataHisto.Integral(bin, n_bins+1))
-                of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
-        """with open(ofdir + "/%s_nomtcut.txt" % cut.name, "w") as of:
-            of.write("%f %f %f\n" % (qcd_sf_nomt, y_nomtcut, error_nomtcut))
-            of.write("Iso data yield %f\n" % (fit.dataHisto.Integral()))
-            of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))"""
-
+                of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))        
     print "Failed to converge: ", str(failed)
-
-    # print "Selection: %s" % cut.name
-    # print "QCD yield in selected region: %.2f +- %.2f, ratio to template from ONLY data %.3f" % (y, error, y/fit.orig["qcd_no_mc_sub"])
-    # print "Total: QCD: %.2f +- %.2f, ratio to template from data %.3f" % (fit.qcd, fit.qcd_uncert, fit.qcd/fit.orig["qcd"])
-    # print "W+Jets: %.2f +- %.2f, ratio to template: %.2f" % (fit.wjets, fit.wjets_uncert, fit.wjets/fit.wjets_orig)
-    # print "Other MC: %.2f +- %.2f, ratio to template: %.2f" % (fit.nonqcd, fit.nonqcd_uncert, fit.nonqcd/fit.nonqcd_orig)
-
-    # print "Fit info:"
-    # print fit
-    # print "doMTCut=",args.mtcut
-    # print "cut=",args.cut
-
-    # #output to file
-    # of = open("QCD_yield_%s.txt" % args.cut, "w")
-    # of.write("%f %f" % (fit.qcd, fit.qcd_uncert))
-    # of.write("\n")
-    # of.close()
 
