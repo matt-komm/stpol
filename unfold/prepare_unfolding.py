@@ -160,15 +160,9 @@ def no_rebin(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None, c
         hist_gen = sample.drawHistogram(var_x, cuts, weight=weight, plot_range=bins_x)
         hist_gen.Scale(sample.lumiScaleFactor(lumi))
         hists_gen[sample.name] = hist_gen
-        print "int", hist_gen.Integral()
-        print "hist rescale", sample.lumiScaleFactor(lumi)
-        print "int2", hist_gen.Integral()
         
         hist_rec = sample.drawHistogram(var_y, cuts, weight=weight, plot_range=bins_y)
-        print "int", hist_rec.Integral()
         hist_rec.Scale(sample.lumiScaleFactor(lumi))
-        print "hist rescale", sample.lumiScaleFactor(lumi)
-        print "int2", hist_rec.Integral()
         
         hists_rec[sample.name] = hist_rec
     
@@ -212,14 +206,7 @@ def no_rebin(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None, c
         #hist_gen.Scale(sample.lumiScaleFactor(lumi))
         #hists_gen[sample.name] = hist_gen
         matrix = sample.drawHistogram2D(var_x, var_y, cuts, weight=weight, plot_range_x=bins_x, plot_range_y=bins_y)
-        print "mat int", matrix.Integral()        
-        print "mat x", matrix.ProjectionX().Integral()
-        print "mat y", matrix.ProjectionY().Integral()
         matrix.Scale(sample.lumiScaleFactor(lumi))
-        print "matrix rescale", sample.lumiScaleFactor(lumi)
-        print "mat int2", matrix.Integral()        
-        print "mat x", matrix.ProjectionX().Integral()
-        print "mat y", matrix.ProjectionY().Integral()
         matrices[sample.name] = matrix
 
     merged_matrix = merge_hists(matrices, merge_anomalous(proc, coupling)).values()[0]
