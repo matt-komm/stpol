@@ -9,10 +9,17 @@ import argparse
 from plot_fit import plot_fit
 
 logging.basicConfig(level=logging.INFO)
+"""
+Script for final fit
 
+The fit parameters are specified in fit.py
+The default shape uncertainties are ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"]  - other do not change the shape.
+The systematics which match in shape with the nominal should not be used for the fit as the fit might not converge. The are absorbed in the rate uncertainties.
+Check with $STPOL_DIR/final_fit/compare_template_shapes.py when adding new systematics-
+As a default, unconstrained prior rate uncertaintes are applied for signal and wzjets while "other" (top+qcd) gets a 20% gaussian uncertainty.
+By default, the output file will also contain the correlation between ("wzjets", "other"). Others can be added as needed.
+"""
 SIGNAL = 'tchan'
-
-
 def get_model(infile, fit):
     model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = fit.histofilter, transform_histo = fit.transformHisto)
     model.fill_histogram_zerobins()
@@ -93,10 +100,6 @@ if __name__=="__main__":
     parser.add_argument('--path', default="./")
     parser.add_argument('--var', default=None, help="Variable to fit on")
     parser.add_argument('--infile', default=None, help="The input file")
-    #TODO
-    #FIXME: WHY is it necessary for the fitter to know the coupling?
-    #parser.add_argument('--coupling', dest='coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
-    #parser.add_argument('--asymmetry', dest='asymmetry', help="Asymmetry to reweight generated distribution to", default=None)
     args = parser.parse_args()
 
     #If the input file is explicitly specified, just run a single fit on it
