@@ -6,42 +6,36 @@ from unfold.utils import asymmetry_weight
 from copy import deepcopy
 from rootpy.io import File
 
-def load_nominal_mc_samples(path, channel):
-    datadir = "/".join((path, channel, "mc", "iso", "nominal", "Jul15"))
+#Set as const right now.
+#If configurability needed in the future, do something with it
+COMPONENTS = 3
+
+def load_nominal_mc_samples(path, channel, iso):
+    datadir = "/".join((path, channel, "mc", iso, "nominal", "Jul15"))
     samples = Sample.fromDirectory(datadir, out_type="dict")
     return samples
 
 def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["STPOL_DIR"], "step3_latest")), coupling="powheg"):
-    #datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "iso", "nominal"))
-    
-    
     samples2 = None
     if systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
         datadir = "/".join((path, channel, "mc", "iso", systematic, "Jul15"))
     elif systematic != "nominal":
         datadir2 = "/".join((path, channel, "mc_syst", "iso", "SYST", "Jul15"))
-        #datadir2 = "/".join(("/home", "andres", "single_top", "stpol", "out", "step3_anomalous_clean", channel, "syst_07_28", "iso", "SYST"))
-        #datadir2 = "/".join((path, channel, "mc_syst", "iso", "SYST", "Jul15"))
         datadir = "/".join((path, channel, "mc", "iso", "nominal", "Jul15"))
         samples2 = Sample.fromDirectory(datadir2, out_type="dict")
     else:
         datadir = "/".join((path, channel, "mc", "iso", systematic, "Jul15"))
         datadir2 = "/".join((path, channel, "mc_syst", "iso", "SYST", "Jul15"))
-        #datadir2 = "/".join(("/home", "andres", "single_top", "stpol", "out", "step3_anomalous_clean", channel, "syst_07_28", "iso", "SYST"))
-        #datadir2 = "/".join((path, channel, "mc_syst", "iso", "SYST", "Jul15"))
         samples2 = Sample.fromDirectory(datadir2, out_type="dict")
     samples = Sample.fromDirectory(datadir, out_type="dict")
     datadir_data = "/".join((path, channel, "data", "iso", "Jul15"))
+    datadir_data_Aug1 = "/".join((path, channel, "data", "iso", "Aug1"))
     samples.update(Sample.fromDirectory(datadir_data, out_type="dict"))
+    samples.update(Sample.fromDirectory(datadir_data_Aug1, out_type="dict"))
     if samples2 is not None:
         samples.update(samples2)
-    #print "__________"
-    #print samples
-    #print "__________"
     wzjets_other = ["DYJets", "WW", "WZ", "ZZ"]
     top = ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_FullLept", "TTJets_SemiLept"]
-
-    components = 3
 
     if coupling == "powheg":
         tchan = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]
@@ -56,12 +50,13 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
         samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
         samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
         samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-        #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
+        #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Aug1", "SingleMu_miss.root")))
         datasamp = ["SingleMu1", "SingleMu2", "SingleMu3"]#, "SingleMu4"]
         datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
     elif channel == "ele":
         samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
         samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
+        #samples["SingleEle3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Aug1", "SingleEle_miss.root")))
         datasamp = ["SingleEle1", "SingleEle2"]
         datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         
@@ -165,7 +160,7 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
             ("wzjets", wzjets),
         )
     
-    sampnames_new = get_sampnames_for_components(sampnames, components, tchan, wzjets_regular, top, datasamp_aiso)
+    sampnames_new = get_sampnames_for_components(sampnames, COMPONENTS, tchan, wzjets_regular, top, datasamp_aiso)
     return (samples, sampnames_new)
 
 def get_sampnames_for_components(sampnames, components, tchan, wzjets, top, qcd):
@@ -249,7 +244,6 @@ def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
     filename += ("_mt_%s_plus.txt" % mtmetcut)
     f = open('/'.join([datadir, filename]), 'r')
     sf = float(f.readline().split()[0])
-    print "QCD SF", sf
     return sf
 
 def change_to_mc(file_name):
@@ -263,10 +257,10 @@ def change_to_mc(file_name):
 def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, coupling, var="abs(eta_lj)", plot_range=None, binning=None, asymmetry=None, qcd_extra=None, mtmetcut=None):
     lumi=lumi_iso[channel]
     weight_str = str(weight)
-    
+    weight_str = "1"
     if sample_name not in ["DATA", "qcd"] and not sample.name.startswith("Single"):
         if sample.name.endswith("ToLeptons") and asymmetry is not None:
-            weight_str = asymmetry_weight(asymmetry, weight)
+            weight_str = "("+str(weight)+") * "+str(Weights.asymmetry_weight(asymmetry))+")"
         if plot_range is not None:
             hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, plot_range=plot_range)
         elif binning is not None:
@@ -285,14 +279,16 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
         if plot_range is not None:
             hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", plot_range=plot_range)
             path = change_to_mc(sample.file_name)
-            nominals = load_nominal_mc_samples(path, channel)            
-            for s in nominals:
+            nominals = load_nominal_mc_samples(path, channel, "antiiso")
+            for s in nominals:      #subtract MC
                 h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, plot_range=plot_range)
+                h.Scale(sample.lumiScaleFactor(lumi))
                 hist.Add(h, -1)
             if qcd_extra is not None: #iso down or up - get nominal integral
                 hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", plot_range=plot_range)
                 for s in nominals:
                     h1 = sample.drawHistogram(var, qcd_extra, weight=weight, plot_range=plot_range)
+                    h1.Scale(sample.lumiScaleFactor(lumi))
                     hist_nomi.Add(h1, -1)
                 if hist.Integral() > 0:
                     hist.Scale(hist_nomi.Integral()/hist.Integral())
@@ -300,14 +296,17 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
         elif binning is not None:
             hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", binning=binning)
             path = change_to_mc(sample.file_name)
-            nominals = load_nominal_mc_samples(path, channel)            
+            nominals = load_nominal_mc_samples(path, channel, "antiiso")            
+            print "before subtraction", hist.Integral()            
             for s in nominals:
                 h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, binning=binning)
                 hist.Add(h, -1)
+            print "after subtraction", hist.Integral()
             if qcd_extra is not None: #iso down or up - get nominal integral
                 hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", plot_range=plot_range)
                 for s in nominals:
                     h1 = sample.drawHistogram(var, qcd_extra, weight=weight, plot_range=plot_range)
+                    h1.Scale(sample.lumiScaleFactor(lumi))
                     hist_nomi.Add(h1, -1)
                 if hist.Integral() > 0:
                     hist.Scale(hist_nomi.Integral()/hist.Integral())
