@@ -525,7 +525,7 @@ if __name__=="__main__":
             j = mul(s)
             wtot.append((wn, j))
 
-        for name, j in wtot[]:
+        for name, j in wtot:
             syst = WeightNode(
                 j, "weight__" + name + "__" + lepton,
                 [], [],

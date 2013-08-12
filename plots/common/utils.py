@@ -136,6 +136,29 @@ class PhysicsProcess:
             except KeyError: #QCD does not have a defined PhysicsProcess but that's fine because we take it separately
                 logger.warning("Process %s not in the process dict %s" % (procname, str(processes_d.keys())))
 
+    def getFiles(self, path):
+        """
+        Returns a list of files that match this process according to its subprocess patterns.
+
+        Args:
+            path: a path in the filesystem to recursively search for matches.
+
+        Returns:
+            a list of matching file names with full path.
+        """
+        pats = [re.compile(sp) for sp in self.subprocesses]
+        out = []
+        for root, dirs, items in os.path.walk(path):
+            for it in items:
+                if not it.endswith(".root"):
+                    continue
+                pname = it.split(".root")[0]
+                for pat in pats:
+                    if pat.match(pname):
+                        fn = os.path.join(root, it)
+                        out.append(fn)
+        return out
+
     systematic = {}
 
 PhysicsProcess.SingleMu = PhysicsProcess("SingleMu", ["SingleMu.*"], pretty_name="data")
