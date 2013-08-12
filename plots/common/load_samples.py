@@ -1,12 +1,18 @@
 import os
 from plots.common.sample import Sample
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
-from plots.common.utils import *
-from unfold.prepare_unfolding import asymmetry_weight
+from plots.common.utils import setErrors
+from unfold.utils import asymmetry_weight
+from copy import deepcopy
+from rootpy.io import File
+
+def load_nominal_mc_samples(path, channel):
+    datadir = "/".join((path, channel, "mc", "iso", "nominal", "Jul15"))
+    samples = Sample.fromDirectory(datadir, out_type="dict")
+    return samples
 
 def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["STPOL_DIR"], "step3_latest")), coupling="powheg"):
     #datadir = "/".join((os.environ["STPOL_DIR"], "step3_latest", "mu", "iso", "nominal"))
-    #FIXME: make independent of machine (no reference to specific directories like out_step3_06_01)
     
     
     samples2 = None
@@ -32,10 +38,10 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
     #print "__________"
     #print samples
     #print "__________"
-    wzjets = ["DYJets", "WW", "WZ", "ZZ"]
+    wzjets_other = ["DYJets", "WW", "WZ", "ZZ"]
     top = ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_FullLept", "TTJets_SemiLept"]
 
-    
+    components = 3
 
     if coupling == "powheg":
         tchan = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]
@@ -46,93 +52,59 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
     elif coupling == "anomWtb-unphys":
         tchan = ["TToBMuNu_anomWtb-unphys_t-channel", "TToBENu_anomWtb-unphys_t-channel", "TToBTauNu_anomWtb-unphys_t-channel"]
 
-    if systematic in "nominal":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp = ["SingleMu1", "SingleMu2", "SingleMu3"]#, "SingleMu4"]
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp = ["SingleEle1", "SingleEle2"]
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
+    if channel == "mu":
+        samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
+        samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
+        samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
+        #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
+        datasamp = ["SingleMu1", "SingleMu2", "SingleMu3"]#, "SingleMu4"]
+        datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
+    elif channel == "ele":
+        samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
+        samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
+        datasamp = ["SingleEle1", "SingleEle2"]
+        datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         
-        wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        other = wzjets
-        #other.extend(top)
-        #other.extend(datasamp_aiso)
+    wzjets = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
+    wzjets_regular = deepcopy(wzjets_other)
+    wzjets_regular.extend(wzjets)
+    
+    if systematic in "nominal":
         sampnames = (
             ("tchan", tchan),
             ("top", top),
-            ("wzjets", wzjets),
-            #("other", other),
+            ("wzjets", wzjets_regular),
             ("DATA", datasamp),
             ("qcd", datasamp_aiso),
         )
 
+    elif systematic in ["iso__up", "iso__down"]:
+        sampnames = (
+            ("qcd", datasamp_aiso),
+            ("top", top),
+        )
+
     elif systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
-        wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        other = wzjets
-        #other.extend(top)
-        #other.extend(datasamp_aiso)
         sampnames = (
             ("tchan", tchan),
-            #("other", other),
+            ("qcd", datasamp_aiso),
             ("top", top),
-            ("wzjets", wzjets),
+            ("wzjets", wzjets_regular),
         )
     elif systematic == "mass__up":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
-        #other = wzjets
-        #other.extend(["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass178_5"])
-        #other.extend(datasamp_aiso)
         wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
         sampnames = (
             ("tchan", ["TToLeptons_t-channel_mass166_5", "TbarToLeptons_t-channel_mass178_5"]),
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass178_5"]),
-            #("other", other),
+            ("qcd", datasamp_aiso),
         )
     elif systematic == "mass__down":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
-        wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        other = wzjets
         #other.extend(["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass166_5"])
         #other.extend(datasamp_aiso)
         sampnames = (
             ("tchan", ["TToLeptons_t-channel_mass166_5", "TbarToLeptons_t-channel_mass166_5"]),
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass166_5"]),
-            #("other", other),
+            ("qcd", datasamp_aiso),
         )
     elif systematic == "tchan_scale__up":
         sampnames = (
@@ -144,186 +116,154 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
             ("tchan", ["T_t_ToLeptons_scaledown", "Tbar_t_ToLeptons_scaledown"]),
         )
     elif systematic == "ttbar_scale__up":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        other = wzjets
-        #other.extend(["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_scaleup"])
-        #other.extend(datasamp_aiso)
         sampnames = (
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_scaleup"]),
-            #("other", other),
+            ("qcd", datasamp_aiso),
         )
 
     elif systematic == "ttbar_scale__down":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        other = wzjets
-        #other.extend(["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_scaledown"])
-        #other.extend(datasamp_aiso)
         sampnames = (
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_scaledown"]),
-            #("other", other),
+            ("qcd", datasamp_aiso),
         )
 
     elif systematic == "ttbar_matching__up":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
-        wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        #other = wzjets
-        #other.extend(["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_matchingup"])
         sampnames = (
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_matchingup"]),
-            #("other", other),
+            ("qcd", datasamp_aiso),
         )
 
     elif systematic == "ttbar_matching__down":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
         other = wzjets
-        #other.extend(["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_matchingdown"])
-        #other.extend(datasamp_aiso)
         sampnames = (
             ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_matchingdown"]),
-            #("other", other),
+            ("qcd", datasamp_aiso),
         )
 
     elif systematic == "wjets_matching__down":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         wzjets.extend(["WJetsToLNu_matchingdown"])
-        other = wzjets
         sampnames = (
             ("wzjets", wzjets),
         )
-        #system.exit(0)
 
     elif systematic == "wjets_matching__up":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         wzjets.extend(["WJetsToLNu_matchingup"])
-        other = wzjets
         sampnames = (
             ("wzjets", wzjets),
         )
     elif systematic == "wjets_scale__down":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         wzjets.extend(["WJetsToLNu_scaledown"])
-        other = wzjets
         sampnames = (
             ("wzjets", wzjets),
         )
     elif systematic == "wjets_scale__up":
-        if channel == "mu":
-            samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-            samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-            samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-            #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu4.root")))
-            datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
-        elif channel == "ele":
-            samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-            samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-            datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
         wzjets.extend(["WJetsToLNu_scaleup"])
-        other = wzjets
         sampnames = (
             ("wzjets", wzjets),
         )
-
-    return (samples, sampnames)
-
-def get_qcd_scale_factor(var, channel, mva=False):
-    #FIXME - automate, take from some "central" file
     
-    if channel == "mu":
-        if var == "cos_theta":
-            if mva is None:
-                qcd_scale = 0.400106115551
-            else:
-                qcd_scale = 3.30901987434
-        elif var in ["abs(eta_lj)"]:
-            qcd_scale = 2.36704374649
-        elif var == "C" or var.startswith("mva"): #with mt cut
-            qcd_scale = 3.30901987434
-    elif channel == "ele":
-        if var == "cos_theta":    
-            if mva is None:
-                qcd_scale = 0.380505601735
-            else:
-                qcd_scale = 3.86190227034
-        elif var == "abs(eta_lj)":
-            qcd_scale = 2.22605022286
-        elif var == "C" or var.startswith("mva"): #with mt cut
-            qcd_scale = 3.86190227034
-    print "QCD SCALE",qcd_scale
-    return qcd_scale
+    sampnames_new = get_sampnames_for_components(sampnames, components, tchan, wzjets_regular, top, datasamp_aiso)
+    return (samples, sampnames_new)
 
-def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, coupling, var="abs(eta_lj)", plot_range=None, binning=None, asymmetry=None):
+def get_sampnames_for_components(sampnames, components, tchan, wzjets, top, qcd):
+    sampnames_new = ()    
+    names_tchan = None
+    names_wzjets = None
+    names_top = None
+    names_qcd = None
+    names_data = None
+    other = []
+    for entry in sampnames:
+        (a,b) = entry
+        if a in ["top", "qcd"] and components == 3:
+            other.extend(b)
+        elif a == "top":
+            names_top = b
+        elif a == "qcd":
+            names_qcd = b
+        elif a == "tchan":
+            names_tchan = b
+        elif a == "wzjets":
+            names_wzjets = b
+        elif a == "DATA":
+            names_data = b
+    if names_tchan == None:
+        names_tchan = tchan
+    if names_wzjets == None:
+        names_wzjets = wzjets
+    if len(other) == 0:
+        if names_top == None:
+            names_top = top
+        if names_qcd == None:
+            names_qcd = qcd
+    if names_data is not None:
+        if components == 3:
+            sampnames_new = (
+                ("tchan", names_tchan),
+                ("wzjets", names_wzjets),
+                ("other", other),
+                ("DATA", names_data),
+            )    
+        else:
+            sampnames_new = (
+                ("tchan", names_tchan),
+                ("wzjets", names_wzjets),
+                ("top", names_top),
+                ("qcd", names_qcd),
+                ("DATA", names_data),
+            )
+        
+    elif components == 3:
+        sampnames_new = (
+            ("tchan", names_tchan),
+            ("wzjets", names_wzjets),
+            ("other", other),
+        )    
+    else:
+        sampnames_new = (
+            ("tchan", names_tchan),
+            ("wzjets", names_wzjets),
+            ("top", names_top),
+            ("qcd", names_qcd),
+        )
+    return sampnames_new
+
+
+def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
+    datadir = "/".join((os.environ["STPOL_DIR"], "qcd_estimation", "fitted", channel))
+    if mtmetcut==None:
+        if channel == "mu":
+            mtmetcut = "50"
+        elif channel == "ele":
+            mtmetcut = "45"
+    
+    if var == "cos_theta" and mva is None:  #final cut based
+        filename = "final__2j1t"
+    elif var == "abs(eta_lj)":
+        filename = "fit__2j1t"
+    else:
+        filename = "2j1t"
+    filename += ("_mt_%s_plus.txt" % mtmetcut)
+    f = open('/'.join([datadir, filename]), 'r')
+    sf = float(f.readline().split()[0])
+    print "QCD SF", sf
+    return sf
+
+def change_to_mc(file_name):
+    path = file_name.split("/")[:-1]
+    index = path.index("data")
+    path[index] = "mc"
+    path.insert(len(path)-1, "nominal")
+    path = '/'.join(path)
+    return path
+
+def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, coupling, var="abs(eta_lj)", plot_range=None, binning=None, asymmetry=None, qcd_extra=None, mtmetcut=None):
     lumi=lumi_iso[channel]
     weight_str = str(weight)
-    print plot_range
-    print sample
-    print sample_name
-    print cut_str_iso
+    
     if sample_name not in ["DATA", "qcd"] and not sample.name.startswith("Single"):
         if sample.name.endswith("ToLeptons") and asymmetry is not None:
             weight_str = asymmetry_weight(asymmetry, weight)
@@ -343,11 +283,36 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
     elif sample_name in "qcd" or sample.name.startswith("Single"):   #take from antiiso data
         if plot_range is not None:
-        	hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", plot_range=plot_range)
+            hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", plot_range=plot_range)
+            path = change_to_mc(sample.file_name)
+            nominals = load_nominal_mc_samples(path, channel)            
+            for s in nominals:
+                h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, plot_range=plot_range)
+                hist.Add(h, -1)
+            if qcd_extra is not None: #iso down or up - get nominal integral
+                hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", plot_range=plot_range)
+                for s in nominals:
+                    h1 = sample.drawHistogram(var, qcd_extra, weight=weight, plot_range=plot_range)
+                    hist_nomi.Add(h1, -1)
+                if hist.Integral() > 0:
+                    hist.Scale(hist_nomi.Integral()/hist.Integral())
+
         elif binning is not None:
             hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", binning=binning)
+            path = change_to_mc(sample.file_name)
+            nominals = load_nominal_mc_samples(path, channel)            
+            for s in nominals:
+                h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, binning=binning)
+                hist.Add(h, -1)
+            if qcd_extra is not None: #iso down or up - get nominal integral
+                hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", plot_range=plot_range)
+                for s in nominals:
+                    h1 = sample.drawHistogram(var, qcd_extra, weight=weight, plot_range=plot_range)
+                    hist_nomi.Add(h1, -1)
+                if hist.Integral() > 0:
+                    hist.Scale(hist_nomi.Integral()/hist.Integral())
         else:
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
-        hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso))
+        hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso, mtmetcut))
     setErrors(hist)    #Set error in bins with 0 error to >0
     return hist

@@ -5,13 +5,6 @@ from ROOT import *
 from cuts import *
 from plotting import *
 
-#from util_scripts import *
-#from Variable import *
-#from DatasetGroup import *
-#from FitResult import *
-#from fitresults_costheta import *
-#from init_data_53_v3 import *
-
 
 def make_histos_with_cuts(var,
         cuts,
@@ -110,6 +103,7 @@ def make_histos_with_cuts(var,
    hData.Write()
          
    #QCD
+   fit.orig_shape = {}
    if useMCforQCDTemplate:
       for s in systematics:
          if s == "":
@@ -138,7 +132,8 @@ def make_histos_with_cuts(var,
 
       bin1 = hQCD.FindBin(mtMinValue)
       bin2 = hQCD.GetNbinsX() + 1
-      
+      fit.orig_shape["qcd_no_mc_sub"] = hQCD.Clone()
+      fit.orig_shape["qcd_no_mc_sub"].SetDirectory(0)
       fit.orig["qcd_no_mc_sub"] = hQCD.Integral(bin1, bin2)
       fit.orig["qcd_no_mc_sub_nomtcut"] = hQCD.Integral()
       #Subtract MC-s from QCD data template
@@ -155,12 +150,14 @@ def make_histos_with_cuts(var,
          hQCDisoDown.Add(h, -1)
       
       print "QCD integral", hQCD.Integral()   
+      fit.orig_shape["qcd"] = hQCD.Clone()
+      fit.orig_shape["qcd"].SetDirectory(0)
           
       #Scale template to a large are (then fitted multiplier will be small, which theta likes
       if hQCD.Integral() > 0:
          print "ORIG QCD integral", hQCD.Integral(),hQCD.Integral(bin1,bin2)
-         fit.orig["qcd"] = hQCD.Integral()
-         
+         fit.orig["qcd"] = hQCD.Integral(bin1, bin2)
+         fit.orig["qcd_nomtcut"] = hQCD.Integral()
          hQCD.Scale(QCD_FACTOR/hQCD.Integral())
       if hQCDisoUp.Integral() > 0:
          hQCDisoUp.Scale(QCD_FACTOR/hQCDisoUp.Integral())
@@ -265,7 +262,7 @@ def make_histos_for_final_fit(var,
    for h in stack.GetHists():
       hQCD.Add(h,-1)
                     
-   #Scale template to a large are (then fitted multiplier will be small, which theta likes
+   #Scale template to a large area (then fitted multiplier will be small, which theta likes
    if hQCD.Integral() > 0:
       hQCD.Scale(qcd_yield/hQCD.Integral())
    

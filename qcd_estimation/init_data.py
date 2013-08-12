@@ -2,6 +2,14 @@ from Dataset import *
 from DatasetGroup import *
 from ROOT import *
 from copy import copy, deepcopy
+from plots.common.cross_sections import *
+
+"""
+init_data.py
+Defines all the datasets used in the fit and files to read them from.
+Each should exist for both iso and anti-iso and also systematics (En, Res, UnclusteredEn; but it's possible to fit without the systematics)
+"""
+
 
 groups = []
 MCgroups = []
@@ -11,13 +19,13 @@ group_IsoUp = []
 group_IsoDown = []
 
 dgDibosons = DatasetGroup("Dibosons", kBlue)
-dWW = Dataset("WW", "WW.root", 54.838)
-dWZ = Dataset("WZ", "WZ.root", 33.2161)
-dZZ = Dataset("ZZ", "ZZ.root", 8.25561)
+dWW = Dataset("WW", "WW.root", xs["WW"])
+dWZ = Dataset("WZ", "WZ.root", xs["WZ"])
+dZZ = Dataset("ZZ", "ZZ.root", xs["ZZ"])
 dgDibosons.add([dWW,dWZ,dZZ])
 
 dgQCDMu = DatasetGroup("QCD", kGray)
-dQCDMu = Dataset("QCDMu", "QCDMu.root", 134680.)
+dQCDMu = Dataset("QCDMu", "QCDMu.root", xs["QCDMu"])
 dgQCDMu.add(dQCDMu)
 
 dgQCDEle = DatasetGroup("QCD", kGray)
@@ -37,45 +45,45 @@ dgGJets.add([dGJHT40, dGJHT100, dGJHT200])
 
 dgTChExclusive = DatasetGroup("t-channel", kRed)
 dgTChInclusive = DatasetGroup("t-channel", kRed)
-dTCh = Dataset("t-channel", "T_t.root", 56.4)
-dTChExc = Dataset("t-channel_toLeptons", "T_t_ToLeptons.root", 56.4*0.326)
-dTbarCh = Dataset("t-channel_Tbar", "Tbar_t.root", 30.7)
-dTbarChExc = Dataset("t-channel_toLeptons_Tbar", "Tbar_t_ToLeptons.root", 30.7*0.326)
+dTCh = Dataset("t-channel", "T_t.root", xs["T_t"])
+dTChExc = Dataset("t-channel_toLeptons", "T_t_ToLeptons.root", xs["T_t_ToLeptons"])
+dTbarCh = Dataset("t-channel_Tbar", "Tbar_t.root", xs["Tbar_t"])
+dTbarChExc = Dataset("t-channel_toLeptons_Tbar", "Tbar_t_ToLeptons.root", xs["Tbar_t_ToLeptons"])
 dgTChInclusive.add([dTCh, dTbarCh])
 dgTChExclusive.add([dTChExc, dTbarChExc])
 
 dgTWCh = DatasetGroup("tW-channel", kYellow+3)
-dTWCh = Dataset("tW-channel", "T_tW.root", 11.1)
-dTbarWCh = Dataset("tW-channel_Tbar", "Tbar_tW.root", 11.1)
+dTWCh = Dataset("tW-channel", "T_tW.root", xs["T_tW"])
+dTbarWCh = Dataset("tW-channel_Tbar", "Tbar_tW.root", xs["Tbar_tW"])
 dgTWCh.add([dTWCh, dTbarWCh])
 
 dgSCh = DatasetGroup("s-channel", kYellow )
-dSCh = Dataset("s-channel", "T_s.root", 3.79)
-dSbarCh = Dataset("s-channel_Tbar", "Tbar_s.root", 1.76)
+dSCh = Dataset("s-channel", "T_s.root", xs["T_s"])
+dSbarCh = Dataset("s-channel_Tbar", "Tbar_s.root", xs["Tbar_s"])
 dgSCh.add([dSCh,dSbarCh])
 
 dgTTBarExclusive = DatasetGroup("t #bar{t}", kOrange)
 dgTTBarInclusive = DatasetGroup("t #bar{t}", kOrange)
-dTTBar = Dataset("TTJets", "TTJets_MassiveBinDECAY.root", 234.)
-dTTBarFullLept = Dataset("TTJetsFullLept", "TTJets_FullLept.root", (0.326**2) * 234, 4246444 + 12119013)
-dTTBarSemiLept = Dataset("TTJetsSemiLept", "TTJets_SemiLept.root", (0.676*0.326*2) * 234, 11229902 + 25424818)
+dTTBar = Dataset("TTJets", "TTJets_MassiveBinDECAY.root", xs["TTJets_MassiveBinDECAY"])
+dTTBarFullLept = Dataset("TTJetsFullLept", "TTJets_FullLept.root", xs["TTJets_FullLept"])
+dTTBarSemiLept = Dataset("TTJetsSemiLept", "TTJets_SemiLept.root", xs["TTJets_SemiLept"])
 dgTTBarInclusive.add([dTTBar])
 dgTTBarExclusive.add([dTTBarFullLept, dTTBarSemiLept])
 
 WJets_lo_nnlo_scale_factor = 37509/30400.0
 dgWJets = DatasetGroup("W+Jets", kGreen)
 dgWJetsExclusive = DatasetGroup("W+Jets", kGreen)
-dWJets = Dataset("WJets", "WJets", "WJets_inclusive", 37509)
-dW1Jets = Dataset("W+1Jets", "W1Jets_exclusive.root", 5400.0 * WJets_lo_nnlo_scale_factor)
-dW2Jets = Dataset("W+2Jets", "W2Jets_exclusive.root", 1750.0 * WJets_lo_nnlo_scale_factor)
-dW3Jets = Dataset("W+3Jets", "W3Jets_exclusive.root", 519.0 * WJets_lo_nnlo_scale_factor)
-dW4Jets = Dataset("W+4Jets", "W4Jets_exclusive.root", 214.0 * WJets_lo_nnlo_scale_factor)
+dWJets = Dataset("WJets", "WJets", "WJets_inclusive", xs["WJets_inclusive"])
+dW1Jets = Dataset("W+1Jets", "W1Jets_exclusive.root", xs["W1Jets_exclusive"])
+dW2Jets = Dataset("W+2Jets", "W2Jets_exclusive.root", xs["W2Jets_exclusive"])
+dW3Jets = Dataset("W+3Jets", "W3Jets_exclusive.root", xs["W3Jets_exclusive"])
+dW4Jets = Dataset("W+4Jets", "W4Jets_exclusive.root", xs["W4Jets_exclusive"])
 dgWJets.add([dWJets])
 dgWJetsExclusive.add([dW1Jets, dW2Jets, dW3Jets, dW4Jets])
 
 
 dgZJets = DatasetGroup("Z+Jets", kViolet)
-dZJets = Dataset("DYJets", "DYJets.root", 3503.71)
+dZJets = Dataset("DYJets", "DYJets.root", xs["DYJets"])
 dgZJets.add(dZJets)
 
 #dgDataMuons = DatasetGroup("Data", kBlack, False)
@@ -88,11 +96,13 @@ dgDataMuons = DatasetGroup("Data", kBlack, False)
 dDataMuons1 = Dataset("DataMu1", "SingleMu1.root", MC=False)
 dDataMuons2 = Dataset("DataMu2", "SingleMu2.root", MC=False)
 dDataMuons3 = Dataset("DataMu3", "SingleMu3.root", MC=False)
-dgDataMuons.add([dDataMuons1, dDataMuons2, dDataMuons3])
+dDataMuons4 = Dataset("DataMu4", "../Aug1/SingleMu_miss.root", MC=False)
+dgDataMuons.add([dDataMuons1, dDataMuons2, dDataMuons3])#, dDataMuons4])
 
 dgDataElectrons = DatasetGroup("Data", kBlack, False)
 dDataElectrons1 = Dataset("DataEle1","SingleEle1.root", MC=False)
 dDataElectrons2 = Dataset("DataEle2","SingleEle2.root", MC=False)
+dDataElectrons3 = Dataset("DataEle3","../Aug1/SingleEle_miss.root", MC=False)
 dgDataElectrons.add([dDataElectrons1, dDataElectrons2])
 
 #Define sets of dataset groups for muons

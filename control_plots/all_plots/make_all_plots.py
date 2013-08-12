@@ -116,37 +116,6 @@ def change_syst(paths, dest):
     """
     return map(lambda x: x.replace("nominal", dest) if "nominal" in x else x, paths)
 
-def total_syst(nominal, systs):
-
-    bins = numpy.array(list(nominal.y()))
-
-    diff_up_tot = numpy.zeros(bins.shape)
-    diff_down_tot = numpy.zeros(bins.shape)
-    for systn, (hup, hdown) in systs.items():
-        bins_up = numpy.array(list(hup.y()))
-        bins_down = numpy.array(list(hdown.y()))
-        diff_up = bins - bins_up
-        diff_down = bins - bins_down
-        diff_up_tot += numpy.power(diff_up, 2)
-        diff_down_tot += numpy.power(diff_down, 2)
-
-    diff_up_tot = numpy.sqrt(diff_up_tot)
-    diff_down_tot = numpy.sqrt(diff_down_tot)
-
-    hup = nominal.Clone("syst_up")
-    hdown = nominal.Clone("syst_down")
-
-    bins_up = bins + diff_up_tot
-    bins_down = bins - diff_down_tot
-
-    for i in range(len(bins)):
-        hup.SetBinContent(i+1, bins_up[i])
-        hdown.SetBinContent(i+1, bins_down[i])
-
-    return hup, hdown
-
-
-
 if __name__=="__main__":
     logger.setLevel(logging.DEBUG)
 
@@ -200,6 +169,10 @@ if __name__=="__main__":
         Any plot_def that has an element in 'tags' that is also in this set will get plotted.
         You can explicitly disable tags by prepending a dot(.), this overrides any enables.
         """
+    )
+    parser.add_argument(
+        '-ai', '--anti_iso', required=False, action='store_true', dest='use_antiiso',
+        help='Change region to anti-isolated region'
     )
 
     args = parser.parse_args()
@@ -265,10 +238,16 @@ if __name__=="__main__":
 
         lumi = lumis[lepton_channel]
 
+        isoreg='iso'
+        use_antiiso = False
+        if args.use_antiiso:
+            isoreg='antiiso'
+            use_antiiso = True
+
         #Get the file lists
         flist = get_file_list(
             merge_cmds,
-            args.indir + "/%s/mc/iso/nominal/Jul15/" % lepton_channel
+            args.indir + "/%s/mc/%s/nominal/Jul15/" % (lepton_channel,isoreg)
         )
         for iso in ['iso', 'antiiso']:
             for ds in ['Jul15', 'Aug1']:
@@ -295,7 +274,7 @@ if __name__=="__main__":
 
             plot_def = plot_defs[plotname]
 
-            canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, physics_processes)
+            canv, merged_hists, htot_mc, htot_data = data_mc_plot(samples, plot_def, plotname, lepton_channel, lumi, weight, physics_processes, use_antiiso)
 
             #Draw the histograms from systematically variated samples
             hists_tot_mc_syst = {}
@@ -328,6 +307,9 @@ if __name__=="__main__":
                 _lepton_channel = "el"
             else:
                 _lepton_channel = "mu"
+
+            if use_antiiso:
+                _lepton_channel+='_aiso'
 
             subpath = ""
             if "dir" in plot_def.keys():
