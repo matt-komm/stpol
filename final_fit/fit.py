@@ -11,7 +11,7 @@ class Fit:
             , name = None
             , rates = {"tchan": inf,  "wzjets": inf, "other": 0.2}
             , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] 
-            , correlations = [("wzjets", "top")]):
+            , correlations = [("wzjets", "other")]):
 
         self.filename = filename
         self.name = name
@@ -97,6 +97,7 @@ class Fit:
             line = '%s, %s, %f, %f\n' % (st_type, syst, 0.0, 1.0)
             f.write(line)
 
+
         n = cor.GetNbinsX()
         for i in range(1, n+1):
             for j in range(1, n+1):
@@ -105,6 +106,7 @@ class Fit:
                 if (xlabel, ylabel) in self.correlations:
                     cor_value = cor.GetBinContent(i,j)
                     line = 'corr, %s, %s, %f\n' % (xlabel, ylabel, cor_value)
+                    print line                    
                     f.write(line)
         f.write(self.filename + "\n")
         f.close()

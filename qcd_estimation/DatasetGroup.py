@@ -40,13 +40,9 @@ class DatasetGroup:
    def addHistogram(self, histo, var, syst="", iso="Iso", extra=""):
       histo.SetLineColor(self._color)
       histo.SetLineStyle(self._lineStyle)
-      #print self._name, " xxx ",self._histograms
-      #print "Adding: ",var.name + branch.name + syst+iso+extra, ":::", histo
       self._histograms[var.name + syst + iso + extra] = histo
-      #print self._name, self._histograms
-
+      
    def getHistogram(self, var, syst="", iso="Iso", extra=""):
-      #print self._name, "A", self._histograms
       return self._histograms[var.name + syst + iso +extra]
 
    def cleanHistograms(self):

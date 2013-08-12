@@ -46,7 +46,8 @@ def generate_paths(systematics, base_path, lepton="mu"):
     paths["data"] = {}
     paths["mc"] = {}
     
-    date = os.listdir(base_path + "/" + lepton + "/data/iso/")[0]
+    #date = os.listdir(base_path + "/" + lepton + "/data/iso/")[0]
+    date = "Jul15" #ugly hack :(
     for iso in isos:
         paths["mc"][iso] = {}
         paths["data"][iso] = base_path + "/" + lepton + "/data/" + iso + "/" + date + "/"
@@ -65,25 +66,3 @@ def clear_histos(data_group, mc_groups):
    all_groups.append(data_group)
    for group in all_groups:
       group.cleanHistograms()
-   
-"""def open_all_data_files_old(data_group, mc_groups, isos, systematics, path):
-   files = {}
-   all_groups = copy(mc_groups)
-   all_groups.append(data_group)
-   for group in all_groups:
-      for ds in group.getDatasets():
-         for iso in isos:
-            for syst in systematics:
-               f = TFile(path+iso+"/nominal/"+ds.getFileName())
-               #print path+iso+"/"+ds.getFileName()+syst
-               files[ds.getName()+"_"+iso+syst]=f
-               #print ds._files
-               #print "add ", ds.getName(), syst, iso
-               count_hist = f.Get("trees").Get("count_hist")
-               if not count_hist:
-                  raise TObjectOpenException("Failed to open count histogram")
-               ds.setOriginalEventCount(count_hist.GetBinContent(1))
-               ds.addFile(syst, iso, files[ds.getName()+"_"+iso+syst])
-               #print "after adding ",ds._files
-   return files
-"""

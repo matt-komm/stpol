@@ -6,6 +6,7 @@
 !*.hpp
 !Makefile
 !*.py
+!*.sh
 
 *.swp
 *.swo
