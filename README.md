@@ -202,7 +202,7 @@ A convenient script to resubmit the task is
 >analysis_step3/resubmit_failed_task.sh /path/to/slurm.out
 
 ##Workflow for creating histograms for unfolding
-1. QCD estimation
+#1. QCD estimation
 Located in $STPOL_DIR/qcd_estimation, must be run as > $STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py
 
 Produces QCD fit by taking QCD shape from anti-isolated data and other processes from MC. Specific cuts are defined in FitConfig.py with on-the-fly modifications for different cut regions.
@@ -235,7 +235,7 @@ Command line parameters:
   plots.common.cross_sections.lumi_iso and .lumi_antiiso are used for luminosities TODO: update when new step2 data arrives
   
   
-2. Creation of histograms to fit
+#2. Creation of histograms to fit
 The script to do this is located in $STPOL_DIR/final_fit/makehistos.py
 NB! QCD estimation has to be run before as the script takes results straight from qcd_estimation/fitted
 For MVA fitting the fit '2j1t' is needed and for eta_j' 'fit_2j1t'
@@ -255,7 +255,7 @@ Possible command-line arguments are the following:
 '--asymmetry' - reweigh the generated asymmetry value to something else. Used for linearity tests and estimating uncertainties if the measured result largely differs from the generated one
 '--mtmetcut' - use an alternative value for MTW/MET cut, used for cross-checks
 
-3. Fitting
+# 3. Fitting
 The script to do this is located in $STPOL_DIR/final_fit/final_fit.py
 
 $STPOL_DIR/final_fit/compare_template_shapes.py compares the shapes of templates with different systematics and prints out the KS values for non-compatible systematics.
@@ -267,7 +267,7 @@ As a default, unconstrained prior rate uncertaintes are applied for signal and w
 By default, the output file will also contain the correlation between ("wzjets", "other"). Others can be added as needed.
 The correlation between all parameters in plotted in plots/[fit_name]/corr.pdf
 
-4. Creation of histograms for unfolding
+# 4. Creation of histograms for unfolding
 The script to do this is located in $STPOL_DIR/unfold/prepare_unfolding.py
 The main amount of work goes to creating the same systematic histograms as makehistos.py, just that now they're for cos_theta and with a cut on MVA (or final cut-based selection)
 Also created are histograms for generated and reconstructed signal events, selection efficiency of those and a transfer matrix needed for the unfolding.
