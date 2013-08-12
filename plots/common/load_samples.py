@@ -297,11 +297,11 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
             hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", binning=binning)
             path = change_to_mc(sample.file_name)
             nominals = load_nominal_mc_samples(path, channel, "antiiso")            
-            print "before subtraction", hist.Integral()            
+            logger.debug("before subtraction", hist.Integral())
             for s in nominals:
                 h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, binning=binning)
                 hist.Add(h, -1)
-            print "after subtraction", hist.Integral()
+            logger.debug("after subtraction", hist.Integral())
             if qcd_extra is not None: #iso down or up - get nominal integral
                 hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", plot_range=plot_range)
                 for s in nominals:
