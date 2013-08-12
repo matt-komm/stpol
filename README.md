@@ -203,13 +203,18 @@ A convenient script to resubmit the task is
 
 ##Workflow for creating histograms for unfolding
 1. QCD estimation
-Located in $STPOL_DIR/qcd_estimation, must be run as $STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py
+Located in $STPOL_DIR/qcd_estimation, must be run as > $STPOL_DIR/theta/utils2/theta-auto.py get_qcd_yield.py
 
-Produces QCD fit by taking QCD shape from anti-isolated data and other processes from MC. Specific cuts are defined in FitConfig.py with on-the-fly modifications for different cut regions
+Produces QCD fit by taking QCD shape from anti-isolated data and other processes from MC. Specific cuts are defined in FitConfig.py with on-the-fly modifications for different cut regions.
+
 Fit is done on 3 components: QCD, W+Jets and all other MC, on the MTW variable for muons and MET for electrons.
+
 Fit results are saved in the directory "fitted" for all possible MTW/MET cut values. 
+
 Separate files are created for scale factors to apply to template taken from anti-isolated region whether or not anti-isolated MC is subtracted from the templated.
+
 The fit itself uses the template with MC subtraction.
+
 Fit plots are produced in the 'fit_plots' directory while the fitted distributions are saved 'fits' and templates in 'templates'
 
 Command line parameters:
@@ -273,4 +278,5 @@ Command-lina arguments are mostly the same as for makehistos.py, except for:
 '--mva_var' instead of '--var' specifies variable if using MVA ('--eta' not specified)
 '--cut' the cut on MVA as float (MVA > [value specified])
 
-./makeUnfoldingHistos.sh  is used to run a scan over MVA cut values producing histograms for each
+> ./makeUnfoldingHistos.sh 
+is used to run a scan over MVA cut values producing histograms for each
