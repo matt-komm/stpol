@@ -255,8 +255,13 @@ For MVA fitting the fit '2j1t' is needed and for eta_j' 'fit_2j1t'
 
 The script creates histograms named in theta format for 3 components - signal ('tchan'), W/Z+jets with WW ('wzjets') and Top processes (ttbar, tW-channel, s-channel) plus QCD ('other') for all the systematic variations
 
-The systematics themselves are defined in plots.common/make_systematics_histos.py (sorry, poorly written code) and are divided into 3 groups (1. having separate files for each dataset (En, Res, UnclusteredEn);
-  2. having separate files, but applying only to a few datasets; 3. altering weights). Each group is treated differently. 
+The systematics themselves are defined in plots.common/make_systematics_histos.py (sorry, poorly written code) and are divided into 3 groups 
+	1. having separate files for each dataset (En, Res, UnclusteredEn);
+  	2. having separate files, but applying only to a few datasets
+  	3. altering weights.
+
+Each group is treated differently. 
+
 If tou want to add a new systematic, it is added to this file (or uncomment one of the premade ones which didn't have datasets available before).
 
 TODO: add pileup, ttbar and PDF uncertainties when available and tchan_scale once new data processing completes
@@ -265,33 +270,49 @@ The loading of the samples is done in plots.common.load_samples.py (also messy, 
 deals with separate files, then these should be processed there.
 
 Possible command-line arguments are the following:
+
 '--channel', '--path' - as previously
+
 '--var' - variable of the histograms, possible choices: ["eta_lj", "C", "mva_BDT", "mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj", "mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj"],
+
 '--coupling' - by default we are using the powheg samples for signal. Here we can use comphep or anomalous couplings instead. choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg"]
+
 '--asymmetry' - reweigh the generated asymmetry value to something else. Used for linearity tests and estimating uncertainties if the measured result largely differs from the generated one
+
 '--mtmetcut' - use an alternative value for MTW/MET cut, used for cross-checks
 
 ### 3. Fitting
 The script to do this is located in $STPOL_DIR/final_fit/final_fit.py
 
 $STPOL_DIR/final_fit/compare_template_shapes.py compares the shapes of templates with different systematics and prints out the KS values for non-compatible systematics.
+
 The systematics which match in shape with the nominal should not be used for the fit as the fit might not converge. The are absorbed in the rate uncertainties.
 
 The fit parameters are specified in fit.py
+
 The default shape uncertainties are ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"]  - other do not change the shape
+
 As a default, unconstrained prior rate uncertaintes are applied for signal and wzjets while "other" (top+qcd) gets a 20% gaussian uncertainty.
+
 By default, the output file will also contain the correlation between ("wzjets", "other"). Others can be added as needed.
+
 The correlation between all parameters in plotted in plots/[fit_name]/corr.pdf
 
 ### 4. Creation of histograms for unfolding
 The script to do this is located in $STPOL_DIR/unfold/prepare_unfolding.py
+
 The main amount of work goes to creating the same systematic histograms as makehistos.py, just that now they're for cos_theta and with a cut on MVA (or final cut-based selection)
+
 Also created are histograms for generated and reconstructed signal events, selection efficiency of those and a transfer matrix needed for the unfolding.
+
 Currently, 6 bins are used for generated events and 12 for reconstructed. This (6<12) is needed for the unfolding to work properly (and we don't 0 in the middle of any bin)
 
-Command-lina arguments are mostly the same as for makehistos.py, except for:
+Command-line arguments are mostly the same as for makehistos.py, except for:
+
 '--eta' if you want to fit on eta
+
 '--mva_var' instead of '--var' specifies variable if using MVA ('--eta' not specified)
+
 '--cut' the cut on MVA as float (MVA > [value specified])
 
 > ./makeUnfoldingHistos.sh 
