@@ -2,6 +2,8 @@ import re, glob
 from rootpy.io import File
 from plots.common.utils import NestedDict
 import ROOT
+import logging
+logger = logging.getLogger("load_histos2")
 
 def load_file(fn, pat):
     pat = re.compile(pat)
@@ -16,10 +18,10 @@ def load_file(fn, pat):
             continue
         for it in items:
             ret.append((
-                tuple(list(m.groups())+[it]), fi.Get(root + "/" + it).Clone()
+                tuple(list(m.groups())+[it]), fi.Get(root + "/" + it)
                 )
             )
-    fi.Close()
+    #fi.Close()
     return ret
 
 
@@ -38,14 +40,14 @@ def get_updown(name):
 
 
 if __name__=="__main__":
-    files = glob.glob("hists/merged/*.root")
+    files = glob.glob("/scratch/joosep/merged/*.root")
 
     pat = ".*hdfs/local/stpol/step3/Aug4_0eb863_full/ele/mc/iso/(.*)/Jul15/(.*).root/channel/ele/ele__iso/jet/2j/tag/1t/met/met__met/signalenr/mva/mva__ele__tight__0_6/(.*)/cos_theta.*"
     ret = []
 
     for fn in files:
+        logger.info("Loading hists from file " + fn)
         ret += load_file(fn, pat)
-
 
     syst_scenarios = NestedDict()
 
@@ -76,9 +78,9 @@ if __name__=="__main__":
         else:
             systname, d = get_updown(syst)
             syst_scenarios[sample][systname][d] = hist
-    
+
     syst_scenarios = syst_scenarios.as_dict()
     for sample, d1 in syst_scenarios.items():
         for scenario, d2 in d1.items():
-            for direction, hist in d2.items(): 
+            for direction, hist in d2.items():
                 print sample, scenario, direction, hist
