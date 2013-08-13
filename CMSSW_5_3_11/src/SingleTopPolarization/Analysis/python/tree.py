@@ -4,7 +4,7 @@ Applies operations on a TFile systematically by defining the operations as a
 directed graph and evaluating all root-to-leaf paths.
 """
 print "Loading dependency libraries..."
-import itertools, copy, argparse, logging, time
+import itertools, copy, argparse, logging, time, sys
 logging.basicConfig(level=logging.WARNING)
 
 from plots.common.sample import Sample
@@ -16,7 +16,7 @@ from rootpy.io import File
 
 import ROOT
 logger = logging.getLogger("tree")
-logger.setLevel(logging.INFO)
+#logger.setLevel(logging.DEBUG)
 print "Done loading dependency libraries..."
 
 """
@@ -95,6 +95,9 @@ class Node(object):
 
         #FIXME: global state
         gNodes[name] = self
+
+    def __del__(self):
+        pass
 
     def __repr__(self):
         return "<%s>" % self.name
@@ -258,7 +261,12 @@ class HistNode(Node):
 
         #Use the cache of the previous CutNode in the call stack.
         last_cut = self.getPrevious(parentage, CutNode)
-        cache = last_cut.cache
+        cache = 0#last_cut.cache
+        #FIXME: The cache carries state information, which cannot be stored with the node
+
+        if cache and "W1Jets" in cache.GetName() and "W3Jets" in obj.sample.name:
+            import pdb
+            pdb.set_trace()
 
         #Get the total cut string from the call stack.
         cut = last_cut.getCutsTotal(parentage)
@@ -354,6 +362,10 @@ class SampleNode(Node):
         super(SampleNode, self).__init__(*args, **kwargs)
         self.sample = Sample.fromFile(self.name)
         self.saver = saver
+
+    def process(self, *args):
+        logger.info("Processing sample %s" % self.sample)
+        return super(SampleNode, self).process(*args)
 
 class WeightNode(Node):
     def __init__(self, weight, *args, **kwargs):
