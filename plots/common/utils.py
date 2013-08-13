@@ -65,7 +65,7 @@ def get_file_list(merge_cmds, dir, fullpath=True, permissive=True):
 
     # remove files ending in _mva.root, which contain friend trees with mva outputs
     out_files = filter(lambda x: not x.endswith("_mva.root"), out_files)
-    
+
     #If you called this method and got nothing, then probably womething went wrong and you don't want the output
     if len(out_files)==0 and not permissive:
         raise Exception("Couldn't match any files to merge_cmds %s in directory %s" % (str(merge_cmds), dir))
@@ -148,7 +148,7 @@ class PhysicsProcess:
         """
         pats = [re.compile(sp) for sp in self.subprocesses]
         out = []
-        for root, dirs, items in os.path.walk(path):
+        for root, dirs, items in os.walk(path):
             for it in items:
                 if not it.endswith(".root"):
                     continue
@@ -285,7 +285,7 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
         out_d[merge_name].SetName(merge_name)
 
     out_d_ordered = OrderedDict()
-    
+
     for elem in order:
         try:
             out_d_ordered[elem] = out_d.pop(elem)
@@ -370,7 +370,7 @@ def escape(s):
     return re.sub("[\/ \( \) \\ \. \* \+ \> \< \# \{ \}]", "", s)
 
 def setErrors(histo):
-    factor = 1.0    
+    factor = 1.0
     if histo.GetEntries()>0:
         factor = histo.Integral()/histo.GetEntries()
     for i in range(1, histo.GetNbinsX()+1):
