@@ -1,5 +1,6 @@
 from plots.common.utils import NestedDict
 from plots.common.utils import PhysicsProcess
+import os
 
 #Fit parameters from the final fit
 #Extracted in the muon channel using final_fit/final_fit.py
@@ -41,7 +42,7 @@ def load_fit_results(fn):
     return sfs
 
 def from_file(fn):
-    fr = load_fit_results("final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd.txt")
+    fr = load_fit_results(fn)
     r = [
         (tchan,) + fr['tchan'],
         (top+qcd,) + fr['other'],
@@ -49,13 +50,15 @@ def from_file(fn):
     ]
     return r
 
-fitpars['final_2j1t_mva']['ele'] = from_file("final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd.txt")
-fitpars['final_2j1t_mva']['mu'] = from_file("final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__top_plus_qcd.txt")
+#fitpars['final_2j1t_mva']['ele'] = from_file("final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd.txt")
+#fitpars['final_2j1t_mva']['mu'] = from_file("final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__top_plus_qcd.txt")
+fitpars['final_2j1t_mva']['ele'] = from_file(os.environ["STPOL_DIR"]+"final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj.txt")
+fitpars['final_2j1t_mva']['mu'] = from_file(os.environ["STPOL_DIR"]+"final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt")
 
 for met in [30, 50, 70]:
     met = str(met)
-    fitpars['final_2j1t_mva_met'+met]['ele'] = from_file("final_fit/results/histos/met%s/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt" % met)
-    fitpars['final_2j1t_mva_met'+met]['mu'] = from_file("final_fit/results/histos/met%s/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt" % met)
+    fitpars['final_2j1t_mva_met'+met]['ele'] = from_file(os.environ["STPOL_DIR"]+"final_fit/results/histos/met%s/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt" % met)
+    fitpars['final_2j1t_mva_met'+met]['mu'] = from_file(os.environ["STPOL_DIR"]+"final_fit/results/histos/met%s/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt" % met)
 
 #PLACEHOLDER
 fitpars['final_2j1t'] = None
