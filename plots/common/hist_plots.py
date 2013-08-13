@@ -7,6 +7,24 @@ from plots.common.histogram import norm
 import logging
 logger = logging.getLogger("hist_plots")
 
+def hist_err(axes, hist, **kwargs):
+    """
+    Plots a Histogram on matplotlib Axes in familiar ROOT style with errorbars.
+
+    Args:
+        axes: a matplotlib axes instance
+        hist: a Hist instance
+    Returns:
+        The errorbar plot.
+    """
+    return axes.errorbar(
+        list(hist.x()),
+        list(hist.y()),
+        yerr=[list(hist.yerrh()),
+        list(hist.yerrl())],
+        drawstyle='steps-mid', **kwargs
+    )
+
 def plot_hists(hists, name="canv", **kwargs):
     """
     Draws a list of histograms side-by-side on a new canvas.
