@@ -26,7 +26,7 @@ from plots.common.sample import Sample
 from plots.common.legend import *
 from plots.common.sample_style import Styling
 from plots.common.hist_plots import plot_data_mc_ratio
-from plots.common.plot_defs import *
+from plots.common.plot_defs import plot_defs
 import plots.common.pretty_names as pretty_names
 from plots.common.histogram import calc_int_err
 from plots.common.utils import *
