@@ -1,40 +1,23 @@
-from SingleTopPolarization.Analysis import tree
-from plots.common.cuts import Cuts, Weights
+#!/usr/bin/env python
+"""
+Creates the necessary histograms for studying the met-phi modulation
+"""
 import logging
 logging.basicConfig(level=logging.INFO)
+
+from SingleTopPolarization.Analysis import tree, hist_node, sample_nodes
+from plots.common.cuts import Cuts, Weights
 import plots.common.sample as sample
 from plots.common.utils import PatternDict, PhysicsProcess
 
 from plots.common.hist_plots import hist_err
 import rootpy.plotting.root2matplotlib as rplt
 import matplotlib.pyplot as plt
+
 plt.rc('font', **{'family':'sans','sans-serif':['Arial']})
 plt.rc('text', usetex=True)
 
 import ROOT
-
-#sample.logger.setLevel(logging.DEBUG)
-
-
-def hist_node(hist_desc, _cut, _weight):
-    cut_name, cut = _cut
-    weight_name, weight = _weight
-    cutnode = tree.CutNode(cut, cut_name, [], [])
-    weightnode = tree.WeightNode(weight, weight_name, [cutnode], [])
-    histnode = tree.HistNode(hist_desc, hist_desc["name"], [weightnode], [])
-    return cutnode
-
-def sample_nodes(sample_fnames, out, top):
-    snodes = []
-    for samp in sample_fnames:
-        snodes.append(
-            tree.SampleNode(
-                out,
-                samp,
-                [top], []
-            )
-        )
-    return snodes
 
 if __name__=="__main__":
     class DictSaver(PatternDict):
