@@ -365,7 +365,7 @@ plot_defs['mva_shape_log'] = cp(plot_defs['mva_shape'])
 plot_defs['mva_shape_log']['log'] = True
 
 plot_defs['mva_bdt_zoom']=cp(plot_defs['mva_bdt'])
-plot_defs['mva_bdt_zoom']['range']=[50,0,1]
+plot_defs['mva_bdt_zoom']['range']=[20,0,1]
 plot_defs['mva_bdt_zoom']['log']=False
 
 plot_defs['mva_bdt_zoom_fit'] = cp(plot_defs['mva_bdt_zoom'] )
@@ -410,7 +410,7 @@ plot_defs['invar_C_norm']['normalize'] = True
 
 plot_defs['invar_eta_lj'] = cp(plot_defs['invar_C'])
 plot_defs['invar_eta_lj']['var']='eta_lj'
-plot_defs['invar_eta_lj']['range']=[50,0,5]
+plot_defs['invar_eta_lj']['range']=[25,0,5]
 plot_defs['invar_eta_lj']['xlab']=varnames['eta_lj']
 
 plot_defs['invar_lep_pt'] = cp(plot_defs['invar_top_mass'])
