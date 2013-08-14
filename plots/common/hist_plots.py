@@ -7,7 +7,7 @@ from plots.common.histogram import norm
 import logging
 logger = logging.getLogger("hist_plots")
 
-def hist_err(axes, hist, **kwargs):
+def hist_err(axes, hist, yerr=None, **kwargs):
     """
     Plots a Histogram on matplotlib Axes in familiar ROOT style with errorbars.
 
@@ -17,11 +17,13 @@ def hist_err(axes, hist, **kwargs):
     Returns:
         The errorbar plot.
     """
+
+    if not yerr:
+        yerr = [list(hist.yerrh()), list(hist.yerrl())]
     return axes.errorbar(
         list(hist.x()),
         list(hist.y()),
-        yerr=[list(hist.yerrh()),
-        list(hist.yerrl())],
+        yerr=yerr,
         drawstyle='steps-mid', **kwargs
     )
 
