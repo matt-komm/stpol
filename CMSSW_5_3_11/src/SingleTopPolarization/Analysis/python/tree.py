@@ -14,10 +14,13 @@ from plots.common.utils import NestedDict
 import rootpy
 from rootpy.io import File
 
+import networkx as nx
+
 import ROOT
 logger = logging.getLogger("tree")
 #logger.setLevel(logging.DEBUG)
 print "Done loading dependency libraries..."
+
 
 """
 A per-module dict with the name and instance of every Node that was instantiated.
@@ -26,6 +29,8 @@ nodes instead.
 """
 gNodes = dict()
 gNhistograms = 0
+gGraph = nx.Graph()
+
 
 def variateOneWeight(weights):
     """
@@ -119,9 +124,11 @@ class Node(object):
                 this node and it's children will be processed.
         """
         self.name = name
+        gGraph.add_node(name)
         self.parents = parents
         for p in parents:
             p.children.append(self)
+            gGraph.add_edge(self.name, p.name)
         self.children = children
         self.filter_funcs = filter_funcs
 
@@ -559,14 +566,14 @@ if __name__=="__main__":
     syst_weights = []
     for lepton, w in weights_lepton.items():
         weights_var_by_one = variateOneWeight([x[1] for x in (weights+w)])
-        #The unvariated weight is taken as the list of the 0th element of the weight tuples
+        #The unvariated weight is taken as the list of the 0th elements of the weight tuples
         weights_var_by_one.append(
             ("nominal", [x[1][0] for x in (weights+w)])
         )
 
         wtot = []
         for wn, s in weights_var_by_one:
-            j = mul(s)
+            j = mul(s) #Multiply together the list of weights
             wtot.append((wn, j))
 
         for name, j in wtot:
@@ -626,10 +633,15 @@ if __name__=="__main__":
             final_plots[name] = reweigh(final_plots[name], syst_weights)
 
     print "Done constructing analysis tree..."
-    print "Starting projection..."
+
+    print gGraph.nodes()
+    import matplotlib.pyplot as plt
+    nx.draw(gGraph)
+    plt.show()
+    print "Starting projection..."    
     #Make everything
     t0 = time.clock()
-    r = sample.recurseDown(sample)
+    #r = sample.recurseDown(sample)
     t1 = time.clock()
     dt = t1-t0
     print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms)/dt)
