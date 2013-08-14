@@ -64,6 +64,38 @@ def variateOneWeight(weights):
             sts.append((w.name, subs))
     return sts
 
+def hist_node(hist_desc, _cut, _weight):
+    """
+    Creates a simple CutNode -> WeightNode -> HistNode structure from the specified
+    histogram description, cut and weight.
+
+    Args:
+        hist_desc: A dict with the histogram description, keys/values as in tree.HistNode.
+        _cut: A (name, cut) tuple with the cut to apply. 
+        _weight: A (name, weight) with the weight to apply.
+
+    Returns:
+        The top CutNode that was created.
+    """
+    cut_name, cut = _cut
+    weight_name, weight = _weight
+    cutnode = tree.CutNode(cut, cut_name, [], [])
+    weightnode = tree.WeightNode(weight, weight_name, [cutnode], [])
+    histnode = tree.HistNode(hist_desc, hist_desc["name"], [weightnode], [])
+    return cutnode
+
+def sample_nodes(sample_fnames, out, top):
+    snodes = []
+    for samp in sample_fnames:
+        snodes.append(
+            tree.SampleNode(
+                out,
+                samp,
+                [top], []
+            )
+        )
+    return snodes
+
 class Node(object):
     """
     Represents a node in a directed graph by containing references to it's
