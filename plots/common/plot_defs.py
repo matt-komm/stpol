@@ -343,8 +343,14 @@ plot_defs['mva_bdt'] = {
     #'cutname': '2J1T',
     'dir': 'BDT'
 }
+
 plot_defs['mva_bdt_fit'] = cp(plot_defs['mva_bdt'] )
 plot_defs['mva_bdt_fit']['fitpars'] = fitpars['final_2j1t_mva']
+
+plot_defs['mva_bdt_slim']=cp(plot_defs['mva_bdt'])
+plot_defs['mva_bdt_slim']['var']=['mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el','mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu']
+plot_defs['mva_bdt_slim_fit']=cp(plot_defs['mva_bdt_slim'])
+plot_defs['mva_bdt_slim_fit']['fitpars'] = fitpars['final_2j1t_mva']
 
 plot_defs['qcd_mva'] = cp(plot_defs['mva_bdt'])
 plot_defs['qcd_mva']['var']=[mva_var_qcd['ele'],mva_var_qcd['mu']]
