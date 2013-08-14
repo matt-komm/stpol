@@ -76,7 +76,7 @@ def hist_node(hist_desc, _cut, _weight):
 
     Args:
         hist_desc: A dict with the histogram description, keys/values as in tree.HistNode.
-        _cut: A (name, cut) tuple with the cut to apply. 
+        _cut: A (name, cut) tuple with the cut to apply.
         _weight: A (name, weight) with the weight to apply.
 
     Returns:
@@ -636,12 +636,20 @@ if __name__=="__main__":
 
     print gGraph.nodes()
     import matplotlib.pyplot as plt
-    nx.draw(gGraph)
-    plt.show()
-    print "Starting projection..."    
+
+    # same layout using matplotlib with no labels
+    #plt.title("draw_networkx")
+    #pos=nx.graphviz_layout(gGraph, prog='dot')
+    #pos = nx.spring_layout(gGraph, k=10, iterations=100, scale=10)
+    #nx.draw(gGraph, pos=pos)
+
+    #plt.savefig("nodes.pdf")
+    print "Starting projection..."
     #Make everything
     t0 = time.clock()
-    #r = sample.recurseDown(sample)
+    r = sample.recurseDown(sample)
     t1 = time.clock()
     dt = t1-t0
+    if dt<1.0:
+        dt = 1.0
     print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms)/dt)
