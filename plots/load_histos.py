@@ -21,7 +21,7 @@ def load_histos(filenames):
             for it in items:
                 k = "/".join([root, it])
                 item = fi.Get(k)
-                k = "/".join([fn, k.replace("__", "/")])
+                #k = "/".join([fn, k.replace("__", "/")])
                 print k, item
                 if not isinstance(item, ROOT.TH1F):
                     pdb.set_trace()
