@@ -1,39 +1,48 @@
-import re, glob
+import re, glob, sys
 from collections import deque
 from rootpy.io import File
 import itertools
-from plots.common.utils import NestedDict
+from plots.common.utils import NestedDict, PatternDict
 import ROOT
 import logging
 
 logger = logging.getLogger("load_histos2")
 logger.setLevel(logging.DEBUG)
 
-def load_file(fi, pat):
-    #depth = len(pat.split("/"))
-    pat = re.compile(pat)
-    ret = []
+def load_file(fnames, pats):
+    res = {}
+    ret = {}
+    for patn, pat in pats.items():
+        res[patn] = re.compile(pat)
+        ret[patn] = PatternDict()
 
-    ROOT.gROOT.cd()
     n = 0
-    for root, dirs, items in fi.walk():
-        #logger.debug(root)
-        n+=1
-        #if len(items)==0:
-        #    continue
-        #if n%100 == 0:
-        #    logger.debug(n)
-        m = pat.match(root)
-        if root.split("/")[0] == fi.GetName():
-            root = "/".join(root.split("/")[1:])
-        #root = "/".join(root.split("/")[1:])
-        if not m:
-            continue
-        pr = [None]*len(dirs+items)
-        for n, it in zip(range(len(dirs+items)), dirs+items):
-            pr[n] = (tuple(list(m.groups())+[it]), fi.Get(root + "/" + it))
-        ret += pr
-    #fi.Close()
+    for fn in fnames:
+        fi = File(fn)
+        ROOT.gROOT.cd()
+        for root, dirs, items in fi.walk():
+            for it in items:
+                n += 1
+                # if n%10==0:
+                #     sys.stdout.write(".")
+                #     sys.stdout.flush()
+                if n%25000 == 0:
+                    logger.debug("%d, %s, %s" % (
+                            n,
+                            str([(k, len(ret[k].keys())) for k in ret.keys()]),
+                            fi.GetPath()
+                        )
+                    )
+                    #logger.debug(root)
+                for patn, pat in res.items():
+                    if pat.match(root):
+                        ret[patn][root] = fi.Get(
+                            "/".join(
+                                [root, it]
+                            )
+                        ).Clone()
+        fi.Close()
+    logger.info("Matched %d histograms to pattern %s" % (len(ret.keys()), pat.pattern))
     return ret
 
 def rekeys(fi, pat):
@@ -49,12 +58,46 @@ def rekeys(fi, pat):
 
 
 if __name__=="__main__":
-    fnames = glob.glob("hists/merged/*.root")
+    fnames = glob.glob("hists/e/mu/*.root")
 
-    #subpath = "hdfs/local/stpol/step3/Aug4_0eb863_full/ele/mc/iso/nominal/Jul15/T_t_ToLeptons.root/channel/ele/ele__iso/jet/2j/tag/1t/met/met__met/signalenr/mva/mva__ele__tight__0_6"
-    subpath = "hdfs/local/stpol/step3/Aug4_0eb863_full/ele/mc/iso/"
+    base = ".*/Aug4_0eb863_full/mu/"
+    cut = "channel/mu/mu__iso/jet/2j/tag/1t/met/met__mtw/signalenr/cutbased/mtop/mtop__SR/etalj/etalj__g2_5/"
+    
+    pat_mc_varsamp = ""
+    pat_mc_varsamp += base
+    pat_mc_varsamp += "mc_syst/iso/(.*)/Jul15/(.*)/"
+    pat_mc_varsamp += cut
+    pat_mc_varsamp += "(weight__nominal__mu)/abs_eta_lj"
 
-    pat = ".*/.*/cos_theta.*"
+    pat_mc_varproc = ""
+    pat_mc_varproc += base
+    pat_mc_varproc += "mc/iso/(.*)/Jul15/(.*)/"
+    pat_mc_varproc += cut
+    pat_mc_varproc += "(weight__nominal__mu)/abs_eta_lj"
+
+    pat_data = ""
+    pat_data += base
+    pat_data += "(data)/iso/.*/(.*)/"
+    pat_data += cut
+    pat_data += "(weight__unweighted.*)/abs_eta_lj"
+
+    pat_mc_nom = ""
+    pat_mc_nom += base
+    pat_mc_nom += "mc/iso/(nominal)/Jul15/(.*)/"
+    pat_mc_nom += cut
+    pat_mc_nom += "(.*)/abs_eta_lj"
+
+
+    rets_data = load_file(fnames,
+        {
+            "mc_varsamp": pat_mc_varsamp,
+            "mc_varproc": pat_mc_varproc,
+            "mc_nom": pat_mc_nom,
+            "data": pat_data,
+        }
+    )
+    # for fi in files:
+    #     fi.Close()
 
     # for fn in files:
     #     logger.info("Loading hists from file " + fn)
