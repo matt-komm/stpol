@@ -111,7 +111,8 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
             hist_qcd.Scale(qcdScale[lepton_channel][plot_def['estQcd']])
             hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
-            hist_qcd=hist_qcd_loose
+            if var=='cos_theta':
+                hist_qcd=hist_qcd_loose
             sampn = "QCD"+sample.name
 
             #Rescale the QCD histogram to the eta_lj fit
