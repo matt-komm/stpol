@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 from ROOT import *
-from cuts import *
 from plotting import *
 
 
