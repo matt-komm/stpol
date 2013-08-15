@@ -19,6 +19,7 @@ import networkx as nx
 import ROOT
 logger = logging.getLogger("tree")
 #logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 print "Done loading dependency libraries..."
 
 
@@ -261,6 +262,8 @@ class Node(object):
         """
         for f in self.filter_funcs:
             if not f(parentage):
+                import inspect
+                logger.debug("Cutting node %s because of filter function %s, %s" % (self.name, inspect.getsource(f), ".".join(parentage)))
                 return
         parentage = copy.deepcopy(parentage)
         parentage.append(self.name)
@@ -300,12 +303,9 @@ class HistNode(Node):
 
         #Use the cache of the previous CutNode in the call stack.
         last_cut = self.getPrevious(parentage, CutNode)
-        cache = 0#last_cut.cache
-        #FIXME: The cache carries state information, which cannot be stored with the node
-
-        if cache and "W1Jets" in cache.GetName() and "W3Jets" in obj.sample.name:
-            import pdb
-            pdb.set_trace()
+        cache = last_cut.cache
+        #FIXME: The cache carries state information, which actually cannot be stored with the node
+        #Current code only works when one doesn't run with multiple input samples
 
         #Get the total cut string from the call stack.
         cut = last_cut.getCutsTotal(parentage)
@@ -332,6 +332,8 @@ class HistNode(Node):
         obj.saver.save(hdir, hi)
 
         gNhistograms += 1
+        if gNhistograms%50==0:
+            logger.info("Projected out %d histograms" % gNhistograms)
         return (hi, r)
 
 class ObjectSaver:
@@ -387,13 +389,14 @@ class CutNode(Node):
         return total_cut
 
     def process(self, obj, parentage):
-        logger.info("Processing cut %s%s" % (len(parentage)*".", self.name))
         r = super(CutNode, self).process(obj, parentage)
         total_cut = self.getCutsTotal(parentage)
         elist_name = "elist__" + self.parentsName(parentage[:-1]).replace("/", "__")
         prev_cache = self.getPreviousCache(parentage)
         self.cache = obj.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache)
-        logger.debug("%d => %d, %s" % (prev_cache.GetN() if prev_cache else obj.sample.getEventCount(), self.cache.GetN(), elist_name))
+        ncur = -1 if not self.cache else self.cache.GetN()
+        nprev = -1 if not prev_cache else prev_cache.GetN()
+        logger.info("Processed cut %s%s => %d -> %d" % (len(parentage)*".", self.name, nprev, ncur))
         return (self.cache.GetN(), r)
 
 class SampleNode(Node):
@@ -577,21 +580,29 @@ if __name__=="__main__":
             wtot.append((wn, j))
 
         for name, j in wtot:
+            filter_funcs=[
+                lambda x,lepton=lepton: is_chan(x, lepton), #Apply the weights separately for the lepton channels
+                lambda x: "/mc/" in x[0] or "/mc_syst/" in x[0] #Apply only in MC
+            ] if name!="nominal" else [] #Always apply the nominal weight
             syst = WeightNode(
                 j, "weight__" + name + "__" + lepton,
-                [], [],
-                filter_funcs=[
-                    lambda x,lepton=lepton: is_chan(x, lepton), #Apply the weights separately for the lepton channels
-                    lambda x: "/mc/" in x[0] #Apply only in MC
-                ] + ([lambda x: "/nominal/" in x[0]] if name != "nominal" else []) #And variate only if we're using the nominal samples.
+                [], [], filter_funcs=filter_funcs
             )
+            logger.debug("Appending weight %s" % syst.name)
             syst_weights.append(syst)
+            # + ([lambda x: "/nominal/" in x[0]] if "nominal" not in name else []) #And variate only if we're using the nominal samples.
+
+        #Always produce the unweighted plot
+        unw = WeightNode(
+            Weights.no_weight, "weight__unweighted",
+            [], []
+        )
+        syst_weights.append(unw)
 
     #Which distributions do you want to plot
     final_plot_descs = dict()
     final_plot_descs['all'] = [
         ("cos_theta", "cos_theta", [60, -1, 1]),
-        ("true_cos_theta", "true_cos_theta", [60, -1, 1]),
         ("abs_eta_lj", "abs(eta_lj)", [60, 2.5, 5]),
         #("eta_lj", "eta_lj", [40, -5, 5]),
     ]
@@ -604,10 +615,19 @@ if __name__=="__main__":
         (Cuts.mva_vars['ele'], Cuts.mva_vars['ele'], [60, -1, 1]),
     ]
 
+    #MC-only variables
+    final_plot_descs['mc'] = [
+        ("true_cos_theta", "true_cos_theta", [60, -1, 1]),
+    ]
+
+    #Checks if the first parent name had an MC-specific string in it
+    is_mc = lambda x: "/mc/" in x[0] or "/mc_syst/" in x[0]
+
     #define a LUT for type <-> filtering function
     final_plot_lambdas = {
         'mu': lambda x: is_chan(x, 'mu'),
-        'ele': lambda x: is_chan(x, 'ele')
+        'ele': lambda x: is_chan(x, 'ele'),
+        'mc': lambda x: is_mc(x)
     }
 
     #Add all the nodes for the final plots with all the possible reweighting combinations
