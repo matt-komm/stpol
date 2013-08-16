@@ -215,31 +215,19 @@ class Cuts:
     def mva_antiiso(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-<<<<<<< HEAD
-        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)
-=======
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR_QCD()*Cuts.antiiso(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
->>>>>>> origin/metphi
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR_QCD()*Cuts.antiiso(lepton)
 
     @staticmethod
     def mva_antiiso_down(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-<<<<<<< HEAD
-        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)
-=======
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR_QCD()*Cuts.antiiso_down(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
->>>>>>> origin/metphi
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR_QCD()*Cuts.antiiso_down(lepton)
 
     @staticmethod
     def mva_antiiso_up(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-<<<<<<< HEAD
-        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)
-=======
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR_QCD()*Cuts.antiiso_up(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
->>>>>>> origin/metphi
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR_QCD()*Cuts.antiiso_up(lepton)
 
     @staticmethod
     def eta_fit(lepton, nj=2, nb=1, mtcut=None):
