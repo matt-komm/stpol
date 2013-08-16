@@ -53,7 +53,7 @@ class Cuts:
 
     electron_iso = Cut("el_mva > 0.9 & el_iso < 0.1")
 
-   
+
     _antiiso = {
         "mu": {
             "nominal": Cut("mu_iso>0.2 && mu_iso<0.5"),
@@ -99,9 +99,9 @@ class Cuts:
         if syst=="nominal":
             return Cut("met>45")
         elif syst=="up":
-            return Cut("met>60")
+            return Cut("met>65")
         elif syst=="down":
-            return Cut("met<30")
+            return Cut("met<25")
 
     no_cut = Cut("1")
 
@@ -154,10 +154,10 @@ class Cuts:
     @staticmethod
     def deltaR(x):
         return Cut("deltaR_bj>{0} && deltaR_lj>{0}".format(x))
-    
+
     @staticmethod
     def deltaR_QCD():
-        return deltaR(0.3)
+        return Cuts.deltaR(0.3)
 
     @staticmethod
     def n_tags(n):
@@ -215,19 +215,31 @@ class Cuts:
     def mva_antiiso(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
+<<<<<<< HEAD
         return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)
+=======
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR_QCD()*Cuts.antiiso(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+>>>>>>> origin/metphi
 
     @staticmethod
     def mva_antiiso_down(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
+<<<<<<< HEAD
         return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)
+=======
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR_QCD()*Cuts.antiiso_down(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+>>>>>>> origin/metphi
 
     @staticmethod
     def mva_antiiso_up(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
+<<<<<<< HEAD
         return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)
+=======
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR_QCD()*Cuts.antiiso_up(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+>>>>>>> origin/metphi
 
     @staticmethod
     def eta_fit(lepton, nj=2, nb=1, mtcut=None):
@@ -239,19 +251,19 @@ class Cuts:
     def eta_fit_antiiso(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR_QCD()*Cuts.antiiso(lepton)
 
     @staticmethod
     def eta_fit_antiiso_down(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR_QCD()*Cuts.antiiso_down(lepton)
 
     @staticmethod
     def eta_fit_antiiso_up(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR_QCD()*Cuts.antiiso_up(lepton)
 
     @staticmethod
     def final(n, m, lepton="mu"):
