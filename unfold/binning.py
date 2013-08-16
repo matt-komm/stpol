@@ -1,7 +1,22 @@
+from efficiency import get_signal_histo, get_signal_samples, var_x, var_y, var_min, var_max, MAXBIN, merge_anomalous
+#from prepare_unfolding import 
+import math
+import numpy
+import os
+from plots.common.make_systematics_histos import generate_out_dir
+from plots.common.utils import mkdir_p, get_file_list, PhysicsProcess, merge_hists, setErrors
+from ROOT import TH1, TH2, TFile
+from plots.common.cross_sections import lumi_iso
+from plots.common.sample import Sample
+from plots.common.cuts import *
+from plots.common.make_systematics_histos import generate_out_dir, generate_systematics, make_systematics_histos
+import shutil
+
 """
 File with rebinning stuff needed to have a special binning.
 Not in use currently.
 """
+
 
 def getbinning(histo, coupling, bins, zerobin=None):
     totint = histo.Integral(0, MAXBIN)
@@ -57,7 +72,7 @@ def findbinning(bins_generated, cuts, weight, indir, channel, coupling,  zerobin
     binning_gen = getbinning(histo_gen, coupling, bins_generated, zerobin_gen)
     # reconstructed
     binning_rec = getbinning(histo_rec, coupling, bins_generated*2, zerobin_rec)
-    return (numpy.array(binning_gen), numpy.array(binning_rec))
+    return (binning_gen, binning_rec)
 
 def rebin(cuts, weight, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "mu", mva_cut = None, coupling = "powheg", asymmetry=None):
     #print proc, "cos_theta", mva_cut, coupling, tag
@@ -117,7 +132,7 @@ def efficiency_rebinned(cuts, weight, binning_x, indir, proc="mu", mva_cut = Non
     fo = TFile(outdir+"/efficiency.root","RECREATE")
     fo.cd()
     
-    ROOT.TH1.SetDefaultSumw2(True)
+    TH1.SetDefaultSumw2(True)
     lumi = lumi_iso[proc]
     plot_range = [100,-1,1]
     hists_presel = {}
@@ -215,5 +230,7 @@ def make_histos_rebinned(binning, cut_str, cut_str_antiiso, indir, channel, mva_
     var = "cos_theta"
     subdir = generate_out_dir(channel, var, mva_cut, coupling, asymmetry)
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", subdir])
+    print "BNNG", binning
+    #system.exit(1)
     make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, channel, coupling, binning=binning, asymmetry=asymmetry)
     shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", subdir])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", subdir])+"/data.root")
