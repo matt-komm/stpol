@@ -10,7 +10,7 @@ class Fit:
             , filename
             , name = None
             , rates = {"tchan": inf,  "wzjets": inf, "other": 0.2}
-            , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] 
+            , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] #"__En" to avoid matching with UnclusteredEn
             , correlations = [("wzjets", "other")]):
 
         self.filename = filename
@@ -93,7 +93,7 @@ class Fit:
         for syst in Fit.getShapeSystematics(fit):
             st_type = self.get_type(fit, syst)
             if syst in fitresults.keys():
-                print '%s, %s, %f, %f\n' % (st_type, syst, fitresults[syst][0], fitresults[syst][1]),
+                print '%s, %s, %f, %f\n' % (st_type, syst.replace("__En","En"), fitresults[syst][0], fitresults[syst][1]),
             line = '%s, %s, %f, %f\n' % (st_type, syst, 0.0, 1.0)
             f.write(line)
 

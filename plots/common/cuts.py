@@ -51,7 +51,7 @@ class Cuts:
     one_electron = Cut("n_muons==0 && n_eles==1")
     lepton_veto = Cut("n_veto_mu==0 && n_veto_ele==0")
 
-    electron_iso = Cut("el_mva > 0.9 & el_reliso < 0.1")
+    electron_iso = Cut("el_mva > 0.9 & el_iso < 0.1")
 
    
     _antiiso = {
@@ -215,19 +215,19 @@ class Cuts:
     def mva_antiiso(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)
 
     @staticmethod
     def mva_antiiso_down(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso_down(lepton)
 
     @staticmethod
     def mva_antiiso_up(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
         if lepton not in ["mu", "ele"]:
             raise ValueError("lepton must be mu or ele:%s" % lepton)
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR(0.3)*Cuts.antiiso_up(lepton)
 
     @staticmethod
     def eta_fit(lepton, nj=2, nb=1, mtcut=None):
@@ -429,6 +429,10 @@ class Weights:
     def total_weight(lepton):
         return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight()
 
+    @staticmethod
+    def asymmetry_weight(asymmetry):    #reweight to given asymmetry
+        weight = Weight(str(asymmetry)+" * true_cos_theta + 0.5) / (0.44*true_cos_theta + 0.5))")
+        return weight
 
     muon_sel = dict()
     muon_sel["id"] = (

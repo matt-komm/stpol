@@ -25,7 +25,7 @@ Command line parameters:
   FitConfig.py: defines the cuts used in the fit, for different iso regions, etc.
 """
 
-import sys,os
+import sys,os,os.path
 
 try:
     from theta_auto import *
@@ -123,11 +123,10 @@ if __name__=="__main__":
         args.cuts = cuts.keys()
 
     ofdir = "fitted/" + args.channel
-    try:
-        os.makedirs(ofdir)
-    except:
-        pass
-
+    if not os.path.isdir(ofdir): os.makedirs(ofdir)
+    if not os.path.isdir('templates'): os.mkdir('templates')
+    if not os.path.isdir('fits'): os.mkdir('fits')
+    if not os.path.isdir('fit_plots'): os.mkdir('fit_plots')
 
     failed = []
     for cutn in args.cuts:

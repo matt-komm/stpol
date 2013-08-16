@@ -1,18 +1,32 @@
 #!/usr/bin/env python
 """
-FIXME: Short documentation
+NB! QCD estimation has to be run before as the script takes results straight from qcd_estimation/fitted
+For MVA fitting the fit '2j1t' is needed and for eta_j' 'fit_2j1t'
+
+The script creates histograms named in theta format for 3 components - signal ('tchan'), W/Z+jets with WW ('wzjets') and Top processes (ttbar, tW-channel, s-channel) plus QCD ('other') for all the systematic variations
+The systematics themselves are defined in plots.common/make_systematics_histos.py (sorry, poorly written code) and are divided into 3 groups (1. having separate files for each dataset (En, Res, UnclusteredEn);
+  2. having separate files, but applying only to a few datasets; 3. altering weights). Each group is treated differently. 
+If tou want to add a new systematic, it is added to this file (or uncomment one of the premade ones which didn't have datasets available before).
+TODO: add pileup, ttbar and PDF uncertainties when available and tchan_scale once new data processing completes
+The loading of the samples is done in plots.common.load_samples.py (also messy, sorry about that). Adding a new weight-based systematic should require no change in this file, however when adding a systematics that
+deals with separate files, then these should be processed there.
+
+Possible command-line arguments are the following:
+'--channel', '--path' - as previously
+'--var' - variable of the histograms, possible choices: ["eta_lj", "C", "mva_BDT", "mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj", "mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj"],
+'--coupling' - by default we are using the powheg samples for signal. Here we can use comphep or anomalous couplings instead. choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg"]
+'--asymmetry' - reweigh the generated asymmetry value to something else. Used for linearity tests and estimating uncertainties if the measured result largely differs from the generated one
+'--mtmetcut' - use an alternative value for MTW/MET cut, used for cross-checks
 """
+
 import logging
 logging.basicConfig(level=logging.WARNING)
 
 from plots.common.make_systematics_histos import generate_out_dir, generate_systematics, make_systematics_histos
-#from plots.common.utils import *
 from plots.common.cuts import *
-#import argparse
 
 from rootpy.io import File
 from os.path import join
-#from plots.common.hist_plots import plot_hists_dict
 from plots.common.histogram import norm
 from plots.common.utils import NestedDict, mkdir_p
 from fit import *
@@ -60,14 +74,17 @@ if __name__=="__main__":
     indir = args.path
     outdir = os.path.join(os.environ["STPOL_DIR"], "final_fit", "histos", "input", generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry, args.mtmetcut))
     outdir_final = os.path.join(os.environ["STPOL_DIR"], "final_fit", "histos")
+    #generate the systematics to use
     systematics = generate_systematics(args.channel, args.coupling)
+    #make histograms with all the systematic variations
     make_systematics_histos(args.var, cut_str, cut_str_antiiso, systematics, outdir, indir, args.channel, args.coupling, plot_range=plot_range, asymmetry=args.asymmetry, mtmetcut=args.mtmetcut)
     mkdir_p(outdir_final)
+    #move results file from temporary location    
     shutil.move(
         '/'.join([outdir, "lqeta.root"]),
         '/'.join([
             outdir_final,
-            generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry)+ ("_met%d" % int(args.mtmetcut)) + ".root"]
+            generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry, args.mtmetcut)+ ".root"]
         )
     )
     print "finished"

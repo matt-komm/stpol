@@ -1,4 +1,3 @@
-#from ROOT
 import os
 from plots.common.sample import Sample
 from plots.common.utils import mkdir_p
@@ -76,7 +75,7 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                         #No systematics if data
                         continue
                     elif main_syst in ["Res", "En", "UnclusteredEn"]:
-                        if coupling != "powheg": #these systs not available for comphep (currently)
+                        if coupling != "powheg": #these systs not available for comphep (currently?)
                             continue
                         hname = "%s__%s__%s__%s" % (var, sn, main_syst, sys)
                         write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
@@ -92,7 +91,6 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
 
 def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
     weight_str = weight
-    #print hname, samples
     samp = samples[sampn]
     outfile = File(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
     if sn=="DATA":
@@ -101,6 +99,7 @@ def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, 
         var = "abs("+var+")"
     qcd_extra = None
     
+    #This is a really ugly way of adding the QCD shape variation, but works. Restructure the whole thing in the future
     if "iso__down" in hname:
         if var == "abs(eta_lj)":
             cuts_antiiso = str(Cuts.eta_fit_antiiso_down(channel))
@@ -123,7 +122,6 @@ def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, 
             cut = cut.replace("(","").replace(")","")
             cuts_antiiso = str(Cuts.mva_antiiso_up(channel, mva_var=var)) + " && ("+cut+")"
             qcd_extra = str(Cuts.mva_antiiso(channel, mva_var=var)) + " && ("+cut+")" #hack for now
-    #print "!", hname, cuts_antiiso    
     hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=qcd_extra, mtmetcut=mtmetcut)
     outfile.cd() #Must cd after histogram creation
 
@@ -141,24 +139,18 @@ def hadd_histos(outdir):
     outfile = generate_file_name(False)
     subprocess.check_call(("hadd -f {0}/"+outfile+" {0}/*.root").format(outdir), shell=True)
 
-
 def generate_file_name(sherpa):
     name = "lqeta"
-    if sherpa:
-        name += "_sherpa"
     name += ".root"
     return name
-
 
 def generate_systematics(channel, coupling):
     systematics = {}
     systematics["nominal"]={}
     systematics["nominal"]["nominal"] = str(Weights.total_weight(channel))
-    #systs_infile = ["pileup", "btaggingBC", "btaggingL", "muonID", "muonIso", "muonTrigger", "wjets_flat", "wjets_shape"]
+    systs_infile = ["btaggingBC", "btaggingL", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape"]
     if channel == "mu":
-        systs_infile = ["btaggingBC", "btaggingL", "leptonID", "leptonIso", "leptonTrigger", "wjets_flat", "wjets_shape"]
-    elif channel == "ele":
-        systs_infile = ["btaggingBC", "btaggingL", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape"]
+        systs_infile.append("leptonIso")
     for sys in systs_infile:
         systematics["nominal"][sys] = {}
     if coupling == "powheg":
@@ -166,7 +158,9 @@ def generate_systematics(channel, coupling):
         for sys in systs_infile_file:
            systematics[sys] = {}
     
-    #FIXME: add pileup variations?
+    #TODO: Add PDF-s
+    #TODO: Add pileup
+    #TODO: add ttbar
     #systematics["nominal"]["pileup"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
     #systematics["nominal"]["pileup"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
     systematics["nominal"]["btaggingBC"]["up"] = str(Weights.pu()*Weights.b_weight("BC", "up")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
@@ -185,12 +179,13 @@ def generate_systematics(channel, coupling):
     systematics["nominal"]["leptonTrigger"]["up"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     systematics["nominal"]["leptonTrigger"]["down"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     
-    #TODO: Add PDF-s
     
     systematics["partial"] = {}
+    #TODO - some mass files still not processed correctly...leave out for now
     """systematics["partial"]["mass"] = {}
     systematics["partial"]["mass"]["down"] = {}
     systematics["partial"]["mass"]["up"] = {}"""
+    #TODO: add tchan-scale when next processing finishes    
     """systematics["partial"]["tchan_scale"] = {}
     systematics["partial"]["tchan_scale"]["down"] = {}
     systematics["partial"]["tchan_scale"]["up"] = {}"""
@@ -200,6 +195,7 @@ def generate_systematics(channel, coupling):
     systematics["partial"]["ttbar_matching"] = {}
     systematics["partial"]["ttbar_matching"]["down"] = {}
     systematics["partial"]["ttbar_matching"]["up"] = {}
+    #TODO: W+jets scale/matching not processed
     """systematics["partial"]["wjets_scale"] = {}
     systematics["partial"]["wjets_scale"]["down"] = {}
     systematics["partial"]["wjets_scale"]["up"] = {}"""
@@ -209,7 +205,7 @@ def generate_systematics(channel, coupling):
     systematics["partial"]["iso"] = {}
     systematics["partial"]["iso"]["down"] = {}
     systematics["partial"]["iso"]["up"] = {}
-
+    
     if coupling == "powheg":
         systematics["Res"]["down"]="ResDown"
         systematics["Res"]["up"]="ResUp"
