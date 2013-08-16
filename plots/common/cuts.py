@@ -53,13 +53,27 @@ class Cuts:
 
     electron_iso = Cut("el_mva > 0.9 & el_reliso < 0.1")
 
-    mu_antiiso = Cut("mu_iso>0.2 && mu_iso<0.5")
-    mu_antiiso_up = Cut("mu_iso>0.2 && mu_iso<0.4")
-    mu_antiiso_down = Cut("mu_iso>0.3 && mu_iso<0.5")
+   
+    _antiiso = {
+        "mu": {
+            "nominal": Cut("mu_iso>0.2 && mu_iso<0.5"),
+            "up": Cut("mu_iso>0.3 && mu_iso<0.5"),
+            "down": Cut("mu_iso>0.2 && mu_iso<0.4"),
+        },
+        "ele": {
+            "nominal": Cut("el_iso > 0.15 && el_iso < 0.5"),
+            "up": Cut("el_iso > 0.165 && el_iso < 0.5"),
+            "down": Cut("el_iso > 0.15 && el_iso < 0.45"),
+        }
+    }
 
-    electron_antiiso = Cut("el_iso > 0.15 && el_iso < 0.5")
-    electron_antiiso_down = Cut("el_iso > 0.15 && el_iso < 0.45")
-    electron_antiiso_up = Cut("el_iso > 0.165 && el_iso < 0.5")
+    #FIXME: deprecated public accessors
+    mu_antiiso = _antiiso["mu"]["nominal"]
+    mu_antiiso_up =  _antiiso["mu"]["up"]
+    mu_antiiso_down =  _antiiso["mu"]["down"]
+    electron_antiiso = _antiiso["ele"]["nominal"]
+    electron_antiiso_up = _antiiso["ele"]["up"]
+    electron_antiiso_down = _antiiso["ele"]["down"]
 
     #MVA variable names
     mva_vars = {}
@@ -123,36 +137,27 @@ class Cuts:
         else:
             raise ChannelException(lepton)
 
-    @staticmethod
-    def antiiso(lepton):
-        if lepton == "mu":
-            return Cuts.mu_antiiso
-        elif lepton == "ele":
-            return Cuts.electron_antiiso
-        else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
+    @classmethod
+    def antiiso(self, lepton, syst="nominal"):
+        return self._antiiso[lepton][syst]
 
+    #FIXME: Deprecated. here for backwards compatibility
     @staticmethod
     def antiiso_down(lepton):
-        if lepton == "mu":
-            return Cuts.mu_antiiso_down
-        elif lepton == "ele":
-            return Cuts.electron_antiiso_down
-        else:
-            raise ChannelException(lepton)
-
+        logger.warning("Calling a deprecated method: Cuts.antiiso_down")
+        Cuts.antiiso(lepton, "down")
     @staticmethod
     def antiiso_up(lepton):
-        if lepton == "mu":
-            return Cuts.mu_antiiso_up
-        elif lepton == "ele":
-            return Cuts.electron_antiiso_up
-        else:
-            raise ChannelException(lepton)
+        logger.warning("Calling a deprecated method: antiiso_up")
+        Cuts.antiiso(lepton, "up")
 
     @staticmethod
     def deltaR(x):
         return Cut("deltaR_bj>{0} && deltaR_lj>{0}".format(x))
+    
+    @staticmethod
+    def deltaR_QCD():
+        return deltaR(0.3)
 
     @staticmethod
     def n_tags(n):
@@ -457,7 +462,7 @@ class Weights:
         Weight("wjets_mg_flavour_shape_weight"), Weight("wjets_mg_flavour_shape_weight_up"), Weight("wjets_mg_flavour_shape_weight_down"),
     )
 
-    wjets_btag_syst = (
+    btag_syst = (
         Weight("b_weight_nominal"), Weight("b_weight_nominal_BCup"), Weight("b_weight_nominal_BCdown"), Weight("b_weight_nominal_Lup"), Weight("b_weight_nominal_Ldown"),
     )
 
