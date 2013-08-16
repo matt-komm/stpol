@@ -27,6 +27,13 @@ def hist_err(axes, hist, yerr=None, **kwargs):
         drawstyle='steps-mid', **kwargs
     )
 
+def ipy_show_canv(c):
+    from IPython.core.display import Image
+
+    fn = "temp.png"
+    c.SaveAs(fn) 
+    return Image(filename=fn) 
+
 def plot_hists(hists, name="canv", **kwargs):
     """
     Draws a list of histograms side-by-side on a new canvas.
