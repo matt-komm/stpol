@@ -42,27 +42,6 @@ def load_fit_results(fn):
         rates[sample] = float(sf)
     return rates
 
-def reorder(src, dest, reverse=False):
-    """
-    Reorders objects in the src dictionary according to the dest order list.
-
-    Args:
-        src: the source dictionary
-        dest: a list with the desired order of the keys.
-
-    Keywords:
-        reverse: return the output in the reversed order.
-
-    Returns:
-        a list with the objects in the desired order.
-    """
-    ret = []
-    if reverse:
-        dest = list(reversed(dest))
-    for i in dest[::-1]:
-        ret.append(src[i])
-    return ret
-
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
     tdrstyle()
@@ -84,11 +63,9 @@ if __name__=="__main__":
 
     dfit_results = dict()
 
-    suffix = 'top_plus_qcd'
-    dfit_results['top_plus_qcd'] = {
-        "mu": "mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__top_plus_qcd",
-        "ele": "ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd"
-    }
+    systs_to_consider = hists_syst.keys()
+    #systs_to_consider = []
+    systs_to_remove = []
 
     dfit_results['default'] = {
         "mu": "mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj",
@@ -142,78 +119,81 @@ if __name__=="__main__":
         for sr in systs_to_remove:
             systs_to_consider.pop(systs_to_consider.index(sr))
 
-        nom = sum(hists_nom_mc)
+    systs_to_consider = list(set(systs_to_consider).difference(set(systs_to_remove)))
+    nom = sum(hists_nom_mc)
 
-        doScale = True
+    doScale = False
 
-        for syst in systs_to_consider:
-            totupdown = []
-            print syst
-            for systdir in ["up", "down"]:
-                _hists = hists_syst[syst][systdir]
-                for k, h in _hists.items():
-                    if doScale:
-                        h.Scale(hists_nominal[k].Integral() / h.Integral())
-                #print syst, systdir, hists_syst[syst][systdir]
-                present = set(_hists.keys())
-                all_mc = set(hists_nominal.keys())
-                missing = list(all_mc.difference(present))
-                tot = sum(_hists.values()) + sum([hists_nominal[m] for m in missing])
-                totupdown.append(tot)
-                diff = numpy.array(list(nom.y())) - numpy.array(list(tot.y()))
-                print "sum abs diff=", numpy.sum(numpy.abs(diff))
+    for syst in systs_to_consider:
+        totupdown = []
+        #print syst
+        for systdir in ["up", "down"]:
+            _hists = hists_syst[syst][systdir]
+            for k, h in _hists.items():
+                if doScale:
+                    h.Scale(hists_nominal[k].Integral() / h.Integral())
 
-            tots.append(
-                (syst, tuple(totupdown))
-            )
+            present = set(_hists.keys())
+            all_mc = set(hists_nominal.keys())
+            missing = list(all_mc.difference(present))
+            tot = sum(_hists.values()) + sum([hists_nominal[m] for m in missing])
+            totupdown.append(tot)
+            diff = numpy.array(list(nom.y())) - numpy.array(list(tot.y()))
+            #print "sum abs diff", systdir, "%.2E" % numpy.sum(numpy.abs(diff))
 
-
-        syst_up, syst_down = total_syst(nom, tots)
+        tots.append(
+            (syst, tuple(totupdown))
+        )
 
 
-        h = OrderedDict()
-        h['data'] = hists_nom_data
-        h['nominal'] = nom
-        h['up'] = syst_up
-        h['down'] = syst_down
+    syst_up, syst_down, syst_stat_up, syst_stat_down = total_syst(nom, tots)
 
-        stacks_d = OrderedDict()
-        stacks_d['mc'] = reorder(hists_nominal, ["tchan", "top", "wzjets", "qcd"])
-        stacks_d['data'] = [hists_nom_data]
+    stacks_d = OrderedDict()
+    stacks_d['mc'] = reorder(hists_nominal, PhysicsProcess.desired_plot_order_mc)
+    stacks_d['data'] = [hists_nom_data]
 
-        for s in [syst_up, syst_down]:
-            s.SetFillStyle(0)
-            s.SetLineWidth(3)
-            s.SetLineColor(ROOT.kGray+1)
-            s.SetLineStyle('dashed')
-            s.SetTitle("syst.")
+    # #Systematic style
+    # for s in [syst_up, syst_down]:
+    #     s.SetFillStyle(0)
+    #     s.SetLineWidth(3)
+    #     s.SetLineColor(ROOT.kGray+1)
+    #     s.SetFillColor(ROOT.kWhite)
+    #     s.SetLineStyle('dashed')
+    #     s.SetTitle("syst.")
+    for s in [syst_stat_up, syst_stat_down]:
+        s.SetFillStyle(0)
+        s.SetLineWidth(3)
+        s.SetLineColor(ROOT.kGray+2)
+        s.SetFillColor(ROOT.kGray)
+        s.SetLineStyle('solid')
+        s.SetTitle("syst.+stat.")
 
-        hists_nom_data.SetTitle('data')
-        hists_nominal['tchan'].SetTitle("signal (t-channel)")
-        hists_nominal['top'].SetTitle("t#bar{t}, tW, s")
-        hists_nominal['wzjets'].SetTitle("W, diboson, DY-jets")
-        hists_nominal['qcd'].SetTitle("QCD")
+    c = ROOT.TCanvas()
+    p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
+    p1.Draw()
+    p1.SetTicks(1, 1);
+    p1.SetGrid();
+    p1.SetFillStyle(0);
+    p1.cd()
 
-        c = ROOT.TCanvas()
-        p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
-        p1.Draw()
-        p1.SetTicks(1, 1);
-        p1.SetGrid();
-        p1.SetFillStyle(0);
-        p1.cd()
+    stacks = plot_hists_stacked(p1, stacks_d, x_label="#eta_{j'}", max_bin_mult=1.5)
+    #p1.SetLogy()
 
-        stacks = plot_hists_stacked(p1, stacks_d, x_label="cos #theta")
+    #IN most cases, the systematic error dominates by a large factor, thus the statistical error can be neglected
+    #and we can draw always syst+stat. together
+    # syst_up.Draw("SAME hist")
+    # syst_down.Draw("SAME hist")
 
-        syst_up.Draw("SAME hist")
-        syst_down.Draw("SAME hist")
+    syst_stat_up.Draw("SAME hist")
+    syst_stat_down.Draw("SAME hist")
 
-        ratio_pad, hratio = plot_data_mc_ratio(c, hists_nom_data, nom, syst_hists=(syst_up, syst_down), min_max=(-0.5, 0.5))
+    ratio_pad, hratio = plot_data_mc_ratio(c, hists_nom_data, nom, syst_hists=(syst_stat_up, syst_stat_down), min_max=(-2, 2))
 
-        p1.cd()
-        leg = legend(stacks_d['data']+list(reversed(stacks_d['mc']))+[syst_up], legend_pos='top-left')
-        lb = lumi_textbox(lumi,
-            line2="%s channel, BDT>%.2f, sf applied" % (channel_pretty[channel], mva_cut[channel]), pos='top-right')
-        c.SaveAs("out/plots/cos_theta_%s_%s.png" % (channel, suffix))
-        c.Close()
-        print "Systs:", systs_to_consider
+    p1.cd()
+    leg = legend(stacks_d['data']+list(reversed(stacks_d['mc']))+[syst_stat_up], legend_pos='top-right')
+    # lb = lumi_textbox(lumi,
+    #     line2="%s channel, BDT>%.2f, sf applied" % (channel_pretty[channel], mva_cut[channel]), pos='top-right')
+    #c.SaveAs("out/plots/cos_theta_%s_%s.png" % (channel, suffix))
+    #c.Close()
+    #print "Systs:", systs_to_consider
     #canv = plot_hists_dict(h)

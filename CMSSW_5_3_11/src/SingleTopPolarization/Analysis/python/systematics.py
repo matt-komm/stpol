@@ -1,4 +1,31 @@
-import numpy
+import numpy as np
+import math
+import logging
+logger = logging.getLogger("systematics")
+
+def to_arr(x):
+    return np.array(list(x))
+
+def quadsum(*args):
+    pow2 = map(lambda x: np.power(x, 2), args)
+    sum2 = reduce(lambda x,y: x+y, pow2)
+    ret = np.sqrt(sum2)
+    return ret
+
+def n_events(hist):
+    errs = to_arr(hist.errors())
+    n = np.power(errs, 2)
+    return n
+
+def cdf_errors(hist, sign=+1):
+    n = n_events(hist)
+    logger.info("Errs: %s" % str())
+    for i in range(hist.nbins()):
+        hist.SetBinError(i,
+            sign*0.5*math.sqrt(
+                n[i] + 0.25
+            )
+        )
 
 def total_syst(nominal, systs):
     """
@@ -6,6 +33,8 @@ def total_syst(nominal, systs):
     corresponding to systematics, calculate the total up/down
     variation assuming uncorrelated errors across systematics
     bins.
+    Additionally, the stat. + syst. error band is calculated,
+    assuming uncorrelated errors.
 
     Args:
         nominal: the unvaried Histogram instance corresponding
@@ -13,34 +42,70 @@ def total_syst(nominal, systs):
         systs: a list of tuples (name, (hist_up, hist_down))
             corresponding to a systematic variation.
     Returns:
-        a pair of histograms corresponding to the total uncorrelated
-        up/down variation. 
+        a 4-tuple of histograms corresponding to the total uncorrelated
+        systematic up/down variation and the uncorrelated
+        systematic + statistical variation. 
     """
     if isinstance(systs, dict):
         systs = systs.items()
-    bins = numpy.array(list(nominal.y()))
 
-    diff_up_tot = numpy.zeros(bins.shape)
-    diff_down_tot = numpy.zeros(bins.shape)
+    bins = to_arr(nominal.y())
+    errs = to_arr(nominal.errors())
+
+    #The total difference resulting from the systematic variation
+    diff_up_tot = np.zeros(bins.shape)
+    diff_down_tot = np.zeros(bins.shape)
+
+    diff_tot = np.zeros(bins.shape)
+    # Consider each systematic variation separately, assuming
+    # no correlations
     for systn, (hup, hdown) in systs:
-        bins_up = numpy.array(list(hup.y()))
-        bins_down = numpy.array(list(hdown.y()))
-        diff_up = bins - bins_up
-        diff_down = bins - bins_down
-        diff_up_tot += numpy.power(diff_up, 2)
-        diff_down_tot += numpy.power(diff_down, 2)
 
-    diff_up_tot = numpy.sqrt(diff_up_tot)
-    diff_down_tot = numpy.sqrt(diff_down_tot)
+        cdf_errors(hup, sign=+1)
+        cdf_errors(hdown, sign=-1)
 
+        # The variated templates
+        bins_up = to_arr(hup.y())
+        bins_down = to_arr(hdown.y())
+
+        # The difference between the nominal and the variated shape, taking into account
+        # the lack of information about the central value of the variated shapes from low statistics.
+        diff_up = quadsum(bins - bins_up, to_arr(hup.errors()))
+        diff_down = quadsum(bins - bins_down, to_arr(hdown.errors()))
+        diff = quadsum(bins_up - bins_down,
+            to_arr(hdown.errors()),
+            to_arr(hup.errors())
+        )
+
+        diff_up_tot += np.power(diff_up, 2)
+        diff_down_tot += np.power(diff_down, 2)
+        diff_tot += np.power(diff, 2)
+
+    diff_up_tot = np.sqrt(diff_up_tot)
+    diff_down_tot = np.sqrt(diff_down_tot)
+    diff_tot = np.sqrt(diff_tot)
+
+    #Systematic only
     hup = nominal.Clone("syst_up")
     hdown = nominal.Clone("syst_down")
-
     bins_up = bins + diff_up_tot
     bins_down = bins - diff_down_tot
-
     for i in range(len(bins)):
         hup.SetBinContent(i+1, bins_up[i])
         hdown.SetBinContent(i+1, bins_down[i])
 
-    return hup, hdown
+    #Statistical plus systematic, uncorrelated
+    hup_syst_stat = nominal.Clone("syst_stat_up")
+    hdown_syst_stat = nominal.Clone("syst_stat_down")
+    delta_up = quadsum(diff_up_tot, errs)
+    delta_down = quadsum(diff_down_tot, errs)
+    delta = quadsum(diff_tot, errs)
+
+    bins_up = bins + delta_up
+    bins_down = bins - delta_down
+    for i in range(len(bins)):
+        hup_syst_stat.SetBinContent(i+1, bins_up[i])
+        hdown_syst_stat.SetBinContent(i+1, bins_down[i])
+
+
+    return hup, hdown, hup_syst_stat, hdown_syst_stat

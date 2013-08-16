@@ -155,6 +155,12 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
     hist_ratio.Add(hist_data, -1.0)
     hist_ratio.Divide(hist_data)
 
+    for i in range(hist_ratio.nbins()):
+        if hist_data[i] == 0:
+            hist_ratio.SetBinError(i+1, max(list(map(abs, min_max))))
+            hist_ratio.SetBinContent(i+1, 0)
+
+
     hist_ratio.SetLineColor(ROOT.kBlack)
 
     hist_ratio.SetStats(False)
@@ -201,9 +207,18 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
             hr.SetFillColor(ROOT.kGray)
             hr.SetLineColor(ROOT.kGray)
 
-            hr.Draw("hist same")
+            #hr.Draw("same hist")
             logger.debug(list(hr.y()))
             syst_ratio_hists.append(hr)
+
+        #Set symmetric error bars on the ratio plot dots according to the maximal syst. error for this bin
+        for i in range(hist_ratio.nbins()):
+            hist_ratio.SetBinError(i+1,
+                max(
+                    abs(hist_ratio[i] - syst_ratio_hists[0].GetBinContent(i+1)),
+                    abs(hist_ratio[i] - syst_ratio_hists[1].GetBinContent(i+1))
+                )
+            )
         canv.syst_ratio_hists = syst_ratio_hists
     return p2, hist_ratio
 
