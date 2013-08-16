@@ -490,13 +490,17 @@ if __name__=="__main__":
             lep + "__iso", par, [],
             filter_funcs=[lambda x: "/iso/" in x[0]]
         )
-        isos[lep]['antiiso'] = CutNode(
-            Cuts.antiiso(lep), #Apply any additional anti-iso cuts (like dR)
-            lep + "__antiiso", par, [],
-            filter_funcs=[lambda x: "/antiiso/" in x[0]]
-        )
         isol.append(isos[lep]['iso'])
-        isol.append(isos[lep]['antiiso'])
+        
+        #Antiiso with variations
+        for aiso_syst in ["nominal", "up", "down"]:
+            cn = 'antiiso_' + aiso_syst
+            isos[lep][cn] = CutNode(
+                Cuts.antiiso(lep, aiso_syst) * Cuts.deltaR_QCD(), #Apply any additional anti-iso cuts (like dR) along with antiiso variations.
+                lep + "__" + cn, par, [],
+                filter_funcs=[lambda x: "/antiiso/" in x[0]]
+            )
+            isol.append(isos[lep][cn])
 
     # [iso, antiiso] --> jet --> [jets2-3]
     jet = Node("jet", isol, [])
@@ -559,10 +563,15 @@ if __name__=="__main__":
 
     #Other weights are the same
     weights = [
-        ("btag", Weights.wjets_btag_syst),
+        ("btag", Weights.btag_syst),
         ("wjets_yield", Weights.wjets_yield_syst),
         ("wjets_shape", Weights.wjets_shape_syst),
+        ("pu", Weights.pu_syst),
+
     ]
+
+    #Checks if the first parent name had an MC-specific string in it
+    is_mc = lambda x: "/mc/" in x[0] or "/mc_syst/" in x[0]
 
     #Now make all the weight combinations for mu/ele, variating one weight
     weights_total = dict()
@@ -582,15 +591,22 @@ if __name__=="__main__":
         for name, j in wtot:
             filter_funcs=[
                 lambda x,lepton=lepton: is_chan(x, lepton), #Apply the weights separately for the lepton channels
-                lambda x: "/mc/" in x[0] or "/mc_syst/" in x[0] #Apply only in MC
-            ] if name!="nominal" else [] #Always apply the nominal weight
+               is_mc #Apply only in MC
+            ]
+
+            #Apply syst weights only in case of nominal samples
+            if name != "nominal":
+                filter_funcs += [
+                    lambda x: "/nominal/" in x[0] #Check if the parent was a nominal sample
+                ]
+
             syst = WeightNode(
                 j, "weight__" + name + "__" + lepton,
                 [], [], filter_funcs=filter_funcs
             )
             logger.debug("Appending weight %s" % syst.name)
             syst_weights.append(syst)
-            # + ([lambda x: "/nominal/" in x[0]] if "nominal" not in name else []) #And variate only if we're using the nominal samples.
+
 
         #Always produce the unweighted plot
         unw = WeightNode(
@@ -601,9 +617,13 @@ if __name__=="__main__":
 
     #Which distributions do you want to plot
     final_plot_descs = dict()
+    nbins = 60
     final_plot_descs['all'] = [
-        ("cos_theta", "cos_theta", [60, -1, 1]),
-        ("abs_eta_lj", "abs(eta_lj)", [60, 2.5, 5]),
+        ("cos_theta", "cos_theta", [nbins, -1, 1]),
+        ("abs_eta_lj", "abs(eta_lj)", [nbins, 2.5, 5]),
+        ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 5]),
+        ("top_mass", "top_mass", [nbins, 80, 400]),
+        ("top_mass_sr", "top_mass", [nbins, 130, 220]),
         #("eta_lj", "eta_lj", [40, -5, 5]),
     ]
 
@@ -619,9 +639,6 @@ if __name__=="__main__":
     final_plot_descs['mc'] = [
         ("true_cos_theta", "true_cos_theta", [60, -1, 1]),
     ]
-
-    #Checks if the first parent name had an MC-specific string in it
-    is_mc = lambda x: "/mc/" in x[0] or "/mc_syst/" in x[0]
 
     #define a LUT for type <-> filtering function
     final_plot_lambdas = {
@@ -654,8 +671,8 @@ if __name__=="__main__":
 
     print "Done constructing analysis tree..."
 
-    print gGraph.nodes()
-    import matplotlib.pyplot as plt
+    # print gGraph.nodes()
+    # import matplotlib.pyplot as plt
 
     # same layout using matplotlib with no labels
     #plt.title("draw_networkx")
