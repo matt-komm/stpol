@@ -491,7 +491,7 @@ if __name__=="__main__":
             filter_funcs=[lambda x: "/iso/" in x[0]]
         )
         isol.append(isos[lep]['iso'])
-        
+
         #Antiiso with variations
         for aiso_syst in ["nominal", "up", "down"]:
             cn = 'antiiso_' + aiso_syst
@@ -514,15 +514,22 @@ if __name__=="__main__":
         tags[i] = CutNode(Cuts.n_tags(i), "%dt"%i, [tag], [])
 
 
+    #The primary MET/MTW cut node
     met = Node("met", tag.children, [])
+
     mets = dict()
 
-    mets['met'] = CutNode(Cuts.met(), "met__met", [met], [],
-        filter_funcs=[lambda x: is_chan(x, 'ele')]
+    #No MET cut requirement
+    mets['off'] = CutNode(Cuts.no_cut, "met__off", [met], [],
     )
-    mets['mtw'] = CutNode(Cuts.mt_mu(), "met__mtw", [met], [],
-        filter_funcs=[lambda x: is_chan(x, 'mu')]
-    )
+
+    for met_syst in ["nominal", "up", "down"]:
+        mets['met_' + met_syst] = CutNode(Cuts.met(met_syst), "met__met_" + met_syst, [met], [],
+            filter_funcs=[lambda x: is_chan(x, 'ele')]
+        )
+        mets['mtw_' + met_syst] = CutNode(Cuts.mt_mu(met_syst), "met__mtw_" + met_syst, [met], [],
+            filter_funcs=[lambda x: is_chan(x, 'mu')]
+        )
 
     # purifications ---> cutbased, MVA
     purification = Node("signalenr", met.children, [])
