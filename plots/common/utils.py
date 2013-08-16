@@ -72,8 +72,11 @@ def get_file_list(merge_cmds, dir, fullpath=True, permissive=True):
     return sorted(out_files)
 
 class PhysicsProcess:
-    desired_plot_order = ["data", "diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan"]
-    desired_plot_order_log = ["data", "schan", "diboson", "tchan", "tWchan", "DYJets", "TTJets", "WJets" ]
+    desired_plot_order_mc = ["diboson", "WJets", "DYJets", "TTJets", "tWchan", "schan", "tchan", "qcd"]
+    desired_plot_order__mc_log = ["schan", "diboson", "tchan", "tWchan", "DYJets", "TTJets", "WJets", "qcd"]
+    desired_plot_order = ["data"] + desired_plot_order_mc
+    desired_plot_order_log = ["data"] + desired_plot_order__mc_log
+
     def __init__(self, name, subprocesses, pretty_name=None):
         self.name = name
         self.subprocesses = subprocesses
@@ -83,7 +86,7 @@ class PhysicsProcess:
             self.pretty_name = name
 
     @classmethod
-    def get_proc_dict(self, lepton_channel, systematic_channel="nominal"):
+    def get_proc_dict(self, lepton_channel, systematic_scenario="nominal"):
         """
         Returns the collection of PhysicsProcesses, that contain samples to be merged for the
         particular lepton channel and systematic scenario.
@@ -101,13 +104,16 @@ class PhysicsProcess:
         out_d["TTJets"] = self.TTJets_exc
         out_d["tWchan"] = self.tWchan
         out_d["schan"] = self.schan
-        if systematic_channel=="nominal" or systematic_channel=="powheg":
+        out_d["qcd"] = self.qcd
+
+        ###FIXME: there is a better way
+        if systematic_scenario=="nominal" or systematic_scenario=="powheg":
             out_d["tchan"] = self.tchan
-        elif systematic_channel=="comphep":
+        elif systematic_scenario=="comphep":
             out_d["tchan"] = self.tchan_comphep
-        elif systematic_channel=="anomWtb-0100":
+        elif systematic_scenario=="anomWtb-0100":
             out_d["tchan"] = self.tchan_comphep_anomWtb_0100
-        elif systematic_channel=="anomWtb-unphys":
+        elif systematic_scenario=="anomWtb-unphys":
             out_d["tchan"] = self.tchan_comphep_anomWtb_unphys
         return out_d
 
@@ -172,39 +178,31 @@ PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"],
     pretty_name="DY"
 )
 PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"],
-#    pretty_name="t#bar{t} (#rightarrow ll, lq)"
     pretty_name="t#bar{t}"
 )
 PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW")
 PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"],
-#    pretty_name="s"
     pretty_name="s-channel"
 )
 PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"],
-#    pretty_name="signal"
     pretty_name="signal (t-channel)"
 )
 
+PhysicsProcess.qcd = PhysicsProcess("qcd", ["qcd"],
+    pretty_name="QCD"
+)
+
 PhysicsProcess.tchan_comphep = PhysicsProcess("tchan_comphep", ["TToB(.*)Nu_t-channel"],
-#    pretty_name="signal"
     pretty_name="signal (t-channel)"
 )
 
 PhysicsProcess.tchan_comphep_anomWtb_0100 = PhysicsProcess("tchan_comphep_anomWtb-0100", ["TToB(.*)Nu_anomWtb-0100_t-channel"],
-#    pretty_name="signal"
-    pretty_name="anomalous Wtb-0100 signal (t-channel)"
+    pretty_name="anom. Wtb-0100 signal (t-channel)"
 )
 
 PhysicsProcess.tchan_comphep_anomWtb_unphys = PhysicsProcess("tchan_comphep_anomWtb_unphys", ["TToB(.*)Nu_anomWtb-unphys_t-channel"],
-#    pretty_name="signal"
-    pretty_name="anomalous unphys signal (t-channel)"
+    pretty_name="anom. unphys. signal (t-channel)"
 )
-
-#for syst in ["scaleup", "scaledown"]:
-#    for nominal in [PhysicsProcess.tchan]:
-#        proc = deepcopy(nominal)
-#        proc.subprocesses = [x+"_%s" % syst for x in proc.subprocesses]
-#        PhysicsProcess.systematic[syst][proc.name] = proc
 
 merge_cmds = PhysicsProcess.get_merge_dict(
     PhysicsProcess.get_proc_dict("mu")
@@ -246,11 +244,33 @@ def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):
     text.Draw()
     return text
 
+def reorder(src, dest, reverse=True):
+    """
+    Reorders objects in the src dictionary according to the dest order list.
+
+    Args:
+        src: the source dictionary
+        dest: a list with the desired order of the keys.
+
+    Keywords:
+        reverse: return the output in the reversed order.
+
+    Returns:
+        a list with the objects in the desired order.
+    """
+    ret = []
+    if reverse:
+        dest = list(reversed(dest))
+    for i in dest[::-1]:
+        ret.append(src[i])
+    return ret
+
 def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
     """
     Merges the dictionary of input histograms according to the merge rules, which are specified
-    as a key-value dictionary, where the key is the target and value a list of (regex) expressions
+    as a key-value dictionary, where the key is the target and value a list of (regular) expressions
     to merge under the key.
+    
     For example, {
         "WJets": ["W[1-4]Jets_.*"],
         "tchan": ["T_t_ToLeptons", "Tbar_t_ToLeptons"],
