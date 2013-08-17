@@ -42,7 +42,7 @@ def hist_node(graph, cut, weights, variables):
     if not isinstance(weights, list):
         weights = [weights]
     
-    from plots.weights import reweight
+    from weights import reweight
 
     for var_name, var, binning in variables:
         hist_desc = {
@@ -370,6 +370,10 @@ class ObjectSaver:
         obj.Write("", ROOT.TObject.kOverwrite)
         logger.debug("Saving object %s in %s" % (str(obj.name), d.GetPath()))
 
+    def __del__(self):
+        if self.tfile:
+            self.tfile.Write()
+            self.tfile.Close()
 class CutNode(Node):
     def __init__(self, cut, *args, **kwargs):
         super(CutNode, self).__init__(*args, **kwargs)
@@ -599,4 +603,5 @@ if __name__=="__main__":
     dt = t1-t0
     if dt<1.0:
         dt = 1.0
+    out.tfile.Close()
     #print "Projected out %d histograms in %.f seconds, %.2f/sec" % (HistNode.nHistograms, dt, float(HistNode.nHistograms)/dt)
