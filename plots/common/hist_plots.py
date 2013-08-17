@@ -6,6 +6,7 @@ from plots.common.legend import legend
 from plots.common.histogram import norm
 import logging
 logger = logging.getLogger("hist_plots")
+logger.setLevel(logging.WARNING)
 
 def hist_err(axes, hist, yerr=None, **kwargs):
     """
@@ -178,10 +179,13 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
 
     hist_ratio = hist_mc.Clone()
 
+    # (MC-data) / data
     hist_ratio.SetName("ratio")
     hist_ratio.Add(hist_data, -1.0)
     hist_ratio.Divide(hist_data)
 
+    #If the measured data was 0, then set the bin error to the maximal value
+    #and content to 0
     for i in range(hist_ratio.nbins()):
         if hist_data[i] == 0:
             hist_ratio.SetBinError(i+1, max(list(map(abs, min_max))))
@@ -211,6 +215,8 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
     #xAxis.SetNdivisions(histStack.GetXaxis().GetNdivisions());
     yAxis.SetNdivisions(405)
 
+    #Draw the ratio histogram with default (statistical error bars) to get the correct axis
+    #This histogram will not be visible in the end
     hist_ratio.Draw("p0e1")
     hist_ratio.SetMinimum(min_max[0])
     hist_ratio.SetMaximum(min_max[1])
@@ -220,11 +226,12 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
     hist_line.Draw("lsame")
     canv.hist_line = hist_line
 
+    #Calculate the down/up variation ratios
     if syst_hists:
         logger.info("Drawing systematic histograms")
         syst_ratio_hists = []
         if len(syst_hists) != 2:
-            raise Exception("Must specify the systematic histograms as a 2-tuple, got %s" % str(syst_hists))
+            raise Exception("Must specify the systematic histograms as a 2-tuple (down, up), got %s" % str(syst_hists))
         for h in list(syst_hists):
             hr = h.Clone()
             hr.Add(hist_data, -1)
@@ -234,19 +241,23 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
             hr.SetFillColor(ROOT.kGray)
             hr.SetLineColor(ROOT.kGray)
 
-            #hr.Draw("same hist")
+            #Draw them as gray lines
+            hr.Draw("same hist")
             logger.debug(list(hr.y()))
             syst_ratio_hists.append(hr)
 
-        #Set symmetric error bars on the ratio plot dots according to the maximal syst. error for this bin
+        #Set the possibly asymmteric error bars using a TGraphAsymmErrors
+        ratio_graph = ROOT.TGraphAsymmErrors(hist_ratio)
         for i in range(hist_ratio.nbins()):
-            hist_ratio.SetBinError(i+1,
-                max(
-                    abs(hist_ratio[i] - syst_ratio_hists[0].GetBinContent(i+1)),
-                    abs(hist_ratio[i] - syst_ratio_hists[1].GetBinContent(i+1))
-                )
-            )
+            ylow = abs(hist_ratio[i]-syst_ratio_hists[0].GetBinContent(i+1))
+            yhigh = abs(hist_ratio[i]-syst_ratio_hists[1].GetBinContent(i+1))
+            ratio_graph.SetPoint(i+1, hist_ratio.GetBinCenter(i+1), hist_ratio.GetBinContent(i+1))
+            ratio_graph.SetPointEYlow(i+1, ylow)
+            ratio_graph.SetPointEYhigh(i+1, yhigh)
+        ratio_graph.Draw("SAME P")
         canv.syst_ratio_hists = syst_ratio_hists
+        canv.ratio_graph = ratio_graph
+
     return p2, hist_ratio
 
 
