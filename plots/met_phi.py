@@ -5,7 +5,7 @@ Creates the necessary histograms for studying the met-phi modulation
 import logging
 logging.basicConfig(level=logging.INFO)
 
-from SingleTopPolarization.Analysis import tree, hist_node, sample_nodes
+from SingleTopPolarization.Analysis import tree
 from plots.common.cuts import Cuts, Weights
 import plots.common.sample as sample
 from plots.common.utils import PatternDict, PhysicsProcess
@@ -13,6 +13,7 @@ from plots.common.utils import PatternDict, PhysicsProcess
 from plots.common.hist_plots import hist_err
 import rootpy.plotting.root2matplotlib as rplt
 import matplotlib.pyplot as plt
+import networkx as nx
 
 plt.rc('font', **{'family':'sans','sans-serif':['Arial']})
 plt.rc('text', usetex=True)
@@ -26,11 +27,13 @@ if __name__=="__main__":
 
     outd = DictSaver()
 
-    top = tree.Node("top", [], [])
+
+    graph = nx.DiGraph()
+    top = tree.Node(graph, "top", [], [])
 
     datadirs = [
         "Aug4_0eb863_full/mu",
-        "/hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/mu"
+        #"/hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/mu"
     ]
 
     sample_fnames = []
@@ -46,7 +49,7 @@ if __name__=="__main__":
             sample_fnames += proc.getFiles(d + "/mc/iso/nominal/Jul15")
         sample_fnames += PhysicsProcess.SingleMu.getFiles(d + "/data/iso")
 
-    snodes = sample_nodes(sample_fnames, outd, top)
+    snodes = tree.sample_nodes(graph, sample_fnames, outd, top)
     print "Done constructing sample nodes"
     variables = {}
     variables["met_phi"] = {
@@ -77,13 +80,13 @@ if __name__=="__main__":
         "final_cb_2j1t",
         Cuts.final(2,1),
     )
-    cuts = [c1, c2]
+    cuts = [c1, c2, c3]
 
     varnodes = {}
     for k, v in variables.items():
         for c in cuts:
-            vn = hist_node(v, c, w)
-            vn.addParents(top.children)
+            vn = tree.hist_node(graph, v, c, w)
+            vn.addParents(top.children())
     print "Recursing down"
     for snode in snodes:
-        snode.recurseDown(snode)
+        snode.recurseDown()
