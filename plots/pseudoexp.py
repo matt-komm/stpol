@@ -138,6 +138,11 @@ if __name__=="__main__":
     )
     args = parser.parse_args()
     lep = args.channel
+    channels = {
+        "mu": "Muon channel",
+        "ele": "Electron channel",
+    }
+    channel = channels[lep]
 
     ROOT.TH1F.AddDirectory(False)
     def get_posterior(fn):
@@ -170,7 +175,7 @@ if __name__=="__main__":
         i=0
 
         #The asymmetry distribution
-        hasym = Hist(100, 0.0, 0.7, title='posterior PE')
+        hasym = Hist(100, -2, 2, title='posterior PE')
 
         #Find the bin index where costheta=0 (center)
         center = find_bin_idx(list(hi.x()), 0)
@@ -222,7 +227,7 @@ if __name__=="__main__":
     # correct gen flavour
     htrue = None
     for fn in ["T_t_ToLeptons", "Tbar_t_ToLeptons"]:
-        s = Sample.fromFile("data/Jul26/%s/mc/iso/nominal/Jul15/%s.root" % (lep, fn))
+        s = Sample.fromFile("data/Step3_Jul26/%s/mc/iso/nominal/Jul15/%s.root" % (lep, fn))
         hi = s.drawHistogram("true_cos_theta", str(Cuts.true_lepton(lep)), binning=binning)
         hi.Scale(s.lumiScaleFactor(lumi))
         if htrue:

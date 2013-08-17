@@ -398,6 +398,7 @@ if __name__=="__main__":
     #Get the list of all possible systematic scenarios that we have available
 
     allsyts = get_all_systs(syst_scenarios)
+
     for sampn, h1 in syst_scenarios.items():
         
         #Consider all the possible systematic scenarios

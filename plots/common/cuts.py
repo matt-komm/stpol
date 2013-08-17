@@ -26,17 +26,18 @@ class ChannelException(Exception):
         self.msg = "Incorrect lepton channel: " + str(chan)
 
 #FIXME: Find a better way than static methods
+#FIXME: THIS IS CLASS HORRIBLE!!!!
 class Cuts:
     hlt_isomu = Cut("(HLT_IsoMu24_eta2p1_v11 == 1 || HLT_IsoMu24_eta2p1_v12 == 1 || HLT_IsoMu24_eta2p1_v13 == 1 || HLT_IsoMu24_eta2p1_v14 == 1 || HLT_IsoMu24_eta2p1_v15 == 1 || HLT_IsoMu24_eta2p1_v16 == 1  || HLT_IsoMu24_eta2p1_v17 == 1)")
     hlt_isoele = Cut("( (HLT_Ele27_WP80_v10 ==1) || (HLT_Ele27_WP80_v11 == 1) || (HLT_Ele27_WP80_v9==1) || (HLT_Ele27_WP80_v8==1) )")
     eta_lj = Cut("abs(eta_lj) > 2.5")
 
-    @staticmethod    
+    @staticmethod
     def mt_mu(syst="nominal"):
         if syst == "nominal":
             return Cut("mt_mu > 50")
         elif syst == "up":
-            return Cut("mt_mu > 70")   
+            return Cut("mt_mu > 70")
         elif syst == "down":
             return Cut("mt_mu > 30")
         raise SystematicException(syst)
@@ -49,9 +50,30 @@ class Cuts:
     one_muon = Cut("n_muons==1 && n_eles==0")
     one_electron = Cut("n_muons==0 && n_eles==1")
     lepton_veto = Cut("n_veto_mu==0 && n_veto_ele==0")
-    electron_iso = Cut("el_mva > 0.9 & el_reliso < 0.1")
-    mu_antiiso = Cut("mu_iso>0.2 && mu_iso<0.5")
-    electron_antiiso = Cut("el_iso > 0.15 & el_iso < 0.5")
+
+    electron_iso = Cut("el_mva > 0.9 & el_iso < 0.1")
+
+
+    _antiiso = {
+        "mu": {
+            "nominal": Cut("mu_iso>0.2 && mu_iso<0.5"),
+            "up": Cut("mu_iso>0.3 && mu_iso<0.5"),
+            "down": Cut("mu_iso>0.2 && mu_iso<0.4"),
+        },
+        "ele": {
+            "nominal": Cut("el_iso > 0.15 && el_iso < 0.5"),
+            "up": Cut("el_iso > 0.165 && el_iso < 0.5"),
+            "down": Cut("el_iso > 0.15 && el_iso < 0.45"),
+        }
+    }
+
+    #FIXME: deprecated public accessors
+    mu_antiiso = _antiiso["mu"]["nominal"]
+    mu_antiiso_up =  _antiiso["mu"]["up"]
+    mu_antiiso_down =  _antiiso["mu"]["down"]
+    electron_antiiso = _antiiso["ele"]["nominal"]
+    electron_antiiso_up = _antiiso["ele"]["up"]
+    electron_antiiso_down = _antiiso["ele"]["down"]
 
     #MVA variable names
     mva_vars = {}
@@ -72,17 +94,14 @@ class Cuts:
     mva_wps['bdt']['ele_qcd']=0.74
     mva_wps = mva_wps.as_dict()
 
-
-    #met = Cut('met > 45')
-    
     @staticmethod
     def met(syst="nominal"):
         if syst=="nominal":
             return Cut("met>45")
         elif syst=="up":
-            return Cut("met>60")
+            return Cut("met>65")
         elif syst=="down":
-            return Cut("met<30")
+            return Cut("met<25")
 
     no_cut = Cut("1")
 
@@ -106,19 +125,9 @@ class Cuts:
         return cut
 
     @staticmethod
-    def mt_or_met(lepton):
-        if lepton=="mu":
-            cut = Cuts.mt_mu()
-        elif lepton=="ele":
-            cut = Cuts.met()
-        else:
-            raise ChannelException(lepton)
-        return cut
-
-    @staticmethod
     def n_jets(n):
         return Cut("n_jets == %d" % int(n))
-    
+
     @staticmethod
     def hlt(lepton):
         if lepton=="mu":
@@ -128,22 +137,47 @@ class Cuts:
         else:
             raise ChannelException(lepton)
 
+    @classmethod
+    def antiiso(self, lepton, syst="nominal"):
+        return self._antiiso[lepton][syst]
+
+    #FIXME: Deprecated. here for backwards compatibility
     @staticmethod
-    def antiiso(lepton):
-        if lepton == "mu":
-            return Cuts.mu_antiiso
-        elif lepton == "ele":
-            return Cuts.electron_antiiso
-        else:
-            raise ChannelException(lepton)
+    def antiiso_down(lepton):
+        logger.warning("Calling a deprecated method: Cuts.antiiso_down")
+        Cuts.antiiso(lepton, "down")
+    @staticmethod
+    def antiiso_up(lepton):
+        logger.warning("Calling a deprecated method: antiiso_up")
+        Cuts.antiiso(lepton, "up")
 
     @staticmethod
     def deltaR(x):
         return Cut("deltaR_bj>{0} && deltaR_lj>{0}".format(x))
 
     @staticmethod
+    def deltaR_QCD():
+        return Cuts.deltaR(0.3)
+
+    @staticmethod
     def n_tags(n):
         return Cut("n_tags == %d" % int(n))
+
+    @staticmethod
+    def metmt(lepton, mtcut_value=None):
+        if mtcut_value is not None:
+            if lepton=="mu":
+                return Cut("mt_mu>%s" % mtcut_value)
+            elif lepton=="ele":
+                return Cut("met>%s" % mtcut_value)
+            else:
+                raise ChannelException(lepton)
+        if lepton=="mu":
+            return Cuts.mt_mu()
+        elif lepton=="ele":
+            return Cuts.met()
+        else:
+            raise ChannelException(lepton)
 
     @staticmethod
     def single_lepton(lepton):
@@ -152,34 +186,72 @@ class Cuts:
         elif lepton=="ele":
             return Cuts.one_electron*Cuts.lepton_veto
         else:
-            raise ValueError("lepton must be mu or ele:%s" % lepton)
+            raise ChannelException(lepton)
 
     @staticmethod
     def final_jet(n, lepton="mu"):
-        return Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton)*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
-        
+        return Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton)*Cuts.n_jets(n)*Cuts.eta_lj*Cuts.top_mass_sig
+
+
     @staticmethod
     def mva_cut(cut, mva_var = "mva_BDT"):
         if cut <= -1:
             return Cut("1")
         else:
-            return Cut("%s >= %s" % (mva_var, cut))    
+            return Cut("%s >= %s" % (mva_var, cut))
+
+    ############################
+    #          FIXME           #
+    ############################
+    #Is there really no way to generate this programmatically?
+    #PLEASE TRY, because this is NOT maintainable!
+    @staticmethod
+    def mva_iso(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
+        if lepton not in ["mu", "ele"]:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.metmt(lepton, mtcut)*Cuts.mva_cut(mva_cut, mva_var)
 
     @staticmethod
-    def mva_iso(lepton, mva_cut="-1", mva_var="mva_BDT"):
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.mt_or_met(lepton)*Cuts.mva_cut(mva_cut, mva_var)
+    def mva_antiiso(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
+        if lepton not in ["mu", "ele"]:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR_QCD()*Cuts.antiiso(lepton)
 
     @staticmethod
-    def mva_antiiso(lepton, mva_cut="-1", mva_var="mva_BDT"):
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)*Cuts.mt_or_met(lepton)*Cuts.mva_cut(mva_cut, mva_var)
+    def mva_antiiso_down(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
+        if lepton not in ["mu", "ele"]:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR_QCD()*Cuts.antiiso_down(lepton)
 
     @staticmethod
-    def eta_fit(lepton, nj=2, nb=1):
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.top_mass_sig
+    def mva_antiiso_up(lepton, mva_cut="-1", mva_var="mva_BDT", mtcut=None):
+        if lepton not in ["mu", "ele"]:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+        return Cuts.mva_iso(lepton, mva_cut, mva_var, mtcut)*Cuts.deltaR_QCD()*Cuts.antiiso_up(lepton)
 
     @staticmethod
-    def eta_fit_antiiso(lepton="mu", nj=2, nb=1):   #relaxed top mass
-        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.mt_or_met(lepton)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR(0.3)*Cuts.antiiso(lepton)
+    def eta_fit(lepton, nj=2, nb=1, mtcut=None):
+        if lepton not in ["mu", "ele"]:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.top_mass_sig
+
+    @staticmethod
+    def eta_fit_antiiso(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
+        if lepton not in ["mu", "ele"]:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR_QCD()*Cuts.antiiso(lepton)
+
+    @staticmethod
+    def eta_fit_antiiso_down(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
+        if lepton not in ["mu", "ele"]:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR_QCD()*Cuts.antiiso_down(lepton)
+
+    @staticmethod
+    def eta_fit_antiiso_up(lepton="mu", nj=2, nb=1, mtcut=None):   #relaxed top mass
+        if lepton not in ["mu", "ele"]:
+            raise ValueError("lepton must be mu or ele:%s" % lepton)
+        return Cuts.hlt(lepton)*Cuts.lepton(lepton)*Cuts.rms_lj*Cuts.metmt(lepton, mtcut)*Cuts.n_jets(nj)*Cuts.n_tags(nb)*Cuts.deltaR_QCD()*Cuts.antiiso_up(lepton)
 
     @staticmethod
     def final(n, m, lepton="mu"):
@@ -191,7 +263,11 @@ class Cuts:
 
     @staticmethod
     def final_iso(lepton="mu", nj=2, nb=1):
-        return Cuts.eta_fit(lepton, nj, nb) * Cuts.eta_lj 
+        return Cuts.eta_fit(lepton, nj, nb) * Cuts.eta_lj
+
+    ############################
+    #         END FIXME        #
+    ############################
 
 
     Wbb = Cut("wjets_flavour_classification0 == 0")
@@ -202,7 +278,7 @@ class Cuts:
 
     WgX = Cut("wjets_flavour_classification0 == 5")
     Wgg = Cut("wjets_flavour_classification0 == 6")
-    
+
     WXX = Cut("wjets_flavour_classification0 == 7")
 
     W_HH = Cut("wjets_flavour_classification2 == 0")
@@ -223,7 +299,7 @@ class Weight:
     def __mul__(self, other):
         weight_str = '('+self.weight_str+') * ('+other.weight_str+')'
         return Weight(weight_str, "__".join([self.name, other.name]))
-    
+
     def __sub__(self, other):
         weight_str = '('+self.weight_str+' - '+other.weight_str+')'
         return Weight(weight_str)
@@ -242,7 +318,7 @@ class Weights:
         #PU weight applied always
         w = Weights.pu()
 
-        
+
         if lepton in ["mu", "ele"]:
             w *= getattr(Weights, lepton)
         else:
@@ -314,7 +390,7 @@ class Weights:
 
     @staticmethod
     def lepton_weight(lepton, systematic="nominal", sys_type=""):
-        if lepton == "mu":        
+        if lepton == "mu":
             return Weights.muon_weight(systematic, sys_type)
         elif lepton == "ele":
             return Weights.electron_weight(systematic, sys_type)
@@ -341,23 +417,27 @@ class Weights:
         elif systematic=="wjets_down":
             return Weight("wjets_mg_flavour_flat_weight_down")
         else:
-            raise ValueError("Unrecognized systematic=%s" % systematic) 
- 
+            raise ValueError("Unrecognized systematic=%s" % systematic)
+
 
     mu = Weight("muon_IsoWeight")*Weight("muon_IDWeight")*Weight("muon_TriggerWeight")
     ele = Weight("electron_IDWeight")*Weight("electron_TriggerWeight")
     sherpa_weight = Weight("gen_weight")
     sherpa_flavour_weight = Weight("wjets_sh_flavour_flat_weight")
-    
+
     @staticmethod
     def total_weight(lepton):
         return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight()
 
+    @staticmethod
+    def asymmetry_weight(asymmetry):    #reweight to given asymmetry
+        weight = Weight(str(asymmetry)+" * true_cos_theta + 0.5) / (0.44*true_cos_theta + 0.5))")
+        return weight
 
     muon_sel = dict()
     muon_sel["id"] = (
         Weight("muon_IDWeight"), Weight("muon_IDWeight_up"), Weight("muon_IDWeight_down")
-    )   
+    )
     muon_sel["trigger"] = (
         Weight("muon_TriggerWeight"), Weight("muon_TriggerWeight_up"), Weight("muon_TriggerWeight_down")
     )
@@ -368,7 +448,7 @@ class Weights:
     electron_sel = dict()
     electron_sel["id"] = (
         Weight("electron_IDWeight"), Weight("electron_IDWeight_up"), Weight("electron_IDWeight_down")
-    )   
+    )
     electron_sel["trigger"] = (
         Weight("electron_TriggerWeight"), Weight("electron_TriggerWeight_up"), Weight("electron_TriggerWeight_down")
     )
@@ -386,8 +466,8 @@ class Weights:
         Weight("wjets_mg_flavour_shape_weight"), Weight("wjets_mg_flavour_shape_weight_up"), Weight("wjets_mg_flavour_shape_weight_down"),
     )
 
-    wjets_btag_syst = (
-        Weight("b_weight_nominal"), Weight("b_weight_nominal_BCup"), Weight("b_weight_nominal_BCdown"), Weight("b_weight_nominal_Lup"), Weight("b_weight_nominal_Ldown"), 
+    btag_syst = (
+        Weight("b_weight_nominal"), Weight("b_weight_nominal_BCup"), Weight("b_weight_nominal_BCdown"), Weight("b_weight_nominal_Lup"), Weight("b_weight_nominal_Ldown"),
     )
 
 

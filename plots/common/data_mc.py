@@ -1,5 +1,6 @@
 import logging,re
 logger = logging.getLogger("data_mc")
+logger.setLevel(logging.DEBUG)
 import ROOT
 import numpy
 
@@ -39,7 +40,7 @@ def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     if not ignore_missing:
         raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
 
-def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_processes):
+def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_processes, use_antiiso=False):
 
     logger.info('Plot in progress %s' % name)
 
@@ -85,15 +86,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
 
             if "fitpars" in plot_def.keys():
                 rescale_to_fit(sample.name, hist, plot_def["fitpars"][lepton_channel])
-        elif "antiiso" in name and plot_def['estQcd']:
-
-            #FIXME: it'd be nice to move the isolation cut to plots/common/cuts.py for generality :) -JP
-            cv='mu_iso'
-            lb=0.2
-            if lepton_channel == 'ele':
-                cv='el_iso'
-                lb=0.1
-            qcd_extra_cut = Cuts.deltaR(0.3)*Cut(cv+'>'+str(lb)+' & '+cv+'<0.5')
+        elif "antiiso" in name and plot_def['estQcd'] and not use_antiiso:
 
             # Make loose template
             #Y U NO LOOP :) -JP
@@ -102,12 +95,20 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
             if '3j0t' in plot_def['estQcd']: region='3j0t'
             if '3j1t' in plot_def['estQcd']: region='3j1t'
             if '3j2t' in plot_def['estQcd']: region='3j2t'
+
+            qcd_extra_cut = Cuts.deltaR(0.3)*Cuts.antiiso(lepton_channel)
+
+            #Take the loose template with a good shape from the N-jet, M-tag, post lepton selection region with high statistics
             qcd_loose_cut = cutlist[region]*cutlist['presel_'+lepton_channel]*qcd_extra_cut
+
+            #Take the template which can be correctly normalized from the actual region with inverted isolation cuts
             qcd_cut = cut*qcd_extra_cut
 
             hist_qcd_loose = sample.drawHistogram(var, str(qcd_loose_cut), weight="1.0", plot_range=plot_range)
             hist_qcd = sample.drawHistogram(var, str(qcd_cut), weight="1.0", plot_range=plot_range)
             logger.debug("Using the QCD scale factor %s: %.2f" % (plot_def['estQcd'], qcdScale[lepton_channel][plot_def['estQcd']]))
+            
+
             hist_qcd.Scale(qcdScale[lepton_channel][plot_def['estQcd']])
             hist_qcd_loose.Scale(hist_qcd.Integral()/hist_qcd_loose.Integral())
             hist_qcd=hist_qcd_loose
@@ -125,7 +126,7 @@ def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_
                 Styling.mc_style(hists_mc[sampn], 'QCD')
 
         #Real ordinary data in the isolated region
-        elif not "antiiso" in name:
+        elif not "antiiso" in name or use_antiiso:
             hist_data = sample.drawHistogram(var, cut_str, weight="1.0", plot_range=plot_range)
             hist_data.SetTitle('Data')
             Styling.data_style(hist_data)

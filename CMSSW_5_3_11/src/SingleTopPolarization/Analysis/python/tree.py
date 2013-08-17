@@ -4,7 +4,7 @@ Applies operations on a TFile systematically by defining the operations as a
 directed graph and evaluating all root-to-leaf paths.
 """
 print "Loading dependency libraries..."
-import itertools, copy, argparse, logging, time
+import itertools, copy, argparse, logging, time, sys
 logging.basicConfig(level=logging.WARNING)
 
 from plots.common.sample import Sample
@@ -14,10 +14,14 @@ from plots.common.utils import NestedDict
 import rootpy
 from rootpy.io import File
 
+import networkx as nx
+
 import ROOT
 logger = logging.getLogger("tree")
+#logger.setLevel(logging.DEBUG)
 logger.setLevel(logging.INFO)
 print "Done loading dependency libraries..."
+
 
 """
 A per-module dict with the name and instance of every Node that was instantiated.
@@ -26,6 +30,8 @@ nodes instead.
 """
 gNodes = dict()
 gNhistograms = 0
+gGraph = nx.Graph()
+
 
 def variateOneWeight(weights):
     """
@@ -64,6 +70,38 @@ def variateOneWeight(weights):
             sts.append((w.name, subs))
     return sts
 
+def hist_node(hist_desc, _cut, _weight):
+    """
+    Creates a simple CutNode -> WeightNode -> HistNode structure from the specified
+    histogram description, cut and weight.
+
+    Args:
+        hist_desc: A dict with the histogram description, keys/values as in tree.HistNode.
+        _cut: A (name, cut) tuple with the cut to apply.
+        _weight: A (name, weight) with the weight to apply.
+
+    Returns:
+        The top CutNode that was created.
+    """
+    cut_name, cut = _cut
+    weight_name, weight = _weight
+    cutnode = tree.CutNode(cut, cut_name, [], [])
+    weightnode = tree.WeightNode(weight, weight_name, [cutnode], [])
+    histnode = tree.HistNode(hist_desc, hist_desc["name"], [weightnode], [])
+    return cutnode
+
+def sample_nodes(sample_fnames, out, top):
+    snodes = []
+    for samp in sample_fnames:
+        snodes.append(
+            tree.SampleNode(
+                out,
+                samp,
+                [top], []
+            )
+        )
+    return snodes
+
 class Node(object):
     """
     Represents a node in a directed graph by containing references to it's
@@ -87,14 +125,19 @@ class Node(object):
                 this node and it's children will be processed.
         """
         self.name = name
+        gGraph.add_node(name)
         self.parents = parents
         for p in parents:
             p.children.append(self)
+            gGraph.add_edge(self.name, p.name)
         self.children = children
         self.filter_funcs = filter_funcs
 
         #FIXME: global state
         gNodes[name] = self
+
+    def __del__(self):
+        pass
 
     def __repr__(self):
         return "<%s>" % self.name
@@ -219,6 +262,8 @@ class Node(object):
         """
         for f in self.filter_funcs:
             if not f(parentage):
+                import inspect
+                logger.debug("Cutting node %s because of filter function %s, %s" % (self.name, inspect.getsource(f), ".".join(parentage)))
                 return
         parentage = copy.deepcopy(parentage)
         parentage.append(self.name)
@@ -259,6 +304,8 @@ class HistNode(Node):
         #Use the cache of the previous CutNode in the call stack.
         last_cut = self.getPrevious(parentage, CutNode)
         cache = last_cut.cache
+        #FIXME: The cache carries state information, which actually cannot be stored with the node
+        #Current code only works when one doesn't run with multiple input samples
 
         #Get the total cut string from the call stack.
         cut = last_cut.getCutsTotal(parentage)
@@ -285,6 +332,8 @@ class HistNode(Node):
         obj.saver.save(hdir, hi)
 
         gNhistograms += 1
+        if gNhistograms%50==0:
+            logger.info("Projected out %d histograms" % gNhistograms)
         return (hi, r)
 
 class ObjectSaver:
@@ -340,13 +389,14 @@ class CutNode(Node):
         return total_cut
 
     def process(self, obj, parentage):
-        logger.info("Processing cut %s%s" % (len(parentage)*".", self.name))
         r = super(CutNode, self).process(obj, parentage)
         total_cut = self.getCutsTotal(parentage)
         elist_name = "elist__" + self.parentsName(parentage[:-1]).replace("/", "__")
         prev_cache = self.getPreviousCache(parentage)
         self.cache = obj.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache)
-        logger.debug("%d => %d, %s" % (prev_cache.GetN() if prev_cache else obj.sample.getEventCount(), self.cache.GetN(), elist_name))
+        ncur = -1 if not self.cache else self.cache.GetN()
+        nprev = -1 if not prev_cache else prev_cache.GetN()
+        logger.info("Processed cut %s%s => %d -> %d" % (len(parentage)*".", self.name, nprev, ncur))
         return (self.cache.GetN(), r)
 
 class SampleNode(Node):
@@ -354,6 +404,10 @@ class SampleNode(Node):
         super(SampleNode, self).__init__(*args, **kwargs)
         self.sample = Sample.fromFile(self.name)
         self.saver = saver
+
+    def process(self, *args):
+        logger.info("Processing sample %s" % self.sample)
+        return super(SampleNode, self).process(*args)
 
 class WeightNode(Node):
     def __init__(self, weight, *args, **kwargs):
@@ -436,13 +490,17 @@ if __name__=="__main__":
             lep + "__iso", par, [],
             filter_funcs=[lambda x: "/iso/" in x[0]]
         )
-        isos[lep]['antiiso'] = CutNode(
-            Cuts.antiiso(lep), #Apply any additional anti-iso cuts (like dR)
-            lep + "__antiiso", par, [],
-            filter_funcs=[lambda x: "/antiiso/" in x[0]]
-        )
         isol.append(isos[lep]['iso'])
-        isol.append(isos[lep]['antiiso'])
+
+        #Antiiso with variations
+        for aiso_syst in ["nominal", "up", "down"]:
+            cn = 'antiiso_' + aiso_syst
+            isos[lep][cn] = CutNode(
+                Cuts.antiiso(lep, aiso_syst) * Cuts.deltaR_QCD(), #Apply any additional anti-iso cuts (like dR) along with antiiso variations.
+                lep + "__" + cn, par, [],
+                filter_funcs=[lambda x: "/antiiso/" in x[0]]
+            )
+            isol.append(isos[lep][cn])
 
     # [iso, antiiso] --> jet --> [jets2-3]
     jet = Node("jet", isol, [])
@@ -456,15 +514,22 @@ if __name__=="__main__":
         tags[i] = CutNode(Cuts.n_tags(i), "%dt"%i, [tag], [])
 
 
+    #The primary MET/MTW cut node
     met = Node("met", tag.children, [])
+
     mets = dict()
 
-    mets['met'] = CutNode(Cuts.met(), "met__met", [met], [],
-        filter_funcs=[lambda x: is_chan(x, 'ele')]
+    #No MET cut requirement
+    mets['off'] = CutNode(Cuts.no_cut, "met__off", [met], [],
     )
-    mets['mtw'] = CutNode(Cuts.mt_mu(), "met__mtw", [met], [],
-        filter_funcs=[lambda x: is_chan(x, 'mu')]
-    )
+
+    for met_syst in ["nominal", "up", "down"]:
+        mets['met_' + met_syst] = CutNode(Cuts.met(met_syst), "met__met_" + met_syst, [met], [],
+            filter_funcs=[lambda x: is_chan(x, 'ele')]
+        )
+        mets['mtw_' + met_syst] = CutNode(Cuts.mt_mu(met_syst), "met__mtw_" + met_syst, [met], [],
+            filter_funcs=[lambda x: is_chan(x, 'mu')]
+        )
 
     # purifications ---> cutbased, MVA
     purification = Node("signalenr", met.children, [])
@@ -505,43 +570,67 @@ if __name__=="__main__":
 
     #Other weights are the same
     weights = [
-        ("btag", Weights.wjets_btag_syst),
+        ("btag", Weights.btag_syst),
         ("wjets_yield", Weights.wjets_yield_syst),
         ("wjets_shape", Weights.wjets_shape_syst),
+        ("pu", Weights.pu_syst),
+
     ]
+
+    #Checks if the first parent name had an MC-specific string in it
+    is_mc = lambda x: "/mc/" in x[0] or "/mc_syst/" in x[0]
 
     #Now make all the weight combinations for mu/ele, variating one weight
     weights_total = dict()
     syst_weights = []
     for lepton, w in weights_lepton.items():
         weights_var_by_one = variateOneWeight([x[1] for x in (weights+w)])
-        #The unvariated weight is taken as the list of the 0th element of the weight tuples
+        #The unvariated weight is taken as the list of the 0th elements of the weight tuples
         weights_var_by_one.append(
             ("nominal", [x[1][0] for x in (weights+w)])
         )
 
         wtot = []
         for wn, s in weights_var_by_one:
-            j = mul(s)
+            j = mul(s) #Multiply together the list of weights
             wtot.append((wn, j))
 
-        for name, j in wtot[]:
+        for name, j in wtot:
+            filter_funcs=[
+                lambda x,lepton=lepton: is_chan(x, lepton), #Apply the weights separately for the lepton channels
+               is_mc #Apply only in MC
+            ]
+
+            #Apply syst weights only in case of nominal samples
+            if name != "nominal":
+                filter_funcs += [
+                    lambda x: "/nominal/" in x[0] #Check if the parent was a nominal sample
+                ]
+
             syst = WeightNode(
                 j, "weight__" + name + "__" + lepton,
-                [], [],
-                filter_funcs=[
-                    lambda x,lepton=lepton: is_chan(x, lepton), #Apply the weights separately for the lepton channels
-                    lambda x: "/mc/" in x[0] #Apply only in MC
-                ] + ([lambda x: "/nominal/" in x[0]] if name != "nominal" else []) #And variate only if we're using the nominal samples.
+                [], [], filter_funcs=filter_funcs
             )
+            logger.debug("Appending weight %s" % syst.name)
             syst_weights.append(syst)
+
+
+        #Always produce the unweighted plot
+        unw = WeightNode(
+            Weights.no_weight, "weight__unweighted",
+            [], []
+        )
+        syst_weights.append(unw)
 
     #Which distributions do you want to plot
     final_plot_descs = dict()
+    nbins = 60
     final_plot_descs['all'] = [
-        ("cos_theta", "cos_theta", [60, -1, 1]),
-        ("true_cos_theta", "true_cos_theta", [60, -1, 1]),
-        ("abs_eta_lj", "abs(eta_lj)", [60, 2.5, 5]),
+        ("cos_theta", "cos_theta", [nbins, -1, 1]),
+        ("abs_eta_lj", "abs(eta_lj)", [nbins, 2.5, 5]),
+        ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 5]),
+        ("top_mass", "top_mass", [nbins, 80, 400]),
+        ("top_mass_sr", "top_mass", [nbins, 130, 220]),
         #("eta_lj", "eta_lj", [40, -5, 5]),
     ]
 
@@ -553,10 +642,16 @@ if __name__=="__main__":
         (Cuts.mva_vars['ele'], Cuts.mva_vars['ele'], [60, -1, 1]),
     ]
 
+    #MC-only variables
+    final_plot_descs['mc'] = [
+        ("true_cos_theta", "true_cos_theta", [60, -1, 1]),
+    ]
+
     #define a LUT for type <-> filtering function
     final_plot_lambdas = {
         'mu': lambda x: is_chan(x, 'mu'),
-        'ele': lambda x: is_chan(x, 'ele')
+        'ele': lambda x: is_chan(x, 'ele'),
+        'mc': lambda x: is_mc(x)
     }
 
     #Add all the nodes for the final plots with all the possible reweighting combinations
@@ -582,10 +677,23 @@ if __name__=="__main__":
             final_plots[name] = reweigh(final_plots[name], syst_weights)
 
     print "Done constructing analysis tree..."
+
+    # print gGraph.nodes()
+    # import matplotlib.pyplot as plt
+
+    # same layout using matplotlib with no labels
+    #plt.title("draw_networkx")
+    #pos=nx.graphviz_layout(gGraph, prog='dot')
+    #pos = nx.spring_layout(gGraph, k=10, iterations=100, scale=10)
+    #nx.draw(gGraph, pos=pos)
+
+    #plt.savefig("nodes.pdf")
     print "Starting projection..."
     #Make everything
     t0 = time.clock()
     r = sample.recurseDown(sample)
     t1 = time.clock()
     dt = t1-t0
+    if dt<1.0:
+        dt = 1.0
     print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms)/dt)

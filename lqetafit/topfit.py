@@ -3,6 +3,7 @@ from theta_auto import *
 import logging
 logging.basicConfig(level=logging.INFO)
 signal = 'tchan'
+#infile = 'histos/ele_mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj/lqeta.root'
 infile = 'histos/mu_mva_BDT/lqeta.root'
 outfile = 'histos_fitted.root'
 import math
@@ -39,6 +40,7 @@ def get_model():
     return model
 
 if __name__=="__main__":
+    raise Exception("Deprecated. Use final_fit/final_fit.py instead")
     if "theta-auto.py" not in sys.argv[0]:
         raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py %s`" % (sys.argv[0]))
 
@@ -74,7 +76,11 @@ if __name__=="__main__":
         os.makedirs("results")
     except:
         pass
-    f = open('results/nominal.txt','w')
+    try:
+        os.makedirs("results/"+fit.name)
+    except:
+        pass
+    f = open("results/"+fit.name+"/fit.txt",'w')
     for key in sorted(fitresults.keys()):
             line = '%s %f %f\n' % (key, fitresults[key][0], fitresults[key][1])
             print line,
@@ -123,8 +129,7 @@ if __name__=="__main__":
     for i in range(n):
         for j in range(n):
             cor.SetBinContent(i+1,j+1,cov[i][j]/math.sqrt(cov[i][i]*cov[j][j]))
-            #print i, j, cov[i][j], cov[i][i], cov[j][j], math.sqrt(cov[i][i]*cov[j][j]), cov[i][j]/math.sqrt(cov[i][i]*cov[j][j])
-
+            
     
     #canvas2 = ROOT.TCanvas("c1","Correlation")
     #fcorr = ROOT.TFile("corr.root","RECREATE")
@@ -145,7 +150,7 @@ if __name__=="__main__":
 
     pred = evaluate_prediction(model, values, include_signal = True)
     write_histograms_to_rootfile(pred, outfile)
-
+    """
     ##Plot the fit before and after
     from rootpy.io import File
     from plots.common.sample_style import Styling
@@ -208,12 +213,12 @@ if __name__=="__main__":
         stacks = plot_hists_stacked(
             p1,
             stacks_d,
-            x_label="#eta_{lj}",
+            x_label="MVA",
             y_label="",
-            do_log_y=False
+            do_log_y=True
         )
         leg = legend([hist_data] + list(reversed(hists_mc.values())), styles=["p", "f"])
-        ratio_pad, hratio, hline = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
+        ratio_pad, hratio = plot_data_mc_ratio(canv, get_stack_total_hist(stacks["mc"]), hist_data)
 
         plot_info = PlotMetaInfo(
             name,
@@ -227,5 +232,5 @@ if __name__=="__main__":
         canv.Close()
     plot_data_mc(hists_mc_post, hist_data, "post_fit")
     plot_data_mc(hists_mc_pre, hist_data, "pre_fit")
-
+"""
 

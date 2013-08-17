@@ -34,7 +34,7 @@ def get_process_name(sn):
     return sn
 
 logger = logging.getLogger("sample.py")
-#logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.DEBUG)
 
 class Sample:
     def __del__(self):
@@ -69,9 +69,10 @@ class Sample:
         if not self.tree:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
-        self.tree.SetBranchStatus("*", 1)
-        self.tree.SetCacheSize(500*1024*1024)
-        self.tree.AddBranchToCache("*")
+ #Switching off caching for now, as it is a huge memory hog and not very effective over /hdfs
+ #       self.tree.SetBranchStatus("*", 1)
+ #       self.tree.SetCacheSize(50*1024*1024)
+ #       self.tree.AddBranchToCache("*")
 
         if self.tfile.Get("trees/WJets_weights"):
             self.tree.AddFriend("trees/WJets_weights")
@@ -209,57 +210,54 @@ class Sample:
         return hist_new
 
     # This should be unified with the above!
-    # def drawHistogram2D(self, var_x, var_y, cut_str, **kwargs):
-    #     logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
-    #     name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
+    def drawHistogram2D(self, var_x, var_y, cut_str, **kwargs):
+        logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
+        name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
 
-    #     plot_range_x = kwargs.get("plot_range_x", None)
-    #     plot_range_y = kwargs.get("plot_range_y", None)
-    #     binning_x = kwargs.get("binning_x", None)
-    #     binning_y = kwargs.get("binning_y", None)
+        plot_range_x = kwargs.get("plot_range_x", None)
+        plot_range_y = kwargs.get("plot_range_y", None)
+        binning_x = kwargs.get("binning_x", None)
+        binning_y = kwargs.get("binning_y", None)
 
-    #     weight_str = kwargs.get("weight", None)
-    #     dtype = kwargs.get("dtype", "F")
+        weight_str = kwargs.get("weight", None)
+        dtype = kwargs.get("dtype", "F")
 
-    #     ROOT.gROOT.cd()
-    #     ROOT.TH2F.AddDirectory(True)
-    #     if plot_range_x and plot_range_y:
-    #         pass
-    #         #TODO: make it work if needed
-    #         #hist = Hist2D(*plot_range_x, *plot_range_y, type=dtype, name="htemp")
-    #     elif binning_x is not None and binning_y is not None:
-    #         hist = Hist2D(binning_x, binning_y, type=dtype)
-    #     else:
-    #         raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
+        ROOT.gROOT.cd()
+        ROOT.TH2F.AddDirectory(True)
+        if plot_range_x and plot_range_y:
+            hist = Hist2D(plot_range_x[0], plot_range_x[1], plot_range_x[2], plot_range_y[0], plot_range_y[1], plot_range_y[2], type=dtype, name="htemp")
+        elif binning_x is not None and binning_y is not None:
+            hist = Hist2D(binning_x, binning_y, type=dtype)
+        else:
+            raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
 
-    #     hist.Sumw2()
+        hist.Sumw2()
 
-    #     draw_cmd = var_y+":"+var_x + ">>%s" % hist.GetName()
+        draw_cmd = var_y+":"+var_x + ">>%s" % hist.GetName()
+        if weight_str:
+            cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
+        else:
+            cutweight_cmd = "(" + cut_str + ")"
 
-    #     if weight_str:
-    #         cutweight_cmd = weight_str + " * " + "(" + cut_str + ")"
-    #     else:
-    #         cutweight_cmd = "(" + cut_str + ")"
+        logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
 
-    #     logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
+        logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
-    #     n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
-    #     logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
+        if n_entries<0:
+            raise HistogramException("Could not draw histogram: %s" % self.name)
 
-    #     if n_entries<0:
-    #         raise HistogramException("Could not draw histogram: %s" % self.name)
+        if hist.Integral() != hist.Integral():
+            raise HistogramException("Histogram had 'nan' Integral(), probably weight was 'nan'")
+        if not hist:
+            raise TObjectOpenException("Could not get histogram: %s" % hist)
+        if hist.GetEntries() != n_entries:
+            raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        ROOT.TH2F.AddDirectory(False)
 
-    #     if hist.Integral() != hist.Integral():
-    #         raise HistogramException("Histogram had 'nan' Integral(), probably weight was 'nan'")
-    #     if not hist:
-    #         raise TObjectOpenException("Could not get histogram: %s" % hist)
-    #     if hist.GetEntries() != n_entries:
-    #         raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
-    #     ROOT.TH2F.AddDirectory(False)
+        hist_new = hist.Clone(filter_alnum(name))
 
-    #     hist_new = hist.Clone(filter_alnum(name))
-
-    #     return hist_new
+        return hist_new
 
     def getColumn(self, col, cut):
         N = self.tree.Draw(col, cut, "goff")

@@ -1,14 +1,17 @@
 import ROOT
 from theta_auto import *
 from copy import deepcopy
+import logging
+logger = logging.getLogger("fit.py")
+logger.setLevel(logging.INFO)
 
 class Fit:
     def __init__(self
             , filename
             , name = None
-            , rates = {"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 1.0}
-            , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"]
-            , correlations = [("wzjets", "top")]):
+            , rates = {"tchan": inf,  "wzjets": inf, "other": 0.2}
+            , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] #"__En" to avoid matching with UnclusteredEn
+            , correlations = [("wzjets", "other")]):
 
         self.filename = filename
         self.name = name
@@ -21,7 +24,7 @@ class Fit:
 
     @staticmethod
     def getRateSystematics():
-        return {"tchan": inf,  "top": 0.1, "wzjets": inf, "qcd": 1.0}
+        return {"tchan": inf,  "wzjets": inf, "other": 0.2}
 
     @staticmethod
     def getShapeSystematics(fit):
@@ -51,6 +54,9 @@ class Fit:
             if channel == "tchan":
                 continue
             add_normal_uncertainty(model, channel, prior, channel)
+        #add_normal_uncertainty(model, "top", 0.2, "top")
+        #add_normal_uncertainty(model, "qcd", 0.2, "top")
+        #add_normal_uncertainty(model, "wzjets", inf, "wzjets")
 
     def get_type(self, fit, name, name2 = None):
         if name2 is not None:
@@ -64,11 +70,18 @@ class Fit:
 
     # export sorted fit values
     def write_results(self, fitresults, cor, fit):
+
+        fname = os.path.join("results", self.name+".txt")
         try:
-            os.makedirs("results")
+            os.makedirs(
+                os.path.dirname(
+                    fname
+                )
+            )
         except:
             pass
-        f = open("results/"+self.name+".txt",'w')
+        logging.info("Writing fit results to file %s" % fname) 
+        f = open(fname, 'w')
         for (syst, prior) in Fit.getRateSystematics().items():
             st_type = self.get_type(fit, syst)
             if syst in fitresults.keys() or (syst == "tchan" and "beta_signal" in fitresults.keys()):
@@ -80,9 +93,10 @@ class Fit:
         for syst in Fit.getShapeSystematics(fit):
             st_type = self.get_type(fit, syst)
             if syst in fitresults.keys():
-                print '%s, %s, %f, %f\n' % (st_type, syst, fitresults[syst][0], fitresults[syst][1]),
+                print '%s, %s, %f, %f\n' % (st_type, syst.replace("__En","En"), fitresults[syst][0], fitresults[syst][1]),
             line = '%s, %s, %f, %f\n' % (st_type, syst, 0.0, 1.0)
             f.write(line)
+
 
         n = cor.GetNbinsX()
         for i in range(1, n+1):
@@ -92,7 +106,9 @@ class Fit:
                 if (xlabel, ylabel) in self.correlations:
                     cor_value = cor.GetBinContent(i,j)
                     line = 'corr, %s, %s, %f\n' % (xlabel, ylabel, cor_value)
+                    print line                    
                     f.write(line)
+        f.write(self.filename + "\n")
         f.close()
 
     def makeCovMatrix(self, cov, pars):
@@ -183,9 +199,6 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
             model.get_coeff(o,p).add_factor('id', parameter = par_name)
             found_match = True
     if not found_match: raise RuntimeError, 'did not find obname, procname = %s, %s' % (obsname, procname)
-
-
-
 
 
 Fit.mu_mva_BDT = Fit("mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj")

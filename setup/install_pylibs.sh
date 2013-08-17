@@ -7,7 +7,8 @@ case "$choice" in
     * ) exit 0;;
 esac
 
-mkdir -p $STPOL_DIR/local/lib/python2.6/site-packages/
+rm -Rf $STPOL_DIR/local
+mkdir -p $STPOL_DIR/local/lib/python2.7/site-packages/
 
 cd $STPOL_DIR/local
 set -e
@@ -15,7 +16,7 @@ unset HTTP_PROXY
 unset http_proxy
 
 echo "Installing setuptools"
-curl -O https://pypi.python.org/packages/source/s/setuptools/setuptools-0.9.5.tar.gz > /dev/null
+curl -kO https://pypi.python.org/packages/source/s/setuptools/setuptools-0.9.5.tar.gz > /dev/null
 tar xf setuptools-0.9.5.tar.gz
 cd setuptools-0.9.5
 python setup.py install --prefix=$STPOL_DIR/local
@@ -23,7 +24,7 @@ cd $STPOL_DIR/local
 python -c 'import setuptools;print "setuptools version=",setuptools.__version__'
 
 echo "Installing pip"
-curl -O https://pypi.python.org/packages/source/p/pip/pip-1.4.tar.gz
+curl -kO https://pypi.python.org/packages/source/p/pip/pip-1.4.tar.gz
 tar xf pip-1.4.tar.gz 
 cd pip-1.4
 python setup.py install --prefix=$STPOL_DIR/local
@@ -32,9 +33,9 @@ cd $STPOL_DIR/local
 
 $STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" shortuuid
 $STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" argparse
-$STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" argparse
 $STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" python-xmp-toolkit
 
+cd $STPOL_DIR/local
 echo "Installing rootpy"
 git clone git://github.com/rootpy/rootpy.git > /dev/null
 cd rootpy
