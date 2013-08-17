@@ -12,7 +12,17 @@ from plots.common.odict import OrderedDict
 from plots.common.sample_style import Styling
 from plots.common.legend import legend
 from plots.common.utils import lumi_textbox
-import numpy
+from plots.load_histos2 import load_theta_format, SystematicHistCollection
+from plots.common.utils import reorder, PhysicsProcess
+from SingleTopPolarization.Analysis import sample_types
+
+
+import numpy, re, math, logging, copy
+
+logger = logging.getLogger("syst_band")
+import rootpy
+rootpy.log.basic_config_colorized()
+logger.setLevel(logging.INFO)
 
 import ROOT
 ROOT.gROOT.SetBatch(True)
@@ -42,71 +52,88 @@ def load_fit_results(fn):
         rates[sample] = float(sf)
     return rates
 
-if __name__=="__main__":
-    from plots.common.tdrstyle import tdrstyle
-    tdrstyle()
+class PlotDef:
+    from plots.vars import varnames
 
-    inf = "hists_out_merged.root"
-    channel = "mu"
-    suffix = ""
-    lumi=19800
-    # files = {
-    #     "mu": "mu__cos_theta__mva_0_06",
-    #     "ele": "ele__cos_theta__mva_0_13"
-    # }
-    # lumi = 18600
-    # channel_pretty = {
-    #     "mu": "Muon",
-    #     "ele": "Electron",
-    # }
-    # mva_cut = {
-    #     "mu": 0.06,
-    #     "ele": 0.13
-    # }
+    defaults = dict(
+        log=False,
+        qcd_sf=None,
+        fit_sf=None,
+        systematics=[],
+        systematics_shapeonly=False,
+        systematics_symmetric=True,
+        x_label=r"%(var_name)s %(x_units)s",
+        x_units='',
+        y_units='',
+        lumibox_format='%(channel)s channel'
+    )
 
-    # dfit_results = dict()
+    def __init__(self, **kwargs):
 
-    # suffix = 'top_plus_qcd'
-    # dfit_results['top_plus_qcd'] = {
-    #     "mu": "mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__top_plus_qcd",
-    #     "ele": "ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd"
-    # }
+        for k, v in self.defaults.items():
+            setattr(self, k, v)
 
-    # dfit_results['default'] = {
-    #     "mu": "mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj",
-    #     "ele": "ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj"
-    # }
-    # fit_results = dfit_results[suffix]
+        #Set any keyword arguments as attributes to self
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
+        #The default variable pretty name is taken externally
+        if not hasattr(self, "var_name"):
+            self.var_name = self.varnames[self.var]
 
-    styles = {
-        'tchan': 'T_t',
-        'ttjets': 'TTJets_FullLept',
-        'wjets': 'WJets_inclusive',
-        'diboson': 'WW',
-        'twchan': 'T_tW',
-        'schan': 'T_s',
-        'qcd': 'QCD'
-    }
-   
-    from plots.load_histos2 import load_theta_format, SystematicHistCollection
-    from plots.common.utils import reorder, PhysicsProcess
+        #The systematic inclusion list is a list of regex patterns to include
+        if isinstance(self.systematics, basestring):
+            self.systematics = [self.systematics]
+
+    def get_x_label(self):
+        return self.x_label % self.__dict__
+
+    def get_lumibox_comments(self, **kwargs):
+        kwargs.update(**self.__dict__)
+        return self.lumibox_format % kwargs
+
+    def __repr__(self):
+        return self.__dict__
+
+    def __str__(self):
+        return str(self.__repr__())
+
+    def update(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
+    def copy(self, **kwargs):
+        newd = copy.deepcopy(self.__dict__)
+        newd.update(**kwargs)
+        new = PlotDef(**newd)
+
+        return new
+
+styles = {
+    'tchan': 'T_t',
+    'ttjets': 'TTJets_FullLept',
+    'wjets': 'WJets_inclusive',
+    'diboson': 'WW',
+    'twchan': 'T_tW',
+    'schan': 'T_s',
+    'qcd': 'QCD'
+}
+
+def data_mc_plot(inf, pd, lumi):
     hists = load_theta_format(inf, styles)
 
-    import pdb
-    from SingleTopPolarization.Analysis import sample_types
 
     for (variable, sample, systtype, systdir), hist in hists.items_flat():
+
+        #Scale all MC samples except QCD to the luminosity
         if sample_types.is_mc(sample) and not sample=="qcd":
-            if "data" in sample:
-                pdb.set_trace()
             hist.Scale(lumi)
-            #print sample, systtype, systdir, hist.Integral()
         hist.SetTitle(sample)
         hist.SetName(sample)
 
 
-    hists = hists.values()[0]
+    #Assuming we only have 1 variable
+    hists = hists[pd.var]
+
     hists_nominal = hists.pop("nominal")[None]
     hists_nom_data = hists_nominal.pop('data')
     hists_nom_mc = hists_nominal.values()
@@ -114,62 +141,88 @@ if __name__=="__main__":
 
     hists_nom_data.SetTitle('data')
 
-    tots = [
+    #A list of all the systematic up, down variation templates as 2-tuples
+    all_systs = [
     ]
 
-    systs_to_consider = hists_syst.keys()
-    #systs_to_consider = ["qcd_yield"]
-    systs_to_remove = []
+    all_systs = hists_syst.keys()
+    systs_to_consider = []
 
-    for sr in systs_to_remove:
-        if sr in systs_to_consider:
-            systs_to_consider.pop(systs_to_consider.index(sr))
-    systs_to_consider = list(set(systs_to_consider).difference(set(systs_to_remove)))
+    for syst in all_systs:
+        for sm in pd.systematics:
+            if re.match(sm, syst):
+                systs_to_consider.append(syst)
+
+    #The total nominal MC histogram
     nom = sum(hists_nom_mc)
 
-    doScale = False
+    #Get all the variated up/down total templates
 
+    #A list with all the up/down total templates
+    all_systs = []
+
+    sumsqs = []
     for syst in systs_to_consider:
+
+        #A list with the up/down variated template for a particular systematic
         totupdown = []
-        print syst
+
+        sumsq = []
         for systdir in ["up", "down"]:
+
+            #Get all the templates corresponding to a systematic scenario and a variation
             _hists = hists_syst[syst][systdir]
+
+
             for k, h in _hists.items():
-                if doScale:
+
+                """
+                Consider only the shape variation of the systematic,
+                hence the variated template is noprmalized to the corresponding
+                unvariated template.
+                """
+                if pd.systematics_shapeonly:
                     h.Scale(hists_nominal[k].Integral() / h.Integral())
 
+            #For the missing variated templates, use the nominal ones, but warn the user
             present = set(_hists.keys())
             all_mc = set(hists_nominal.keys())
             missing = list(all_mc.difference(present))
+            for m in missing:
+                logger.warning("Missing systematic template for %s:%s" % (syst, systdir))
+
+            #Calculate the total variated template
             tot = sum(_hists.values()) + sum([hists_nominal[m] for m in missing])
             totupdown.append(tot)
-            diff = numpy.array(list(nom.y())) - numpy.array(list(tot.y()))
-            print "sum abs diff", systdir, "%.2E" % numpy.sum(numpy.abs(diff))
 
-        tots.append(
+            sumsq.append(
+                math.sqrt(numpy.sum(numpy.power(numpy.array(list(nom.y())) - numpy.array(list(tot.y())), 2)))
+            )
+        logger.debug("Systematic %s: sumsq=%.2Eu, %.2Ed" % (syst, sumsq[0], sumsq[1]))
+        sumsqs.append((syst, max(sumsq)))
+        all_systs.append(
             (syst, tuple(totupdown))
         )
 
+    sumsqs = sorted(sumsqs, key=lambda x: x[1], reverse=True)
+    for syst, sumsq in sumsqs[0:4]:
+        logger.info("Systematic %s, %.4f" % (syst, sumsq))
 
-    syst_up, syst_down = total_syst(nom, tots)
-
-    h = OrderedDict()
-    h['data'] = hists_nom_data
-    h['nominal'] = nom
-    h['up'] = syst_up
-    h['down'] = syst_down
+    #Calculate the total up/down variated templates by summing in quadrature
+    syst_up, syst_down, syst_stat_up, syst_stat_down = total_syst(nom, all_systs, symmetric=pd.systematics_symmetric)
 
     stacks_d = OrderedDict()
     stacks_d['mc'] = reorder(hists_nominal, PhysicsProcess.desired_plot_order_mc)
     stacks_d['data'] = [hists_nom_data]
 
     #Systematic style
-    for s in [syst_up, syst_down]:
+    for s in [syst_stat_up, syst_stat_down]:
         s.SetFillStyle(0)
-        s.SetLineWidth(3)
-        s.SetLineColor(ROOT.kGray+1)
+        s.SetLineWidth(2)
+        s.SetMarkerSize(0)
+        s.SetLineColor(ROOT.kGray+2)
         s.SetLineStyle('dashed')
-        s.SetTitle("syst.")
+        s.SetTitle("stat. + syst.")
 
     c = ROOT.TCanvas()
     p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
@@ -179,19 +232,50 @@ if __name__=="__main__":
     p1.SetFillStyle(0);
     p1.cd()
 
-    stacks = plot_hists_stacked(p1, stacks_d, x_label="BDT", max_bin_mult=1.5)
-    #p1.SetLogy()
+    stacks = plot_hists_stacked(p1, stacks_d, x_label=pd.get_x_label(), max_bin_mult=1.5 if not pd.log else 100)
+    p1.SetLogy(pd.log)
 
-    syst_up.Draw("SAME hist")
-    syst_down.Draw("SAME hist")
+    syst_stat_up.Draw("SAME hist")
+    syst_stat_down.Draw("SAME hist")
 
-    ratio_pad, hratio = plot_data_mc_ratio(c, hists_nom_data, nom, syst_hists=(syst_up, syst_down), min_max=(-2, 2))
+    ratio_pad, hratio = plot_data_mc_ratio(c, hists_nom_data, nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=(-1, 1))
 
     p1.cd()
-    leg = legend(stacks_d['data']+list(reversed(stacks_d['mc']))+[syst_up], legend_pos='top-right')
-    # lb = lumi_textbox(lumi,
-    #     line2="%s channel, BDT>%.2f, sf applied" % (channel_pretty[channel], mva_cut[channel]), pos='top-right')
-    #c.SaveAs("out/plots/cos_theta_%s_%s.png" % (channel, suffix))
-    #c.Close()
-    #print "Systs:", systs_to_consider
-    #canv = plot_hists_dict(h)
+    leg = legend(
+        stacks_d['data'] +
+        list(reversed(stacks_d['mc'])) +
+        [syst_stat_up],
+        legend_pos='top-right'
+    )
+    lb = lumi_textbox(lumi,
+        line2=pd.get_lumibox_comments(channel="Muon"),
+        pos='top-left'
+    )
+    c.children = [p1, ratio_pad, stacks, leg, lb]
+
+    return c
+if __name__=="__main__":
+    from plots.common.tdrstyle import tdrstyle
+    tdrstyle()
+
+    inf = "hists_out_merged.root"
+    channel = "mu"
+
+    lumi=19800
+
+
+    pd = PlotDef(
+        var='abs_eta_lj',
+        leg_pos='top-right',
+        systematics='.*',
+        log=True,
+        systematics_shapeonly=True
+    )
+    pd2 = pd.copy(
+        log=True,
+        systematics='en',
+        systematics_shapeonly=True
+    )
+
+    c1 = data_mc_plot(inf, pd, lumi)
+    c2 = data_mc_plot(inf, pd2, lumi)
