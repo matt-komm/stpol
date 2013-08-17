@@ -28,49 +28,8 @@ A per-module dict with the name and instance of every Node that was instantiated
 TODO: this is a rather bad solution, make a separate Graph class which contains the
 nodes instead.
 """
-gNodes = dict()
-gNhistograms = 0
-gGraph = nx.Graph()
 
-
-def variateOneWeight(weights):
-    """
-    Given a list of tuples with weights such as
-    [
-        (w1_nominal, w1_up, w1_down),
-        (w2_nominal, w2_up, w2s_down),
-        ...
-        (wN_nominal, wN_up, wN_down)
-    ]
-    this method returns the list of combinations where
-    exactly one weight is variated, such as
-    [
-        [w1_nominal, w2_up, w3_nominal, ...],
-        [w1_nominal, w2_nominal, w3_up, ...]
-    ].
-    Operates under the assumption that the first element
-    of the tuple is the nominal weight.
-
-    Args:
-        weights: a list of tuples with the different weight combinations
-
-    Returns:
-        a list with the variated weights.
-
-    """
-    sts = []
-    for i in range(len(weights)):
-        st = [x[0] for x in weights[:i]]
-        for w in weights[i][1:]:
-            subs = []
-            subs += st
-            subs.append(w)
-            for w2 in weights[i+1:]:
-                subs.append(w2[0])
-            sts.append((w.name, subs))
-    return sts
-
-def hist_node(hist_desc, _cut, _weight):
+def hist_node(graph, hist_desc, _cut, _weight):
     """
     Creates a simple CutNode -> WeightNode -> HistNode structure from the specified
     histogram description, cut and weight.
@@ -85,17 +44,18 @@ def hist_node(hist_desc, _cut, _weight):
     """
     cut_name, cut = _cut
     weight_name, weight = _weight
-    cutnode = tree.CutNode(cut, cut_name, [], [])
-    weightnode = tree.WeightNode(weight, weight_name, [cutnode], [])
-    histnode = tree.HistNode(hist_desc, hist_desc["name"], [weightnode], [])
+    cutnode = CutNode(cut, graph, cut_name, [], [])
+    weightnode = WeightNode(weight, graph, weight_name, [cutnode], [])
+    histnode = HistNode(hist_desc, graph, hist_desc["name"], [weightnode], [])
     return cutnode
 
-def sample_nodes(sample_fnames, out, top):
+def sample_nodes(graph, sample_fnames, out, top):
     snodes = []
     for samp in sample_fnames:
         snodes.append(
-            tree.SampleNode(
+            SampleNode(
                 out,
+                graph,
                 samp,
                 [top], []
             )
@@ -109,7 +69,12 @@ class Node(object):
     A Node object is stateless, the state of processing is contained
     within the Node.process method.
     """
-    def __init__(self, name, parents, children, filter_funcs=[]):
+
+    class State:
+        def __init__(self):
+            self.cache = 0
+
+    def __init__(self, graph, name, parents, children, filter_funcs=[]):
         """
         Construct a node with a given name and optionally parents and children.
 
@@ -124,18 +89,21 @@ class Node(object):
                 in the current processing chain and returning a boolean which decides if
                 this node and it's children will be processed.
         """
+        self.graph = graph
+        self.graph.add_node(self)
+
         self.name = name
-        gGraph.add_node(name)
-        self.parents = parents
-        for p in parents:
-            p.children.append(self)
-            gGraph.add_edge(self.name, p.name)
-        self.children = children
+        self.addParents(parents)
         self.filter_funcs = filter_funcs
 
-        #FIXME: global state
-        gNodes[name] = self
+        self.state = Node.State()
 
+    def parents(self):
+        return self.graph.predecessors(self)
+
+    def children(self):
+        return self.graph.successors(self)
+        
     def __del__(self):
         pass
 
@@ -146,7 +114,7 @@ class Node(object):
         """
         A leaf is a Node with no children.
         """
-        return len(self.children)==0
+        return len(self.children())==0
 
     def addParents(self, parents):
         """
@@ -155,9 +123,8 @@ class Node(object):
         Args:
             parents: a list of Node objects to be added as parents.
         """
-        self.parents += parents
         for p in parents:
-            p.children.append(self)
+            self.graph.add_edge(p, self)
 
     def delParents(self, parents):
         """
@@ -167,16 +134,23 @@ class Node(object):
         Args:
             parents: a list of parent Nodes to remove
         """
-        self.parents = filter(lambda x: x not in parents, self.parents)
         for p in parents:
-            p.children = filter(lambda x: x!= self, p.children)
+            self.graph.remove_edge(p, self)
+        #self.parents = filter(lambda x: x not in parents, self.parents)
+        #for p in parents:
+        #    p.children = filter(lambda x: x!= self, p.children)
 
-    def process(self, obj, parentage):
+    def process(self, parentage):
         """
         A default implementation of the Node.process method, which
         is called when this Node is traversed using the recurseDown method.
         """
-        parentage = parentage[:-1]
+        # logger.info("Parents: " + ",".join([p.name for p in parentage]))
+        # logger.info("Self: " + self.name)
+        # logger.info("Children: " + ",".join([p.name for p in self.children()]))
+
+        # logger.info("Calling process for %s" % self.name)
+        #parentage = parentage[:-1]
         if self.isLeaf():
             logger.debug(self.parentsName(parentage))
         return self.name
@@ -199,9 +173,9 @@ class Node(object):
             pars = parentage[:upto]
         else:
             pars = parentage
-        return "/".join(pars + [self.name])
+        return "/".join([p.name for p in pars] + [self.name])
 
-    def getParents(self, parentage, cls=None):
+    def getParents(self, parentage, f=None):
         """
         Gets the list of Node instances that are the parents
         of this node in this iteration.
@@ -210,23 +184,21 @@ class Node(object):
             parentage: a list of string with the names of the parents
                 in the call order.
 
-        Keywords:
-            cls: an optional class/type by which the parent list will be filtered.
-
         Returns:
             A list of the parent Node instances.
+
         """
-        pars = [gNodes[p] for p in parentage]
-        if cls:
-            pars = filter(lambda x: isinstance(x, cls), pars)
+        pars = [p for p in parentage]
+        if f:
+            pars = filter(f, pars)
         return pars
 
-    def getPrevious(self, parentage, cls):
+    def getPrevious(self, parentage, f):
         """
         Gets the previous node in the current call order.
 
         Args:
-            parentage: a list of strings with the parentage in the call order.
++            parentage: a list of strings with the parentage in the call order.
 
         Keywords:
             cls: an optional class, the instance returned will be the first
@@ -237,13 +209,22 @@ class Node(object):
         """
         last = None
         for p in parentage[::-1]:
-            par = gNodes[p]
-            if isinstance(par, cls):
-                last = par
+            if f(p):
+                last = p
                 break
         return last
 
-    def recurseDown(self, obj, parentage=[], dryRun=False):
+    def getPreviousCache(self, parentage):
+        last_cut = self.getPrevious(parentage, lambda x: hasattr(x, "cut"))
+        logger.debug("Last cut is %s" % last_cut)
+        if not last_cut:
+            cache = 0
+        else:
+            cache = last_cut.state.cache
+        logger.debug("Last cut is %s, cache %s" % (last_cut, str(cache)))
+        return cache
+
+    def recurseDown(self, parentage=[], dryRun=False):
         """
         Recursively processes the children of this node, calling the
         Node.process method on each child. This node and it's children
@@ -251,7 +232,6 @@ class Node(object):
         the parentage.
 
         Args:
-            obj: an instance of an object that is passed down the recurse tree.
             parentage: the list of names of the preceding nodes.
 
         Keywords:
@@ -263,11 +243,18 @@ class Node(object):
         for f in self.filter_funcs:
             if not f(parentage):
                 import inspect
-                logger.debug("Cutting node %s because of filter function %s, %s" % (self.name, inspect.getsource(f), ".".join(parentage)))
+                logger.debug("Cutting node %s because of filter function %s, %s" %
+                    (self.name, inspect.getsource(f), ".".join([p.name for p in parentage]))
+                )
                 return
-        parentage = copy.deepcopy(parentage)
-        parentage.append(self.name)
-        return [self.process(obj, parentage) if not dryRun else self.name, [c.recurseDown(obj, parentage) for c in self.children]]
+        self.process(parentage)
+        parentage = copy.copy(parentage)
+        new = copy.copy(self)
+        new.state = copy.deepcopy(self.state)
+        parentage.append(new)
+        #import pdb; pdb.set_trace()
+        logger.debug("%s: %s" % (self.name, map(str, parentage)))
+        return [c.recurseDown(parentage) for c in self.children()]
 
 class HistNode(Node):
     """
@@ -285,56 +272,60 @@ class HistNode(Node):
         super(HistNode, self).__init__(*args, **kwargs)
         self.hist_desc = hist_desc
 
-    def process(self, obj, parentage):
-        global gNhistograms
+    def process(self, parentage):
         """
         Draws the histogram corresponding to the present cut and optionally the weighting
         strategy.
 
         Args:
-            obj: assumed to be a SampleNode whose underlying Sample will
-                be ued for projection.
             parentage: the names of the call stack
         Returns:
             a tuple (Hist, Node.process()) with the projected histogram Hist and the parent Node class
             process output.
         """
-        r = Node.process(self, obj, parentage)
+        r = Node.process(self, parentage)
+
+        # sys.stdout.write("+")
+        # sys.stdout.flush()
 
         #Use the cache of the previous CutNode in the call stack.
-        last_cut = self.getPrevious(parentage, CutNode)
-        cache = last_cut.cache
-        #FIXME: The cache carries state information, which actually cannot be stored with the node
-        #Current code only works when one doesn't run with multiple input samples
+        cache = self.getPreviousCache(parentage)
 
         #Get the total cut string from the call stack.
-        cut = last_cut.getCutsTotal(parentage)
+        cut = self.getPrevious(parentage, lambda x: hasattr(x, "getCutsTotal")).\
+            getCutsTotal(parentage)
 
         #Get the total weight
-        weights = self.getParents(parentage, WeightNode)
+        weights = self.getParents(parentage, lambda x: hasattr(x, "weight"))
         wtot = mul([w.weight for w in weights])
 
         if not "var" in self.hist_desc.keys() or not "binning" in self.hist_desc.keys():
             raise KeyError("Incorrect hist desc: %s" % str(self.hist_desc))
 
-        if not hasattr(obj, "sample") or not hasattr(obj.sample, "drawHistogram"):
-            raise TypeError("call object 'obj' must have a sample with a drawHistogram method.")
+        #Get the sample node
+        snodes = self.getParents(parentage, lambda x: hasattr(x, "sample"))
+        if not len(snodes)==1:
+            raise Exception("More than one parent was a SampleNode")
+        snode = snodes[0]
 
-        hi = obj.sample.drawHistogram(self.hist_desc["var"], str(cut), weight=wtot.weight_str, binning=self.hist_desc["binning"], entrylist=cache)
-        if obj.sample.isMC:
-            hi.Scale(obj.sample.lumiScaleFactor(1))
+        hi = snode.sample.drawHistogram(self.hist_desc["var"], str(cut), weight=wtot.weight_str, binning=self.hist_desc["binning"], entrylist=cache)
+        if snode.sample.isMC:
+            hi.Scale(snode.sample.lumiScaleFactor(1))
         hdir = self.parentsName(parentage[:-1])
 
         logger.debug("%d %s %s" % (hi.GetEntries(), self.name, self.parentsName(parentage)))
 
-        #Save the histogram using the Saver that was passed down.
         hi.SetName(self.name)
-        obj.saver.save(hdir, hi)
+        snode.saver.save(hdir, hi)
 
-        gNhistograms += 1
-        if gNhistograms%50==0:
-            logger.info("Projected out %d histograms" % gNhistograms)
         return (hi, r)
+
+def get_parent_sample(node, parentage):
+    snodes = node.getParents(parentage, lambda x: hasattr(x, "sample"))
+    if not len(snodes)==1:
+        raise Exception("More than one parent was a SampleNode")
+    snode = snodes[0]
+    return snode
 
 class ObjectSaver:
     def __init__(self, fname):
@@ -365,39 +356,38 @@ class CutNode(Node):
     def __init__(self, cut, *args, **kwargs):
         super(CutNode, self).__init__(*args, **kwargs)
         self.cut = cut
-        self.cache = 0
+        #self.cache = 0
 
     def getCutsList(self, parentage):
-        cutlist = [gNodes[p].cut for p in parentage if isinstance(gNodes[p], CutNode)]
-        return cutlist
-
-    def getPreviousCache(self, parentage):
-        last_cut = self.getPrevious(parentage[:-1], CutNode)
-        logger.debug("Last cut is %s" % last_cut)
-        if not last_cut:
-            cache = 0
-        else:
-            cache = last_cut.cache
-        logger.debug("Last cut is %s, cache %s" % (last_cut, str(cache)))
-        return cache
+        cutlist = [
+            p.cut for p in parentage
+            if hasattr(p, "cut")]
+        return cutlist + [self.cut]
 
     def getCutsTotal(self, parentage):
         cutlist = self.getCutsList(parentage)
-        total_cut = cutlist[0]
-        for cut in cutlist[1:]:
-            total_cut = total_cut * cut
-        return total_cut
+        return reduce(lambda x,y: x*y, cutlist, Cuts.no_cut)
 
-    def process(self, obj, parentage):
-        r = super(CutNode, self).process(obj, parentage)
+    def process(self, parentage):
+        r = super(CutNode, self).process(parentage)
+
         total_cut = self.getCutsTotal(parentage)
-        elist_name = "elist__" + self.parentsName(parentage[:-1]).replace("/", "__")
+        elist_name = "elist__" + self.parentsName(
+            parentage[:-1]
+        ).replace("/", "__")
+
         prev_cache = self.getPreviousCache(parentage)
-        self.cache = obj.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache)
-        ncur = -1 if not self.cache else self.cache.GetN()
+        if self.name=="2j" or self.name=="3j":
+            import pdb;pdb.set_trace()
+        snode = get_parent_sample(self, parentage)
+
+        self.state.cache = snode.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache)
+        
+        ncur = -1 if not self.state.cache else self.state.cache.GetN()
         nprev = -1 if not prev_cache else prev_cache.GetN()
+        
         logger.info("Processed cut %s%s => %d -> %d" % (len(parentage)*".", self.name, nprev, ncur))
-        return (self.cache.GetN(), r)
+        return (self.state.cache.GetN(), r)
 
 class SampleNode(Node):
     def __init__(self, saver, *args, **kwargs):
@@ -417,26 +407,21 @@ class WeightNode(Node):
 def hasParent(node, p):
     return node.name in p
 
-def reweigh(node, weights):
-    pars = copy.copy(node.parents)
-    node.delParents(node.parents)
-    for w in weights:
-        w.addParents(pars)
-        node.addParents([w])
-        #w.children += [node]
-    return node
-
-def is_chan(p, lep):
+def is_chan(parents, lep):
     """
     There must be a parent which is the corresponding lepton cut node.
     """
-    return hasParent(gNodes[lep], p)
+    return lep in [p.name for p in parents]
 
 def is_samp(p, lep):
     """
     The first parent must be a sample and contain the lepton.
     """
-    return ("/%s/" % lep) in p[0]
+    return ("/%s/" % lep) in p[0].name
+
+def is_mc(x):
+    return "/mc/" in x[0].name or "/mc_syst/" in x[0].name
+
 
 if __name__=="__main__":
     print "Constructing analysis tree..."
@@ -454,24 +439,25 @@ if __name__=="__main__":
     )
     args = parser.parse_args()
 
-
+    graph = nx.DiGraph()
     #Create the sink to a file
     hsaver = ObjectSaver(args.outfile)
 
     #Load the sample, which is the root of the tree
-    sample = SampleNode(hsaver, args.infile, [], [])
+    sample = SampleNode(hsaver, graph, args.infile, [], [])
 
     #Different lepton channels
-    channel = Node("channel", [sample], [])
+    channel = Node(graph, "channel", [sample], [])
     channels = dict()
 
     # sample --> channels['mu'], channels['ele']
     channels['mu'] = CutNode(
         Cuts.hlt("mu")*Cuts.lepton("mu"),
-        "mu", [channel], [], filter_funcs=[lambda x: is_samp(x, 'mu')]
+        graph, "mu", [channel], [], filter_funcs=[lambda x: is_samp(x, 'mu')]
     )
     channels['ele'] = CutNode(
         Cuts.hlt("ele")*Cuts.lepton("ele"),
+        graph,
         "ele", [channel], [], filter_funcs=[lambda x: is_samp(x, 'ele')]
     )
 
@@ -487,8 +473,8 @@ if __name__=="__main__":
         isos[lep] = dict()
         isos[lep]['iso'] = CutNode(
             Cut("1.0"), #At present no special cuts have to be applied on the ISO region
-            lep + "__iso", par, [],
-            filter_funcs=[lambda x: "/iso/" in x[0]]
+            graph, lep + "__iso", par, [],
+            filter_funcs=[lambda x: "/iso/" in x[0].name]
         )
         isol.append(isos[lep]['iso'])
 
@@ -497,55 +483,62 @@ if __name__=="__main__":
             cn = 'antiiso_' + aiso_syst
             isos[lep][cn] = CutNode(
                 Cuts.antiiso(lep, aiso_syst) * Cuts.deltaR_QCD(), #Apply any additional anti-iso cuts (like dR) along with antiiso variations.
-                lep + "__" + cn, par, [],
-                filter_funcs=[lambda x: "/antiiso/" in x[0]]
+                graph, lep + "__" + cn, par, [],
+                filter_funcs=[lambda x: "/antiiso/" in x[0].name]
             )
             isol.append(isos[lep][cn])
 
     # [iso, antiiso] --> jet --> [jets2-3]
-    jet = Node("jet", isol, [])
+    jet = Node(graph, "jet", isol, [])
     jets = dict()
     for i in [2,3]:
-        jets[i] = CutNode(Cuts.n_jets(i), "%dj"%i, [jet], [])
+        jets[i] = CutNode(Cuts.n_jets(i), graph, "%dj"%i, [jet], [])
 
-    tag = Node("tag", jet.children, [])
+    tag = Node(graph, "tag", jet.children(), [])
     tags = dict()
     for i in [0,1,2]:
-        tags[i] = CutNode(Cuts.n_tags(i), "%dt"%i, [tag], [])
+        tags[i] = CutNode(Cuts.n_tags(i), graph, "%dt"%i, [tag], [])
 
 
     #The primary MET/MTW cut node
-    met = Node("met", tag.children, [])
+    met = Node(graph, "met", tag.children(), [])
 
     mets = dict()
 
     #No MET cut requirement
-    mets['off'] = CutNode(Cuts.no_cut, "met__off", [met], [],
+    mets['off'] = CutNode(Cuts.no_cut, graph, "met__off", [met], [],
     )
 
     for met_syst in ["nominal", "up", "down"]:
-        mets['met_' + met_syst] = CutNode(Cuts.met(met_syst), "met__met_" + met_syst, [met], [],
+        mets['met_' + met_syst] = CutNode(
+            Cuts.met(met_syst),
+            graph, "met__met_" + met_syst,
+            [met], [],
             filter_funcs=[lambda x: is_chan(x, 'ele')]
         )
-        mets['mtw_' + met_syst] = CutNode(Cuts.mt_mu(met_syst), "met__mtw_" + met_syst, [met], [],
+        mets['mtw_' + met_syst] = CutNode(
+            Cuts.mt_mu(met_syst),
+            graph, "met__mtw_" + met_syst, [met], [],
             filter_funcs=[lambda x: is_chan(x, 'mu')]
         )
 
     # purifications ---> cutbased, MVA
-    purification = Node("signalenr", met.children, [])
+    purification = Node(graph, "signalenr", met.children(), [])
     purifications = dict()
-    purifications['cutbased'] = Node("cutbased", [purification], [])
-    purifications['mva'] = Node("mva", [purification], [])
+    purifications['cutbased'] = Node(graph, "cutbased", [purification], [])
+    purifications['mva'] = Node(graph, "mva", [purification], [])
 
     # cutbased ---> Mtop ---> SR
-    mtop = Node("mtop", [purifications['cutbased']], [])
+    mtop = Node(graph, "mtop", [purifications['cutbased']], [])
     mtops = dict()
-    mtops['SR'] = CutNode(Cuts.top_mass_sig, "mtop__SR", [mtop], [])
+    mtops['SR'] = CutNode(Cuts.top_mass_sig, graph, "mtop__SR", [mtop], [])
 
     # Mtop children ---> etalj ---> |etalj|>2.5
-    etalj = Node("etalj", mtop.children, [])
+    etalj = Node(graph, "etalj", mtop.children(), [])
     etaljs = dict()
-    etaljs['greater__2_5'] = CutNode(Cuts.eta_lj,"etalj__g2_5", [etalj], [])
+    etaljs['greater__2_5'] = CutNode(Cuts.eta_lj,
+        graph, "etalj__g2_5", [etalj], []
+    )
 
     # MVA ---> MVA ele, MVA mu
     mvas = NestedDict()
@@ -556,115 +549,18 @@ if __name__=="__main__":
             mva_name = 'mva__%s__%s__%s' % (lepton, name, cval)
             mvas[lepton][cval] = CutNode(
                 Cut("%s >= %f" % (Cuts.mva_vars[lepton], mva_cut)),
-                mva_name, [purifications['mva']], [],
-                filter_funcs=[lambda x,lepton=lepton: is_chan(x, lepton)]
+                graph, mva_name, [purifications['mva']], [],
+                filter_funcs=[lambda _x,_lepton=lepton: is_chan(_x, _lepton)]
             )
 
     #After which cuts do you want the reweighed plots?
-    plot_nodes = etalj.children + purifications['mva'].children
-
-    #Separate lepton weights for mu/ele
-    weights_lepton = dict()
-    weights_lepton['mu'] = Weights.muon_sel.items()
-    weights_lepton['ele'] = Weights.electron_sel.items()
-
-    #Other weights are the same
-    weights = [
-        ("btag", Weights.btag_syst),
-        ("wjets_yield", Weights.wjets_yield_syst),
-        ("wjets_shape", Weights.wjets_shape_syst),
-        ("pu", Weights.pu_syst),
-
-    ]
-
-    #Checks if the first parent name had an MC-specific string in it
-    is_mc = lambda x: "/mc/" in x[0] or "/mc_syst/" in x[0]
-
-    #Now make all the weight combinations for mu/ele, variating one weight
-    weights_total = dict()
-    syst_weights = []
-    for lepton, w in weights_lepton.items():
-        weights_var_by_one = variateOneWeight([x[1] for x in (weights+w)])
-        #The unvariated weight is taken as the list of the 0th elements of the weight tuples
-        weights_var_by_one.append(
-            ("nominal", [x[1][0] for x in (weights+w)])
-        )
-
-        wtot = []
-        for wn, s in weights_var_by_one:
-            j = mul(s) #Multiply together the list of weights
-            wtot.append((wn, j))
-
-        for name, j in wtot:
-            filter_funcs=[
-                lambda x,lepton=lepton: is_chan(x, lepton), #Apply the weights separately for the lepton channels
-               is_mc #Apply only in MC
-            ]
-
-            #Apply syst weights only in case of nominal samples
-            if name != "nominal":
-                filter_funcs += [
-                    lambda x: "/nominal/" in x[0] #Check if the parent was a nominal sample
-                ]
-
-            syst = WeightNode(
-                j, "weight__" + name + "__" + lepton,
-                [], [], filter_funcs=filter_funcs
-            )
-            logger.debug("Appending weight %s" % syst.name)
-            syst_weights.append(syst)
-
-
-        #Always produce the unweighted plot
-        unw = WeightNode(
-            Weights.no_weight, "weight__unweighted",
-            [], []
-        )
-        syst_weights.append(unw)
-
-    #Which distributions do you want to plot
-    final_plot_descs = dict()
-    nbins = 60
-    final_plot_descs['all'] = [
-        ("cos_theta", "cos_theta", [nbins, -1, 1]),
-        ("abs_eta_lj", "abs(eta_lj)", [nbins, 2.5, 5]),
-        ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 5]),
-        ("top_mass", "top_mass", [nbins, 80, 400]),
-        ("top_mass_sr", "top_mass", [nbins, 130, 220]),
-        #("eta_lj", "eta_lj", [40, -5, 5]),
-    ]
-
-    #Lepton channels need to be separated out
-    final_plot_descs['mu'] = [
-        (Cuts.mva_vars['mu'], Cuts.mva_vars['mu'], [60, -1, 1]),
-    ]
-    final_plot_descs['ele'] = [
-        (Cuts.mva_vars['ele'], Cuts.mva_vars['ele'], [60, -1, 1]),
-    ]
-
-    #MC-only variables
-    final_plot_descs['mc'] = [
-        ("true_cos_theta", "true_cos_theta", [60, -1, 1]),
-    ]
-
-    #define a LUT for type <-> filtering function
-    final_plot_lambdas = {
-        'mu': lambda x: is_chan(x, 'mu'),
-        'ele': lambda x: is_chan(x, 'ele'),
-        'mc': lambda x: is_mc(x)
-    }
-
+    plot_nodes = etalj.children() + purifications['mva'].children()
+   
+    from plots.histo_descs import hdescs, hdesc, final_plot_lambdas
+    from plots.weights import reweight, syst_weights    
     #Add all the nodes for the final plots with all the possible reweighting combinations
     final_plots = dict()
-    def hdesc(name, func, binning):
-        hdesc = {
-            "name": name,
-            "var": func,
-            "binning": binning
-        }
-        return hdesc
-
-    for t, descs in final_plot_descs.items():
+    for t, descs in hdescs.items():
         for name, func, binning in descs:
             hd = hdesc(name, func, binning)
 
@@ -673,27 +569,32 @@ if __name__=="__main__":
             if t in final_plot_lambdas.keys():
                 lambdas.append(final_plot_lambdas[t])
 
-            final_plots[name] = HistNode(hd, name, plot_nodes, [], filter_funcs=lambdas)
-            final_plots[name] = reweigh(final_plots[name], syst_weights)
+            final_plots[name] = HistNode(
+                hd,
+                graph, name, plot_nodes, [], filter_funcs=lambdas
+            )
+            final_plots[name] = reweight(
+                final_plots[name],
+                syst_weights(graph)
+            )
 
     print "Done constructing analysis tree..."
-
-    # print gGraph.nodes()
-    # import matplotlib.pyplot as plt
-
-    # same layout using matplotlib with no labels
-    #plt.title("draw_networkx")
-    #pos=nx.graphviz_layout(gGraph, prog='dot')
-    #pos = nx.spring_layout(gGraph, k=10, iterations=100, scale=10)
-    #nx.draw(gGraph, pos=pos)
-
-    #plt.savefig("nodes.pdf")
     print "Starting projection..."
+
+    # import matplotlib.pyplot as plt
+    # fig = plt.figure()
+    # nx.draw_graphviz(
+    #     graph,
+    #     prog='dot',
+    #     args='-x -Gsize=80,80'
+    # )
+    # fig.savefig("test.pdf")
+
     #Make everything
     t0 = time.clock()
-    r = sample.recurseDown(sample)
+    r = sample.recurseDown()
     t1 = time.clock()
     dt = t1-t0
     if dt<1.0:
         dt = 1.0
-    print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms)/dt)
+#    print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms)/dt)
