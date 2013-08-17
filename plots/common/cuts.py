@@ -138,8 +138,8 @@ class Cuts:
             raise ChannelException(lepton)
 
     @classmethod
-    def antiiso(self, lepton, syst="nominal"):
-        return self._antiiso[lepton][syst]
+    def antiiso(cls, lepton, syst="nominal"):
+        return cls._antiiso[lepton][syst]
 
     #FIXME: Deprecated. here for backwards compatibility
     @staticmethod
@@ -430,7 +430,11 @@ class Weights:
         return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight()
 
     @staticmethod
-    def asymmetry_weight(asymmetry):    #reweight to given asymmetry
+    def asymmetry_weight(asymmetry):
+        """
+        reweight to given asymmetry.
+        FIXME@Andres: mathematical description of what and why you are doing so that we don't forget.
+        """
         weight = Weight(str(asymmetry)+" * true_cos_theta + 0.5) / (0.44*true_cos_theta + 0.5))")
         return weight
 
