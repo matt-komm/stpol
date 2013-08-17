@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.WARNING)
 
 from plots.common.sample import Sample
 from plots.common.cuts import Cuts, Weights, mul, Cut
-from plots.common.utils import NestedDict
+from plots.common.utils import NestedDict, PatternDict
 
 import rootpy
 from rootpy.io import File
@@ -22,31 +22,37 @@ logger = logging.getLogger("tree")
 logger.setLevel(logging.INFO)
 print "Done loading dependency libraries..."
 
-
-"""
-A per-module dict with the name and instance of every Node that was instantiated.
-TODO: this is a rather bad solution, make a separate Graph class which contains the
-nodes instead.
-"""
-
-def hist_node(graph, hist_desc, _cut, _weight):
+def hist_node(graph, cut, weights, variables):
     """
-    Creates a simple CutNode -> WeightNode -> HistNode structure from the specified
-    histogram description, cut and weight.
+    Creates a simple CutNode -> WeightNode(s) ->
+    HistNode(s) structure from the specified cut, weights and variables.
 
     Args:
-        hist_desc: A dict with the histogram description, keys/values as in tree.HistNode.
-        _cut: A (name, cut) tuple with the cut to apply.
-        _weight: A (name, weight) with the weight to apply.
+        # variables: A dict with the histogram description, keys/values as in tree.HistNode.
+        # _cut: A (name, cut) tuple with the cut to apply.
+        # _weights: A list with [(name, weight)] with the weights to apply in parallel.
 
     Returns:
         The top CutNode that was created.
     """
-    cut_name, cut = _cut
-    weight_name, weight = _weight
+    cut_name, cut = cut
+    #weight_name, weight = _weight
     cutnode = CutNode(cut, graph, cut_name, [], [])
-    weightnode = WeightNode(weight, graph, weight_name, [cutnode], [])
-    histnode = HistNode(hist_desc, graph, hist_desc["name"], [weightnode], [])
+
+    if not isinstance(weights, list):
+        weights = [weights]
+    
+    from plots.weights import reweight
+
+    for var_name, var, binning in variables:
+        hist_desc = {
+            "var": var,
+            "binning": binning
+        }
+        histnode = HistNode(hist_desc, graph, var_name, [cutnode], [])
+        reweight(histnode, [
+            WeightNode(w[1], graph, w[0], [], []) for w in weights]
+        )
     return cutnode
 
 def sample_nodes(graph, sample_fnames, out, top):
@@ -64,10 +70,8 @@ def sample_nodes(graph, sample_fnames, out, top):
 
 class Node(object):
     """
-    Represents a node in a directed graph by containing references to it's
+    Represents a node in a directed graph by containing references to its
     parents and children.
-    A Node object is stateless, the state of processing is contained
-    within the Node.process method.
     """
 
     class State:
@@ -262,6 +266,9 @@ class HistNode(Node):
     corresponding to the present event selection. Any preceding WeightNodes are multiplied
     and the corresponding per-event weight is applied on the histogram.
     """
+    logger = logging.getLogger("HistNode")
+    logger.setLevel(logging.INFO)
+
     def __init__(self, hist_desc, *args, **kwargs):
         """
         Creates a HistNode with the histogram description dictionary.
@@ -283,6 +290,7 @@ class HistNode(Node):
             a tuple (Hist, Node.process()) with the projected histogram Hist and the parent Node class
             process output.
         """
+
         r = Node.process(self, parentage)
 
         # sys.stdout.write("+")
@@ -305,15 +313,25 @@ class HistNode(Node):
         #Get the sample node
         snodes = self.getParents(parentage, lambda x: hasattr(x, "sample"))
         if not len(snodes)==1:
-            raise Exception("More than one parent was a SampleNode")
+            raise Exception("More than one parent was a SampleNode, undefined behaviour (probably human error).")
         snode = snodes[0]
 
         hi = snode.sample.drawHistogram(self.hist_desc["var"], str(cut), weight=wtot.weight_str, binning=self.hist_desc["binning"], entrylist=cache)
+        hdir = self.parentsName(parentage)
+
+        #Scale MC histograms to 1 inverse picobarn
         if snode.sample.isMC:
             hi.Scale(snode.sample.lumiScaleFactor(1))
-        hdir = self.parentsName(parentage[:-1])
 
-        logger.debug("%d %s %s" % (hi.GetEntries(), self.name, self.parentsName(parentage)))
+        line_to_show = [
+            "->".join([p.name for p in parentage]+[self.name]),
+            hi.GetEntries(),
+            cache.GetN(),
+            "%.2f" % hi.Integral()
+        ]
+        self.logger.info(
+            ", ".join(map(lambda x: str(x), line_to_show))
+        )
 
         hi.SetName(self.name)
         snode.saver.save(hdir, hi)
@@ -373,12 +391,10 @@ class CutNode(Node):
 
         total_cut = self.getCutsTotal(parentage)
         elist_name = "elist__" + self.parentsName(
-            parentage[:-1]
+            parentage
         ).replace("/", "__")
 
         prev_cache = self.getPreviousCache(parentage)
-        if self.name=="2j" or self.name=="3j":
-            import pdb;pdb.set_trace()
         snode = get_parent_sample(self, parentage)
 
         self.state.cache = snode.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache)
@@ -404,23 +420,27 @@ class WeightNode(Node):
         super(WeightNode, self).__init__(*args, **kwargs)
         self.weight = weight
 
+class DictSaver(PatternDict):
+    def save(self, path, obj):
+        self[path] = obj
+
 def hasParent(node, p):
     return node.name in p
 
-def is_chan(parents, lep):
+def is_samp(p, x):
     """
-    There must be a parent which is the corresponding lepton cut node.
+    Take a boolean decision based on the sample filename/path
     """
-    return lep in [p.name for p in parents]
+    return ("/%s/" % x) in p[0].name
 
-def is_samp(p, lep):
+def is_chan(p, lep):
     """
-    The first parent must be a sample and contain the lepton.
+    Placeholder for now. FIXME: implement a more clever decision
     """
-    return ("/%s/" % lep) in p[0].name
+    return is_samp(p, lep)
 
-def is_mc(x):
-    return "/mc/" in x[0].name or "/mc_syst/" in x[0].name
+def is_mc(p):
+    return is_samp(p, "mc") or is_samp(p, "mc_syst")
 
 
 if __name__=="__main__":
@@ -430,24 +450,28 @@ if __name__=="__main__":
         description='Produces a hierarchy of histograms corresponding to cuts and weights.'
     )
 
-    parser.add_argument('infile', action='store',
-        help="The input file name with step3 TTrees."
-    )
-
     parser.add_argument('outfile', action='store',
         help="The output file name with histograms."
     )
+
+    parser.add_argument('infiles', nargs='+',
+        help="The input file names with step3 TTrees."
+    )
+
     args = parser.parse_args()
 
     graph = nx.DiGraph()
+
     #Create the sink to a file
     hsaver = ObjectSaver(args.outfile)
 
-    #Load the sample, which is the root of the tree
-    sample = SampleNode(hsaver, graph, args.infile, [], [])
+    #Load the samples
+    sample_nodes = [
+        SampleNode(hsaver, graph, inf, [], []) for inf in args.infiles
+    ]
 
     #Different lepton channels
-    channel = Node(graph, "channel", [sample], [])
+    channel = Node(graph, "channel", sample_nodes, [])
     channels = dict()
 
     # sample --> channels['mu'], channels['ele']
@@ -555,46 +579,24 @@ if __name__=="__main__":
 
     #After which cuts do you want the reweighed plots?
     plot_nodes = etalj.children() + purifications['mva'].children()
-   
-    from plots.histo_descs import hdescs, hdesc, final_plot_lambdas
-    from plots.weights import reweight, syst_weights    
-    #Add all the nodes for the final plots with all the possible reweighting combinations
-    final_plots = dict()
-    for t, descs in hdescs.items():
-        for name, func, binning in descs:
-            hd = hdesc(name, func, binning)
 
-            #Make only the required plots par channel
-            lambdas = []
-            if t in final_plot_lambdas.keys():
-                lambdas.append(final_plot_lambdas[t])
-
-            final_plots[name] = HistNode(
-                hd,
-                graph, name, plot_nodes, [], filter_funcs=lambdas
-            )
-            final_plots[name] = reweight(
-                final_plots[name],
-                syst_weights(graph)
-            )
+    from histo_descs import create_plots
+    create_plots(graph, plot_nodes)
 
     print "Done constructing analysis tree..."
     print "Starting projection..."
 
-    # import matplotlib.pyplot as plt
-    # fig = plt.figure()
-    # nx.draw_graphviz(
-    #     graph,
-    #     prog='dot',
-    #     args='-x -Gsize=80,80'
-    # )
-    # fig.savefig("test.pdf")
+    try:
+        nx.write_dot(graph, args.outfile.replace(".root", "_gviz.dot"))
+    except Exception as e:
+        logger.warning("Couldn't write .dot file for visual representation of analysis: %s" % str(e))
 
     #Make everything
     t0 = time.clock()
-    r = sample.recurseDown()
+    for sn in sample_nodes:
+        sn.recurseDown()
     t1 = time.clock()
     dt = t1-t0
     if dt<1.0:
         dt = 1.0
-#    print "Projected out %d histograms in %.f seconds, %.2f/sec" % (gNhistograms, dt, float(gNhistograms)/dt)
+    #print "Projected out %d histograms in %.f seconds, %.2f/sec" % (HistNode.nHistograms, dt, float(HistNode.nHistograms)/dt)

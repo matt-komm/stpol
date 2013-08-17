@@ -1,11 +1,10 @@
 from plots.common.cuts import Weights, mul
-from SingleTopPolarization.Analysis.tree import (
+from tree import (
     WeightNode, is_chan, is_mc
 )
 import logging, copy
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
-
+logger.setLevel(logging.INFO)
 
 def reweight(node, weights):
     """
@@ -21,7 +20,7 @@ def reweight(node, weights):
     Returns:
         the input node
     """
-
+    logger.debug("Reweighting node %s" % node)
     parents = node.parents()
     #1. Get the parents of the node to be reweighted
     pars = copy.copy(parents)
@@ -31,6 +30,7 @@ def reweight(node, weights):
 
     for w in weights:
 
+        logger.debug("Adding parents to weight node %s" % w)
         #Add the previous parents from 1. as the parents of the WeightNode
         w.addParents(pars)
 
@@ -82,7 +82,7 @@ weights_lepton['mu'] = Weights.muon_sel.items()
 weights_lepton['ele'] = Weights.electron_sel.items()
 
 #Other weights are the same for both channels
-weights = [
+weights_syst = [
     ("btag", Weights.btag_syst),
     ("wjets_yield", Weights.wjets_yield_syst),
     ("wjets_shape", Weights.wjets_shape_syst),
@@ -94,12 +94,12 @@ weights_total = dict()
 def syst_weights(graph):
     _syst_weights = []
     for lepton, w in weights_lepton.items():
-        weights_var_by_one = variateOneWeight([x[1] for x in (weights+w)])
+        weights_var_by_one = variateOneWeight([x[1] for x in (weights_syst+w)])
 
         # The unvariated weight is taken as the list of the 0th elements of the
         # weight tuples
         weights_var_by_one.append(
-            ("nominal", [x[1][0] for x in (weights+w)])
+            ("nominal", [x[1][0] for x in (weights_syst+w)])
         )
 
         wtot = []

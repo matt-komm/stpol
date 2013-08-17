@@ -32,7 +32,7 @@ if __name__=="__main__":
     top = tree.Node(graph, "top", [], [])
 
     datadirs = [
-        "Aug4_0eb863_full/mu",
+        "data/Aug4_0eb863_full/mu",
         #"/hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/mu"
     ]
 
@@ -67,7 +67,12 @@ if __name__=="__main__":
         "var": Cuts.mva_vars['mu'],
         "binning": [60, -1, 1]
     }
-    w = ("w_nominal", Weights.total_weight("mu"))
+
+    weights = [
+        ("weight__nominal", Weights.total_weight("mu")),
+    ]
+
+
     c1 = (
         "2j0t",
         Cuts.mt_mu()*Cuts.n_jets(2)*Cuts.n_tags(0)*Cuts.lepton("mu")*Cuts.hlt("mu"),
@@ -85,8 +90,10 @@ if __name__=="__main__":
     varnodes = {}
     for k, v in variables.items():
         for c in cuts:
-            vn = tree.hist_node(graph, v, c, w)
+            vn = tree.hist_node(graph, v, c, weights)
             vn.addParents(top.children())
+
+    tree.HistNode.logger.setLevel(logging.INFO)
     print "Recursing down"
     for snode in snodes:
         snode.recurseDown()
