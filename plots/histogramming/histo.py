@@ -35,7 +35,7 @@ def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
     except Exception as e:
         logger.warning("Couldn't write .dot file for visual representation of analysis: %s" % str(e))
     
-    return snodes
+    return snodes, out
 
 
 if __name__=="__main__":
@@ -61,7 +61,7 @@ if __name__=="__main__":
     ]
 
     #Construct the analysis chain
-    snodes = analysis_tree_all_reweighed(
+    snodes, out = analysis_tree_all_reweighed(
         cuts, args.infiles,
         args.outfile,
         filter_funcs=[
@@ -72,3 +72,4 @@ if __name__=="__main__":
     print "Recursing down"
     for sn in snodes:
         sn.recurseDown()
+    out.tfile.close()

@@ -14,7 +14,7 @@ import pdb
 def load_histos(filenames):
     if isinstance(filenames, basestring):
         filenames = [filenames]
-    outdict = dict()
+    outdict = PatternDict()
     for fn in filenames:
         fi = File(fn)
         for root, dirs, items in fi:
