@@ -34,7 +34,7 @@ def reweight(node, weights):
         #Add the previous parents from 1. as the parents of the WeightNode
         w.addParents(pars)
 
-        #Add this WeightNode as the parent of the input node 
+        #Add this WeightNode as the parent of the input node
         node.addParents([w])
     return node
 
@@ -86,6 +86,7 @@ weights_syst = [
     ("btag", Weights.btag_syst),
     ("wjets_yield", Weights.wjets_yield_syst),
     ("wjets_shape", Weights.wjets_shape_syst),
+    #("top_pt", Weights.top_pt),
     ("pu", Weights.pu_syst),
 ]
 
@@ -111,7 +112,7 @@ def syst_weights(graph):
             filter_funcs=[
                 #Apply the weights separately for the lepton channels
                 lambda _x,_lepton=lepton: is_chan(_x, _lepton),
-                
+
                 #Apply only in MC
                 is_mc
             ]

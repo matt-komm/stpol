@@ -438,6 +438,7 @@ class Weights:
         weight = Weight(str(asymmetry)+" * true_cos_theta + 0.5) / (0.44*true_cos_theta + 0.5))")
         return weight
 
+    #Weights grouped by nominal, up, down for systematic access
     muon_sel = dict()
     muon_sel["id"] = (
         Weight("muon_IDWeight"), Weight("muon_IDWeight_up"), Weight("muon_IDWeight_down")
@@ -460,6 +461,10 @@ class Weights:
 
     pu_syst = (
         Weight("pu_weight"), Weight("pu_weight_up"), Weight("pu_weight_down")
+    )
+
+    top_pt = (
+        Weight("ttbar_weight"), Weight("ttbar_weight*ttbar_weight"), Weight("1.0")
     )
 
     wjets_yield_syst = (
