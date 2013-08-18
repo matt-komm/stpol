@@ -548,27 +548,30 @@ public:
 class TopCuts : public CutsBase
 {
 public:
-    bool applyMassCut;
-    bool signalRegion;
-    float signalRegionMassLow;
-    float signalRegionMassHigh;
+    // bool applyMassCut;
+    // bool signalRegion;
+    // float signalRegionMassLow;
+    // float signalRegionMassHigh;
     edm::InputTag topMassSrc;
+    edm::InputTag topPtSrc;
 
     virtual void initialize_branches()
     {
         branch_vars.vars_float["top_mass"] = BranchVars::def_val;
+        branch_vars.vars_float["top_pt"] = BranchVars::def_val;
     }
 
     TopCuts(const edm::ParameterSet &pars, BranchVars &_branch_vars) :
         CutsBase(_branch_vars)
     {
         initialize_branches();
-        applyMassCut = pars.getParameter<bool>("applyMassCut");
-        signalRegion = pars.getParameter<bool>("signalRegion");
-        signalRegionMassLow = (float)pars.getParameter<double>("signalRegionMassLow");
-        signalRegionMassHigh = (float)pars.getParameter<double>("signalRegionMassHigh");
+        // applyMassCut = pars.getParameter<bool>("applyMassCut");
+        // signalRegion = pars.getParameter<bool>("signalRegion");
+        // signalRegionMassLow = (float)pars.getParameter<double>("signalRegionMassLow");
+        // signalRegionMassHigh = (float)pars.getParameter<double>("signalRegionMassHigh");
 
         topMassSrc = pars.getParameter<edm::InputTag>("topMassSrc");
+        topPtSrc = pars.getParameter<edm::InputTag>("topPtSrc");
     }
 
     bool process(const edm::EventBase &event)
@@ -576,21 +579,22 @@ public:
         pre_process();
 
         branch_vars.vars_float["top_mass"] = get_collection_n<float>(event, topMassSrc);
-        bool passes_mass_cut = true;
-        if (applyMassCut)
-        {
-            if (signalRegion)
-            {
-                passes_mass_cut = (branch_vars.vars_float["top_mass"] < signalRegionMassHigh) && (branch_vars.vars_float["top_mass"] > signalRegionMassLow);
-            }
-            else
-            {
-                //sideband region
-                passes_mass_cut = (branch_vars.vars_float["top_mass"] > signalRegionMassHigh) || (branch_vars.vars_float["top_mass"] < signalRegionMassLow);
-            }
-        }
+        branch_vars.vars_float["top_pt"] = get_collection_n<float>(event, topPtSrc);
+        // bool passes_mass_cut = true;
+        // if (applyMassCut)
+        // {
+        //     if (signalRegion)
+        //     {
+        //         passes_mass_cut = (branch_vars.vars_float["top_mass"] < signalRegionMassHigh) && (branch_vars.vars_float["top_mass"] > signalRegionMassLow);
+        //     }
+        //     else
+        //     {
+        //         //sideband region
+        //         passes_mass_cut = (branch_vars.vars_float["top_mass"] > signalRegionMassHigh) || (branch_vars.vars_float["top_mass"] < signalRegionMassLow);
+        //     }
+        // }
 
-        if (!passes_mass_cut) return false;
+        // if (!passes_mass_cut) return false;
 
         post_process();
         return true;
@@ -674,7 +678,7 @@ public:
 
     Weights(const edm::ParameterSet &pars, BranchVars &_branch_vars) :
         CutsBase(_branch_vars),
-        leptonChannel(pars.getParameter<string>("leptonChannel")) //better to ust const string and initialize here (faster)
+        leptonChannel(pars.getParameter<string>("leptonChannel")) //better to use const string and initialize here (faster)
     {
         if (leptonChannel != "mu" && leptonChannel != "ele")
         {
@@ -741,7 +745,9 @@ public:
 
             branch_vars.vars_float["b_weight_nominal"] = get_collection<float>(event, bWeightNominalSrc, 0.0);
             branch_vars.vars_float["pu_weight"] = get_collection<double>(event, puWeightSrc, 0.0);
-            branch_vars.vars_float["ttbar_weight"] = get_collection<double>(event, ttbarWeightSrc, 0.0);
+
+            //The top-pt reweighting. Set to unity by default since not every dataset has this weight defined.
+            branch_vars.vars_float["ttbar_weight"] = get_collection<double>(event, ttbarWeightSrc, 1.0);
 
             branch_vars.vars_float["muon_IDWeight"] = get_collection<double>(event, muonIDWeightSrc, 0.0);
             branch_vars.vars_float["muon_IsoWeight"] = get_collection<double>(event, muonIsoWeightSrc, 0.0);
@@ -770,8 +776,8 @@ public:
         {
             branch_vars.vars_float["pu_weight_up"] = get_collection<double>(event, puWeightUpSrc, 0.0);
             branch_vars.vars_float["pu_weight_down"] = get_collection<double>(event, puWeightDownSrc, 0.0);
-            
-            
+
+
             branch_vars.vars_float["b_weight_nominal_Lup"] = get_collection<float>(event, bWeightNominalLUpSrc, 0.0);
             branch_vars.vars_float["b_weight_nominal_Ldown"] = get_collection<float>(event, bWeightNominalLDownSrc, 0.0);
             branch_vars.vars_float["b_weight_nominal_BCup"] = get_collection<float>(event, bWeightNominalBCUpSrc, 0.0);
@@ -1289,6 +1295,6 @@ int main(int argc, char *argv[])
     TNamed *inflist = new TNamed("infiles", ss.str().c_str());
     pdesc->Write();
     inflist->Write();
-    
+
     return 0;
 }
