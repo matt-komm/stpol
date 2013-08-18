@@ -1040,6 +1040,7 @@ int main(int argc, char *argv[])
     edm::InputTag totalPATProcessedCountSrc = lumiblock_counter_pars.getParameter<edm::InputTag>("totalPATProcessedCountSrc");
 
     BranchVars branch_vars;
+    BranchVars branch_vars_pdf;
     std::map<std::string, int> event_id_branches;
     std::map<std::string, unsigned int> count_map;
 
@@ -1068,7 +1069,7 @@ int main(int argc, char *argv[])
     MiscVars misc_vars(miscvars_pars, branch_vars);
 
 #ifdef WITH_LHAPDF
-    PDFWeights pdf_weights(pdfweights_pars, branch_vars);
+    PDFWeights pdf_weights(pdfweights_pars, branch_vars_pdf);
 #endif
 
     EvtShapeVars evt_shape_vars(evtshapevars_pars, branch_vars);
@@ -1081,24 +1082,20 @@ int main(int argc, char *argv[])
 
     int maxEvents_( in.getParameter<int>("maxEvents") );
 
-    //Making the output tree is optional
-    //bool make_tree ( in.getParameter<bool>("makeTree") );
     unsigned int outputEvery_( in.getParameter<unsigned int>("outputEvery") );
 
     TFileDirectory dir = fs.mkdir("trees");
     TTree *out_tree = 0;
-    //if (make_tree)
+    TTree *out_tree_pdf = 0;
     out_tree = dir.make<TTree>("Events", "Events");
+    out_tree_pdf = dir.make<TTree>("pdf_weights", "pdf_weights");
     TH1I *count_hist = dir.make<TH1I>("count_hist", "Event counts", count_map.size(), 0, count_map.size() - 1);
 
-    //TFileDirectory dir_effs = fs.mkdir("b_eff_hists");
-    //BEffCalcs b_eff_calcs(b_eff_pars, branch_vars, dir_effs);
-
     TFile::SetOpenTimeout(60000);
-    if (!TFile::SetCacheFileDir("/scratch/joosep"))
-    {
-        std::cerr << "Cache directory was not writable" << std::endl;
-    }
+    // if (!TFile::SetCacheFileDir("/scratch/joosep"))
+    // {
+    //     std::cerr << "Cache directory was not writable" << std::endl;
+    // }
 
     event_id_branches["event_id"] = 0;
     event_id_branches["run_id"] = 0;
@@ -1134,6 +1131,21 @@ int main(int argc, char *argv[])
         int *p_branch = &(elem.second);
         out_tree->Branch(br_name.c_str(), p_branch);
     }
+
+    //Put the PDF weights to a separate TTree
+    for (auto & elem : branch_vars_pdf.vars_float)
+    {
+        const std::string &br_name = elem.first;
+        std::cout << br_name << ", ";
+        float *p_branch = &(elem.second);
+        out_tree_pdf->Branch(br_name.c_str(), p_branch);
+    }
+    for (auto & elem : branch_vars_pdf.vars_vfloat)
+    {
+        std::cout << elem.first << ", ";
+        out_tree_pdf->Branch(elem.first.c_str(), &(elem.second));
+    }
+
     std::cout << std::endl;
 
     // loop the events
@@ -1204,11 +1216,6 @@ int main(int argc, char *argv[])
                 }
                 if (!passes_gen_cuts) continue;
 
-                /*if (b_eff_calcs.doBEffCalcs)
-                {
-                    b_eff_calcs.process(event);
-                }*/
-
 #ifdef WITH_LHAPDF
                 if (pdf_weights.enabled)
                 {
@@ -1221,6 +1228,7 @@ int main(int argc, char *argv[])
                 event_id_branches["lumi_id"] = (unsigned int)event.id().luminosityBlock();
 
                 out_tree->Fill();
+                out_tree_pdf->Fill();
             }
 
             fwlite::LuminosityBlock ls(in_file);
