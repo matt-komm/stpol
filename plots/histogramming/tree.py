@@ -22,6 +22,22 @@ logger = logging.getLogger("tree")
 logger.setLevel(logging.INFO)
 print "Done loading dependency libraries..."
 
+def is_samp(p, x):
+    """
+    Take a boolean decision based on the sample filename/path
+    """
+    return ("/%s/" % x) in p[0].name
+
+def is_chan(p, lep):
+    """
+    Placeholder for now. FIXME: implement a more clever decision
+    """
+    return is_samp(p, lep)
+
+def is_mc(p):
+    return is_samp(p, "mc") or is_samp(p, "mc_syst")
+
+
 def hist_node(graph, cut, weights, variables):
     """
     Creates a simple CutNode -> WeightNode(s) ->
@@ -427,25 +443,6 @@ class WeightNode(Node):
 class DictSaver(PatternDict):
     def save(self, path, obj):
         self[path] = obj
-
-def hasParent(node, p):
-    return node.name in p
-
-def is_samp(p, x):
-    """
-    Take a boolean decision based on the sample filename/path
-    """
-    return ("/%s/" % x) in p[0].name
-
-def is_chan(p, lep):
-    """
-    Placeholder for now. FIXME: implement a more clever decision
-    """
-    return is_samp(p, lep)
-
-def is_mc(p):
-    return is_samp(p, "mc") or is_samp(p, "mc_syst")
-
 
 if __name__=="__main__":
     print "Constructing analysis tree..."
