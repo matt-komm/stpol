@@ -19,13 +19,51 @@ from SingleTopPolarization.Analysis import sample_types
 
 import numpy, re, math, logging, copy
 
-logger = logging.getLogger("syst_band")
+logger = logging.getLogger(__name__)
 import rootpy
 rootpy.log.basic_config_colorized()
 logger.setLevel(logging.INFO)
 
 import ROOT
 ROOT.gROOT.SetBatch(True)
+
+#Define the styles for the merged histograms
+styles = {
+    'tchan': 'T_t',
+    'ttjets': 'TTJets_FullLept',
+    'wjets': 'WJets_inclusive',
+    'diboson': 'WW',
+    'twchan': 'T_tW',
+    'schan': 'T_s',
+    'qcd': 'QCD'
+}
+
+def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
+    """
+    Rescales the histogram from a sample by the corresponding scale factors.
+    Raises a KeyError when there was no match.
+
+    sample_name - the name of the sample, corresponding to the patterns in fitpars
+    hist - the Hist to be scaled
+    fitpars - a list with tuple contents
+        [
+            ([patA1, patA2, ...], sfA, errA),
+            ([patB1, patB2, ...], sfB, errB),
+        ]
+
+    returns - nothing
+    """
+    for patterns, sf, err in fitpars:
+        for pat in patterns:
+            if re.match(pat, sample_name):
+                logger.debug("Rescaling sample %s to match rule '%s', sf=%.2f" % (sample_name, pat, sf))
+                hist.Scale(sf)
+                #We take the first match
+                return
+    #If we loop through and get here, there was no match
+    if not ignore_missing:
+        raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
+
 
 def load_fit_results(fn):
     """
@@ -57,7 +95,6 @@ class PlotDef:
 
     defaults = dict(
         log=False,
-        qcd_sf=None,
         fit_sf=None,
         systematics=[],
         systematics_shapeonly=False,
@@ -65,7 +102,16 @@ class PlotDef:
         x_label=r"%(var_name)s %(x_units)s",
         x_units='',
         y_units='',
-        lumibox_format='%(channel)s channel'
+        lumibox_format='%(channel)s channel',
+        legend_pos='top-left',
+        lumi_pos='top-right',
+
+        #The scale factor for the N(data, anti-iso)/N(QCD, iso) yields,
+        process_scale_factor = [
+            (["tchan"], 1.0, -1),
+            (["ttjets", "qcd"], 1.0, -1),
+            (["wjets"], 1.0, -1),
+        ]
     )
 
     def __init__(self, **kwargs):
@@ -108,25 +154,16 @@ class PlotDef:
 
         return new
 
-styles = {
-    'tchan': 'T_t',
-    'ttjets': 'TTJets_FullLept',
-    'wjets': 'WJets_inclusive',
-    'diboson': 'WW',
-    'twchan': 'T_tW',
-    'schan': 'T_s',
-    'qcd': 'QCD'
-}
-
-def data_mc_plot(inf, pd, lumi):
-    hists = load_theta_format(inf, styles)
-
+def data_mc_plot(pd):
+    hists = load_theta_format(pd.infile, styles)
 
     for (variable, sample, systtype, systdir), hist in hists.items_flat():
 
         #Scale all MC samples except QCD to the luminosity
         if sample_types.is_mc(sample) and not sample=="qcd":
-            hist.Scale(lumi)
+            hist.Scale(pd.lumi)
+
+        rescale_to_fit(sample, hist, pd.process_scale_factor)
         hist.SetTitle(sample)
         hist.SetName(sample)
 
@@ -148,6 +185,7 @@ def data_mc_plot(inf, pd, lumi):
     all_systs = hists_syst.keys()
     systs_to_consider = []
 
+    #See which systematics where asked to switch on
     for syst in all_systs:
         for sm in pd.systematics:
             if re.match(sm, syst):
@@ -157,7 +195,6 @@ def data_mc_plot(inf, pd, lumi):
     nom = sum(hists_nom_mc)
 
     #Get all the variated up/down total templates
-
     #A list with all the up/down total templates
     all_systs = []
 
@@ -178,7 +215,7 @@ def data_mc_plot(inf, pd, lumi):
 
                 """
                 Consider only the shape variation of the systematic,
-                hence the variated template is noprmalized to the corresponding
+                hence the variated template is normalized to the corresponding
                 unvariated template.
                 """
                 if pd.systematics_shapeonly:
@@ -248,11 +285,11 @@ def data_mc_plot(inf, pd, lumi):
         stacks_d['data'] +
         list(reversed(stacks_d['mc'])) +
         [syst_stat_up],
-        legend_pos='top-right'
+        legend_pos=pd.legend_pos
     )
-    lb = lumi_textbox(lumi,
-        line2=pd.get_lumibox_comments(channel="Muon"),
-        pos='top-left'
+    lb = lumi_textbox(pd.lumi,
+        line2=pd.get_lumibox_comments(channel=pd.channel_pretty),
+        pos=pd.lumi_pos
     )
     c.children = [p1, ratio_pad, stacks, leg, lb]
 
@@ -262,23 +299,21 @@ if __name__=="__main__":
     tdrstyle()
 
     inf = "hists_out_merged.root"
-    channel = "mu"
 
-    lumi=19800
-
+    from plots.fit_scale_factors import fitpars_process
+    from plots.common.cross_sections import lumis
 
     pd = PlotDef(
-        var='abs_eta_lj',
+        infile="hists_out_merged.root",
+        lumi=lumis["Aug4_0eb863_full"]["iso"]["mu"],
+        var='cos_theta',
+        channel_pretty='Muon',
         leg_pos='top-right',
         systematics='.*',
-        log=True,
-        systematics_shapeonly=False
-    )
-    pd2 = pd.copy(
-        log=True,
-        systematics='en',
-        systematics_shapeonly=False
+        log=False,
+        systematics_shapeonly=True,
+        process_scale_factor=fitpars_process['final_2j1t_mva']['mu'],
     )
 
-    c1 = data_mc_plot(inf, pd, lumi)
-    c2 = data_mc_plot(inf, pd2, lumi)
+    c1 = data_mc_plot(pd)
+    c1.SaveAs("test.pdf")
