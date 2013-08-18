@@ -100,7 +100,7 @@ def total_syst(nominal, systs, **kwargs):
             float(consider_variated_stat_err)*to_arr(hdown.errors())
         )
         diff = quadsum(bins_up - bins_down,
-            float(consider_variated_stat_err)*-to_arr(hdown.errors()),
+            float(consider_variated_stat_err)*to_arr(hdown.errors()),
             float(consider_variated_stat_err)*to_arr(hup.errors())
         )
 

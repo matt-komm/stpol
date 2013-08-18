@@ -209,7 +209,10 @@ def data_mc_plot(inf, pd, lumi):
         logger.info("Systematic %s, %.4f" % (syst, sumsq))
 
     #Calculate the total up/down variated templates by summing in quadrature
-    syst_up, syst_down, syst_stat_up, syst_stat_down = total_syst(nom, all_systs, symmetric=pd.systematics_symmetric)
+    syst_up, syst_down, syst_stat_up, syst_stat_down = total_syst(nom, all_systs,
+        symmetric=pd.systematics_symmetric,
+        consider_variated_stat_err=False
+    )
 
     stacks_d = OrderedDict()
     stacks_d['mc'] = reorder(hists_nominal, PhysicsProcess.desired_plot_order_mc)
@@ -269,12 +272,12 @@ if __name__=="__main__":
         leg_pos='top-right',
         systematics='.*',
         log=True,
-        systematics_shapeonly=True
+        systematics_shapeonly=False
     )
     pd2 = pd.copy(
         log=True,
         systematics='en',
-        systematics_shapeonly=True
+        systematics_shapeonly=False
     )
 
     c1 = data_mc_plot(inf, pd, lumi)

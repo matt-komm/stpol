@@ -548,27 +548,30 @@ public:
 class TopCuts : public CutsBase
 {
 public:
-    bool applyMassCut;
-    bool signalRegion;
-    float signalRegionMassLow;
-    float signalRegionMassHigh;
+    // bool applyMassCut;
+    // bool signalRegion;
+    // float signalRegionMassLow;
+    // float signalRegionMassHigh;
     edm::InputTag topMassSrc;
+    edm::InputTag topPtSrc;
 
     virtual void initialize_branches()
     {
         branch_vars.vars_float["top_mass"] = BranchVars::def_val;
+        branch_vars.vars_float["top_pt"] = BranchVars::def_val;
     }
 
     TopCuts(const edm::ParameterSet &pars, BranchVars &_branch_vars) :
         CutsBase(_branch_vars)
     {
         initialize_branches();
-        applyMassCut = pars.getParameter<bool>("applyMassCut");
-        signalRegion = pars.getParameter<bool>("signalRegion");
-        signalRegionMassLow = (float)pars.getParameter<double>("signalRegionMassLow");
-        signalRegionMassHigh = (float)pars.getParameter<double>("signalRegionMassHigh");
+        // applyMassCut = pars.getParameter<bool>("applyMassCut");
+        // signalRegion = pars.getParameter<bool>("signalRegion");
+        // signalRegionMassLow = (float)pars.getParameter<double>("signalRegionMassLow");
+        // signalRegionMassHigh = (float)pars.getParameter<double>("signalRegionMassHigh");
 
         topMassSrc = pars.getParameter<edm::InputTag>("topMassSrc");
+        topPtSrc = pars.getParameter<edm::InputTag>("topPtSrc");
     }
 
     bool process(const edm::EventBase &event)
@@ -576,21 +579,22 @@ public:
         pre_process();
 
         branch_vars.vars_float["top_mass"] = get_collection_n<float>(event, topMassSrc);
-        bool passes_mass_cut = true;
-        if (applyMassCut)
-        {
-            if (signalRegion)
-            {
-                passes_mass_cut = (branch_vars.vars_float["top_mass"] < signalRegionMassHigh) && (branch_vars.vars_float["top_mass"] > signalRegionMassLow);
-            }
-            else
-            {
-                //sideband region
-                passes_mass_cut = (branch_vars.vars_float["top_mass"] > signalRegionMassHigh) || (branch_vars.vars_float["top_mass"] < signalRegionMassLow);
-            }
-        }
+        branch_vars.vars_float["top_pt"] = get_collection_n<float>(event, topPtSrc);
+        // bool passes_mass_cut = true;
+        // if (applyMassCut)
+        // {
+        //     if (signalRegion)
+        //     {
+        //         passes_mass_cut = (branch_vars.vars_float["top_mass"] < signalRegionMassHigh) && (branch_vars.vars_float["top_mass"] > signalRegionMassLow);
+        //     }
+        //     else
+        //     {
+        //         //sideband region
+        //         passes_mass_cut = (branch_vars.vars_float["top_mass"] > signalRegionMassHigh) || (branch_vars.vars_float["top_mass"] < signalRegionMassLow);
+        //     }
+        // }
 
-        if (!passes_mass_cut) return false;
+        // if (!passes_mass_cut) return false;
 
         post_process();
         return true;
@@ -674,7 +678,7 @@ public:
 
     Weights(const edm::ParameterSet &pars, BranchVars &_branch_vars) :
         CutsBase(_branch_vars),
-        leptonChannel(pars.getParameter<string>("leptonChannel")) //better to ust const string and initialize here (faster)
+        leptonChannel(pars.getParameter<string>("leptonChannel")) //better to use const string and initialize here (faster)
     {
         if (leptonChannel != "mu" && leptonChannel != "ele")
         {
@@ -741,7 +745,9 @@ public:
 
             branch_vars.vars_float["b_weight_nominal"] = get_collection<float>(event, bWeightNominalSrc, 0.0);
             branch_vars.vars_float["pu_weight"] = get_collection<double>(event, puWeightSrc, 0.0);
-            branch_vars.vars_float["ttbar_weight"] = get_collection<double>(event, ttbarWeightSrc, 0.0);
+
+            //The top-pt reweighting. Set to unity by default since not every dataset has this weight defined.
+            branch_vars.vars_float["ttbar_weight"] = get_collection<double>(event, ttbarWeightSrc, 1.0);
 
             branch_vars.vars_float["muon_IDWeight"] = get_collection<double>(event, muonIDWeightSrc, 0.0);
             branch_vars.vars_float["muon_IsoWeight"] = get_collection<double>(event, muonIsoWeightSrc, 0.0);
@@ -770,8 +776,8 @@ public:
         {
             branch_vars.vars_float["pu_weight_up"] = get_collection<double>(event, puWeightUpSrc, 0.0);
             branch_vars.vars_float["pu_weight_down"] = get_collection<double>(event, puWeightDownSrc, 0.0);
-            
-            
+
+
             branch_vars.vars_float["b_weight_nominal_Lup"] = get_collection<float>(event, bWeightNominalLUpSrc, 0.0);
             branch_vars.vars_float["b_weight_nominal_Ldown"] = get_collection<float>(event, bWeightNominalLDownSrc, 0.0);
             branch_vars.vars_float["b_weight_nominal_BCup"] = get_collection<float>(event, bWeightNominalBCUpSrc, 0.0);
@@ -1034,6 +1040,7 @@ int main(int argc, char *argv[])
     edm::InputTag totalPATProcessedCountSrc = lumiblock_counter_pars.getParameter<edm::InputTag>("totalPATProcessedCountSrc");
 
     BranchVars branch_vars;
+    BranchVars branch_vars_pdf;
     std::map<std::string, int> event_id_branches;
     std::map<std::string, unsigned int> count_map;
 
@@ -1062,7 +1069,7 @@ int main(int argc, char *argv[])
     MiscVars misc_vars(miscvars_pars, branch_vars);
 
 #ifdef WITH_LHAPDF
-    PDFWeights pdf_weights(pdfweights_pars, branch_vars);
+    PDFWeights pdf_weights(pdfweights_pars, branch_vars_pdf);
 #endif
 
     EvtShapeVars evt_shape_vars(evtshapevars_pars, branch_vars);
@@ -1075,24 +1082,20 @@ int main(int argc, char *argv[])
 
     int maxEvents_( in.getParameter<int>("maxEvents") );
 
-    //Making the output tree is optional
-    //bool make_tree ( in.getParameter<bool>("makeTree") );
     unsigned int outputEvery_( in.getParameter<unsigned int>("outputEvery") );
 
     TFileDirectory dir = fs.mkdir("trees");
     TTree *out_tree = 0;
-    //if (make_tree)
+    TTree *out_tree_pdf = 0;
     out_tree = dir.make<TTree>("Events", "Events");
+    out_tree_pdf = dir.make<TTree>("pdf_weights", "pdf_weights");
     TH1I *count_hist = dir.make<TH1I>("count_hist", "Event counts", count_map.size(), 0, count_map.size() - 1);
 
-    //TFileDirectory dir_effs = fs.mkdir("b_eff_hists");
-    //BEffCalcs b_eff_calcs(b_eff_pars, branch_vars, dir_effs);
-
     TFile::SetOpenTimeout(60000);
-    if (!TFile::SetCacheFileDir("/scratch/joosep"))
-    {
-        std::cerr << "Cache directory was not writable" << std::endl;
-    }
+    // if (!TFile::SetCacheFileDir("/scratch/joosep"))
+    // {
+    //     std::cerr << "Cache directory was not writable" << std::endl;
+    // }
 
     event_id_branches["event_id"] = 0;
     event_id_branches["run_id"] = 0;
@@ -1128,6 +1131,21 @@ int main(int argc, char *argv[])
         int *p_branch = &(elem.second);
         out_tree->Branch(br_name.c_str(), p_branch);
     }
+
+    //Put the PDF weights to a separate TTree
+    for (auto & elem : branch_vars_pdf.vars_float)
+    {
+        const std::string &br_name = elem.first;
+        std::cout << br_name << ", ";
+        float *p_branch = &(elem.second);
+        out_tree_pdf->Branch(br_name.c_str(), p_branch);
+    }
+    for (auto & elem : branch_vars_pdf.vars_vfloat)
+    {
+        std::cout << elem.first << ", ";
+        out_tree_pdf->Branch(elem.first.c_str(), &(elem.second));
+    }
+
     std::cout << std::endl;
 
     // loop the events
@@ -1198,11 +1216,6 @@ int main(int argc, char *argv[])
                 }
                 if (!passes_gen_cuts) continue;
 
-                /*if (b_eff_calcs.doBEffCalcs)
-                {
-                    b_eff_calcs.process(event);
-                }*/
-
 #ifdef WITH_LHAPDF
                 if (pdf_weights.enabled)
                 {
@@ -1215,6 +1228,7 @@ int main(int argc, char *argv[])
                 event_id_branches["lumi_id"] = (unsigned int)event.id().luminosityBlock();
 
                 out_tree->Fill();
+                out_tree_pdf->Fill();
             }
 
             fwlite::LuminosityBlock ls(in_file);
@@ -1289,6 +1303,6 @@ int main(int argc, char *argv[])
     TNamed *inflist = new TNamed("infiles", ss.str().c_str());
     pdesc->Write();
     inflist->Write();
-    
+
     return 0;
 }
