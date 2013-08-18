@@ -93,7 +93,8 @@ xs["WJetsToLNu_scaledown"] = xs["WJets_inclusive"]
 xs["WJetsToLNu_scaleup"] = xs["WJets_inclusive"]
 
 
-#Use this dict to create lumis corresponding to processings. Please don't overwrite old lumis
+# Use this dict to create lumis corresponding to step2 processings.
+# Please don't overwrite old lumis
 lumis = dict()
 lumis["83a02e9_Jul22"] = dict()
 lumis["83a02e9_Jul22"]["iso"] = dict()
@@ -102,7 +103,6 @@ lumis["83a02e9_Jul22"]["iso"]["mu"] = 6784+6398+5277
 lumis["83a02e9_Jul22"]["iso"]["ele"] = 12410+6144
 lumis["83a02e9_Jul22"]["antiiso"] = lumis["83a02e9_Jul22"]["iso"]
 
-#FIXME
 lumis["Aug4_0eb863_full"] = dict()
 lumis["Aug4_0eb863_full"]["iso"] = dict()
 lumis["Aug4_0eb863_full"]["antiiso"] = dict()
@@ -111,6 +111,7 @@ lumis["Aug4_0eb863_full"]["iso"]["ele"] = 917 + 12378 + 6421
 lumis["Aug4_0eb863_full"]["antiiso"]["mu"] = 1094 + 5319 + 6528 + 6823
 lumis["Aug4_0eb863_full"]["antiiso"]["ele"] = 917 + 12409 + 6482
 
+# References to the 'latest' luminosities.
 lumi_iso = {
     "ele": lumis["83a02e9_Jul22"]["iso"]["ele"],
     "mu": lumis["83a02e9_Jul22"]["iso"]["mu"]
