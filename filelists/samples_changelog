@@ -1,4 +1,13 @@
 -------
+Sample: /hdfs/local/stpol/step3/Aug4_0eb863_full_with_Jul29_MVA
+step: step3
+luminosity: filelists/Aug4_0eb863_full/step2/data/overview, also in plots/common/cross_sections.py already
+git hash: step2 0eb863, step3 4ed824
+Explanation: Full systematics processing with top pt reweighting, met-phi corrections, 19.7/fb int.lumi.
+Changed default top PT weight to unity, stop aborting on missing file in step3. PDF weights in separate tree (trees/pdf_weights)
+MVA same as previous step3 releases, trained on Jul29th. 
+parent: Aug4_0eb863_full
+-------
 Sample: /hdfs/local/stpol/fit_histograms/09_08_2013_3comp
     /hdfs/local/stpol/unfolding_histograms/09_08_2013_comp
 step: histograms
