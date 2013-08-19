@@ -463,6 +463,7 @@ file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/W4Jets_e
 file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/W4Jets_exclusive/output_463_1_SBH.root
 file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/W4Jets_exclusive/output_464_1_AD9.root
 file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/W4Jets_exclusive/output_465_5_T48.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/W4Jets_exclusive/output_466_5_Gyg.root
 file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/W4Jets_exclusive/output_467_5_U5C.root
 file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/W4Jets_exclusive/output_468_5_Fe3.root
 file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/W4Jets_exclusive/output_469_5_Yar.root
