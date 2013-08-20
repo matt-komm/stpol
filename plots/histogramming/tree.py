@@ -514,7 +514,9 @@ if __name__=="__main__":
                     #Apply any additional anti-iso cuts (like dR) along with antiiso variations.
                     Cuts.antiiso(lep, aiso_syst) * Cuts.deltaR_QCD(dr_syst),
                     graph, lep + "__" + cn, par, [],
-                    filter_funcs=[is_samp("antiiso"), is_samp("data")]
+                    filter_funcs=[
+                        lambda x: is_samp(x, "antiiso") and is_samp(x, "data")
+                    ]
                 )
                 isol.append(isos[lep][cn])
 

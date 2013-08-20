@@ -86,7 +86,7 @@ weights_syst = [
     ("btag", Weights.btag_syst),
     ("wjets_yield", Weights.wjets_yield_syst),
     ("wjets_shape", Weights.wjets_shape_syst),
-    #("top_pt", Weights.top_pt),
+    ("top_pt", Weights.top_pt),
     ("pu", Weights.pu_syst),
 ]
 
