@@ -40,11 +40,13 @@ extern "C" {
         event->toBegin();
     }
 
-    void *event_getByLabel(fwlite::Event *evt, const char *label, void *handle)
+    void event_getByLabel(fwlite::Event *evt, const char *label, void *handle, const void *out)
     {
         const edm::InputTag src(label);
-        evt.getByLabel(src, *handle);
-        return &(handle->product());
+        edm::Handle<std::vector<float>> *_handle = (edm::Handle<std::vector<float>> *)handle;
+        evt->getByLabel(src, *_handle);
+        out = &(_handle->product()[0]);
+        //return (_handle->product());
     }
 
     bool event_atEnd(fwlite::Event *event)

@@ -23,8 +23,19 @@ def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
 
     cutnodes = []
     for cut_name, cut in cuts:
+        
+        cutnode = tree.CutNode(cut, graph, cut_name, snodes, [])
         cutnodes.append(
-            tree.CutNode(cut, graph, cut_name, snodes, [])
+            cutnode
+        )
+
+        #an extra QCD cleaning cut on top of the previous cut, which is only done in antiiso data
+        cutnodes.append(
+            tree.CutNode(Cuts.deltaR_QCD(), graph, "dR_QCD", [cutnode], [],
+                filter_funcs=[
+                    lambda p: tree.is_samp(p, "data") and is_samp(p, "antiiso")
+                ]
+            )
         )
 
     from histo_descs import create_plots
@@ -57,7 +68,8 @@ if __name__=="__main__":
     cuts = [
         # ("2j0t", Cuts.mt_mu()*Cuts.n_jets(2)*Cuts.n_tags(0)*Cuts.lepton("mu")*Cuts.hlt("mu")),
         # ("2j1t", Cuts.mt_mu()*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton("mu")*Cuts.hlt("mu")),
-        ("final_cb_2j1t", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1))
+        ("final_mu_cb_2j1t", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)),
+        ("final_mu_mva_loose", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1))
     ]
 
     #Construct the analysis chain

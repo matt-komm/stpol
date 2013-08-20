@@ -14,32 +14,6 @@ from plots.common.odict import OrderedDict
 from plots.common.stack_plot import plot_hists_stacked
 import pdb
 
-def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
-    """
-    Rescales the histogram from a sample by the corresponding scale factors.
-    Raises a KeyError when there was no match.
-
-    sample_name - the name of the sample, corresponding to the patterns in fitpars
-    hist - the Hist to be scaled
-    fitpars - a list with tuple contents
-        [
-            ([patA1, patA2, ...], sfA, errA),
-            ([patB1, patB2, ...], sfB, errB),
-        ]
-
-    returns - nothing
-    """
-    for patterns, sf, err in fitpars:
-        for pat in patterns:
-            if re.match(pat, sample_name):
-                logger.debug("Rescaling sample %s to lepton_channeless %s, sf=%.2f" % (sample_name, pat, sf))
-                hist.Scale(sf)
-                #We take the first match
-                return
-    #If we loop through and get here, there was no match
-    if not ignore_missing:
-        raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
-
 def data_mc_plot(samples, plot_def, name, lepton_channel, lumi, weight, physics_processes, use_antiiso=False):
 
     logger.info('Plot in progress %s' % name)

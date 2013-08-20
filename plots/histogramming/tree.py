@@ -22,15 +22,33 @@ logger = logging.getLogger("tree")
 logger.setLevel(logging.INFO)
 print "Done loading dependency libraries..."
 
+def is_samp(p, x):
+    """
+    Take a boolean decision based on the sample filename/path.
+    The sample is assumed to be the first node in the parentage (FIXME)
+    """
+    return ("/%s/" % x) in p[0].name
+
+def is_chan(p, lep):
+    """
+    Placeholder for now. FIXME: implement a more clever decision
+    """
+    return is_samp(p, lep)
+
+def is_mc(p):
+    return is_samp(p, "mc") or is_samp(p, "mc_syst")
+
+
 def hist_node(graph, cut, weights, variables):
     """
     Creates a simple CutNode -> WeightNode(s) ->
     HistNode(s) structure from the specified cut, weights and variables.
 
     Args:
-        # variables: A dict with the histogram description, keys/values as in tree.HistNode.
-        # _cut: A (name, cut) tuple with the cut to apply.
-        # _weights: A list with [(name, weight)] with the weights to apply in parallel.
+        graph: a NX graph which is the parent of these nodes
+        cut: a (cutname, Cut) tuple with the cut to apply
+        weights: a list of (weightname, Weight) tuples to apply
+        variables: a list of (varname, variable, binning) tuples to project out.
 
     Returns:
         The top CutNode that was created.
@@ -428,25 +446,6 @@ class DictSaver(PatternDict):
     def save(self, path, obj):
         self[path] = obj
 
-def hasParent(node, p):
-    return node.name in p
-
-def is_samp(p, x):
-    """
-    Take a boolean decision based on the sample filename/path
-    """
-    return ("/%s/" % x) in p[0].name
-
-def is_chan(p, lep):
-    """
-    Placeholder for now. FIXME: implement a more clever decision
-    """
-    return is_samp(p, lep)
-
-def is_mc(p):
-    return is_samp(p, "mc") or is_samp(p, "mc_syst")
-
-
 if __name__=="__main__":
     print "Constructing analysis tree..."
 
@@ -506,15 +505,18 @@ if __name__=="__main__":
         )
         isol.append(isos[lep]['iso'])
 
-        #Antiiso with variations
+        #Antiiso with variations in the isolation cut
         for aiso_syst in ["nominal", "up", "down"]:
-            cn = 'antiiso_' + aiso_syst
-            isos[lep][cn] = CutNode(
-                Cuts.antiiso(lep, aiso_syst) * Cuts.deltaR_QCD(), #Apply any additional anti-iso cuts (like dR) along with antiiso variations.
-                graph, lep + "__" + cn, par, [],
-                filter_funcs=[lambda x: "/antiiso/" in x[0].name]
-            )
-            isol.append(isos[lep][cn])
+            #dR with variations
+            for dr_syst in ["nominal", "up", "down"]:
+                cn = 'antiiso_' + aiso_syst + '_dR_' + dr_syst
+                isos[lep][cn] = CutNode(
+                    #Apply any additional anti-iso cuts (like dR) along with antiiso variations.
+                    Cuts.antiiso(lep, aiso_syst) * Cuts.deltaR_QCD(dr_syst),
+                    graph, lep + "__" + cn, par, [],
+                    filter_funcs=[is_samp("antiiso"), is_samp("data")]
+                )
+                isol.append(isos[lep][cn])
 
     # [iso, antiiso] --> jet --> [jets2-3]
     jet = Node(graph, "jet", isol, [])

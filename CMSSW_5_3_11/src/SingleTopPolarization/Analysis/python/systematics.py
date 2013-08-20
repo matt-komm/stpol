@@ -3,29 +3,45 @@ import math
 import logging
 logger = logging.getLogger("systematics")
 logger.setLevel(logging.DEBUG)
+
 def to_arr(x):
+    """
+    Converts an iterable to a numpy array
+    """
     return np.array(list(x))
 
 def quadsum(*args):
+    """
+    Calculates the sqrt of the quadratic sum of a list of variables.
+    """
     pow2 = map(lambda x: np.power(x, 2), args)
     sum2 = reduce(lambda x,y: x+y, pow2)
     ret = np.sqrt(sum2)
     return ret
 
 def n_events(hist):
+    """
+    Under the assumption of Poisson errors, gets the per-bin array
+    of the number of MC events that entered a particular histogram
+    """
     errs = to_arr(hist.errors())
     n = np.power(errs, 2)
     return n
 
 def cdf_errors(hist, sign=+1):
-    n = n_events(hist)
-    #logger.info("Errs: %s" % str(to_arr(hist.errors())))
-    for i in range(hist.nbins()):
-        hist.SetBinError(i+1,
-            sign*0.5*math.sqrt(
+    """
+    Implements the statistical errors a la CDF for a histogram with
+    low event counts. 
+    """
+    hc = hist.Clone()
+    n = n_events(hc)
+    for i in range(hc.nbins()):
+        hc.SetBinError(i+1,
+            sign*0.5 + math.sqrt(
                 n[i] + 0.25
             )
         )
+    return hc
 
 def total_syst(nominal, systs, **kwargs):
     """
@@ -48,10 +64,18 @@ def total_syst(nominal, systs, **kwargs):
             limited statistics, one must, in principle,
             consider their means as a random variable drawn
             from a distribution.
+            0: don't consider the statistical error
+            1: consider it and add in quadrature, which has no
+                strong statistical basis
+            -1: consider it and subtract in quadrature, which
+                takes into account the fact that the variation
+                is more likely to be in the direction of the nominal
+                than the opposite. See http://arxiv.org/pdf/hep-ex/0207026v1.pdf
         symmetric: symmetrize the systematic errors, using a
             Gaussian with mean=nominal and sigma=up-down.
             Otherwise, a two-sided gaussian is assumed, with
-            mean=nominal, sigma1=up-nominal, sigma2=nominal-down.
+            mean=nominal, sigma1=up-nominal, sigma2=nominal-down,
+            and addition is performed via convolution
     Returns:
         a 4-tuple of histograms corresponding to the total uncorrelated
         systematic up/down variation and the uncorrelated
@@ -60,89 +84,119 @@ def total_syst(nominal, systs, **kwargs):
     if isinstance(systs, dict):
         systs = systs.items()
 
-    consider_variated_stat_err = kwargs.get("consider_variated_stat_err", True)
-
-    if consider_variated_stat_err:
-        consider_variated_stat_err = 1.0
-    else:
-        consider_variated_stat_err = 0.0
-        logger.debug(
-            """Not taking into account the
-            statistical error in the variated templates"""
-        )
-    symmetric = kwargs.get("symmetric", True)
+    cdf_nom_up = cdf_errors(nominal, +1)
+    cdf_nom_down = cdf_errors(nominal, -1)
 
     bins = to_arr(nominal.y())
-    errs = to_arr(nominal.errors())
 
-    #The total difference resulting from the systematic variation
-    diff_up_tot = np.zeros(bins.shape)
-    diff_down_tot = np.zeros(bins.shape)
-
-    diff_tot = np.zeros(bins.shape)
-    # Consider each systematic variation separately, assuming
-    # no correlations
     for systn, (hup, hdown) in systs:
-
         cdf_errors(hup, sign=+1)
         cdf_errors(hdown, sign=-1)
 
-        # The variated templates
-        bins_up = to_arr(hup.y())
-        bins_down = to_arr(hdown.y())
-
-        # The difference between the nominal and the variated shape, taking into account
-        # the lack of information about the central value of the variated shapes from low statistics.
-        diff_up = quadsum(bins - bins_up,
-            float(consider_variated_stat_err)*to_arr(hup.errors())
+    #Add the statistical uncertainty
+    systs.append(
+        ("stat",
+            (
+                bins + to_arr(cdf_nom_up.errors()),
+                bins - to_arr(cdf_nom_down.errors())
+            )
         )
-        diff_down = quadsum(bins - bins_down,
-            float(consider_variated_stat_err)*to_arr(hdown.errors())
-        )
-        diff = quadsum(bins_up - bins_down,
-            float(consider_variated_stat_err)*to_arr(hdown.errors()),
-            float(consider_variated_stat_err)*to_arr(hup.errors())
-        )
+    )
 
-        diff_up_tot += np.power(diff_up, 2)
-        diff_down_tot += np.power(diff_down, 2)
-        diff_tot += np.power(diff, 2)
+    from util.stats.asym_errs import add_errors
+    delta_up = np.empty_like(bins)
+    delta_down = np.empty_like(bins)
 
-    diff_up_tot = np.sqrt(diff_up_tot)
-    diff_down_tot = np.sqrt(diff_down_tot)
-    diff_tot = np.sqrt(diff_tot)
-
-    #Systematic variation only
-    hup = nominal.Clone("syst_up")
-    hdown = nominal.Clone("syst_down")
-    if symmetric:
-        bins_up = bins + diff_tot
-        bins_down = bins - diff_tot
-    else:
-        bins_up = bins + diff_up_tot
-        bins_down = bins - diff_down_tot
-
+    #Add systematic variations bin-by-bin
     for i in range(len(bins)):
-        hup.SetBinContent(i+1, bins_up[i])
-        hdown.SetBinContent(i+1, bins_down[i])
+        sigmas = []
+        names = []
+        for systn, (hup, hdown) in systs:
+            sigma_plus = abs(hup[i] - bins[i])
+            sigma_minus = abs(hdown[i] - bins[i])
+            sigmas.append(
+                (sigma_plus, sigma_minus)
+            )
+            names.append(systn)
+        sig_up, sig_down, delta = add_errors(sigmas)
+        
+        sumsq = lambda n: math.sqrt(
+            sum(map(
+            lambda x: x**2,
+            map(lambda z: z[n], sigmas)
+        )))
+        sig_up_naive = sumsq(0)
+        sig_down_naive = sumsq(1)
 
-    #Statistical plus systematic, assuming uncorrelated
-    hup_syst_stat = nominal.Clone("syst_stat_up")
-    hdown_syst_stat = nominal.Clone("syst_stat_down")
-    delta_up = quadsum(diff_up_tot, errs)
-    delta_down = quadsum(diff_down_tot, errs)
-    delta = quadsum(diff_tot, errs)
+        logger.debug(
+            "y=%.2f sig_up=%.2f, sig_down=%.2f, delta=%.2f, sig_up_naive=%.2f, sig_down_naive=%.2f \nsigmas=%s" %
+            (bins[i], sig_up, sig_down, delta, sig_up_naive, sig_down_naive, str(zip(names, sigmas)))
+        )
 
-    if symmetric:
-        bins_up = bins + delta
-        bins_down = bins - delta
-    else:
-        bins_up = bins + delta_up
-        bins_down = bins - delta_down
+        delta_up[i] = sig_up
+        delta_down[i] = sig_down
 
+    bins_up = bins + delta_up
+    bins_down = bins - delta_down
+
+    hup_syst_stat = nominal.Clone()
+    hdown_syst_stat = nominal.Clone()
     for i in range(len(bins)):
         hup_syst_stat.SetBinContent(i+1, bins_up[i])
         hdown_syst_stat.SetBinContent(i+1, bins_down[i])
+        hup_syst_stat.SetBinError(i+1, 0)
+        hdown_syst_stat.SetBinError(i+1, 0)
+
+    return hup_syst_stat, hdown_syst_stat
 
 
-    return hup, hdown, hup_syst_stat, hdown_syst_stat
+import unittest
+from rootpy.plotting import Hist
+class TestErrors(unittest.TestCase):
+
+    @staticmethod
+    def print_hist(h):
+        errs = list(h.errors())
+        x = list(h.x())
+        for i in range(h.nbins()):
+            print "%d | %.2f | %.2f | %.2f" % (i, x[i], h[i], errs[i])
+
+    @staticmethod
+    def make_hist(n=5):
+        hi = Hist(n, -1, 1)
+        hi.Sumw2()
+        for i in range(hi.nbins()):
+            hi[i] = i
+            hi.SetBinError(i+1, math.sqrt(hi[i]))
+        return hi
+
+    @staticmethod
+    def variate_hist(h, coef=lambda n: 1):
+        h = h.Clone()
+        errs = list(h.errors())
+        for i in range(h.nbins()):
+            h.SetBinContent(i+1, h[i] + coef(i) * errs[i])
+        return h
+
+    def test_systematic(self):
+        hi = self.make_hist()
+        hi_up = self.variate_hist(hi)
+        self.print_hist(hi)
+        self.print_hist(hi_up)
+
+    def test_cdf_errors(self):
+        hi = Hist(list(range(20)))
+        hi.Sumw2()
+        for i in range(1, hi.nbins()+1):
+            hi.SetBinContent(i, i-1)
+            hi.SetBinError(i, math.sqrt(hi[i-1]))
+        self.print_hist(hi)
+        hi_up = cdf_errors(hi, +1)
+        hi_down = cdf_errors(hi, -1)
+        print "up"
+        self.print_hist(hi_up)
+        print "down"
+        self.print_hist(hi_down)
+
+if __name__=="__main__":
+    unittest.main()

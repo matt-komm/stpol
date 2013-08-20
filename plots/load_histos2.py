@@ -251,86 +251,92 @@ if __name__=="__main__":
     import cPickle as pickle
     import os
 
-    if not os.path.exists("temp.pickle"):
-        fnames = glob.glob("hists/e/mu/*.root")
-        base = ".*/Aug4_0eb863_full/mu/"
-        cut = "channel/mu/mu__iso/jet/2j/tag/1t/met/met__mtw/signalenr/cutbased/mtop/mtop__SR/etalj/etalj__g2_5/"
-        cut_antiiso = cut.replace("iso", "antiiso")
+    varname = "cos_theta"
+    channel="mu"
+    fnames = glob.glob("hists/e/mu/*.root")
 
-        varname = "abs_eta_lj"
+    cutstr = "channel/mu/%s__iso/jet/2j/tag/1t/met/met__mtw/signalenr/mva/.*tight.*/" % channel
+    
 
-        pat_mc_varsamp = ""
-        pat_mc_varsamp += base
-        pat_mc_varsamp += "mc_syst/iso/(.*)/Jul15/(.*)/"
-        pat_mc_varsamp += cut
-        pat_mc_varsamp += "(weight__nominal__mu)/" + varname
+    cut = cutstr
+    cut_antiiso = cut.replace("iso", "antiiso")
+    base = ".*/Aug4_0eb863_full/%s/"%channel
 
-        pat_mc_varproc = ""
-        pat_mc_varproc += base
-        pat_mc_varproc += "mc/iso/(.*)/Jul15/(.*)/"
-        pat_mc_varproc += cut
-        pat_mc_varproc += "(weight__nominal__mu)/" + varname
+    pat_mc_varsamp = ""
+    pat_mc_varsamp += base
+    pat_mc_varsamp += "mc_syst/iso/(.*)/Jul15/(.*)/"
+    pat_mc_varsamp += cut
+    pat_mc_varsamp += "(weight__nominal__%s)/"%channel + varname
 
-        pat_data = ""
-        pat_data += base
-        pat_data += "(data)/iso/.*/(.*)/"
-        pat_data += cut
-        pat_data += "(weight__unweighted.*)/" + varname
+    pat_mc_varproc = ""
+    pat_mc_varproc += base
+    pat_mc_varproc += "mc/iso/(.*)/Jul15/(.*)/"
+    pat_mc_varproc += cut
+    pat_mc_varproc += "(weight__nominal__%s)/"%channel + varname
 
-        pat_mc_nom = ""
-        pat_mc_nom += base
-        pat_mc_nom += "mc/iso/(nominal)/Jul15/(.*)/"
-        pat_mc_nom += cut
-        pat_mc_nom += "(weight__.*__mu)/" + varname
+    pat_data = ""
+    pat_data += base
+    pat_data += "(data)/iso/.*/(Single.*)/"
+    pat_data += cut
+    pat_data += "(weight__unweighted.*)/" + varname
 
-        pat_data_antiiso = ""
-        pat_data_antiiso += base
-        pat_data_antiiso += "data/antiiso/.*/(.*)/"
-        pat_data_antiiso += cut_antiiso
-        pat_data_antiiso += "(weight__unweighted.*)/" + varname
+    pat_mc_nom = ""
+    pat_mc_nom += base
+    pat_mc_nom += "mc/iso/(nominal)/Jul15/(.*)/"
+    pat_mc_nom += cut
+    pat_mc_nom += "(weight__.*__%s)/"%channel + varname
 
-        rets_data = load_file(fnames,
-            {
-                "mc_varsamp": pat_mc_varsamp,
-                "mc_varproc": pat_mc_varproc,
-                "mc_nom": pat_mc_nom,
-                "data": pat_data,
-                "data_antiiso": pat_data_antiiso,
-            }
-        )
+    pat_data_antiiso = ""
+    pat_data_antiiso += base
+    pat_data_antiiso += "data/antiiso/.*/(.*)/"
+    pat_data_antiiso += cut_antiiso
+    pat_data_antiiso += "(weight__unweighted.*)/" + varname
 
-        hists = {}
-        hsources = (
-            rets_data["data"][pat_data]+
-            rets_data["mc_nom"][pat_mc_nom]+
-            rets_data["mc_varproc"][pat_mc_varproc]+
-            rets_data["mc_varsamp"][pat_mc_varsamp]
-        )
+    rets_data = load_file(fnames,
+        {
+            "mc_varsamp": pat_mc_varsamp,
+            "mc_varproc": pat_mc_varproc,
+            "mc_nom": pat_mc_nom,
+            "data": pat_data,
+            "data_antiiso": pat_data_antiiso,
+        }
+    )
 
-        hqcd = sum([x[1] for x in rets_data["data_antiiso"][pat_data_antiiso]])
-        
-        hqcd_up = hqcd.Clone()
-        hqcd_up.Scale(2.0)
-        
-        hqcd_down = hqcd.Clone()
-        hqcd_down.Scale(0.5)
+    hists = {}
+    hsources = (
+        rets_data["data"][pat_data]+
+        rets_data["mc_nom"][pat_mc_nom]+
+        rets_data["mc_varproc"][pat_mc_varproc]+
+        rets_data["mc_varsamp"][pat_mc_varsamp]
+    )
 
-        hsources += [
-            (("data", "qcd", "weight__unweighted"), hqcd),
-            (("data", "qcd", "weight__qcd_yield_up"), hqcd_up),
-            (("data", "qcd", "weight__qcd_yield_down"), hqcd_down),
-        ]
+    hqcd = sum([x[1] for x in rets_data["data_antiiso"][pat_data_antiiso]])
+    
+    hqcd_up = hqcd.Clone()
+    hqcd_up.Scale(2.0)
+    
+    hqcd_down = hqcd.Clone()
+    hqcd_down.Scale(0.5)
 
-        f = open('temp.pickle','wb')
-        pickle.dump(hsources, f)
-        f.close()
+    #Add the variated data-driven QCD templates
+    hsources += [
+        (("data", "qcd", "weight__unweighted"), hqcd),
+        (("data", "qcd", "weight__qcd_yield_up"), hqcd_up),
+        (("data", "qcd", "weight__qcd_yield_down"), hqcd_down),
+    ]
+
+        #f = open('temp.pickle','wb')
+        #pickle.dump(hsources, f)
+        #f.close()
 
     #load the histos from the temporary pickle
-    f = open('temp.pickle','rb')
-    hsources = pickle.load(f)
+    #f = open('temp.pickle','rb')
+    #hsources = pickle.load(f)
 
     syst_scenarios = NestedDict()
-    for (sample_var, sample, weight_var), hist in hsources:    
+    for (sample_var, sample, weight_var), hist in hsources:
+        if sample_var=="data":
+            pdb.set_trace() 
         if "__ele" in weight_var:
             continue
         
@@ -393,7 +399,6 @@ if __name__=="__main__":
     #Create the output file
     of = ROOT.TFile("hists_out.root", "RECREATE")
     of.cd()
-    varname = "abs_eta_lj"
 
     #Get the list of all possible systematic scenarios that we have available
 
@@ -490,6 +495,8 @@ if __name__=="__main__":
     of.Close()
 
     hists = load_theta_format("hists_out_merged.root")
+    for k, v in hists.items_flat():
+        print k, v
 
     # for k1, v1 in syst_scenarios.items():
     #     for k2, v2 in v1.items():

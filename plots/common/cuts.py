@@ -1,5 +1,7 @@
 from plots.common.utils import escape
 from plots.common.utils import NestedDict
+import logging
+logger = logging.getLogger(__name__)
 
 class Cut:
     def __init__(self, cut_str):
@@ -156,8 +158,13 @@ class Cuts:
         return Cut("deltaR_bj>{0} && deltaR_lj>{0}".format(x))
 
     @staticmethod
-    def deltaR_QCD():
-        return Cuts.deltaR(0.3)
+    def deltaR_QCD(syst="nominal"):
+        cutvals = {
+            "nominal": 0.3,
+            "up": 0.5,
+            "down": 0.1,
+        }
+        return Cuts.deltaR(cutvals[syst])
 
     @staticmethod
     def n_tags(n):
