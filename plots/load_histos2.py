@@ -255,7 +255,7 @@ if __name__=="__main__":
     channel="mu"
     fnames = glob.glob("hists/e/mu/*.root")
 
-    cutstr = "%s__iso/jet/2j/tag/1t/met/met__mtw/signalenr/mva/.*tight.*/" % channel
+    cutstr = "channel/mu/%s__iso/jet/2j/tag/1t/met/met__mtw/signalenr/mva/.*tight.*/" % channel
     
 
     cut = cutstr
@@ -276,7 +276,7 @@ if __name__=="__main__":
 
     pat_data = ""
     pat_data += base
-    pat_data += "(data)/iso/.*/(.*)/"
+    pat_data += "(data)/iso/.*/(Single.*)/"
     pat_data += cut
     pat_data += "(weight__unweighted.*)/" + varname
 
@@ -334,7 +334,9 @@ if __name__=="__main__":
     #hsources = pickle.load(f)
 
     syst_scenarios = NestedDict()
-    for (sample_var, sample, weight_var), hist in hsources:    
+    for (sample_var, sample, weight_var), hist in hsources:
+        if sample_var=="data":
+            pdb.set_trace() 
         if "__ele" in weight_var:
             continue
         
@@ -493,6 +495,8 @@ if __name__=="__main__":
     of.Close()
 
     hists = load_theta_format("hists_out_merged.root")
+    for k, v in hists.items_flat():
+        print k, v
 
     # for k1, v1 in syst_scenarios.items():
     #     for k2, v2 in v1.items():
