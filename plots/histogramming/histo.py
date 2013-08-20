@@ -69,7 +69,7 @@ if __name__=="__main__":
         # ("2j0t", Cuts.mt_mu()*Cuts.n_jets(2)*Cuts.n_tags(0)*Cuts.lepton("mu")*Cuts.hlt("mu")),
         # ("2j1t", Cuts.mt_mu()*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton("mu")*Cuts.hlt("mu")),
         ("final_mu_cb_2j1t", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)),
-        ("final_mu_mva_loose", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1))
+        ("final_mu_mva_loose", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.metmt("mu")*Cuts.mva_wp("mu"))
     ]
 
     #Construct the analysis chain
