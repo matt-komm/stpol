@@ -34,7 +34,7 @@ def get_process_name(sn):
     return sn
 
 logger = logging.getLogger("sample.py")
-#logger.setLevel(logging.WARNING)
+#logger.setLevel(logging.DEBUG)
 
 class Sample:
     def __del__(self):
@@ -69,9 +69,10 @@ class Sample:
         if not self.tree:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
-        self.tree.SetBranchStatus("*", 1)
-        self.tree.SetCacheSize(500*1024*1024)
-        self.tree.AddBranchToCache("*")
+ #Switching off caching for now, as it is a huge memory hog and not very effective over /hdfs
+ #       self.tree.SetBranchStatus("*", 1)
+ #       self.tree.SetCacheSize(50*1024*1024)
+ #       self.tree.AddBranchToCache("*")
 
         if self.tfile.Get("trees/WJets_weights"):
             self.tree.AddFriend("trees/WJets_weights")

@@ -1,0 +1,28 @@
+TToBENu_t-channel                       mc    T_t               tchan    signal     comphep   syst      sig_gen__comphep
+TToBMuNu_t-channel                      mc    T_t               tchan    signal     comphep   syst      sig_gen__comphep
+TToBTauNu_t-channel                     mc    T_t               tchan    signal     comphep   syst      sig_gen__comphep
+
+Tbar_t_ToLeptons_mass178_5              mc    Tbar_t            tchan    signal     powheg    syst      mass__up
+Tbar_t_ToLeptons_mass166_5              mc    Tbar_t            tchan    signal     powheg    syst      mass__down
+    
+T_t_ToLeptons_mass178_5                 mc    T_t_ToLeptons     tchan    signal     powheg    syst      mass__up
+T_t_ToLeptons_mass166_5                 mc    T_t_ToLeptons     tchan    signal     powheg    syst      mass__down
+
+Tbar_t_ToLeptons_scaledown              mc    Tbar_t_ToLeptons  tchan    signal     powheg    syst      tchan_scale__up
+Tbar_t_ToLeptons_scaleup                mc    Tbar_t_ToLeptons  tchan    signal     powheg    syst      tchan_scale__down
+
+T_t_ToLeptons_scaledown                 mc    T_t_ToLeptons     tchan    signal     powheg    syst      tchan_scale__up
+T_t_ToLeptons_scaleup                   mc    T_t_ToLeptons     tchan    signal     powheg    syst      tchan_scale__down
+
+WJetsToLNu_scaledown                    mc    WJets_inclusive   wjets    backgr     powheg    syst      wjets_scale__down
+WJetsToLNu_scaleup                      mc    WJets_inclusive   wjets    backgr     powheg    syst      wjets_scale__up
+WJetsToLNu_matchingdown                 mc    WJets_inclusive   wjets    bacgkr     powheg    syst      wjets_matching__down
+WJetsToLNu_matchingup                   mc    WJets_inclusive   wjets    bacgkr     powheg    syst      wjets_matching__up
+
+TToBENu_anomWtb-0100_t-channel          mc    T_t               tchan    signal     comphep   syst      sig_anom__0100
+TToBMuNu_anomWtb-0100_t-channel         mc    T_t               tchan    signal     comphep   syst      sig_anom__0100
+TToBTauNu_anomWtb-0100_t-channel        mc    T_t               tchan    signal     comphep   syst      sig_anom__0100
+
+TToBENu_anomWtb-unphys_t-channel        mc    T_t               tchan    signal     comphep   syst      sig_anom__unphys
+TToBMuNu_anomWtb-unphys_t-channel       mc    T_t               tchan    signal     comphep   syst      sig_anom__unphys
+TToBTauNu_anomWtb-unphys_t-channel      mc    T_t               tchan    signal     comphep   syst      sig_anom__unphys

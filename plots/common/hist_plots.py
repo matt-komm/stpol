@@ -7,6 +7,33 @@ from plots.common.histogram import norm
 import logging
 logger = logging.getLogger("hist_plots")
 
+def hist_err(axes, hist, yerr=None, **kwargs):
+    """
+    Plots a Histogram on matplotlib Axes in familiar ROOT style with errorbars.
+
+    Args:
+        axes: a matplotlib axes instance
+        hist: a Hist instance
+    Returns:
+        The errorbar plot.
+    """
+
+    if not yerr:
+        yerr = [list(hist.yerrh()), list(hist.yerrl())]
+    return axes.errorbar(
+        list(hist.x()),
+        list(hist.y()),
+        yerr=yerr,
+        drawstyle='steps-mid', **kwargs
+    )
+
+def ipy_show_canv(c):
+    from IPython.core.display import Image
+
+    fn = "temp.png"
+    c.SaveAs(fn) 
+    return Image(filename=fn) 
+
 def plot_hists(hists, name="canv", **kwargs):
     """
     Draws a list of histograms side-by-side on a new canvas.
@@ -134,7 +161,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
 
     height = kwargs.get("height", 0.3)
     syst_hists = kwargs.get("syst_hists", None)
-    min_max = kwargs.get("min_max", (-0.2, 0.2))
+    min_max = kwargs.get("min_max", (-1, 1))
     syst_fill = kwargs.get("syst_fill", 0)
 
     p2 = ROOT.TPad("p2", "p2", 0, 0, 1, height)

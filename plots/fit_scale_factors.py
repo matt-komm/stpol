@@ -1,5 +1,7 @@
+# -*- coding: utf-8 -*-
 from plots.common.utils import NestedDict
 from plots.common.utils import PhysicsProcess
+import os
 
 #Fit parameters from the final fit
 #Extracted in the muon channel using final_fit/final_fit.py
@@ -26,13 +28,14 @@ def load_fit_results(fn):
     Returns:
         A dict with (sample, (sf, err)) items.
     """
-    fi = open(fn)
+    fi = open(fn, 'r')
     lines = map(lambda x: x.strip(), fi.readlines())
     sfs = dict()
     for line in lines:
         spl = line.split(",")
         spl = map(lambda x: x.strip(), spl)
-        assert(len(spl)==4)
+        if not len(spl)==4:
+            continue
         typ, sample, sf, err = spl
         if not typ=="rate":
             continue
@@ -40,8 +43,11 @@ def load_fit_results(fn):
     fi.close()
     return sfs
 
+names = [
+    "t-channel", "top+QCD", "W, diboson"
+]
 def from_file(fn):
-    fr = load_fit_results("final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd.txt")
+    fr = load_fit_results(fn)
     r = [
         (tchan,) + fr['tchan'],
         (top+qcd,) + fr['other'],
@@ -49,17 +55,26 @@ def from_file(fn):
     ]
     return r
 
-fitpars['final_2j1t_mva']['ele'] = from_file("final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd.txt")
-fitpars['final_2j1t_mva']['mu'] = from_file("final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__top_plus_qcd.txt")
+#fitpars['final_2j1t_mva']['ele'] = from_file("final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__top_plus_qcd.txt")
+#fitpars['final_2j1t_mva']['mu'] = from_file("final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__top_plus_qcd.txt")
+fitpars['final_2j1t_mva']['ele'] = from_file(os.environ["STPOL_DIR"]+"/final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj.txt")
+fitpars['final_2j1t_mva']['mu'] = from_file(os.environ["STPOL_DIR"]+"/final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt")
 
 for met in [30, 50, 70]:
     met = str(met)
-    fitpars['final_2j1t_mva_met'+met]['ele'] = from_file("final_fit/results/histos/met%s/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt" % met)
-    fitpars['final_2j1t_mva_met'+met]['mu'] = from_file("final_fit/results/histos/met%s/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt" % met)
+    fitpars['final_2j1t_mva_met'+met]['mu'] = from_file(os.environ["STPOL_DIR"]+"/final_fit/results/histos/met%s/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt" % met)
+    # FIXME -> Currently no MET cut dependent results for electron channel
+    fitpars['final_2j1t_mva_met'+met]['ele'] = from_file(os.environ["STPOL_DIR"]+"/final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj.txt")
+    for i, name in zip(range(len(names)), names):
+        fpmu = fitpars['final_2j1t_mva_met'+met]['mu'][i]
+        fpel = fitpars['final_2j1t_mva_met'+met]['ele'][i]
+        print "%s | %.2f ± %.2f | %.2f ± %.2f |" % (name, fpmu[1], fpmu[2], fpel[1], fpel[2])
 
 #PLACEHOLDER
 fitpars['final_2j1t'] = None
+from pprint import pprint
 
+pprint(fitpars)
 #OLD. HERE ONLY FOR REFERENCE
 # #Cut based
 # fitpars['final_2j1t']['mu'] = [

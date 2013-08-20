@@ -1,2 +1,2 @@
 #!/bin/bash
-../theta/bin/theta $1
+$STPOL_DIR/theta/bin/theta $1

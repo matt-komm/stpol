@@ -1,10 +1,16 @@
 import sys, os
 import math
 from fit import *
-#from theta_auto import *
+from theta_auto import *
 import logging
 import ROOT
 #from final_fit.fit_systematics import *
+# <<<<<<< HEAD
+# from fit import *
+# #import fit
+# from theta_auto import *
+# =======
+# >>>>>>> 238da5811aefd51f1d73d29c905d1aedb7562d71
 import argparse
 from plot_fit import plot_fit
 
@@ -90,10 +96,9 @@ if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
         raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py %s`" % (sys.argv[0]))
     try:
-        sys.argv.pop(sys.argv.index("final_fit.py"))
+        sys.argv.pop(sys.argv.index(sys.argv[0]))
     except ValueError:
         pass
-
 
     parser = argparse.ArgumentParser(description='Do the final fit')
     parser.add_argument('--channel', default=None, help="The lepton channel used for the fit")
