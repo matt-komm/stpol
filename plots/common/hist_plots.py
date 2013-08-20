@@ -8,32 +8,7 @@ import logging
 logger = logging.getLogger("hist_plots")
 logger.setLevel(logging.WARNING)
 
-def hist_err(axes, hist, yerr=None, **kwargs):
-    """
-    Plots a Histogram on matplotlib Axes in familiar ROOT style with errorbars.
-
-    Args:
-        axes: a matplotlib axes instance
-        hist: a Hist instance
-    Returns:
-        The errorbar plot.
-    """
-
-    if not yerr:
-        yerr = [list(hist.yerrh()), list(hist.yerrl())]
-    return axes.errorbar(
-        list(hist.x()),
-        list(hist.y()),
-        yerr=yerr,
-        drawstyle='steps-mid', **kwargs
-    )
-
-def ipy_show_canv(c):
-    from IPython.core.display import Image
-
-    fn = "temp.png"
-    c.SaveAs(fn) 
-    return Image(filename=fn) 
+from plots.common.mpl_hists import hist_err, ipy_show_canv
 
 def plot_hists(hists, name="canv", **kwargs):
     """
