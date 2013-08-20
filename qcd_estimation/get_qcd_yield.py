@@ -149,7 +149,7 @@ if __name__=="__main__":
         #print "QCD scale factor with MC subtraction, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_nomtcut"], "to ", y_nomtcut
         
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
-        
+        #plot_fit_shapes(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         n_bins = fit.dataHisto.GetNbinsX()
     
         infile = "fits/"+fit.var.shortName+"_fit_"+cut.name+".root"
@@ -178,6 +178,8 @@ if __name__=="__main__":
                     qcd_sf = y / fit.orig_shape["qcd"].Integral(bin, n_bins+1)
                 of.write("%f %f %f\n" % (qcd_sf, y, error[0]))
                 of.write("Iso data yield %f\n" % fit.dataHisto.Integral(bin, n_bins+1))
-                of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))        
+                of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))  
+        print "Total: QCD: %.2f +- %.2f, ratio to template from data %.3f" % (fit.qcd, fit.qcd_uncert, fit.qcd/fit.orig["qcd"])
+        print "W+Jets: %.2f +- %.2f, ratio to template: %.2f" % (fit.wjets, fit.wjets_uncert, fit.wjets/fit.wjets_orig)
+        print "Other MC: %.2f +- %.2f, ratio to template: %.2f" % (fit.nonqcd, fit.nonqcd_uncert, fit.nonqcd/fit.nonqcd_orig)
     print "Failed to converge: ", str(failed)
-

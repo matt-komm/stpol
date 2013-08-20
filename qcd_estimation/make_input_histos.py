@@ -19,7 +19,7 @@ def make_histos_with_cuts(var,
         QCDGroup = dgQCDMu):
 
    QCD_FACTOR = 1000000.
-    
+   #componentShapes = True
    syst_type = ["Up", "Down"]
 
    stacks =  {}
@@ -73,6 +73,9 @@ def make_histos_with_cuts(var,
                 hWJ.Add(h)            
             else:
                 h1.Add(h)
+            #if componentShapes == True:
+            #    h.Scale(1/h.Integral())
+            #    h.Write()
          h1.Write()
          hWJ.Write()
          print "MC integral", h1.Integral()
@@ -93,6 +96,10 @@ def make_histos_with_cuts(var,
                     hWJ.Add(h)            
                 else:
                     h1.Add(h)
+            #if componentShapes == True:
+            #    for h in stack.GetHists():
+            #        h.Scale(1/h.Integral())
+            #        h.Write()                
             h1.Write()
             hWJ.Write()
    #Data
@@ -163,6 +170,8 @@ def make_histos_with_cuts(var,
          hQCDisoUp.Scale(QCD_FACTOR/hQCDisoUp.Integral())
       if hQCDisoDown.Integral() > 0:
          hQCDisoDown.Scale(QCD_FACTOR/hQCDisoDown.Integral())
+      #if componentShapes == True:
+      #   hQCD.Scale(1/hQCD.Integral())
       hQCD.Write()
       hQCDisoUp.SetName(var.shortName+"__qcd__ISO__plus")
       hQCDisoDown.SetName(var.shortName+"__qcd__ISO__minus")
