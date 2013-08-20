@@ -4,7 +4,7 @@ Deals with loading a ROOT TFile with 'flat' contents and projecting stuff out fr
 """
 import logging
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.WARNING)
 from utils import filter_alnum, NestedDict
 from histogram import unique_name
 
@@ -219,8 +219,6 @@ class Sample:
         logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
         name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
 
-        plot_range_x = kwargs.get("plot_range_x", None)
-        plot_range_y = kwargs.get("plot_range_y", None)
         binning_x = kwargs.get("binning_x", None)
         binning_y = kwargs.get("binning_y", None)
 
@@ -229,12 +227,13 @@ class Sample:
 
         ROOT.gROOT.cd()
         ROOT.TH2F.AddDirectory(True)
-        if plot_range_x and plot_range_y:
-            hist = Hist2D(plot_range_x[0], plot_range_x[1], plot_range_x[2], plot_range_y[0], plot_range_y[1], plot_range_y[2], type=dtype, name="htemp")
-        elif binning_x is not None and binning_y is not None:
-            hist = Hist2D(binning_x, binning_y, type=dtype)
+        if len(binning_x)==3 and len(binning_y)==3:
+            binnings = binning_x+binning_y
+            hist = Hist2D(*binnings, type=dtype)
         else:
-            raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
+            hist = Hist2D(
+                binning_x, binning_y, type=dtype
+            )
 
         hist.Sumw2()
 
