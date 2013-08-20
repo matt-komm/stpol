@@ -482,7 +482,7 @@ class Weights:
     )
 
     top_pt = (
-        Weight("ttbar_weight", "top_pt__nominal"), Weight("ttbar_weight*ttbar_weight", "top_pt__up"), Weight("1.0", "top_pt__down")
+        Weight("ttbar_weight", "top_pt_nominal"), Weight("ttbar_weight*ttbar_weight", "top_pt_up"), Weight("1.0", "top_pt_down")
     )
 
     wjets_yield_syst = (
