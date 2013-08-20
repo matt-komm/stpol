@@ -207,6 +207,17 @@ class Cuts:
         else:
             return Cut("%s >= %s" % (mva_var, cut))
 
+    @classmethod
+    def mva_wp(self, lepton, cutval='loose'):
+        if cutval in self.mva_wps['bdt'][lepton].keys():
+            cv = self.mva_wps['bdt'][lepton][cutval]
+        else:
+            try:
+                cv = float(cutval)
+            except:
+                cv = 0.0
+        return Cut("%s >= %f" % (self.mva_vars[lepton], cv))
+
     ############################
     #          FIXME           #
     ############################
