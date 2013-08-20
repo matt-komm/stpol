@@ -23,7 +23,7 @@ def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
 
     cutnodes = []
     for cut_name, cut in cuts:
-        
+
         cutnode = tree.CutNode(cut, graph, cut_name, snodes, [])
         cutnodes.append(
             cutnode
@@ -33,7 +33,7 @@ def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
         cutnodes.append(
             tree.CutNode(Cuts.deltaR_QCD(), graph, "dR_QCD", [cutnode], [],
                 filter_funcs=[
-                    lambda p: tree.is_samp(p, "data") and is_samp(p, "antiiso")
+                    lambda p: tree.is_samp(p, "data") and tree.is_samp(p, "antiiso")
                 ]
             )
         )
@@ -45,7 +45,7 @@ def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
         nx.write_dot(graph, outfile.replace(".root", "_gviz.dot"))
     except Exception as e:
         logger.warning("Couldn't write .dot file for visual representation of analysis: %s" % str(e))
-    
+
     return snodes, out
 
 
