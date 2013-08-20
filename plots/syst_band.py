@@ -102,14 +102,15 @@ class PlotDef:
         x_label=r"%(var_name)s %(x_units)s",
         x_units='',
         y_units='',
-        lumibox_format='%(channel)s channel',
+        lumibox_format='%(channel)s channel%(lb_comments)s',
         legend_pos='top-left',
         lumi_pos='top-right',
 
         #The scale factor for the N(data, anti-iso)/N(QCD, iso) yields,
         process_scale_factor = [
             (["tchan"], 1.0, -1),
-            (["ttjets", "qcd"], 1.0, -1),
+            (["ttjets"], 1.0, -1),
+            (["qcd"], 0.0, -1),
             (["wjets"], 1.0, -1),
         ]
     )
@@ -194,11 +195,16 @@ def data_mc_plot(pd):
     #The total nominal MC histogram
     nom = sum(hists_nom_mc)
 
+    if pd.normalize:
+        ratio = hists_nom_data.Integral() / nom.Integral() 
+        hists_nom_data.Scale(1.0/ratio)
+
     #Get all the variated up/down total templates
     #A list with all the up/down total templates
     all_systs = []
 
     sumsqs = []
+    logger.info("Considering systematics %s" % str(systs_to_consider))
     for syst in systs_to_consider:
 
         #A list with the up/down variated template for a particular systematic
@@ -219,7 +225,8 @@ def data_mc_plot(pd):
                 unvariated template.
                 """
                 if pd.systematics_shapeonly:
-                    h.Scale(hists_nominal[k].Integral() / h.Integral())
+                    if h.Integral()>0:
+                        h.Scale(hists_nominal[k].Integral() / h.Integral())
 
             #For the missing variated templates, use the nominal ones, but warn the user
             present = set(_hists.keys())
@@ -242,13 +249,12 @@ def data_mc_plot(pd):
         )
 
     sumsqs = sorted(sumsqs, key=lambda x: x[1], reverse=True)
-    for syst, sumsq in sumsqs[0:4]:
+    for syst, sumsq in sumsqs[0:7]:
         logger.info("Systematic %s, %.4f" % (syst, sumsq))
 
     #Calculate the total up/down variated templates by summing in quadrature
-    syst_up, syst_down, syst_stat_up, syst_stat_down = total_syst(nom, all_systs,
-        symmetric=pd.systematics_symmetric,
-        consider_variated_stat_err=False
+    syst_stat_up, syst_stat_down = total_syst(
+        nom, all_systs,
     )
 
     stacks_d = OrderedDict()
@@ -278,7 +284,10 @@ def data_mc_plot(pd):
     syst_stat_up.Draw("SAME hist")
     syst_stat_down.Draw("SAME hist")
 
-    ratio_pad, hratio = plot_data_mc_ratio(c, hists_nom_data, nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=(-1, 1))
+    ratio_pad, hratio = plot_data_mc_ratio(
+        c, hists_nom_data,
+        nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=(-1, 1)
+    )
 
     p1.cd()
     leg = legend(
@@ -298,22 +307,36 @@ if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
     tdrstyle()
 
-    inf = "hists_out_merged.root"
-
     from plots.fit_scale_factors import fitpars_process
     from plots.common.cross_sections import lumis
 
-    pd = PlotDef(
+    pd1 = PlotDef(
         infile="hists_out_merged.root",
         lumi=lumis["Aug4_0eb863_full"]["iso"]["mu"],
         var='cos_theta',
         channel_pretty='Muon',
         leg_pos='top-right',
-        systematics='.*',
+        systematics='tchan_scale',
         log=False,
         systematics_shapeonly=True,
-        process_scale_factor=fitpars_process['final_2j1t_mva']['mu'],
+        #process_scale_factor=fitpars_process['final_2j1t_mva']['mu'],
+        save_name='2j1t_mva__cosTheta__tchan_scale.png',
+        normalize=True,
+        lb_comments=', t-channel Q^{2}'
+    )
+    pd2 = pd1.copy(
+        systematics='mass',
+        save_name='2j1t_mva__cosTheta__top_mass.png',
+        lb_comments=', M_{top}'
+    )
+    pd3 = pd1.copy(
+        systematics='.*',
+        save_name='2j1t_mva__cosTheta__all_syst.png',
+        lb_comments=', all syst.'
     )
 
-    c1 = data_mc_plot(pd)
-    c1.SaveAs("test.pdf")
+    for p in [pd1, pd2, pd3]:
+        c = data_mc_plot(p)
+        c.SaveAs(p.save_name)
+        p.res = c
+        #c.Close()
