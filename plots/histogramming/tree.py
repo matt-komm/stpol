@@ -59,7 +59,7 @@ def hist_node(graph, cut, weights, variables):
 
     if not isinstance(weights, list):
         weights = [weights]
-    
+
     from weights import reweight
 
     for var_name, var, binning in variables:
@@ -125,7 +125,7 @@ class Node(object):
 
     def children(self):
         return self.graph.successors(self)
-        
+
     def __del__(self):
         pass
 
@@ -420,10 +420,10 @@ class CutNode(Node):
         snode = get_parent_sample(self, parentage)
 
         self.state.cache = snode.sample.cacheEntries(elist_name, str(total_cut), cache=prev_cache)
-        
+
         ncur = -1 if not self.state.cache else self.state.cache.GetN()
         nprev = -1 if not prev_cache else prev_cache.GetN()
-        
+
         logger.info("Processed cut %s%s => %d -> %d" % (len(parentage)*".", self.name, nprev, ncur))
         return (self.state.cache.GetN(), r)
 
@@ -514,7 +514,9 @@ if __name__=="__main__":
                     #Apply any additional anti-iso cuts (like dR) along with antiiso variations.
                     Cuts.antiiso(lep, aiso_syst) * Cuts.deltaR_QCD(dr_syst),
                     graph, lep + "__" + cn, par, [],
-                    filter_funcs=[is_samp("antiiso"), is_samp("data")]
+                    filter_funcs=[
+                        lambda x: is_samp(x, "antiiso") and is_samp(x, "data")
+                    ]
                 )
                 isol.append(isos[lep][cn])
 
@@ -605,5 +607,6 @@ if __name__=="__main__":
     dt = t1-t0
     if dt<1.0:
         dt = 1.0
-    out.tfile.Close()
+    hsaver.tfile.Close()
+    print "All done in %.2f seconds" % dt
     #print "Projected out %d histograms in %.f seconds, %.2f/sec" % (HistNode.nHistograms, dt, float(HistNode.nHistograms)/dt)

@@ -12,9 +12,6 @@ CURRENT_DIR=`pwd`
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CMSSW_VERSION=CMSSW_5_3_11
 export CMSSW_VERSION
-#if [ -z "$CMSSW_VERSION" ]; then CMSSW_VERSION="CMSSW_5_3_11"; fi
-#echo "Current:" $CURRENT_DIR
-#echo "Script:" $SCRIPT_DIR
 
 # Set up CMSSW env
 export STPOL_DIR=$SCRIPT_DIR
@@ -22,18 +19,21 @@ export local_dbs_instance=cms_dbs_ph_analysis_02
 export local_dbs_url=https://cmsdbsprod.cern.ch:8443/cms_dbs_ph_analysis_02_writer/servlet/DBSServlet
 
 # Add plotfw to python library path
-#PYTHONPATH=$PYTHONPATH:${SCRIPT_DIR}/newplots
-#PYTHONPATH=$PYTHONPATH:`readlink -f runconfs`:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/local/lib/python2.6/site-packages/
+#FIXME: is this really necessary?
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/mvatools:$STPOL_DIR/local/lib/python2.6/site-packages/:$STPOL_DIR/local/lib/python2.7/site-packages/
 
 #Add QCD estimation stuff
+#FIXME: this is probably not really necessary
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/qcd_estimation/
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/theta/utils2/
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/final_fit/
 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$STPOL_DIR/local/lib
+
+#Only for OSX
 export DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH:$STPOL_DIR/local/lib
-export LD_RUN_PATH=$LD_RUN_PATH:$STPOL_DIR/local/lib
+
+#export LD_RUN_PATH=$LD_RUN_PATH:$STPOL_DIR/local/lib
 export PATH=$PATH:$STPOL_DIR/local/bin
 
 if [[ "`hostname`" == *hep.kbfi.ee ]] || [[ "`hostname`" == comp* ]]

@@ -1250,7 +1250,7 @@ int main(int argc, char *argv[])
         else
         {
             std::cerr << "Couldn't open an input file: " << inputFiles_[iFile] << std::endl;
-            throw 1;
+            continue;
         }
     }
 

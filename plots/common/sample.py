@@ -16,6 +16,13 @@ from rootpy.plotting import Hist, Hist2D
 
 import numpy, os, ROOT
 
+def get_sample_name(filename):
+    """
+    Returns the sample name from the input file name
+    """
+    logger.warning("DEPRECATED")
+    return filename.split("/")[-1].split(".")[0]
+
 class HistogramException(Exception):
     pass
 class TObjectOpenException(Exception):
@@ -385,12 +392,6 @@ class TestSample(unittest.TestCase):
 ###DEPRECATED, this stuff should NOT be used and will probably be removed after approval!
 class DeprecatedException(Exception):
     pass
-def get_sample_name(filename):
-    raise DeprecatedException("DEPRECATED")
-    """
-    Returns the sample name from the input file name
-    """
-    return filename.split("/")[-1].split(".")[0]
 
 
 process_names = {
