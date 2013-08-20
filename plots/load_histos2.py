@@ -297,6 +297,13 @@ if __name__=="__main__":
     )
     pat_data_antiiso += "(weight__unweighted.*)/%(varname)s"
 
+
+    pat_mc_varsamp = pat_mc_varsamp % conf
+    pat_mc_varproc = pat_mc_varproc % conf
+    pat_mc_nom = pat_mc_nom % conf
+    pat_data = pat_data % conf
+    pat_data_antiiso = pat_data_antiiso % conf
+
     pats = {
             "mc_varsamp": pat_mc_varsamp,
             "mc_varproc": pat_mc_varproc,
@@ -304,9 +311,7 @@ if __name__=="__main__":
             "data": pat_data,
             "data_antiiso": pat_data_antiiso,
     }
-    for k, v in pats.items():
-        pats[k] = v % conf
-        
+
     rets_data = load_file(fnames, pats)
 
     for k, v in rets_data.items():
@@ -320,7 +325,8 @@ if __name__=="__main__":
         rets_data["mc_varproc"][pat_mc_varproc]+
         rets_data["mc_varsamp"][pat_mc_varsamp]
     )
-    hsources = []
+    if len(hsources)==0:
+        raise ValueError("No histograms matched")
 
     qcd_yield_variations = (2.0, 0.5)
     hqcd = NestedDict()
