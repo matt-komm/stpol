@@ -107,6 +107,12 @@ def total_syst(nominal, systs, **kwargs):
     delta_up = np.empty_like(bins)
     delta_down = np.empty_like(bins)
 
+    def add_naive(sigmas):
+        sig1 = math.sqrt(sum([s[0]**2 for s in sigmas]))
+        sig2 = math.sqrt(sum([s[1]**2 for s in sigmas]))
+        #import pdb; pdb.set_trace()
+        return sig1, sig2, 0
+
     #Add systematic variations bin-by-bin
     for i in range(len(bins)):
         sigmas = []
@@ -118,7 +124,7 @@ def total_syst(nominal, systs, **kwargs):
                 (sigma_plus, sigma_minus)
             )
             names.append(systn)
-        sig_up, sig_down, delta = add_errors(sigmas)
+        sig_up, sig_down, delta = add_naive(sigmas)
         
         sumsq = lambda n: math.sqrt(
             sum(map(
