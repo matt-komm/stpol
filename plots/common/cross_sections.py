@@ -112,11 +112,11 @@ lumis["Aug4_0eb863_full"]["antiiso"]["mu"] = 1094 + 5319 + 6528 + 6823
 lumis["Aug4_0eb863_full"]["antiiso"]["ele"] = 917 + 12409 + 6482
 
 lumi_iso = {
-    "ele": lumis["83a02e9_Jul22"]["iso"]["ele"],
-    "mu": lumis["83a02e9_Jul22"]["iso"]["mu"]
+    "ele": lumis["Aug4_0eb863_full"]["iso"]["ele"],
+    "mu": lumis["Aug4_0eb863_full"]["iso"]["mu"]
 }
 
 lumi_antiiso = {
-    "ele": lumis["83a02e9_Jul22"]["antiiso"]["ele"],
-    "mu": lumis["83a02e9_Jul22"]["antiiso"]["mu"]
+    "ele": lumis["Aug4_0eb863_full"]["antiiso"]["ele"],
+    "mu": lumis["Aug4_0eb863_full"]["antiiso"]["mu"]
 }
