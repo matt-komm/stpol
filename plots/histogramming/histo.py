@@ -12,15 +12,7 @@ import networkx as nx
 import argparse
 
 
-def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
-    out = tree.ObjectSaver(outfile)
-    graph = nx.DiGraph()
-
-    #top = tree.Node(graph, "top", [], [])
-    snodes = [tree.SampleNode(out, graph, inf, [], []) for inf in infiles]
-
-    logger.info("Done constructing sample nodes: %d" % len(snodes))
-
+def analysis_tree_all_reweighed(cuts, snodes, **kwargs):
     cutnodes = []
     for cut_name, cut in cuts:
 
@@ -49,9 +41,6 @@ def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
     except Exception as e:
         logger.warning("Couldn't write .dot file for visual representation of analysis: %s" % str(e))
 
-    return snodes, out
-
-
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(
@@ -78,16 +67,20 @@ if __name__=="__main__":
             ("%s_2j1t_mva_loose" % lep, baseline * c2j1t * Cuts.mva_wp(lep)),
         ]
 
+    out = tree.ObjectSaver(args.outfile)
+    graph = nx.DiGraph()
+    snodes = [tree.SampleNode(out, graph, inf, [], []) for inf in args.infiles]
+    logger.info("Done constructing sample nodes: %d" % len(snodes))
+
+
     #Construct the analysis chain
-    snodes, out = analysis_tree_all_reweighed(
-        cuts, args.infiles,
-        args.outfile,
+    analysis_tree_all_reweighed(
+        cuts, snodes,
         filter_funcs=[
-            #lambda x: "mva" not in x
         ]
     )
 
     print "Recursing down"
     for sn in snodes:
         sn.recurseDown()
-    out.tfile.close()
+    out.close()
