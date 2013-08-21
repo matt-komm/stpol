@@ -70,7 +70,7 @@ if __name__=="__main__":
 
     cuts = []
     for lep in ["mu", "ele"]:
-        baseline = Cuts.lepton(lep)*Cuts.hlt(lep)*Cuts.metmt(lep)
+        baseline = Cuts.lepton(lep)*Cuts.hlt(lep)*Cuts.metmt(lep)*Cuts.rms_lj
         c2j1t = Cuts.n_jets(2)*Cuts.n_tags(1)
         cuts += [
             ("%s_2j1t" % lep, baseline * c2j1t),
