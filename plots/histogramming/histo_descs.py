@@ -22,9 +22,11 @@ hdescs['all'] = [
 #Lepton channels need to be separated out
 hdescs['mu'] = [
     (Cuts.mva_vars['mu'], Cuts.mva_vars['mu'], [60, -1, 1]),
+    ("mtw", "mt_mu", [nbins, 0, 300]),
 ]
 hdescs['ele'] = [
     (Cuts.mva_vars['ele'], Cuts.mva_vars['ele'], [60, -1, 1]),
+    ("mtw", "mt_el", [nbins, 0, 300]),
 ]
 
 #MC-only variables
