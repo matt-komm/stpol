@@ -256,8 +256,9 @@ if __name__=="__main__":
     conf['varname'] = 'cos_theta'
     conf['channel'] = 'mu'
     conf['basepath'] = ".*/%(channel)s/"
-    conf['cutstr'] = "channel/%(channel)s/%(channel)s__iso/jet/2j/tag/1t/met/met__mtw_nominal/signalenr/mva/.*loose.*/"
-    conf['infiles'] = glob.glob("hists/Aug20/*.root")
+    #conf['cutstr'] = "channel/%(channel)s/%(channel)s__iso/jet/2j/tag/1t/met/met__mtw_nominal/signalenr/mva/.*loose.*/"
+    conf['cutstr'] = "final_%(channel)s_mva_loose/"
+    conf['infiles'] = glob.glob("merged.root")
 
     fnames = conf['infiles']
 
@@ -291,10 +292,7 @@ if __name__=="__main__":
     pat_data_antiiso = ""
     pat_data_antiiso += base
     pat_data_antiiso += "data/antiiso/.*/(.*)/"
-    pat_data_antiiso += cutstr.replace(
-        "%(channel)s__iso",
-        "%(channel)s__(antiiso_.*)_dR_nominal"
-    )
+    pat_data_antiiso += cutstr.replace("iso", "antiiso") + "dR_QCD/"
     pat_data_antiiso += "(weight__unweighted.*)/%(varname)s"
 
 
@@ -335,10 +333,25 @@ if __name__=="__main__":
         for sdir in ["up", "down"]:
             hqcd[syst][sdir] = []
     for keys, hist in rets_data["data_antiiso"][pat_data_antiiso]:
-        if not keys[1].startswith("antiiso"):
-            raise ValueError("Could not understand QCD pattern format: %s" % str(keys))
-        isodir = keys[1].split("_")[1]
-        if isodir=="nominal":
+        if keys[1].startswith("antiiso"):
+            #We have isolation variations
+            isodir = keys[1].split("_")[1]
+            if isodir=="nominal":
+                hqcd["nominal"][None].append(hist)
+                hup = hist.Clone()
+                hdown = hist.Clone()
+                hup.Scale(qcd_yield_variations[0])
+                hdown.Scale(qcd_yield_variations[1])
+                hqcd["yield"]["up"].append(hup)
+                hqcd["yield"]["down"].append(hdown)
+
+            elif isodir in ["up", "down"]:
+                hqcd["iso"][isodir].append(hist)
+            else:
+                raise ValueError("Undefined isolation variation direction: %s" % isodir)
+
+        #We only have the nominal QCD shape
+        elif keys[1]=="weight__unweighted":
             hqcd["nominal"][None].append(hist)
             hup = hist.Clone()
             hdown = hist.Clone()
@@ -347,10 +360,12 @@ if __name__=="__main__":
             hqcd["yield"]["up"].append(hup)
             hqcd["yield"]["down"].append(hdown)
 
-        elif isodir in ["up", "down"]:
-            hqcd["iso"][isodir].append(hist)
+            #Placeholders for the isolation variation
+            for isodir in ["up", "down"]:
+                h = hist.Clone()
+                hqcd["iso"][isodir].append(h)
         else:
-            raise ValueError("Undefined isolation variation direction: %s" % isodir)
+            raise Exception("Couldn't parse the QCD pattern: %s" % str(keys))
 
     def map_leaves(di, f, equate=True):
         for k, v in di.items():
@@ -363,7 +378,7 @@ if __name__=="__main__":
                     f(v)
         return di
 
-    import pdb; pdb.set_trace()
+    #import pdb; pdb.set_trace()
     #Sum all the data subsamples
     map_leaves(hqcd, lambda li: reduce(lambda x,y: x+y, li))
 
@@ -430,6 +445,8 @@ if __name__=="__main__":
                 continue
             #print "W:", wn, sample_var, sample
             syst = wn
+
+
         if wn=="nominal" and sample_var=="nominal":
             syst_scenarios[sample]["nominal"][None] = hist
 
@@ -443,11 +460,10 @@ if __name__=="__main__":
             syst_scenarios[sample][systname][d] = hist
         
         else:
+            print weight_var
             systname, d = get_updown(syst)
             syst_scenarios[sample][systname][d] = hist
 
-    syst_scenarios = syst_scenarios.as_dict()
-    pdb.set_trace()
     ######################################
     ### Save systematics, fill missing ###
     ######################################
@@ -457,6 +473,32 @@ if __name__=="__main__":
     mdownt = syst_scenarios["T_t_ToLeptons"]["mass"]["down"].Clone()
     mupt = (mnomt+mnomt-mdownt)
     syst_scenarios["T_t_ToLeptons"]["mass"]["up"] = mupt
+
+
+    nom_ttbar = syst_scenarios["TTJets_FullLept"]["nominal"][None] + syst_scenarios["TTJets_SemiLept"]["nominal"][None]
+
+    syst_scenarios["TTJets_FullLept"]["mass"]["up"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["mass"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_FullLept"]["mass"]["down"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["mass"]["down"] / nom_ttbar
+
+    syst_scenarios["TTJets_SemiLept"]["mass"]["up"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["mass"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_SemiLept"]["mass"]["down"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["mass"]["down"] / nom_ttbar
+
+    syst_scenarios["TTJets_FullLept"]["ttbar_scale"]["up"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_scale"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_FullLept"]["ttbar_scale"]["down"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_scale"]["down"] / nom_ttbar
+
+    syst_scenarios["TTJets_SemiLept"]["ttbar_scale"]["up"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_scale"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_SemiLept"]["ttbar_scale"]["down"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_scale"]["down"] / nom_ttbar
+
+
+    syst_scenarios["TTJets_FullLept"]["ttbar_matching"]["up"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_matching"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_FullLept"]["ttbar_matching"]["down"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_matching"]["down"] / nom_ttbar
+
+    syst_scenarios["TTJets_SemiLept"]["ttbar_matching"]["up"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_matching"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_SemiLept"]["ttbar_matching"]["down"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_matching"]["down"] / nom_ttbar
+
+    syst_scenarios.pop("TTJets")
+
+    syst_scenarios = syst_scenarios.as_dict()
 
     #Create the output file
     of = ROOT.TFile("hists_out.root", "RECREATE")
@@ -482,6 +524,8 @@ if __name__=="__main__":
                 h = h1.get("nominal", None)
                 if not h:
                     h = h1.get("unweighted", None)
+                if not h:
+                    raise Exception("Could not get the nominal template for %s:%s" % (sampn, systname))
                 
                 #Our convention is that even the unvariated template is a dict with a single
                 #key for the direction of variation, which is 'None'
@@ -489,8 +533,8 @@ if __name__=="__main__":
                 
                 #Add placeholder templates
                 for systdir in ["up", "down"]:
-                    h = h.Clone(hname_encode(varname, sampn, systname, systdir))
-                    
+                    h = h.Clone(hname_encode(conf['varname'], sampn, systname, systdir))
+                    print "Missing template for %s:%s" % (sampn, systname) 
                     set_missing_hist(h)
                     
                     #Save to file
@@ -501,11 +545,11 @@ if __name__=="__main__":
                 continue
             for systdir, h in h2.items():
                 if systdir==None and systname=="nominal" or not sample_types.is_mc(sampn):
-                    h = h.Clone(hname_encode(varname, sampn))
+                    h = h.Clone(hname_encode(conf['varname'], sampn))
                 elif systdir==None and systname=="unweighted":
-                    h = h.Clone(hname_encode(varname, sampn, "unweighted"))
+                    h = h.Clone(hname_encode(conf['varname'], sampn, "unweighted"))
                 else:
-                    h = h.Clone(hname_encode(varname, sampn, systname, systdir))
+                    h = h.Clone(hname_encode(conf['varname'], sampn, systname, systdir))
                 h.SetDirectory(of)
                 h.Write()
     nkeys = len(of.GetListOfKeys())
