@@ -12,6 +12,7 @@ nbins = 60 #Use 60 since it has many divisors for rebinning
 hdescs['all'] = [
     ("cos_theta", "cos_theta", [nbins, -1, 1]),
     ("met", "met", [nbins, 0, 300]),
+    ("met_50_150", "met", [nbins, 50, 150]),
     ("abs_eta_lj", "abs(eta_lj)", [nbins, 2.5, 5]),
     ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 5]),
     ("top_mass", "top_mass", [nbins, 80, 400]),
@@ -23,10 +24,12 @@ hdescs['all'] = [
 hdescs['mu'] = [
     (Cuts.mva_vars['mu'], Cuts.mva_vars['mu'], [60, -1, 1]),
     ("mtw", "mt_mu", [nbins, 0, 300]),
+    ("mtw_50_150", "mt_mu", [nbins, 50, 150]),
 ]
 hdescs['ele'] = [
     (Cuts.mva_vars['ele'], Cuts.mva_vars['ele'], [60, -1, 1]),
     ("mtw", "mt_el", [nbins, 0, 300]),
+    ("mtw_50_150", "mt_el", [nbins, 50, 150]),
 ]
 
 #MC-only variables
