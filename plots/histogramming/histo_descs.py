@@ -11,6 +11,7 @@ hdescs = dict()
 nbins = 60 #Use 60 since it has many divisors for rebinning
 hdescs['all'] = [
     ("cos_theta", "cos_theta", [nbins, -1, 1]),
+    ("met", "met", [nbins, 0, 300]),
     ("abs_eta_lj", "abs(eta_lj)", [nbins, 2.5, 5]),
     ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 5]),
     ("top_mass", "top_mass", [nbins, 80, 400]),
