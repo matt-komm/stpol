@@ -66,10 +66,9 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     cuts = [
-        # ("2j0t", Cuts.mt_mu()*Cuts.n_jets(2)*Cuts.n_tags(0)*Cuts.lepton("mu")*Cuts.hlt("mu")),
-        # ("2j1t", Cuts.mt_mu()*Cuts.n_jets(2)*Cuts.n_tags(1)*Cuts.lepton("mu")*Cuts.hlt("mu")),
         ("final_mu_cb_2j1t", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)),
         ("final_mu_mva_loose", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)*Cuts.metmt("mu")*Cuts.mva_wp("mu"))
+        
         ("final_ele_cb_2j1t", Cuts.lepton("ele")*Cuts.hlt("ele")*Cuts.final(2,1)),
         ("final_ele_mva_loose", Cuts.lepton("ele")*Cuts.hlt("ele")*Cuts.final(2,1)*Cuts.metmt("ele")*Cuts.mva_wp("ele"))
     ]
