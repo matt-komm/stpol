@@ -80,7 +80,7 @@ def get_syst_from_sample_name(sn):
     Returns:
         A 3-tuple with (process_name, systematic_name, systematic_dir)
     """
-    
+
     si = sample_types.sample_infos[sn]
 
     #Check if the sample is MC and of the SYST type
@@ -246,91 +246,172 @@ class SystematicHistCollection(NestedDict):
                     for sample, h4 in h3.items():
                         yield ((variable, sample, syst, systdir), h4)
 
+
 if __name__=="__main__":
 
     import cPickle as pickle
     import os
 
-    if not os.path.exists("temp.pickle"):
-        fnames = glob.glob("hists/e/mu/*.root")
-        base = ".*/Aug4_0eb863_full/mu/"
-        cut = "channel/mu/mu__iso/jet/2j/tag/1t/met/met__mtw/signalenr/cutbased/mtop/mtop__SR/etalj/etalj__g2_5/"
-        cut_antiiso = cut.replace("iso", "antiiso")
+    conf = dict()
+    conf['varname'] = 'cos_theta'
+    conf['channel'] = 'mu'
+    conf['basepath'] = ".*/%(channel)s/"
+    #conf['cutstr'] = "channel/%(channel)s/%(channel)s__iso/jet/2j/tag/1t/met/met__mtw_nominal/signalenr/mva/.*loose.*/"
+    conf['cutstr'] = "final_%(channel)s_mva_loose/"
+    conf['infiles'] = glob.glob("merged.root")
 
-        varname = "abs_eta_lj"
+    fnames = conf['infiles']
 
-        pat_mc_varsamp = ""
-        pat_mc_varsamp += base
-        pat_mc_varsamp += "mc_syst/iso/(.*)/Jul15/(.*)/"
-        pat_mc_varsamp += cut
-        pat_mc_varsamp += "(weight__nominal__mu)/" + varname
+    cutstr = conf['cutstr']
+    base = conf['basepath']
 
-        pat_mc_varproc = ""
-        pat_mc_varproc += base
-        pat_mc_varproc += "mc/iso/(.*)/Jul15/(.*)/"
-        pat_mc_varproc += cut
-        pat_mc_varproc += "(weight__nominal__mu)/" + varname
+    pat_mc_varsamp = ""
+    pat_mc_varsamp += base
+    pat_mc_varsamp += "mc_syst/iso/(.*)/Jul15/(.*)/"
+    pat_mc_varsamp += cutstr
+    pat_mc_varsamp += "(weight__nominal__%(channel)s)/%(varname)s"
 
-        pat_data = ""
-        pat_data += base
-        pat_data += "(data)/iso/.*/(.*)/"
-        pat_data += cut
-        pat_data += "(weight__unweighted.*)/" + varname
+    pat_mc_varproc = ""
+    pat_mc_varproc += base
+    pat_mc_varproc += "mc/iso/(.*)/Jul15/(.*)/"
+    pat_mc_varproc += cutstr
+    pat_mc_varproc += "(weight__nominal__%(channel)s)/%(varname)s"
 
-        pat_mc_nom = ""
-        pat_mc_nom += base
-        pat_mc_nom += "mc/iso/(nominal)/Jul15/(.*)/"
-        pat_mc_nom += cut
-        pat_mc_nom += "(weight__.*__mu)/" + varname
+    pat_data = ""
+    pat_data += base
+    pat_data += "(data)/iso/.*/(Single.*)/"
+    pat_data += cutstr
+    pat_data += "(weight__unweighted.*)/%(varname)s"
 
-        pat_data_antiiso = ""
-        pat_data_antiiso += base
-        pat_data_antiiso += "data/antiiso/.*/(.*)/"
-        pat_data_antiiso += cut_antiiso
-        pat_data_antiiso += "(weight__unweighted.*)/" + varname
+    pat_mc_nom = ""
+    pat_mc_nom += base
+    pat_mc_nom += "mc/iso/(nominal)/Jul15/(.*)/"
+    pat_mc_nom += cutstr
+    pat_mc_nom += "(weight__.*__%(channel)s)/%(varname)s"
 
-        rets_data = load_file(fnames,
-            {
-                "mc_varsamp": pat_mc_varsamp,
-                "mc_varproc": pat_mc_varproc,
-                "mc_nom": pat_mc_nom,
-                "data": pat_data,
-                "data_antiiso": pat_data_antiiso,
-            }
-        )
+    pat_data_antiiso = ""
+    pat_data_antiiso += base
+    pat_data_antiiso += "data/antiiso/.*/(.*)/"
+    pat_data_antiiso += cutstr.replace("iso", "antiiso") + "dR_QCD/"
+    pat_data_antiiso += "(weight__unweighted.*)/%(varname)s"
 
-        hists = {}
-        hsources = (
-            rets_data["data"][pat_data]+
-            rets_data["mc_nom"][pat_mc_nom]+
-            rets_data["mc_varproc"][pat_mc_varproc]+
-            rets_data["mc_varsamp"][pat_mc_varsamp]
-        )
 
-        hqcd = sum([x[1] for x in rets_data["data_antiiso"][pat_data_antiiso]])
-        
-        hqcd_up = hqcd.Clone()
-        hqcd_up.Scale(2.0)
-        
-        hqcd_down = hqcd.Clone()
-        hqcd_down.Scale(0.5)
+    pat_mc_varsamp = pat_mc_varsamp % conf
+    pat_mc_varproc = pat_mc_varproc % conf
+    pat_mc_nom = pat_mc_nom % conf
+    pat_data = pat_data % conf
+    pat_data_antiiso = pat_data_antiiso % conf
 
-        hsources += [
-            (("data", "qcd", "weight__unweighted"), hqcd),
-            (("data", "qcd", "weight__qcd_yield_up"), hqcd_up),
-            (("data", "qcd", "weight__qcd_yield_down"), hqcd_down),
-        ]
+    pats = {
+            "mc_varsamp": pat_mc_varsamp,
+            "mc_varproc": pat_mc_varproc,
+            "mc_nom": pat_mc_nom,
+            "data": pat_data,
+            "data_antiiso": pat_data_antiiso,
+    }
 
-        f = open('temp.pickle','wb')
-        pickle.dump(hsources, f)
-        f.close()
+    rets_data = load_file(fnames, pats)
+
+    for k, v in rets_data.items():
+        if len(v)==0:
+            raise ValueError("Could not match any histograms to pattern %s:%s" % (k, pats[k]))
+    hists = {}
+
+    hsources = (
+        rets_data["data"][pat_data]+
+        rets_data["mc_nom"][pat_mc_nom]+
+        rets_data["mc_varproc"][pat_mc_varproc]+
+        rets_data["mc_varsamp"][pat_mc_varsamp]
+    )
+    if len(hsources)==0:
+        raise ValueError("No histograms matched")
+
+    qcd_yield_variations = (2.0, 0.5)
+    hqcd = NestedDict()
+    hqcd["nominal"][None] = []
+    for syst in ["yield", "iso"]:
+        for sdir in ["up", "down"]:
+            hqcd[syst][sdir] = []
+    for keys, hist in rets_data["data_antiiso"][pat_data_antiiso]:
+        if keys[1].startswith("antiiso"):
+            #We have isolation variations
+            isodir = keys[1].split("_")[1]
+            if isodir=="nominal":
+                hqcd["nominal"][None].append(hist)
+                hup = hist.Clone()
+                hdown = hist.Clone()
+                hup.Scale(qcd_yield_variations[0])
+                hdown.Scale(qcd_yield_variations[1])
+                hqcd["yield"]["up"].append(hup)
+                hqcd["yield"]["down"].append(hdown)
+
+            elif isodir in ["up", "down"]:
+                hqcd["iso"][isodir].append(hist)
+            else:
+                raise ValueError("Undefined isolation variation direction: %s" % isodir)
+
+        #We only have the nominal QCD shape
+        elif keys[1]=="weight__unweighted":
+            hqcd["nominal"][None].append(hist)
+            hup = hist.Clone()
+            hdown = hist.Clone()
+            hup.Scale(qcd_yield_variations[0])
+            hdown.Scale(qcd_yield_variations[1])
+            hqcd["yield"]["up"].append(hup)
+            hqcd["yield"]["down"].append(hdown)
+
+            #Placeholders for the isolation variation
+            for isodir in ["up", "down"]:
+                h = hist.Clone()
+                hqcd["iso"][isodir].append(h)
+        else:
+            raise Exception("Couldn't parse the QCD pattern: %s" % str(keys))
+
+    def map_leaves(di, f, equate=True):
+        for k, v in di.items():
+            if isinstance(v, dict):
+                map_leaves(v, f)
+            else:
+                if equate:
+                    di[k] = f(v)
+                else:
+                    f(v)
+        return di
+
+    #import pdb; pdb.set_trace()
+    #Sum all the data subsamples
+    map_leaves(hqcd, lambda li: reduce(lambda x,y: x+y, li))
+
+    #Normalize the isolation variations to the nominal
+    map_leaves(hqcd["iso"],
+        lambda hi:
+            hi.Scale(hqcd["nominal"][None].Integral() / hi.Integral()) if hi.Integral()>0 else 0,
+        equate=False
+    )
+    assert(hqcd["nominal"][None].Integral() / hqcd["yield"]["down"].Integral() - 2.0 < 0.001)
+    assert(hqcd["nominal"][None].Integral() / hqcd["yield"]["up"].Integral() - 0.5 < 0.001)
+    assert(hqcd["nominal"][None].Integral() / hqcd["iso"]["up"].Integral() - 1.0 < 0.001)
+    assert(hqcd["nominal"][None].Integral() / hqcd["iso"]["down"].Integral() - 1.0 < 0.001)
+
+    #Add the variated data-driven QCD templates
+    hsources += [
+        (("data", "qcd", "weight__unweighted"), hqcd["nominal"][None]),
+        (("data", "qcd", "weight__qcd_yield_up"), hqcd["yield"]["up"]),
+        (("data", "qcd", "weight__qcd_yield_down"), hqcd["yield"]["down"]),
+        (("data", "qcd", "weight__qcd_iso_up"), hqcd["iso"]["up"]),
+        (("data", "qcd", "weight__qcd_iso_down"), hqcd["iso"]["down"]),
+    ]
+
+        #f = open('temp.pickle','wb')
+        #pickle.dump(hsources, f)
+        #f.close()
 
     #load the histos from the temporary pickle
-    f = open('temp.pickle','rb')
-    hsources = pickle.load(f)
+    #f = open('temp.pickle','rb')
+    #hsources = pickle.load(f)
 
     syst_scenarios = NestedDict()
-    for (sample_var, sample, weight_var), hist in hsources:    
+    for (sample_var, sample, weight_var), hist in hsources:
         if "__ele" in weight_var:
             continue
         
@@ -364,6 +445,8 @@ if __name__=="__main__":
                 continue
             #print "W:", wn, sample_var, sample
             syst = wn
+
+
         if wn=="nominal" and sample_var=="nominal":
             syst_scenarios[sample]["nominal"][None] = hist
 
@@ -377,20 +460,54 @@ if __name__=="__main__":
             syst_scenarios[sample][systname][d] = hist
         
         else:
+            print weight_var
             systname, d = get_updown(syst)
             syst_scenarios[sample][systname][d] = hist
-
-    of = ROOT.TFile("hists_out.root", "RECREATE")
-    of.cd()
-
-    varname = "abs_eta_lj"
-
-    #Get the list of all possible systematic scenarios that we have available
-    allsyts = get_all_systs(syst_scenarios)
 
     ######################################
     ### Save systematics, fill missing ###
     ######################################
+
+    #T_t_ToLeptons mass_up is missing, take the mass down and flip the difference with the nominal
+    mnomt = syst_scenarios["T_t_ToLeptons"]["nominal"][None].Clone()
+    mdownt = syst_scenarios["T_t_ToLeptons"]["mass"]["down"].Clone()
+    mupt = (mnomt+mnomt-mdownt)
+    syst_scenarios["T_t_ToLeptons"]["mass"]["up"] = mupt
+
+
+    nom_ttbar = syst_scenarios["TTJets_FullLept"]["nominal"][None] + syst_scenarios["TTJets_SemiLept"]["nominal"][None]
+
+    syst_scenarios["TTJets_FullLept"]["mass"]["up"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["mass"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_FullLept"]["mass"]["down"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["mass"]["down"] / nom_ttbar
+
+    syst_scenarios["TTJets_SemiLept"]["mass"]["up"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["mass"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_SemiLept"]["mass"]["down"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["mass"]["down"] / nom_ttbar
+
+    syst_scenarios["TTJets_FullLept"]["ttbar_scale"]["up"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_scale"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_FullLept"]["ttbar_scale"]["down"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_scale"]["down"] / nom_ttbar
+
+    syst_scenarios["TTJets_SemiLept"]["ttbar_scale"]["up"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_scale"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_SemiLept"]["ttbar_scale"]["down"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_scale"]["down"] / nom_ttbar
+
+
+    syst_scenarios["TTJets_FullLept"]["ttbar_matching"]["up"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_matching"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_FullLept"]["ttbar_matching"]["down"] = syst_scenarios["TTJets_FullLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_matching"]["down"] / nom_ttbar
+
+    syst_scenarios["TTJets_SemiLept"]["ttbar_matching"]["up"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_matching"]["up"] / nom_ttbar
+    syst_scenarios["TTJets_SemiLept"]["ttbar_matching"]["down"] = syst_scenarios["TTJets_SemiLept"]["nominal"][None] * syst_scenarios["TTJets"]["ttbar_matching"]["down"] / nom_ttbar
+
+    syst_scenarios.pop("TTJets")
+
+    syst_scenarios = syst_scenarios.as_dict()
+
+    #Create the output file
+    of = ROOT.TFile("hists_out.root", "RECREATE")
+    of.cd()
+
+    #Get the list of all possible systematic scenarios that we have available
+
+    allsyts = get_all_systs(syst_scenarios)
+
     for sampn, h1 in syst_scenarios.items():
         
         #Consider all the possible systematic scenarios
@@ -407,6 +524,8 @@ if __name__=="__main__":
                 h = h1.get("nominal", None)
                 if not h:
                     h = h1.get("unweighted", None)
+                if not h:
+                    raise Exception("Could not get the nominal template for %s:%s" % (sampn, systname))
                 
                 #Our convention is that even the unvariated template is a dict with a single
                 #key for the direction of variation, which is 'None'
@@ -414,8 +533,8 @@ if __name__=="__main__":
                 
                 #Add placeholder templates
                 for systdir in ["up", "down"]:
-                    h = h.Clone(hname_encode(varname, sampn, systname, systdir))
-                    
+                    h = h.Clone(hname_encode(conf['varname'], sampn, systname, systdir))
+                    print "Missing template for %s:%s" % (sampn, systname) 
                     set_missing_hist(h)
                     
                     #Save to file
@@ -426,11 +545,11 @@ if __name__=="__main__":
                 continue
             for systdir, h in h2.items():
                 if systdir==None and systname=="nominal" or not sample_types.is_mc(sampn):
-                    h = h.Clone(hname_encode(varname, sampn))
+                    h = h.Clone(hname_encode(conf['varname'], sampn))
                 elif systdir==None and systname=="unweighted":
-                    h = h.Clone(hname_encode(varname, sampn, "unweighted"))
+                    h = h.Clone(hname_encode(conf['varname'], sampn, "unweighted"))
                 else:
-                    h = h.Clone(hname_encode(varname, sampn, systname, systdir))
+                    h = h.Clone(hname_encode(conf['varname'], sampn, systname, systdir))
                 h.SetDirectory(of)
                 h.Write()
     nkeys = len(of.GetListOfKeys())
@@ -482,6 +601,8 @@ if __name__=="__main__":
     of.Close()
 
     hists = load_theta_format("hists_out_merged.root")
+    for k, v in hists.items_flat():
+        print k, v
 
     # for k1, v1 in syst_scenarios.items():
     #     for k2, v2 in v1.items():

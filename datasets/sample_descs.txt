@@ -2,9 +2,9 @@ TToBENu_t-channel                       mc    T_t               tchan    signal 
 TToBMuNu_t-channel                      mc    T_t               tchan    signal     comphep   syst      sig_gen__comphep
 TToBTauNu_t-channel                     mc    T_t               tchan    signal     comphep   syst      sig_gen__comphep
 
-Tbar_t_ToLeptons_mass178_5              mc    Tbar_t            tchan    signal     powheg    syst      mass__up
-Tbar_t_ToLeptons_mass166_5              mc    Tbar_t            tchan    signal     powheg    syst      mass__down
-    
+Tbar_t_ToLeptons_mass178_5              mc    Tbar_t_ToLeptons  tchan    signal     powheg    syst      mass__up
+Tbar_t_ToLeptons_mass166_5              mc    Tbar_t_ToLeptons  tchan    signal     powheg    syst      mass__down
+
 T_t_ToLeptons_mass178_5                 mc    T_t_ToLeptons     tchan    signal     powheg    syst      mass__up
 T_t_ToLeptons_mass166_5                 mc    T_t_ToLeptons     tchan    signal     powheg    syst      mass__down
 
@@ -13,6 +13,15 @@ Tbar_t_ToLeptons_scaleup                mc    Tbar_t_ToLeptons  tchan    signal 
 
 T_t_ToLeptons_scaledown                 mc    T_t_ToLeptons     tchan    signal     powheg    syst      tchan_scale__up
 T_t_ToLeptons_scaleup                   mc    T_t_ToLeptons     tchan    signal     powheg    syst      tchan_scale__down
+
+TTJets_mass178_5                        mc    TTJets            ttbar    backgr     powheg    syst      mass__up
+TTJets_mass166_5                        mc    TTJets            ttbar    backgr     powheg    syst      mass__down
+
+TTJets_scaleup                          mc    TTJets            ttbar    backgr     powheg    syst      ttbar_scale__up
+TTJets_scaledown                        mc    TTJets            ttbar    backgr     powheg    syst      ttbar_scale__down
+
+TTJets_matchingup                       mc    TTJets            ttbar    backgr     powheg    syst      ttbar_matching__up
+TTJets_matchingdown                     mc    TTJets            ttbar    backgr     powheg    syst      ttbar_matching__down
 
 WJetsToLNu_scaledown                    mc    WJets_inclusive   wjets    backgr     powheg    syst      wjets_scale__down
 WJetsToLNu_scaleup                      mc    WJets_inclusive   wjets    backgr     powheg    syst      wjets_scale__up

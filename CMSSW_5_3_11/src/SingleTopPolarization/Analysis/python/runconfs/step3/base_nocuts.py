@@ -211,11 +211,12 @@ process.bTagCuts = cms.PSet(
 )
 
 process.topCuts = cms.PSet(
-        applyMassCut = cms.bool(False),
-        signalRegion = cms.bool(True),
-        signalRegionMassLow = cms.double(130),
-        signalRegionMassHigh = cms.double(220),
-        topMassSrc = cms.InputTag("recoTopNTupleProducer", "Mass")
+        # applyMassCut = cms.bool(False),
+        # signalRegion = cms.bool(True),
+        # signalRegionMassLow = cms.double(130),
+        # signalRegionMassHigh = cms.double(220),
+        topMassSrc = cms.InputTag("recoTopNTupleProducer", "Mass"),
+        topPtSrc = cms.InputTag("recoTopNTupleProducer", "Pt"),
 )
 
 process.weights = cms.PSet(

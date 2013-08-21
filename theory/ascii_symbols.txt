@@ -5,3 +5,5 @@ light jet eta ηj'
 sum Σ
 phi φ
 muon μ
+sigma σ
+rho ρ

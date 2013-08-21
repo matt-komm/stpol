@@ -33,7 +33,7 @@ if __name__=="__main__":
         help="Don't really submit the jobs."
     )
     parser.add_argument("--syst-on", dest="syst",
-        default=False, required=False, action="store_true",
+        default=True, required=False, action="store_true",
         help="Do the systematics"
     )
     cmdline_args = parser.parse_args()
@@ -60,9 +60,11 @@ if __name__=="__main__":
                 args = " --doControlVars --lepton=%s" % lep
                 if isMC:
                     args += " --isMC"
+
                     #!!!!!!!FIXME: cleverer way of getting the systematic scenario
                     if "nominal" in root:
                         args += " --systematic=nominal"
+
                     elif not cmdline_args.syst:
                         continue
                     else:

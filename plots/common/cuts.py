@@ -1,5 +1,7 @@
 from plots.common.utils import escape
 from plots.common.utils import NestedDict
+import logging
+logger = logging.getLogger(__name__)
 
 class Cut:
     def __init__(self, cut_str):
@@ -138,8 +140,8 @@ class Cuts:
             raise ChannelException(lepton)
 
     @classmethod
-    def antiiso(self, lepton, syst="nominal"):
-        return self._antiiso[lepton][syst]
+    def antiiso(cls, lepton, syst="nominal"):
+        return cls._antiiso[lepton][syst]
 
     #FIXME: Deprecated. here for backwards compatibility
     @staticmethod
@@ -156,8 +158,13 @@ class Cuts:
         return Cut("deltaR_bj>{0} && deltaR_lj>{0}".format(x))
 
     @staticmethod
-    def deltaR_QCD():
-        return Cuts.deltaR(0.3)
+    def deltaR_QCD(syst="nominal"):
+        cutvals = {
+            "nominal": 0.3,
+            "up": 0.5,
+            "down": 0.1,
+        }
+        return Cuts.deltaR(cutvals[syst])
 
     @staticmethod
     def n_tags(n):
@@ -199,6 +206,17 @@ class Cuts:
             return Cut("1")
         else:
             return Cut("%s >= %s" % (mva_var, cut))
+
+    @classmethod
+    def mva_wp(self, lepton, cutval='loose'):
+        if cutval in self.mva_wps['bdt'][lepton].keys():
+            cv = self.mva_wps['bdt'][lepton][cutval]
+        else:
+            try:
+                cv = float(cutval)
+            except:
+                cv = 0.0
+        return Cut("%s >= %f" % (self.mva_vars[lepton], cv))
 
     ############################
     #          FIXME           #
@@ -430,10 +448,15 @@ class Weights:
         return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight()
 
     @staticmethod
-    def asymmetry_weight(asymmetry):    #reweight to given asymmetry
+    def asymmetry_weight(asymmetry):
+        """
+        reweight to given asymmetry.
+        FIXME@Andres: mathematical description of what and why you are doing so that we don't forget.
+        """
         weight = Weight(str(asymmetry)+" * true_cos_theta + 0.5) / (0.44*true_cos_theta + 0.5))")
         return weight
 
+    #Weights grouped by nominal, up, down for systematic access
     muon_sel = dict()
     muon_sel["id"] = (
         Weight("muon_IDWeight"), Weight("muon_IDWeight_up"), Weight("muon_IDWeight_down")
@@ -456,6 +479,10 @@ class Weights:
 
     pu_syst = (
         Weight("pu_weight"), Weight("pu_weight_up"), Weight("pu_weight_down")
+    )
+
+    top_pt = (
+        Weight("ttbar_weight", "top_pt_nominal"), Weight("ttbar_weight*ttbar_weight", "top_pt_up"), Weight("1.0", "top_pt_down")
     )
 
     wjets_yield_syst = (

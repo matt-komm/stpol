@@ -1,40 +1,32 @@
-import ROOT
+#!/usr/bin/env python
+"""
+Deals with loading a ROOT TFile with 'flat' contents and projecting stuff out from it.
+"""
 import logging
-from plots.common.utils import filter_alnum, NestedDict
-from plots.common.histogram import *
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
+from utils import filter_alnum, NestedDict
+from histogram import unique_name
+
 import numpy
 from cross_sections import xs as sample_xs_map
+
 import rootpy
 from rootpy.plotting import Hist, Hist2D
 
-import os
-
-class HistogramException(Exception):
-    pass
-class TObjectOpenException(Exception):
-    pass
-
+import numpy, os, ROOT
 
 def get_sample_name(filename):
     """
     Returns the sample name from the input file name
     """
+    logger.warning("DEPRECATED")
     return filename.split("/")[-1].split(".")[0]
 
-
-process_names = {
-    "WJets_sherpa.*": "WJets_sherpa",
-    "SingleMu.*": "SingleMu",
-    "SingleEle.*": "SingleEle"
-}
-def get_process_name(sn):
-    for k, v in process_names.items():
-        if re.match(k, sn):
-            return v
-    return sn
-
-logger = logging.getLogger("sample.py")
-#logger.setLevel(logging.DEBUG)
+class HistogramException(Exception):
+    pass
+class TObjectOpenException(Exception):
+    pass
 
 class Sample:
     def __del__(self):
@@ -153,18 +145,22 @@ class Sample:
 
         #Internally use the same variable name, but for backwards compatibility still keep plot_range available
         #To be phased out
+        if "plot_range" in kwargs.keys():
+            logger.warning("Using a deprecated argument 'plot_range', switch to 'binning'.")
         binning = kwargs.get("plot_range", None)
         binning = kwargs.get("binning", binning)
 
-        frac_entries = kwargs.get("frac_entries", 1.0)
         weight_str = kwargs.get("weight", None)
         dtype = kwargs.get("dtype", "F")
         entrylist = kwargs.get("entrylist", None)
 
         ROOT.gROOT.cd()
         ROOT.TH1F.AddDirectory(True)
+
+        #In case of 3-element binning, interpret as (nbins, low, up)
         if len(binning)==3 and (isinstance(binning, tuple) or isinstance(binning, list)):
             hist = Hist(*list(binning), type=dtype)
+        #Otherwise interpret as (low1, low2, ..., highN)
         elif isinstance(binning, list):
             hist = Hist(binning, type=dtype)
         else:
@@ -190,7 +186,7 @@ class Sample:
 
         logger.debug("Calling TTree.Draw('%s', '%s')" % (draw_cmd, cutweight_cmd))
 
-        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH", int(self.getEventCount()*frac_entries))
+        n_entries = self.tree.Draw(draw_cmd, cutweight_cmd, "goff BATCH")
         logger.debug("Histogram drawn with %d entries, integral=%.2f" % (n_entries, hist.Integral()))
 
         if n_entries<0:
@@ -202,6 +198,22 @@ class Sample:
             raise TObjectOpenException("Could not get histogram: %s" % hist)
         if hist.GetEntries() != n_entries:
             raise HistogramException("Histogram drawn with %d entries, but actually has %d" % (n_entries, hist.GetEntries()))
+        if entrylist and entrylist.GetN() != hist.GetEntries():
+
+            n_entries_unw = self.tree.Draw(var, cut_str, "goff BATCH")
+            if not n_entries_unw==entrylist.GetN():
+                """
+                In case a weight is zero, the corresponding entries are not even counted by ROOT, which can cause
+                the internal safety checks of Sample to fail. Let's check for this.
+                """
+                raise HistogramException(
+                    "Histogram drawn with %d entries, but entry list %s had %d, probably some weight had entries with 0" % (
+                        hist.GetEntries(), entrylist.GetName(), entrylist.GetN()
+                    )
+                )
+            else:
+                logger.debug("Detected entries with weight value 0, ignoring event count mismatch.")
+
         ROOT.TH1F.AddDirectory(False)
 
         hist_new = hist.Clone(filter_alnum(name))
@@ -209,13 +221,11 @@ class Sample:
 
         return hist_new
 
-    # This should be unified with the above!
+    #FIXME: This should be unified with the above!
     def drawHistogram2D(self, var_x, var_y, cut_str, **kwargs):
         logger.debug("drawHistogram: var_x=%s, var_y=%s, cut_str=%sm kwargs=%s" % (str(var_x), str(var_y), str(cut_str), str(kwargs)))
         name = self.name + "_" + unique_name(var_x+"_"+var_y, cut_str, kwargs.get("weight"))
 
-        plot_range_x = kwargs.get("plot_range_x", None)
-        plot_range_y = kwargs.get("plot_range_y", None)
         binning_x = kwargs.get("binning_x", None)
         binning_y = kwargs.get("binning_y", None)
 
@@ -224,12 +234,13 @@ class Sample:
 
         ROOT.gROOT.cd()
         ROOT.TH2F.AddDirectory(True)
-        if plot_range_x and plot_range_y:
-            hist = Hist2D(plot_range_x[0], plot_range_x[1], plot_range_x[2], plot_range_y[0], plot_range_y[1], plot_range_y[2], type=dtype, name="htemp")
-        elif binning_x is not None and binning_y is not None:
-            hist = Hist2D(binning_x, binning_y, type=dtype)
+        if len(binning_x)==3 and len(binning_y)==3:
+            binnings = binning_x+binning_y
+            hist = Hist2D(*binnings, type=dtype)
         else:
-            raise ValueError("Must specify either plot_range_x=(nbins, min, max) and plot_range_y=(nbinbs, min, max) or binning_x=numpy.array(..) and binning_y=numpy.array(..)")
+            hist = Hist2D(
+                binning_x, binning_y, type=dtype
+            )
 
         hist.Sumw2()
 
@@ -297,9 +308,6 @@ class Sample:
 
     def __str__(self):
         return self.__repr__()
-
-def is_mc(name):
-    return not "SingleMu" in name
 
 def get_paths(basedir=None, samples_dir="step3_latest", dataset=None):
     """
@@ -380,3 +388,23 @@ class TestSample(unittest.TestCase):
         self.assertNotEqual(hi.GetName(), hi3.GetName())
         self.assertEqual(list(hi.x()), list(hi3.x()))
         self.assertEqual(hi.GetEntries(), hi3.GetEntries())
+
+###DEPRECATED, this stuff should NOT be used and will probably be removed after approval!
+class DeprecatedException(Exception):
+    pass
+
+
+process_names = {
+    "WJets_sherpa.*": "WJets_sherpa",
+    "SingleMu.*": "SingleMu",
+    "SingleEle.*": "SingleEle"
+}
+def get_process_name(sn):
+    raise DeprecatedException("DEPRECATED")
+    for k, v in process_names.items():
+        if re.match(k, sn):
+            return v
+    return sn
+def is_mc(name):
+    raise DeprecatedException("DEPRECATED")
+    return not "SingleMu" in name

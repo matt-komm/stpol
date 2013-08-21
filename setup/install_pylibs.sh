@@ -34,6 +34,7 @@ cd $STPOL_DIR/local
 $STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" shortuuid
 $STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" argparse
 $STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" python-xmp-toolkit
+$STPOL_DIR/local/bin/pip install --install-option="--prefix=$STPOL_DIR/local" networkx
 
 cd $STPOL_DIR/local
 echo "Installing rootpy"
