@@ -58,6 +58,8 @@ private:
     // ----------member data ---------------------------
 
     const edm::InputTag src;
+    const float err_CONSERVATIVE;
+    const bool applyConservativeSyst;
 };
 
 //
@@ -74,6 +76,8 @@ private:
 //
 ElectronEfficiencyProducer::ElectronEfficiencyProducer(const edm::ParameterSet &iConfig):
     src(iConfig.getParameter<edm::InputTag>("src"))
+    , err_CONSERVATIVE(iConfig.getParameter<double>("SFError"))
+    , applyConservativeSyst(iConfig.getParameter<bool>("applyConservativeSyst"))
 {
     produces<double>("electronIdIsoWeight");
     produces<double>("electronIdIsoWeightUp");
@@ -110,149 +114,124 @@ ElectronEfficiencyProducer::produce(edm::Event &iEvent, const edm::EventSetup &i
     double weightTriggerUp = TMath::QuietNaN();
     double weightTriggerDown = TMath::QuietNaN();
 
-    double err = 0.02;
-
     Handle<View<reco::Candidate> > electrons;
     iEvent.getByLabel(src, electrons);
 
-    // Temporarily switch all SFs to 1 (until the Jan22 reprocessing SFs are ready) and apply a conservative 2% uncertainty
+    // Scale factors from AN-12-429. Need to be updated to Jan22 ReReco once available
 
-    for (uint i = 0; i < electrons->size(); ++i)
-    {
-        const reco::Candidate &electron = electrons->at(i);
+    for (uint i = 0; i < electrons->size(); ++i){
+      const reco::Candidate& electron = electrons->at(i);
+     
+      if( fabs(electron.eta()) < 0.8 ){
+	if( electron.pt() >= 30. && electron.pt() < 40.){
+	  weightIdIso = 0.939;
+	  weightIdIsoUp = weightIdIso + 0.003;
+	  weightIdIsoDown = weightIdIso - 0.003;
 
-        if ( fabs(electron.eta()) < 0.8 )
-        {
-            if ( electron.pt() >= 30. && electron.pt() < 40.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
+	  weightTrigger = 0.987;
+	  weightTriggerUp = weightTrigger + 0.012;
+	  weightTriggerDown = weightTrigger - 0.017;
+	}
+	if( electron.pt() >= 40. && electron.pt() < 50.){
+	  weightIdIso = 0.950;
+	  weightIdIsoUp = weightIdIso + 0.001;
+	  weightIdIsoDown = weightIdIso - 0.001;
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if ( electron.pt() >= 40. && electron.pt() < 50.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
+	  weightTrigger = 0.997;
+	  weightTriggerUp = weightTrigger + 0.001;
+	  weightTriggerDown = weightTrigger - 0.001;
+	}
+	if( electron.pt() >= 50. && electron.pt() < 200.){
+	  weightIdIso = 0.957;
+	  weightIdIsoUp = weightIdIso + 0.001;
+	  weightIdIsoDown = weightIdIso - 0.001;
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if ( electron.pt() >= 50. && electron.pt() < 200.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
+	  weightTrigger = 0.998;
+	  weightTriggerUp = weightTrigger + 0.002;
+	  weightTriggerDown = weightTrigger - 0.002;
+	}
+	if(electron.pt() >= 200.){
+	  weightIdIso = 1; weightTrigger = 1;
+	  weightIdIsoUp = weightIdIso; weightIdIsoDown = weightIdIso; weightTriggerUp = weightTrigger; weightTriggerDown = weightTrigger;
+	}
+      }
+     
+      if( fabs(electron.eta()) >= 0.8 && fabs(electron.eta()) < 1.478 ){
+	if( electron.pt() >= 30. && electron.pt() < 40.){
+	  weightIdIso = 0.920;
+	  weightIdIsoUp = weightIdIso + 0.002;
+	  weightIdIsoDown = weightIdIso - 0.000;
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if (electron.pt() >= 200.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
+	  weightTrigger = 0.964;
+	  weightTriggerUp = weightTrigger + 0.002;
+	  weightTriggerDown = weightTrigger - 0.001;
+	}
+	if( electron.pt() >= 40. && electron.pt() < 50.){
+	  weightIdIso = 0.949;
+	  weightIdIsoUp = weightIdIso + 0.002;
+	  weightIdIsoDown = weightIdIso - 0.002;
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-        }
+	  weightTrigger = 0.980;
+	  weightTriggerUp = weightTrigger + 0.001;
+	  weightTriggerDown = weightTrigger - 0.001;
+	}
+	if( electron.pt() >= 50. && electron.pt() < 200.){
+	  weightIdIso = 0.959;
+	  weightIdIsoUp = weightIdIso + 0.003;
+	  weightIdIsoDown = weightIdIso - 0.003;
 
-        if ( fabs(electron.eta()) >= 0.8 && fabs(electron.eta()) < 1.478 )
-        {
-            if ( electron.pt() >= 30. && electron.pt() < 40.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
+	  weightTrigger = 0.988;
+	  weightTriggerUp = weightTrigger + 0.002;
+	  weightTriggerDown = weightTrigger - 0.002;
+	}
+	if( electron.pt() >= 200.){
+	  weightIdIso = 1; weightTrigger = 1;
+	  weightIdIsoUp = weightIdIso; weightIdIsoDown = weightIdIso; weightTriggerUp = weightTrigger; weightTriggerDown = weightTrigger;
+	}
+      }
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if ( electron.pt() >= 40. && electron.pt() < 50.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
+      if( fabs(electron.eta()) >= 1.478 && fabs(electron.eta()) <= 2.5 ){
+	if( electron.pt() >= 30. && electron.pt() < 40.){
+	  weightIdIso = 0.907;
+	  weightIdIsoUp = weightIdIso + 0.005;
+	  weightIdIsoDown = weightIdIso - 0.005;
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if ( electron.pt() >= 50. && electron.pt() < 200.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
+	  weightTrigger = 1.004;
+	  weightTriggerUp = weightTrigger + 0.006;
+	  weightTriggerDown = weightTrigger - 0.006;
+	}
+	if( electron.pt() >= 40. && electron.pt() < 50.){
+	  weightIdIso = 0.937;
+	  weightIdIsoUp = weightIdIso + 0.008;
+	  weightIdIsoDown = weightIdIso - 0.008;
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if ( electron.pt() >= 200.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
+	  weightTrigger = 1.033;
+	  weightTriggerUp = weightTrigger + 0.007;
+	  weightTriggerDown = weightTrigger - 0.007;
+	}
+	if( electron.pt() >= 50. && electron.pt() < 200.){
+	  weightIdIso = 0.954;
+	  weightIdIsoUp = weightIdIso + 0.011;
+	  weightIdIsoDown = weightIdIso - 0.010;
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-        }
+	  weightTrigger = 0.976;
+	  weightTriggerUp = weightTrigger + 0.015;
+	  weightTriggerDown = weightTrigger - 0.012;
+	}
+	if( electron.pt() >= 200.){
+	  weightIdIso = 1; weightTrigger = 1;
+	  weightIdIsoUp = weightIdIso; weightIdIsoDown = weightIdIso; weightTriggerUp = weightTrigger; weightTriggerDown = weightTrigger;       
+	}
+      }
+    }
 
-        if ( fabs(electron.eta()) >= 1.478 && fabs(electron.eta()) <= 2.5 )
-        {
-            if ( electron.pt() >= 30. && electron.pt() < 40.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
 
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if ( electron.pt() >= 40. && electron.pt() < 50.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
-
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if ( electron.pt() >= 50. && electron.pt() < 200.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
-
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-            if ( electron.pt() >= 200.)
-            {
-                weightIdIso = 1;
-                weightIdIsoUp = weightIdIso + err;
-                weightIdIsoDown = weightIdIso - err;
-
-                weightTrigger = 1;
-                weightTriggerUp = weightTrigger + err;
-                weightTriggerDown = weightTrigger - err;
-            }
-        }
-
+    //Simply set the common variated scale factors using a conservative strategy
+    if (applyConservativeSyst) {
+      weightIdIsoUp = weightIdIso + err_CONSERVATIVE;
+      weightIdIsoDown = weightIdIso - err_CONSERVATIVE;
+      weightTriggerUp = weightTrigger + err_CONSERVATIVE;
+      weightTriggerDown = weightTrigger - err_CONSERVATIVE;
     }
 
     iEvent.put(std::auto_ptr<double>(new double(weightIdIso)), "electronIdIsoWeight");
