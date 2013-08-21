@@ -22,19 +22,21 @@ hdescs['all'] = [
 
 #Lepton channels need to be separated out
 hdescs['mu'] = [
-    (Cuts.mva_vars['mu'], Cuts.mva_vars['mu'], [60, -1, 1]),
+    ("bdt_discr", Cuts.mva_vars['mu'], [nbins, -1, 1]),
+    ("lep_iso", 'mu_iso', [nbins, 0, 0.2]),
     ("mtw", "mt_mu", [nbins, 0, 300]),
     ("mtw_50_150", "mt_mu", [nbins, 50, 150]),
 ]
 hdescs['ele'] = [
-    (Cuts.mva_vars['ele'], Cuts.mva_vars['ele'], [60, -1, 1]),
+    ("bdt_discr", Cuts.mva_vars['ele'], [nbins, -1, 1]),
+    ("lep_iso", 'el_iso', [nbins, 0, 0.2]),
     ("mtw", "mt_el", [nbins, 0, 300]),
     ("mtw_50_150", "mt_el", [nbins, 50, 150]),
 ]
 
 #MC-only variables
 hdescs['mc'] = [
-    ("true_cos_theta", "true_cos_theta", [60, -1, 1]),
+    ("true_cos_theta", "true_cos_theta", [nbins, -1, 1]),
 ]
 
 #define a LUT for type <-> filtering function
