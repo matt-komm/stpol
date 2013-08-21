@@ -67,8 +67,7 @@ if __name__=="__main__":
 
     cuts = [
         ("final_mu_cb_2j1t", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)),
-        ("final_mu_mva_loose", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)*Cuts.metmt("mu")*Cuts.mva_wp("mu"))
-        
+        ("final_mu_mva_loose", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)*Cuts.metmt("mu")*Cuts.mva_wp("mu")),
         ("final_ele_cb_2j1t", Cuts.lepton("ele")*Cuts.hlt("ele")*Cuts.final(2,1)),
         ("final_ele_mva_loose", Cuts.lepton("ele")*Cuts.hlt("ele")*Cuts.final(2,1)*Cuts.metmt("ele")*Cuts.mva_wp("ele"))
     ]
