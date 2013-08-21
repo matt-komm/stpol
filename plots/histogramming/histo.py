@@ -65,12 +65,15 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    cuts = [
-        ("final_mu_cb_2j1t", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)),
-        ("final_mu_mva_loose", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)*Cuts.metmt("mu")*Cuts.mva_wp("mu")),
-        ("final_ele_cb_2j1t", Cuts.lepton("ele")*Cuts.hlt("ele")*Cuts.final(2,1)),
-        ("final_ele_mva_loose", Cuts.lepton("ele")*Cuts.hlt("ele")*Cuts.final(2,1)*Cuts.metmt("ele")*Cuts.mva_wp("ele"))
-    ]
+    cuts = []
+    for lep in ["mu", "ele"]:
+        baseline = Cuts.lepton(lep)*Cuts.hlt(lep)*Cuts.metmt(lep)
+        c2j1t = Cuts.n_jets(2)*Cuts.n_tags(1)
+        cuts += [
+            ("%s_2j1t" % lep, baseline * c2j1t),
+            ("%s_2j1t_cutbased_final" % lep, baseline * Cuts.final(2,1)),
+            ("%s_2j1t_mva_loose" % lep, baseline * c2j1t * Cuts.mva_wp(lep)),
+        ]
 
     #Construct the analysis chain
     snodes, out = analysis_tree_all_reweighed(
