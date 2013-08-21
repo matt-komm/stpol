@@ -24,7 +24,10 @@ def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
     cutnodes = []
     for cut_name, cut in cuts:
 
-        cutnode = tree.CutNode(cut, graph, cut_name, snodes, [])
+        cutnode = tree.CutNode(cut, graph, cut_name, snodes, [],
+            filter_funcs=[
+                lambda x,cut_name=cut_name: tree.is_samp(x, cut_name.split("_")[0])
+        ])
         cutnodes.append(
             cutnode
         )
