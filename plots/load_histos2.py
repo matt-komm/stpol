@@ -346,7 +346,7 @@ def combine_templates(template_d, patterns, conf):
 
     for k, v in template_d.items():
         if len(v)==0:
-            raise ValueError("Could not match any histograms to pattern %s:%s" % (k, pats[k]))
+            raise ValueError("Could not match any histograms to pattern %s:%s" % (k, patterns[k]))
     hists = {}
 
     hsources = (
@@ -629,8 +629,8 @@ def combine_templates(template_d, patterns, conf):
 
 if __name__=="__main__":
 
-    fpat_unmerged = 'hists__%(varname)s_%(channel)s.root'
-    fpat_merged = 'hists_merged__%(varname)s_%(channel)s.root'
+    fpat_unmerged = 'out/hists/hists__%(varname)s_%(channel)s.root'
+    fpat_merged = 'out/hists/hists_merged__%(varname)s_%(channel)s.root'
 
     for channel in ["mu", "ele"]:
         cos_theta = HistDef(
@@ -638,8 +638,8 @@ if __name__=="__main__":
             channel=channel,
             basepath='.*/%(channel)s/',
             cutstr='%(channel)s_2j1t_mva_loose/',
-            cutstr_antiiso='%(cutstr)sdR_QCD/',
-            infile_pattern = 'hists/d/*.root',
+            cutstr_antiiso='%(channel)s_2j1t_mva_loose/dR_QCD/',
+            infile_pattern = 'hists/Aug22/*.root',
             outfile_unmerged=fpat_unmerged,
             outfile_merged=fpat_merged
         )
@@ -650,7 +650,14 @@ if __name__=="__main__":
             outfile_merged=fpat_merged
         )
 
-        for var in [cos_theta, met]:
+        abs_eta_lj = cos_theta.copy(
+            varname='abs_eta_lj',
+            outfile_unmerged=fpat_unmerged,
+            outfile_merged=fpat_merged
+        )
+
+
+        for var in [cos_theta, met, abs_eta_lj]:
             patterns = make_patterns(var)
             templates = load_file(var.infiles, patterns)
             combine_templates(templates, patterns, var)
