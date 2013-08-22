@@ -31,7 +31,7 @@ def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
                 Cuts.antiiso(lepton, syst) * Cuts.deltaR_QCD(),
                 graph, "antiiso_nominal", [cutnode], [],
                 filter_funcs=[
-                    lambda p: tree.is_samp(p, "data") and tree.is_samp(p, "antiiso")
+                    lambda p: tree.is_samp(p, "antiiso")
                 ]
             )
             cutnodes.append(
