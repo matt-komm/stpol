@@ -88,4 +88,4 @@ if __name__=="__main__":
     for sn in snodes:
         sn.recurseDown()
 
-    out.tfile.close()
+    out.close()

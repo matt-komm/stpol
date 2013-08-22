@@ -2,7 +2,7 @@ import numpy as np
 import math
 import logging
 logger = logging.getLogger("systematics")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 
 def to_arr(x):
     """
@@ -31,7 +31,8 @@ def n_events(hist):
 def cdf_errors(hist, sign=+1):
     """
     Implements the statistical errors a la CDF for a histogram with
-    low event counts. 
+    low event counts.
+    http://www-cdf.fnal.gov/physics/statistics/notes/pois_eb.txt
     """
     hc = hist.Clone()
     n = n_events(hc)
