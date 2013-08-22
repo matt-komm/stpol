@@ -14,7 +14,7 @@ import argparse
 
 
 def analysis_tree(cuts, weights, variables, infiles, outfile):
-    out = tree.ObjectSaver(outfile)
+    out = tree.DictSaver()
 
     graph = nx.DiGraph()
 
