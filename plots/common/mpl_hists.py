@@ -6,20 +6,23 @@ def draw_hists(hists, **kwargs):
         figsize=(10,10)
     )
     ax = plt.axes()
-    ax.grid(which="both")
-    legitems = []
+
+    axes_style(ax)
     if isinstance(hists, dict):
         hlist = hists.items()
     elif isinstance(hists, list):
         hlist = [(h.GetTitle(), h) for h in hists]
     
     for hn, h in hlist:
+
+        #In case of latex name, escape the underscores
+        if not hn.startswith "$":
+            hn = hn.replace("_", " ")
+            
         h = h.Clone()
-        #h.Scale(1.0/h.Integral())
-        hi = hist_err(ax, h, **kwargs)
-        legitems.append(hn.replace("_", " "))
-    
-    leg = ax.legend(legitems)
+        hi = hist_err(ax, h, label=hn, **kwargs)
+
+    leg = ax.legend()
     return ax
 
 def hist_err(axes, hist, yerr=None, **kwargs):
