@@ -63,6 +63,7 @@ if __name__=="__main__":
         c2j1t = Cuts.n_jets(2)*Cuts.n_tags(1)
         cuts += [
             ("%s_2j1t" % lep, baseline * c2j1t),
+            ("%s_2j1t_etalj" % lep, baseline * c2j1t * Cuts.eta_lj),
             ("%s_2j1t_cutbased_final" % lep, baseline * Cuts.final(2,1)),
             ("%s_2j1t_mva_loose" % lep, baseline * c2j1t * Cuts.mva_wp(lep)),
         ]
