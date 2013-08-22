@@ -265,10 +265,6 @@ class HistDef:
             setattr(self, k, v)
 
         self.infiles = glob.glob(self.infile_pattern)
-        self.outfile_merged = self.outfile_merged % self.__dict__
-        self.outfile_unmerged = self.outfile_unmerged % self.__dict__
-        self.cutstr = self.cutstr % self.__dict__
-        self.cutstr_antiiso = self.cutstr_antiiso % self.__dict__
 
     def update(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -279,40 +275,53 @@ class HistDef:
         new = HistDef(**newd)
         return new
 
-def make_patterns(conf):
-    fnames = conf.infiles
+    def get_infiles(self):
+        return glob.glob(self.infile_pattern)
 
-    cutstr = conf.cutstr
+    def get_outfile_merged(self):
+        return self.outfile_merged % self.__dict__
+
+    def get_outfile_unmerged(self):
+        return self.outfile_unmerged % self.__dict__
+
+    def get_cutstr(self):
+        return self.cutstr % self.__dict__
+    
+    def get_cutstr_antiiso(self):
+        return self.cutstr_antiiso % self.__dict__
+
+def make_patterns(conf):
+    cutstr = conf.get_cutstr()
     base = conf.basepath
 
     pat_mc_varsamp = ""
     pat_mc_varsamp += base
     pat_mc_varsamp += "mc_syst/iso/(.*)/Jul15/(.*)/"
-    pat_mc_varsamp += conf.cutstr
+    pat_mc_varsamp += conf.get_cutstr()
     pat_mc_varsamp += "(weight__nominal__%(channel)s)/%(varname)s$"
 
     pat_mc_varproc = ""
     pat_mc_varproc += base
     pat_mc_varproc += "mc/iso/(.*)/Jul15/(.*)/"
-    pat_mc_varproc += conf.cutstr
+    pat_mc_varproc += conf.get_cutstr()
     pat_mc_varproc += "(weight__nominal__%(channel)s)/%(varname)s$"
 
     pat_data = ""
     pat_data += base
     pat_data += "(data)/iso/.*/(Single.*)/"
-    pat_data += conf.cutstr
+    pat_data += conf.get_cutstr()
     pat_data += "(weight__unweighted.*)/%(varname)s$"
 
     pat_mc_nom = ""
     pat_mc_nom += base
     pat_mc_nom += "mc/iso/(nominal)/Jul15/(.*)/"
-    pat_mc_nom += conf.cutstr
+    pat_mc_nom += conf.get_cutstr()
     pat_mc_nom += "(weight__.*__%(channel)s)/%(varname)s$"
 
     pat_data_antiiso = ""
     pat_data_antiiso += base
     pat_data_antiiso += "data/antiiso/.*/(.*)/"
-    pat_data_antiiso += conf.cutstr_antiiso
+    pat_data_antiiso += conf.get_cutstr_antiiso()
     pat_data_antiiso += "(weight__unweighted.*)/%(varname)s$"
 
 
@@ -514,7 +523,7 @@ def combine_templates(template_d, patterns, conf):
     syst_scenarios = syst_scenarios.as_dict()
 
     #Create the output file
-    of = ROOT.TFile(conf.outfile_unmerged , "RECREATE")
+    of = ROOT.TFile(conf.get_outfile_unmerged() , "RECREATE")
     of.cd()
 
     #Get the list of all possible systematic scenarios that we have available
@@ -572,7 +581,7 @@ def combine_templates(template_d, patterns, conf):
     ########################
     ### Load systematics ###
     ########################
-    of = File(conf.outfile_unmerged)
+    of = File(conf.get_outfile_unmerged())
     hists = dict()
     ROOT.gROOT.cd()
     for k in of.GetListOfKeys():
@@ -593,7 +602,7 @@ def combine_templates(template_d, patterns, conf):
         spl = split_name(k)
         hsysts[spl["type"]][spl["dir"]][spl["sample"]] = v
     hsysts = hsysts.as_dict()
-    of = ROOT.TFile(conf.outfile_merged, "RECREATE")
+    of = ROOT.TFile(conf.get_outfile_merged(), "RECREATE")
     of.cd()
 
     skipped_systs = ["wjets_matching", "wjets_scale", "sig_gen", "sig_anom"]
@@ -613,7 +622,7 @@ def combine_templates(template_d, patterns, conf):
     logger.info("Saved %d histograms to file %s" % (nkeys, of.GetPath()))
     of.Close()
 
-    hists = load_theta_format(conf.outfile_merged)
+    hists = load_theta_format(conf.get_outfile_merged())
     processes = []
     systs = []
     for (variable, sample, syst, systdir), v in hists.items_flat():
@@ -647,26 +656,25 @@ if __name__=="__main__":
         met = cos_theta.copy(
             varname='mtw_50_150',
             cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
-            outfile_unmerged=fpat_unmerged,
-            outfile_merged=fpat_merged
         )
 
         abs_eta_lj = cos_theta.copy(
             varname='abs_eta_lj',
             cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
-            outfile_unmerged=fpat_unmerged,
-            outfile_merged=fpat_merged
         )
 
         abs_eta_lj_4 = cos_theta.copy(
             varname='abs_eta_lj_4',
             cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
-            outfile_unmerged=fpat_unmerged,
-            outfile_merged=fpat_merged
+        )
+
+        top_mass_sr = cos_theta.copy(
+            varname='top_mass_sr',
+            cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
         )
 
 
-        for var in [cos_theta, met, abs_eta_lj, abs_eta_lj_4]:
+        for var in [top_mass_sr, cos_theta, met, abs_eta_lj, abs_eta_lj_4]:
             patterns = make_patterns(var)
-            templates = load_file(var.infiles, patterns)
+            templates = load_file(var.get_infiles(), patterns)
             combine_templates(templates, patterns, var)
