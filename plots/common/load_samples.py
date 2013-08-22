@@ -257,7 +257,7 @@ def change_to_mc(file_name):
 def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_antiiso, channel, coupling, var="abs(eta_lj)", plot_range=None, binning=None, asymmetry=None, qcd_extra=None, mtmetcut=None):
     lumi=lumi_iso[channel]
     weight_str = str(weight)
-    weight_str = "1"
+    #weight_str = "1"
     if sample_name not in ["DATA", "qcd"] and not sample.name.startswith("Single"):
         if sample.name.endswith("ToLeptons") and asymmetry is not None:
             weight_str = "("+str(weight)+") * "+str(Weights.asymmetry_weight(asymmetry))+")"
@@ -277,17 +277,17 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
     elif sample_name in "qcd" or sample.name.startswith("Single"):   #take from antiiso data
         if plot_range is not None:
-            hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", plot_range=plot_range)
+            hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", binning=plot_range)
             path = change_to_mc(sample.file_name)
             nominals = load_nominal_mc_samples(path, channel, "antiiso")
             for s in nominals:      #subtract MC
-                h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, plot_range=plot_range)
+                h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, binning=plot_range)
                 h.Scale(sample.lumiScaleFactor(lumi))
                 hist.Add(h, -1)
             if qcd_extra is not None: #iso down or up - get nominal integral
-                hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", plot_range=plot_range)
+                hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", binning=plot_range)
                 for s in nominals:
-                    h1 = sample.drawHistogram(var, qcd_extra, weight=weight, plot_range=plot_range)
+                    h1 = sample.drawHistogram(var, qcd_extra, weight=weight, binning=plot_range)
                     h1.Scale(sample.lumiScaleFactor(lumi))
                     hist_nomi.Add(h1, -1)
                 if hist.Integral() > 0:
@@ -297,15 +297,15 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
             hist = sample.drawHistogram(var, cut_str_antiiso, weight="1.0", binning=binning)
             path = change_to_mc(sample.file_name)
             nominals = load_nominal_mc_samples(path, channel, "antiiso")            
-            logger.debug("before subtraction", hist.Integral())
+            #print("before subtraction", hist.Integral())
             for s in nominals:
                 h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, binning=binning)
                 hist.Add(h, -1)
-            logger.debug("after subtraction", hist.Integral())
+            #print("after subtraction", hist.Integral())
             if qcd_extra is not None: #iso down or up - get nominal integral
-                hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", plot_range=plot_range)
+                hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", binning=binning)
                 for s in nominals:
-                    h1 = sample.drawHistogram(var, qcd_extra, weight=weight, plot_range=plot_range)
+                    h1 = sample.drawHistogram(var, qcd_extra, weight=weight, binning=binning)
                     h1.Scale(sample.lumiScaleFactor(lumi))
                     hist_nomi.Add(h1, -1)
                 if hist.Integral() > 0:

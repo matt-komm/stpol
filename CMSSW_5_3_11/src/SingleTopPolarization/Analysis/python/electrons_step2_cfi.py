@@ -124,7 +124,10 @@ def ElectronSetup(process, conf):
 
     # Scale factors #
     process.electronWeightsProducer = cms.EDProducer("ElectronEfficiencyProducer",
-        src = cms.InputTag("singleIsoEle")
+        src = cms.InputTag("singleIsoEle"),
+                                                     
+        SFError=cms.double(0.02),
+        applyConservativeSyst=cms.bool(True)
     )
 
     goodMET = metSequence(process, conf, "ele", conf.metSource, "goodSignalLeptons")

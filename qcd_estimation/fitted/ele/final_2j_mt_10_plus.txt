@@ -1,3 +1,3 @@
-1.152631 70227.540182 0.000000
-Iso data yield 178727.000000
-Cut string (iso) pu_weight*b_weight_nominal*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight*electron_TriggerWeight*electron_IDWeight*((HLT_Ele27_WP80_v8 == 1 || HLT_Ele27_WP80_v9 == 1 || HLT_Ele27_WP80_v10 || HLT_Ele27_WP80_v11)*(((n_jets == 2) && (rms_lj < 0.025)) && pt_lj>40 && pt_bj>40 && rms_lj<0.025 && ((top_mass > 130 && top_mass < 220) && (abs(eta_lj) > 2.5)) && el_iso < 0.1))
+1.583209 101184.037620 0.000000
+Iso data yield 189617.000000
+Cut string (iso) ((((((1) * (electron_IDWeight)) * (electron_TriggerWeight)) * (wjets_mg_flavour_flat_weight)) * (wjets_mg_flavour_shape_weight)) * (pu_weight)) * (b_weight_nominal)*((( (HLT_Ele27_WP80_v10 ==1) || (HLT_Ele27_WP80_v11 == 1) || (HLT_Ele27_WP80_v9==1) || (HLT_Ele27_WP80_v8==1) ))*(((n_jets == 2) && (rms_lj < 0.025)) && ((((pt_lj > 40) && (pt_bj > 40)) && ((abs(eta_lj) < 4.5) && (abs(eta_bj) < 4.5))) && (rms_lj < 0.025)) && ((top_mass > 130 && top_mass < 220) && (abs(eta_lj) > 2.5)) && (el_mva > 0.9 & el_iso < 0.1)))
