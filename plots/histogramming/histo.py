@@ -15,10 +15,11 @@ import argparse
 def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
     cutnodes = []
     for cut_name, cut in cuts:
+        lepton = cut_name.split("_")[0]
 
         cutnode = tree.CutNode(cut, graph, cut_name, snodes, [],
             filter_funcs=[
-                lambda x,cut_name=cut_name: tree.is_samp(x, cut_name.split("_")[0])
+                lambda x,lepton=lepton: tree.is_samp(x, lepton)
         ])
         cutnodes.append(
             cutnode
