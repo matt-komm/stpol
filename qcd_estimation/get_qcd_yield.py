@@ -182,7 +182,6 @@ if __name__=="__main__":
                 of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
                 of.write("Cut string for QCD template (data): %s\n" % (cut.antiIsoCutsData))
                 of.write("Cut string for QCD template (MC): %s\n" % (cut.antiIsoCutsMC))
-        print "Total: QCD: %.2f +- %.2f, ratio to template from data %.3f" % (fit.qcd, fit.qcd_uncert, fit.qcd/fit.orig["qcd"])
         print "W+Jets: %.2f +- %.2f, ratio to template: %.2f" % (fit.wjets, fit.wjets_uncert, fit.wjets/fit.wjets_orig)
         print "Other MC: %.2f +- %.2f, ratio to template: %.2f" % (fit.nonqcd, fit.nonqcd_uncert, fit.nonqcd/fit.nonqcd_orig)
     print "Failed to converge: ", str(failed)
