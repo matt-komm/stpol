@@ -47,4 +47,17 @@ def ipy_show_canv(c):
 
     fn = "temp.png"
     c.SaveAs(fn) 
-    return Image(filename=fn) 
+    return Image(filename=fn)
+
+def ratio_subplots():
+    gs = plt.GridSpec(2, 1,
+        width_ratios=[1],
+        height_ratios=[4,1]
+    )
+    ax1 = plt.subplot(gs[0])
+    ax2 = plt.subplot(gs[1])
+    return ax1, ax2
+
+def axes_style(ax):
+    ax.grid(True, which='both')
+    ax.tick_params(axis='both', which='major', labelsize=16)
