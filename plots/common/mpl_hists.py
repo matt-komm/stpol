@@ -17,7 +17,7 @@ def draw_hists(hists, **kwargs):
         h = h.Clone()
         #h.Scale(1.0/h.Integral())
         hi = hist_err(ax, h, **kwargs)
-        legitems.append(hn)
+        legitems.append(hn.replace("_", " "))
     
     leg = ax.legend(legitems)
     return ax
