@@ -12,13 +12,13 @@ def draw_hists(hists, **kwargs):
         hlist = hists.items()
     elif isinstance(hists, list):
         hlist = [(h.GetTitle(), h) for h in hists]
-    
+
     for hn, h in hlist:
 
         #In case of latex name, escape the underscores
-        if not hn.startswith "$":
+        if not hn.startswith("$"):
             hn = hn.replace("_", " ")
-            
+
         h = h.Clone()
         hi = hist_err(ax, h, label=hn, **kwargs)
 
@@ -49,7 +49,7 @@ def ipy_show_canv(c):
     from IPython.core.display import Image
 
     fn = "temp.png"
-    c.SaveAs(fn) 
+    c.SaveAs(fn)
     return Image(filename=fn)
 
 def ratio_subplots():
