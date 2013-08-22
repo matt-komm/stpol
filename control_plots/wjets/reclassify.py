@@ -35,7 +35,10 @@ if __name__=="__main__":
     n_file = 0
     for fi in tot_files:
         args = []
-        sn = get_sample_name(fi)
+        if "out_step3_" in fi:
+            sn = fi.split("/")[-2]
+        else:
+            sn = get_sample_name(fi)
 
         args += ["--isWJets=%s" % str(is_wjets(sn))]
         subprocess.check_call([cmd, "--infile=%s" % fi] + args, stdout=log)
