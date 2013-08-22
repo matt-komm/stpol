@@ -468,12 +468,27 @@ class Weights:
         Weight("muon_IsoWeight"), Weight("muon_IsoWeight_up"), Weight("muon_IsoWeight_down")
     )
 
+    #Check the effect of the lepton scale factor differing from unity (more correct would be mean weight)
+    muon_sel["shape"] = (
+        Weight("1.0 - 0*abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_nominal"),
+        Weight("1.0 + abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_up"),
+        Weight("1.0 - abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_down")
+    )
+
+
+    #Electron selection weights
     electron_sel = dict()
     electron_sel["id"] = (
         Weight("electron_IDWeight"), Weight("electron_IDWeight_up"), Weight("electron_IDWeight_down")
     )
     electron_sel["trigger"] = (
         Weight("electron_TriggerWeight"), Weight("electron_TriggerWeight_up"), Weight("electron_TriggerWeight_down")
+    )
+
+    electron_sel["shape"] = (
+        Weight("1.0 - 0*abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_nominal"),
+        Weight("1.0 + abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_up"),
+        Weight("1.0 - abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_down")
     )
 
 
