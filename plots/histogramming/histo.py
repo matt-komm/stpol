@@ -25,13 +25,17 @@ def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
         )
 
         #an extra QCD cleaning cut on top of the previous cut, which is only done in antiiso data
-        cutnodes.append(
-            tree.CutNode(Cuts.deltaR_QCD(), graph, "dR_QCD", [cutnode], [],
+        for syst in ["nominal", "up", "down"]:
+            cn = tree.CutNode(
+                Cuts.antiiso(lepton, syst) * Cuts.deltaR_QCD(),
+                graph, "antiiso_nominal", [cutnode], [],
                 filter_funcs=[
                     lambda p: tree.is_samp(p, "data") and tree.is_samp(p, "antiiso")
                 ]
             )
-        )
+            cutnodes.append(
+                cn
+            )
 
     from histo_descs import create_plots
     create_plots(graph, cutnodes, **kwargs)
