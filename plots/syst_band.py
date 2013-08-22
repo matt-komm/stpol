@@ -105,6 +105,7 @@ class PlotDef:
         lumibox_format='%(channel)s channel%(lb_comments)s',
         legend_pos='top-left',
         lumi_pos='top-right',
+        normalize=False,
 
         #The scale factor for the N(data, anti-iso)/N(QCD, iso) yields,
         process_scale_factor = []
@@ -160,6 +161,10 @@ def data_mc_plot(pd):
         #Scale all MC samples except QCD to the luminosity
         if sample_types.is_mc(sample) and not sample=="qcd":
             hist.Scale(pd.lumi)
+        if hasattr(pd, "rebin"):
+            hist.Rebin(pd.rebin)
+        if sample=="qcd" and hasattr(pd, "qcd_yield"):
+            hist.Scale(pd.qcd_yield / hist.Integral())
 
         rescale_to_fit(sample, hist, pd.process_scale_factor)
         hist.SetTitle(sample)
@@ -305,6 +310,7 @@ def data_mc_plot(pd):
         tot += v.Integral()
     tot_data = hists_nom_data.Integral()
     print "MC: %.2f Data: %.2f" % (tot, tot_data)
+    #import pdb; pdb.set_trace()
     return c
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
@@ -322,21 +328,26 @@ if __name__=="__main__":
         "mu": [
             (["tchan"], 1.031894, -1),
             (["ttjets", "twchan", "schan"], 0.914750, -1),
-            (["qcd"], 0.914750 * 7.2, -1),
+            (["qcd"], 0.914750 * 7, -1),
             (["wjets", "diboson", "dyjets"], 1.604641, -1),
         ],
         "ele": [
             (["tchan"], 0.956595, -1),
             (["ttjets", "twchan", "schan"], 0.982722, -1),
-            (["qcd"], 0.982722 * 5.0, -1),
+            (["qcd"], 0.982722 * 0.0, -1),
             (["wjets", "diboson", "dyjets"], 1.382914, -1),
         ]
     }
 
+    # qcd_yields = {
+    #     "mu": 700,
+    #     "ele": 133.020387,
+    # }
+
     for channel in ["mu", "ele"]:
-        for var in ["mtw_50_150", "cos_theta"]:
+        for var in ["top_mass_sr", "abs_eta_lj_4", "mtw_50_150", "cos_theta"]:
             h = PlotDef(
-                infile="hists_merged__%s_%s.root" % (var, channel),
+                infile="out/hists/hists_merged__%s_%s.root" % (var, channel),
                 lumi=lumis["Aug4_0eb863_full"]["iso"][channel],
                 var=var,
                 channel_pretty=channels_pretty[channel],
@@ -345,18 +356,20 @@ if __name__=="__main__":
                 log=False,
                 systematics_shapeonly=True,
                 save_name='2j1t_mva__%s__all_syst_%s.png' % (var, channel),
-                normalize=False,
+                #normalize=False,
                 lb_comments=', all syst.',
-                process_scale_factor = sfs[channel]
+                process_scale_factor = sfs[channel],
+                #qcd_yield=qcd_yields[channel],
+                rebin=2
             )
-            h1 = h.copy(
-                systematics='en|res',
-                save_name='2j1t_mva__%s__jes_jer_%s.png' % (var, channel),
-                lb_comments=', JES+JER',
-                process_scale_factor = sfs[channel]
-            )
+            # h1 = h.copy(
+            #     systematics='en|res',
+            #     save_name='2j1t_mva__%s__jes_jer_%s.png' % (var, channel),
+            #     lb_comments=', JES+JER',
+            #     process_scale_factor = sfs[channel]
+            # )
 
-            for p in [h, h1]:
+            for p in [h]:
                 c = data_mc_plot(p)
                 c.SaveAs(p.save_name)
                 p.res = c

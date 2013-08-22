@@ -126,47 +126,46 @@ const std::vector<double> BTagSystematicsWeightProducer::SFb_ptBins (
     800
 });
 
-//https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_payload_Moriond13.txt
-//FIXME: Update to https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_WITHttbar_payload_EPS13.txt
+//https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_WITHttbar_payload_EPS13.txt
 const std::vector<double> BTagSystematicsWeightProducer::SFb_CSVM_Err (
 {
-    0.0554504,
-    0.0209663,
-    0.0207019,
-    0.0230073,
-    0.0208719,
-    0.0200453,
-    0.0264232,
-    0.0240102,
-    0.0229375,
-    0.0184615,
-    0.0216242,
-    0.0248119,
-    0.0465748,
-    0.0474666,
-    0.0718173,
-    0.0717567
+  0.0415707,
+  0.0204209,
+  0.0223227,
+  0.0206655,
+  0.0199325,
+  0.0174121,
+  0.0202332,
+  0.0182446,
+  0.0159777,
+  0.0218531,
+  0.0204688,
+  0.0265191,
+  0.0313175,
+  0.0415417,
+  0.0740446,
+  0.0596716
 });
 
 //bin-by-bin(pt) variation for TCHPT for QCD-derived scale factors
 const std::vector<double> BTagSystematicsWeightProducer::SFb_TCHPT_Err (
 {
-    0.0725549,
-    0.0275189,
-    0.0279695,
-    0.028065,
-    0.0270752,
-    0.0254934,
-    0.0262087,
-    0.0230919,
-    0.0294829,
-    0.0226487,
-    0.0272755,
-    0.0303747,
-    0.051223,
-    0.0542895,
-    0.0589887,
-    0.0584216
+  0.0624031,
+  0.034023,
+  0.0362764,
+  0.0341996,
+  0.031248,
+  0.0281222,
+  0.0316684,
+  0.0276272,
+  0.0208828,
+  0.0223511,
+  0.0224121,
+  0.0261939,
+  0.0268247,
+  0.0421413,
+  0.0532897,
+  0.0506714
 });
 
 
@@ -232,42 +231,42 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
         sfDown = sf - sfErr;
     };
 
-    //https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_payload_Moriond13.txt
+    //https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFb-pt_WITHttbar_payload_EPS13.txt
     auto sfB_CSVM = [&pt] ()
     {
         double x = pt;
-        return 0.726981 * ((1. + (0.253238 * x)) / (1. + (0.188389 * x)));
+        return (0.938887 + (0.00017124 * x)) + (-2.76366e-07 * (x * x));
     };
 
     //Tagger: TCHPT within 20 < pt < 800 GeV, abs(eta) < 2.4, x = pt
     auto sfB_TCHPT = [&pt] ()
     {
         double x = pt;
-        return 0.305208 * ((1. + (0.595166 * x)) / (1. + (0.186968 * x)));
+        return 0.703389 * ((1. + (0.088358 * x)) / (1. + (0.0660291 * x)));
     };
 
-    //https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFlightFuncs_Moriond2013.C
+    //https://twiki.cern.ch/twiki/pub/CMS/BtagPOG/SFlightFuncs_EPS2013.C
     //Data period ABCD
     auto sfL_CSVM = [&eta, &pt, &sfUp, &sfDown] ()
     {
         double x = pt;
         if (eta >= 0.0 && eta < 0.8)
         {
-            sfDown = ((0.972746 + (0.00104424 * x)) + (-2.36081e-06 * (x * x))) + (1.53438e-09 * (x * (x * x)));
-            sfUp = ((1.15201 + (0.00292575 * x)) + (-7.41497e-06 * (x * x))) + (5.0512e-09 * (x * (x * x)));
-            return ((1.06238 + (0.00198635 * x)) + (-4.89082e-06 * (x * x))) + (3.29312e-09 * (x * (x * x)));
+            sfDown = ((0.964527 + (0.00149055 * x)) + (-2.78338e-06 * (x * x))) + (1.51771e-09 * (x * (x * x)));
+            sfUp = ((1.18638 + (0.00314148 * x)) + (-6.68993e-06 * (x * x))) + (3.89288e-09 * (x * (x * x)));
+            return ((1.07541 + (0.00231827 * x)) + (-4.74249e-06 * (x * x))) + (2.70862e-09 * (x * (x * x)));
         }
         else if (eta >= 0.8 && eta < 1.6)
         {
-            sfDown = ((0.9836 + (0.000649761 * x)) + (-1.59773e-06 * (x * x))) + (1.14324e-09 * (x * (x * x)));
-            sfUp = ((1.17735 + (0.00156533 * x)) + (-4.32257e-06 * (x * x))) + (3.18197e-09 * (x * (x * x)));
-            return ((1.08048 + (0.00110831 * x)) + (-2.96189e-06 * (x * x))) + (2.16266e-09 * (x * (x * x)));
+            sfDown = ((0.946051 + (0.000759584 * x)) + (-1.52491e-06 * (x * x))) + (9.65822e-10 * (x * (x * x)));
+            sfUp = ((1.16624 + (0.00151884 * x)) + (-3.59041e-06 * (x * x))) + (2.38681e-09 * (x * (x * x)));
+            return ((1.05613 + (0.00114031 * x)) + (-2.56066e-06 * (x * x))) + (1.67792e-09 * (x * (x * x)));
         }
         else if (eta >= 1.6 && eta < 2.4)
         {
-            sfDown = ((1.00616 + (0.000358884 * x)) + (-1.23768e-06 * (x * x))) + (6.86678e-10 * (x * (x * x)));
-            sfUp = ((1.17671 + (0.0010147 * x)) + (-3.66269e-06 * (x * x))) + (2.88425e-09 * (x * (x * x)));
-            return ((1.09145 + (0.000687171 * x)) + (-2.45054e-06 * (x * x))) + (1.7844e-09 * (x * (x * x)));
+            sfDown = ((0.956736 + (0.000280197 * x)) + (-1.42739e-06 * (x * x))) + (1.0085e-09 * (x * (x * x)));
+            sfUp = ((1.15575 + (0.000693344 * x)) + (-3.02661e-06 * (x * x))) + (2.39752e-09 * (x * (x * x)));
+            return ((1.05625 + (0.000487231 * x)) + (-2.22792e-06 * (x * x))) + (1.70262e-09 * (x * (x * x)));
         }
         else   //jet eta overflow
         {
@@ -283,9 +282,9 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
         //Data period ABCD
         if (eta >= 0.0 && eta < 2.4)
         {
-            sfDown = ((0.988346 + (0.000914722 * x)) + (-2.37077e-06 * (x * x))) + (1.72082e-09 * (x * (x * x)));
-            sfUp = ((1.34691 + (0.00181637 * x)) + (-4.64484e-06 * (x * x))) + (3.27122e-09 * (x * (x * x)));
-            return ((1.1676 + (0.00136673 * x)) + (-3.51053e-06 * (x * x))) + (2.4966e-09 * (x * (x * x)));
+            sfDown = ((0.968557 + (0.000586877 * x)) + (-1.34624e-06 * (x * x))) + (9.09724e-10 * (x * (x * x)));
+            sfUp = ((1.43508 + (0.00112666 * x)) + (-2.62078e-06 * (x * x))) + (1.70697e-09 * (x * (x * x)));
+            return ((1.20175 + (0.000858187 * x)) + (-1.98726e-06 * (x * x))) + (1.31057e-09 * (x * (x * x)));
         }
         else     //jet eta overflow
         {

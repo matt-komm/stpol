@@ -147,11 +147,11 @@ class Cuts:
     @staticmethod
     def antiiso_down(lepton):
         logger.warning("Calling a deprecated method: Cuts.antiiso_down")
-        Cuts.antiiso(lepton, "down")
+        return Cuts.antiiso(lepton, "down")
     @staticmethod
     def antiiso_up(lepton):
         logger.warning("Calling a deprecated method: antiiso_up")
-        Cuts.antiiso(lepton, "up")
+        return Cuts.antiiso(lepton, "up")
 
     @staticmethod
     def deltaR(x):
@@ -452,7 +452,8 @@ class Weights:
             Weights.wjets_madgraph_flat_weight() *
             Weights.wjets_madgraph_shape_weight() *
             Weights.pu() *
-            Weights.b_weight()
+            Weights.b_weight() * 
+            Weights.top_pt[0]
         )
 
     @staticmethod

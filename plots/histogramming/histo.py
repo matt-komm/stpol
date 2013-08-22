@@ -25,7 +25,7 @@ def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
             cutnode
         )
 
-        #an extra QCD cleaning cut on top of the previous cut, which is only done in antiiso data
+        #an extra QCD cleaning cut on top of the previous cut, which is only done in antiiso
         for syst in ["nominal", "up", "down"]:
             cn = tree.CutNode(
                 Cuts.antiiso(lepton, syst) * Cuts.deltaR_QCD(),
@@ -68,14 +68,9 @@ if __name__=="__main__":
         c2j1t = Cuts.n_jets(2)*Cuts.n_tags(1)
         cuts += [
             ("%s_2j1t" % lep, baseline * c2j1t),
-            ("%s_2j1t_qcd_template" % lep,
-                Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.rms_lj * c2j1t
-            ),
-            ("%s_2j1t_qcd_template_eta_lj" % lep,
-                Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.rms_lj * c2j1t * Cuts.eta_lj
-            ),
-            ("%s_2j1t_qcd_template_met" % lep,
-                Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.rms_lj * c2j1t * Cuts.metmt(lep)
+
+            ("%s_2j1t_eta_lj" % lep,
+                baseline * c2j1t * Cuts.eta_lj
             ),
             ("%s_2j1t_cutbased_final" % lep,
                 baseline * Cuts.final(2,1)
