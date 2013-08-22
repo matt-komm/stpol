@@ -12,7 +12,7 @@ import networkx as nx
 import argparse
 
 
-def analysis_tree_all_reweighed(cuts, snodes, **kwargs):
+def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
     cutnodes = []
     for cut_name, cut in cuts:
 
@@ -75,7 +75,7 @@ if __name__=="__main__":
 
     #Construct the analysis chain
     analysis_tree_all_reweighed(
-        cuts, snodes,
+        graph, cuts, snodes,
         filter_funcs=[
         ]
     )
