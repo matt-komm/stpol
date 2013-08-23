@@ -12,31 +12,31 @@ import networkx as nx
 import argparse
 
 
-def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
-    out = tree.ObjectSaver(outfile)
-    graph = nx.DiGraph()
-
-    #top = tree.Node(graph, "top", [], [])
-    snodes = [tree.SampleNode(out, graph, inf, [], []) for inf in infiles]
-
-    logger.info("Done constructing sample nodes: %d" % len(snodes))
-
+def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
     cutnodes = []
     for cut_name, cut in cuts:
+        lepton = cut_name.split("_")[0]
 
-        cutnode = tree.CutNode(cut, graph, cut_name, snodes, [])
+        cutnode = tree.CutNode(cut, graph, cut_name, snodes, [],
+            filter_funcs=[
+                lambda x,lepton=lepton: tree.is_samp(x, lepton)
+        ])
         cutnodes.append(
             cutnode
         )
 
-        #an extra QCD cleaning cut on top of the previous cut, which is only done in antiiso data
-        cutnodes.append(
-            tree.CutNode(Cuts.deltaR_QCD(), graph, "dR_QCD", [cutnode], [],
+        #an extra QCD cleaning cut on top of the previous cut, which is only done in antiiso
+        for syst in ["nominal", "up", "down"]:
+            cn = tree.CutNode(
+                Cuts.antiiso(lepton, syst) * Cuts.deltaR_QCD(),
+                graph, "antiiso_%s" % syst, [cutnode], [],
                 filter_funcs=[
-                    lambda p: tree.is_samp(p, "data") and tree.is_samp(p, "antiiso")
+                    lambda p: tree.is_samp(p, "antiiso")
                 ]
             )
-        )
+            cutnodes.append(
+                cn
+            )
 
     from histo_descs import create_plots
     create_plots(graph, cutnodes, **kwargs)
@@ -45,9 +45,6 @@ def analysis_tree_all_reweighed(cuts, infiles, outfile, **kwargs):
         nx.write_dot(graph, outfile.replace(".root", "_gviz.dot"))
     except Exception as e:
         logger.warning("Couldn't write .dot file for visual representation of analysis: %s" % str(e))
-
-    return snodes, out
-
 
 if __name__=="__main__":
 
@@ -65,24 +62,38 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    cuts = [
-        ("final_mu_cb_2j1t", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)),
-        ("final_mu_mva_loose", Cuts.lepton("mu")*Cuts.hlt("mu")*Cuts.final(2,1)*Cuts.metmt("mu")*Cuts.mva_wp("mu"))
-        
-        ("final_ele_cb_2j1t", Cuts.lepton("ele")*Cuts.hlt("ele")*Cuts.final(2,1)),
-        ("final_ele_mva_loose", Cuts.lepton("ele")*Cuts.hlt("ele")*Cuts.final(2,1)*Cuts.metmt("ele")*Cuts.mva_wp("ele"))
-    ]
+    cuts = []
+    for lep in ["mu", "ele"]:
+        baseline = Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.metmt(lep) * Cuts.rms_lj
+        c2j1t = Cuts.n_jets(2)*Cuts.n_tags(1)
+        cuts += [
+            ("%s_2j1t" % lep, baseline * c2j1t),
+
+            ("%s_2j1t_eta_lj" % lep,
+                baseline * c2j1t * Cuts.eta_lj
+            ),
+            ("%s_2j1t_cutbased_final" % lep,
+                baseline * Cuts.final(2,1)
+            ),
+            ("%s_2j1t_mva_loose" % lep,
+                baseline * c2j1t * Cuts.mva_wp(lep)
+            ),
+        ]
+
+    out = tree.ObjectSaver(args.outfile)
+    graph = nx.DiGraph()
+    snodes = [tree.SampleNode(out, graph, inf, [], []) for inf in args.infiles]
+    logger.info("Done constructing sample nodes: %d" % len(snodes))
+
 
     #Construct the analysis chain
-    snodes, out = analysis_tree_all_reweighed(
-        cuts, args.infiles,
-        args.outfile,
+    analysis_tree_all_reweighed(
+        graph, cuts, snodes,
         filter_funcs=[
-            #lambda x: "mva" not in x
         ]
     )
 
     print "Recursing down"
     for sn in snodes:
         sn.recurseDown()
-    out.tfile.close()
+    out.close()

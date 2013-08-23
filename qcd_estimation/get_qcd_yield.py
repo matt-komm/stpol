@@ -133,7 +133,7 @@ if __name__=="__main__":
         cut = cuts[cutn]
         try:
             (results, fit) = get_qcd_yield_with_selection(cut, True, args.channel, base_path=args.path, do_systematics=args.doSystematics, doSystematicCuts = args.doSystematicCuts)
-        except rootpy.ROOTError:
+        except rootpy.ROOTError, TypeError:
             failed += [cutn]
             continue
         (y, error_mtcut) = results["mt"]
@@ -148,7 +148,7 @@ if __name__=="__main__":
         #print "QCD scale factor with MC subtraction, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_nomtcut"], "to ", y_nomtcut
         
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
-        
+        #plot_fit_shapes(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
         n_bins = fit.dataHisto.GetNbinsX()
     
         infile = "fits/"+fit.var.shortName+"_fit_"+cut.name+".root"
@@ -171,12 +171,17 @@ if __name__=="__main__":
                 of.write("%f %f %f\n" % (qcd_sf, y, error[0]))
                 of.write("Iso data yield %f\n" % fit.dataHisto.Integral(bin, n_bins+1))
                 of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
+                of.write("Cut string for QCD template (data): %s\n" % (cut.antiIsoCutsData))
+                of.write("Cut string for QCD template (MC): %s\n" % (cut.antiIsoCutsMC))
             with open(ofdir + "/%s_mt_%i_plus.txt" % (cut.name, int(lowedge)), "w") as of:
                 qcd_sf = 0
                 if fit.orig_shape["qcd"].Integral(bin, n_bins+1) > 0:
                     qcd_sf = y / fit.orig_shape["qcd"].Integral(bin, n_bins+1)
                 of.write("%f %f %f\n" % (qcd_sf, y, error[0]))
                 of.write("Iso data yield %f\n" % fit.dataHisto.Integral(bin, n_bins+1))
-                of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))        
+                of.write("Cut string (iso) %s\n" % (cut.isoCutsMC))
+                of.write("Cut string for QCD template (data): %s\n" % (cut.antiIsoCutsData))
+                of.write("Cut string for QCD template (MC): %s\n" % (cut.antiIsoCutsMC))
+        print "W+Jets: %.2f +- %.2f, ratio to template: %.2f" % (fit.wjets, fit.wjets_uncert, fit.wjets/fit.wjets_orig)
+        print "Other MC: %.2f +- %.2f, ratio to template: %.2f" % (fit.nonqcd, fit.nonqcd_uncert, fit.nonqcd/fit.nonqcd_orig)
     print "Failed to converge: ", str(failed)
-

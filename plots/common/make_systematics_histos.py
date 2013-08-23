@@ -9,7 +9,7 @@ from plots.common.load_samples import load_samples, load_nominal_mc_samples, cre
 from plots.common.cuts import *
 from rootpy.io import File
 
-def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg", asymmetry=None, mtmetcut=None):
+def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg", asymmetry=None, mtmetcut=None, extra=None):
     dirname = channel + "__" +var
     if float(mva_cut) > -1:    
         mva = "__mva_"+str(mva_cut)
@@ -21,6 +21,8 @@ def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg", asymmetry=No
         dirname += "__asymm_" + str(asymmetry)
     if mtmetcut is not None:
         dirname += "__mtmet_" + str(mtmetcut)
+    if extra is not None:
+        dirname += "__" + str(extra)
     return dirname
 
 
@@ -51,7 +53,8 @@ def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".joi
         else:
             make_histos_for_syst(var, systname, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
 
-    hadd_histos(outdir)
+    #hadd_histos(outdir)
+    add_histos(outdir, var, channel, "mva" in cuts, mtmetcut)
 
 def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling, binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
         if sub_systs.keys()[0] in ["up", "down"] and main_syst in ["Res", "En", "UnclusteredEn"]:
@@ -138,6 +141,127 @@ def hadd_histos(outdir):
     #Add the relevant histograms together
     outfile = generate_file_name(False)
     subprocess.check_call(("hadd -f {0}/"+outfile+" {0}/*.root").format(outdir), shell=True)
+
+def add_histos(outdir, var, channel, mva, mtmetcut):
+    from os import listdir
+    from os.path import isfile, join
+    
+    
+    onlyfiles = [ f for f in listdir(outdir) if isfile(join(outdir,f)) ]
+    hists = dict()
+    hists_data = []
+    hists_qcd = []
+    for fname in onlyfiles:
+        f = File(outdir+"/"+fname)
+        for root, dirs, items in f.walk():
+            for name in items:
+                h = f.Get(join(root, name))
+                if fname.endswith("DATA.root"):
+                    hists_data.append(h)
+                    continue
+                elif fname.startswith("Single"):
+                    hists_qcd.append(h)
+                    continue
+                if not name in hists:
+                    hists[name] = []
+                if h.GetEntries()>0:
+                    print fname, "factor", h.Integral()/math.sqrt(h.GetEntries())
+                for bin in range(1, h.GetNbinsX()+1):
+                    print bin, h.GetBinContent(bin), h.GetBinError(bin)
+                hists[name].append(h)
+                #hists[name].SetTitle(name)
+    
+    hist_data = hists_data[0]
+    for i in range(1, len(hists_data)):
+        hist_data.Add(hists_data[i])
+    hist_qcd = hists_qcd[0]
+    print "data", "factor", hist_data.Integral()/math.sqrt(hist_data.GetEntries())
+    for i in range(1, len(hists_qcd)):
+        print "add", i
+        hist_qcd.Add(hists_qcd[i])
+    print "QCD", "factor", hist_qcd.Integral()/math.sqrt(hist_qcd.GetEntries())
+                
+    for bin in range(1, hist_data.GetNbinsX()+1):
+        hist_data.SetBinError(bin, math.sqrt(hist_data.GetBinContent(bin)))
+        hist_qcd.SetBinError(bin, math.sqrt(hist_qcd.GetBinContent(bin)))
+
+        print bin, hist_qcd.GetBinContent(bin), hist_qcd.GetBinError(bin)
+    hist_qcd.Scale(get_qcd_scale_factor(var, channel, mva, mtmetcut))
+    for bin in range(1, hist_data.GetNbinsX()+1):
+        print bin, hist_qcd.GetBinContent(bin), hist_qcd.GetBinError(bin)
+    hists[hist_data.GetName()] = [hist_data]
+    print hist_qcd.GetName()
+    hists[hist_qcd.GetName()].append(hist_qcd)
+    outfile = File(outdir+"/"+generate_file_name(False), "recreate")
+
+    
+    for category in hists:
+        factor = 1.0    
+        total_hist=hists[category][0].Clone()
+        total_hist.Reset("ICE")
+        #total_hist.Sumw2()
+        total_hist.SetNameTitle(category,category)
+        outfile.cd()
+        print category
+        for bin in range(1, total_hist.GetNbinsX()+1):
+            zero_error = 0.
+            zero_integral = 0.
+            nonzero_error = 0.
+            bin_sum = 0.
+            #max_zero_error = 0.
+            for hist in hists[category]:
+                print "hist", hist.GetBinContent(bin), hist.GetBinError(bin)**2
+                if hist.GetEntries()>0:
+                    factor = hist.Integral()/(math.sqrt(hist.GetEntries()) * total_hist.GetNbinsX()) 
+                    #print "fact", factor,hist.Integral(), hist.GetEntries()
+                    """min_nonzero_error = sys.float_info.max
+                    for bin1 in range(1, hist.GetNbinsX()+1):
+                        if hist.GetBinContent(bin1) > 0 and hist.GetBinError(bin1) < min_nonzero_error:
+                            min_nonzero_error = hist.GetBinError(bin1)
+                    print "error", min_nonzero_error
+                else:
+                    min_nonzero_error = 0."""
+                if hist.GetBinContent(bin) < 0.00001:
+                    zero_error += factor**2 * hist.Integral()
+                    #zero_error += min_nonzero_error**2
+                    zero_integral += hist.Integral()
+                else:
+                    bin_sum += hist.GetBinContent(bin)
+                    nonzero_error += hist.GetBinError(bin)**2
+                #print "...hist", hist.GetBinContent(bin), hist.GetBinError(bin)**2
+            total_hist.SetBinContent(bin, bin_sum)
+            if zero_integral > 0:
+                #total_error = math.sqrt(nonzero_error + zero_error / zero_integral)
+                total_error = math.sqrt(nonzero_error + zero_error)
+            else:
+                total_error = math.sqrt(nonzero_error)
+            total_hist.SetBinError(bin, total_error)
+            #print category, "bin", bin, "content", bin_sum, "error", total_error
+            #print category, "bin", bin, "weight", total_error**2/bin_sum
+        total_hist.Write()
+    for category in hists:       #Imitate hadd
+        #factor = 1.0    
+        total_hist=hists[category][0].Clone()
+        total_hist.Reset("ICE")
+        print "cat", category
+        total_hist.SetNameTitle(category,category)
+        total_hist.Sumw2()
+        outfile.cd()
+        for hist in hists[category]:
+            print "hist", hist, hist.GetName()
+            factor = 1.0
+            if hist.GetEntries()>0:
+                factor = hist.Integral()/hist.GetEntries()
+
+            for bin in range(1, total_hist.GetNbinsX()+1):
+                if hist.GetBinError(bin) < factor:
+                    hist.SetBinError(bin, factor)
+                #total_hist.SetBinContent(bin, total_hist.GetBinContent(bin) + hist.GetBinContent(bin))
+                #total_hist.SetBinError(bin, total_hist.GetBinError(bin) + hist.GetBinError(bin))
+            total_hist.Add(hist)
+        total_hist.Write()
+    outfile.Write()
+    outfile.Close()
 
 def generate_file_name(sherpa):
     name = "lqeta"

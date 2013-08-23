@@ -6,20 +6,23 @@ def draw_hists(hists, **kwargs):
         figsize=(10,10)
     )
     ax = plt.axes()
-    ax.grid(which="both")
-    legitems = []
+
+    axes_style(ax)
     if isinstance(hists, dict):
         hlist = hists.items()
     elif isinstance(hists, list):
         hlist = [(h.GetTitle(), h) for h in hists]
-    
+
     for hn, h in hlist:
+
+        #In case of latex name, escape the underscores
+        if not hn.startswith("$"):
+            hn = hn.replace("_", " ")
+
         h = h.Clone()
-        #h.Scale(1.0/h.Integral())
-        hi = hist_err(ax, h, **kwargs)
-        legitems.append(hn)
-    
-    leg = ax.legend(legitems)
+        hi = hist_err(ax, h, label=hn, **kwargs)
+
+    leg = ax.legend()
     return ax
 
 def hist_err(axes, hist, yerr=None, **kwargs):
@@ -46,5 +49,18 @@ def ipy_show_canv(c):
     from IPython.core.display import Image
 
     fn = "temp.png"
-    c.SaveAs(fn) 
-    return Image(filename=fn) 
+    c.SaveAs(fn)
+    return Image(filename=fn)
+
+def ratio_subplots():
+    gs = plt.GridSpec(2, 1,
+        width_ratios=[1],
+        height_ratios=[4,1]
+    )
+    ax1 = plt.subplot(gs[0])
+    ax2 = plt.subplot(gs[1])
+    return ax1, ax2
+
+def axes_style(ax):
+    ax.grid(True, which='both')
+    ax.tick_params(axis='both', which='major', labelsize=16)

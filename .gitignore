@@ -22,6 +22,7 @@ CMSSW_5_3_11/src/*
 !CMSSW_5_3_11/src/PhysicsTools
 CMSSW_5_3_11/src/PhysicsTools/PatAlgos
 CMSSW_5_3_11/src/PhysicsTools/PatUtils
+CMSSW_5_3_11/src/PhysicsTools/CandUtils
 
 # The automatically downloaded exempi tool
 exempi-2.2.1.tar.bz2

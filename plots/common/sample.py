@@ -93,6 +93,11 @@ class Sample:
             self.event_count = self.tree.GetEntries()
         return self.event_count
 
+    def getPath(self, escape=False):
+        p = self.tfile.GetPath()[:-2]
+        if escape:
+            p = p.replace("/", "_")
+        return p
     def getTree(self):
         return self.tree
 
