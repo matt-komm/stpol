@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/TToBENu_anomWtb-unphys_t-channel/output_1_1_r0C.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/TToBENu_anomWtb-unphys_t-channel/output_2_1_yUW.root
