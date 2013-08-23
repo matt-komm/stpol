@@ -4,7 +4,7 @@ import math
 import numpy
 import os
 from plots.common.make_systematics_histos import generate_out_dir
-from plots.common.utils import mkdir_p, get_file_list, PhysicsProcess, merge_hists, setErrors
+from plots.common.utils import mkdir_p, get_file_list, PhysicsProcess, merge_hists#, setErrors
 from ROOT import TH1, TH2, TFile
 from plots.common.cross_sections import lumi_iso
 from plots.common.sample import Sample
@@ -108,8 +108,8 @@ def rebin(cuts, weight, bins_x, bin_list_x, bins_y, bin_list_y, indir, proc = "m
     merged_matrix = merge_hists(matrices, merge_anomalous(proc, coupling)).values()
     assert len(merged_rec) == 1
     assert len(merged_gen) == 1
-    setErrors(merged_rec[0])
-    setErrors(merged_gen[0])
+    #setErrors(merged_rec[0])
+    #setErrors(merged_gen[0])
     #TODO 2D setErrors(merged_matrix)
     #The should be nothing in overflow bins, if it happens there is, make some changes
     assert merged_gen[0].GetBinContent(0) == 0.0
@@ -164,8 +164,8 @@ def efficiency_rebinned(cuts, weight, binning_x, indir, proc="mu", mva_cut = Non
 
     assert len(merge_hists(hists_presel, merge_anomalous(proc, coupling)).values()) == 1
     assert len(merge_hists(hists_presel_rebin, merge_anomalous(proc, coupling)).values()) == 1
-    setErrors(merged_gen_presel)
-    setErrors(merged_gen_presel_rebin)
+    #setErrors(merged_gen_presel)
+    #setErrors(merged_gen_presel_rebin)
     hists_gen= {}
     hists_gen_rebin = {}
     hists_rec= {}
@@ -190,9 +190,9 @@ def efficiency_rebinned(cuts, weight, binning_x, indir, proc="mu", mva_cut = Non
     print merged_gen.GetEntries(), merged_gen.Integral()
     print merged_gen_rebin.GetEntries(), merged_gen_rebin.Integral()
     print merged_rec.GetEntries(), merged_rec.Integral()
-    setErrors(merged_gen)
-    setErrors(merged_gen_rebin)
-    setErrors(merged_rec)
+    #setErrors(merged_gen)
+    #setErrors(merged_gen_rebin)
+    #setErrors(merged_rec)
 
     merged_gen.SetNameTitle("hgen", "hgen")
     merged_gen_rebin.SetNameTitle("hgen_rebin", "hgen_rebin")

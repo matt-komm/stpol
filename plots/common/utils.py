@@ -105,16 +105,7 @@ class PhysicsProcess:
         out_d["tWchan"] = self.tWchan
         out_d["schan"] = self.schan
         out_d["qcd"] = self.qcd
-
-        ###FIXME: there is a better way
-        if systematic_scenario=="nominal" or systematic_scenario=="powheg":
-            out_d["tchan"] = self.tchan
-        elif systematic_scenario=="comphep":
-            out_d["tchan"] = self.tchan_comphep
-        elif systematic_scenario=="anomWtb-0100":
-            out_d["tchan"] = self.tchan_comphep_anomWtb_0100
-        elif systematic_scenario=="anomWtb-unphys":
-            out_d["tchan"] = self.tchan_comphep_anomWtb_unphys
+        out_d["tchan"] = self.tchan[systematic_scenario]
         return out_d
 
     @classmethod
@@ -184,7 +175,9 @@ PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW")
 PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"],
     pretty_name="s-channel"
 )
-PhysicsProcess.tchan = PhysicsProcess("tchan", ["T.*_t_ToLeptons"],
+
+PhysicsProcess.tchan = {}
+PhysicsProcess.tchan["nominal"] = PhysicsProcess("tchan", ["T.*_t_ToLeptons"],
     pretty_name="signal (t-channel)"
 )
 
@@ -192,15 +185,33 @@ PhysicsProcess.qcd = PhysicsProcess("qcd", ["qcd"],
     pretty_name="QCD"
 )
 
-PhysicsProcess.tchan_comphep = PhysicsProcess("tchan_comphep", ["TToB(.*)Nu_t-channel"],
+PhysicsProcess.tchan["tchan_scale__down"] = PhysicsProcess("tchan_scale__down", ["T.*_t_ToLeptons_scaledown"],
     pretty_name="signal (t-channel)"
 )
 
-PhysicsProcess.tchan_comphep_anomWtb_0100 = PhysicsProcess("tchan_comphep_anomWtb-0100", ["TToB(.*)Nu_anomWtb-0100_t-channel"],
+PhysicsProcess.tchan["tchan_scale__up"] = PhysicsProcess("tchan_scale__up", ["T.*_t_ToLeptons_scaleup"],
+    pretty_name="signal (t-channel)"
+)
+
+PhysicsProcess.tchan["mass__down"] = PhysicsProcess("mass_down", ["T.*_t_ToLeptons_mass166_5"],
+    pretty_name="signal (t-channel)"
+)
+
+#FIXME when sample available
+PhysicsProcess.tchan["mass__up"] = PhysicsProcess("mass__up", ["T.*_t_ToLeptons_mass178_5", "T_t_ToLeptons_mass166_5"],
+    pretty_name="signal (t-channel)"
+)
+
+
+PhysicsProcess.tchan["comphep"] = PhysicsProcess("tchan_comphep", ["TToB(.*)Nu_t-channel"],
+    pretty_name="signal (t-channel) comphep"
+)
+
+PhysicsProcess.tchan["anomWtb-0100"] = PhysicsProcess("tchan_comphep_anomWtb-0100", ["TToB(.*)Nu_anomWtb-0100_t-channel"],
     pretty_name="anom. Wtb-0100 signal (t-channel)"
 )
 
-PhysicsProcess.tchan_comphep_anomWtb_unphys = PhysicsProcess("tchan_comphep_anomWtb_unphys", ["TToB(.*)Nu_anomWtb-unphys_t-channel"],
+PhysicsProcess.tchan["anomWtb-unphys"] = PhysicsProcess("tchan_comphep_anomWtb_unphys", ["TToB(.*)Nu_anomWtb-unphys_t-channel"],
     pretty_name="anom. unphys. signal (t-channel)"
 )
 
@@ -310,7 +321,10 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
         try:
             out_d_ordered[elem] = out_d.pop(elem)
             if hasattr(PhysicsProcess, merge_name):
-                out_d_ordered[elem].SetTitle(getattr(PhysicsProcess, merge_name).pretty_name)
+                if type(getattr(PhysicsProcess, merge_name)) is dict:   #take nominal name if multiple options
+                    out_d_ordered[elem].SetTitle(getattr(PhysicsProcess, merge_name)["nominal"].pretty_name)
+                else:   #regular
+                    out_d_ordered[elem].SetTitle(getattr(PhysicsProcess, merge_name).pretty_name)
         except KeyError: #We don't care if there was an element in the order which was not present in the merge output
             pass
 
@@ -389,11 +403,4 @@ def filter_hists(indict, pat):
 def escape(s):
     return re.sub("[\/ \( \) \\ \. \* \+ \> \< \# \{ \}]", "", s)
 
-def setErrors(histo):
-    factor = 1.0
-    if histo.GetEntries()>0:
-        factor = histo.Integral()/histo.GetEntries()
-    for i in range(1, histo.GetNbinsX()+1):
-        if histo.GetBinError(i) < factor:
-            histo.SetBinError(i, factor)
 
