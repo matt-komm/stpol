@@ -80,18 +80,18 @@ if __name__=="__main__":
             ),
         ]
 
+    import cPickle as pickle
+    import gzip
     class PickleSaver:
         def __init__(self, fname):
-            self.ofname = fname
-            self.out = []
+            self.of = gzip.GzipFile(fname, 'wb')
 
         def save(self, path, obj):
-            self.out.append(obj.Clone(path))
+            o = obj.Clone(path)
+            pickle.dump(o, self.of)
+
         def close(self):
-            of = open(self.ofname, 'wb')
-            import cPickle as pickle
-            pickle.dump(self.out, of)
-            of.close()
+            self.of.close()
 
     out = PickleSaver(args.outfile)
     graph = nx.DiGraph()

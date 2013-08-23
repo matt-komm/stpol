@@ -16,7 +16,6 @@ import pdb
 
 qcd_yield_variations = (2.0, 0.5)
 
-
 def load_file(fnames, pats):
     res = {}
     ret = {}
@@ -58,6 +57,7 @@ def load_pickle(fnames):
     ret = PatternDict()
     import cPickle as pickle
     for fn in fnames:
+        print fn, len(ret)
         li = pickle.load(gzip.GzipFile(fn, 'rb'))
         for item in li:
             ret[item.GetName()] = item
@@ -353,13 +353,6 @@ def make_patterns(conf):
 def combine_templates(templates, patterns, conf):
     """
     Args:
-        template_d: A dictionary which matches the /path/sample/cut/weight/histo to a histogram
-        Must contain the keys:
-            data: real measured data
-            data_antiiso: the anti-iso templates from data
-            mc_nom: nominal MC
-            mc_varproc: MC with variated processing (EnUp/Down, ResUp/Down, ...)
-            mc_varsamp: MC with variated samples
     """
 
     hists = {}
@@ -644,19 +637,17 @@ def combine_templates(templates, patterns, conf):
 
 if __name__=="__main__":
 
-
-    templates = templates["all"]
     for channel in ["mu", "ele"]:
         for cut in ["mva_loose", "cutbased_final"]:
-            fpat_unmerged = 'out/hists/hists__%s__%(varname)s_%(channel)s.root' % cut
-            fpat_merged = 'out/hists/hists_merged__%s__%(varname)s_%(channel)s.root' % cut
+            fpat_unmerged = 'out/hists/hists__' + cut + '__%(varname)s_%(channel)s.root'
+            fpat_merged = 'out/hists/hists_merged__' + cut + '__%(varname)s_%(channel)s.root'
             cos_theta = HistDef(
                 varname='cos_theta',
                 channel=channel,
                 basepath='.*/%(channel)s/',
-                cutstr='%(channel)s_2j1t_%s/' % cut,
+                cutstr='%(channel)s_2j1t_' + cut + '/',
                 cutstr_antiiso='%(channel)s_2j1t/dR_QCD/',
-                infile_pattern = 'hists/c/*.root',
+                infile_pattern = 'hists/e/*.pickle',
                 outfile_unmerged=fpat_unmerged,
                 outfile_merged=fpat_merged
             )
@@ -685,5 +676,5 @@ if __name__=="__main__":
 
             for var in [top_mass_sr, cos_theta, met, abs_eta_lj, abs_eta_lj_4]:
                 patterns = make_patterns(var)
-                templates = load_file(var.get_infiles(), patterns)
+                templates = load_pickle(var.get_infiles())
                 combine_templates(templates, patterns, var)
