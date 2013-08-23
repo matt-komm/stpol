@@ -1,0 +1,17 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_1_1_ZJp.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_2_1_IRN.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_3_1_oNy.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_4_1_FYl.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_5_1_Ohz.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_6_1_7ZM.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_7_1_k9o.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_8_1_Tcn.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_9_1_nJ3.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_10_1_qAX.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_11_1_yue.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_12_1_OFe.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_13_1_At3.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_14_1_XHS.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_15_1_X2m.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_16_1_5Rp.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/WZ/output_17_1_2Y3.root

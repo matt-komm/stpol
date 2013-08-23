@@ -1,0 +1,17 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_1_1_G4o.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_2_1_dcv.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_3_1_RBc.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_4_1_wcZ.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_5_1_PmH.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_6_1_Ori.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_7_1_KAU.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_8_1_pOl.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_9_1_42N.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_10_1_C94.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_11_1_fJy.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_12_1_JHx.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_13_1_BUS.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_14_1_KyH.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_15_1_Pp8.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_16_1_EPK.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/EnDown/WZ/output_17_1_7vx.root

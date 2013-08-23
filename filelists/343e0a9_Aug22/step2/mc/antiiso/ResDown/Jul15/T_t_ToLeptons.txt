@@ -1,0 +1,13 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_1_1_SYM.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_2_1_PnC.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_3_1_C8H.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_4_1_h15.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_5_1_jaP.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_6_1_usH.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_7_1_04p.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_8_1_ggp.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_9_1_7D2.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_10_1_Jzf.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_11_1_lm7.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_12_1_ZOE.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_t_ToLeptons/output_13_1_bDO.root

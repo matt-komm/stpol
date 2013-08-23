@@ -1,0 +1,3 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_BCtoE/output_1_1_VUF.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_BCtoE/output_2_2_rRf.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_BCtoE/output_3_1_Mvn.root

@@ -35,7 +35,7 @@ class Config(C):
     doDebug = False
 
     #Do a phi-correction for the MET, as dependent on the number of vertices
-    doMETSystShift = True
+    doMETSystShift = False
 
     #If using comphep-generated input
     isCompHep = False

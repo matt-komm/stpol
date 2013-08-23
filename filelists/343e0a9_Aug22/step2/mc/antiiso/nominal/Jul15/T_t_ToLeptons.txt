@@ -1,0 +1,13 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_1_1_XMi.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_2_1_ZJs.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_3_1_K8K.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_4_2_ZGS.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_5_1_D1b.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_6_1_cnT.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_7_1_hZ9.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_8_2_6oS.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_9_1_wsw.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_10_1_366.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_11_1_ISm.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_12_1_ywI.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/T_t_ToLeptons/output_13_1_V8w.root
