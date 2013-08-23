@@ -58,7 +58,7 @@ def load_pickle(fnames):
     ret = PatternDict()
     import cPickle as pickle
     for fn in fnames:
-        li = pickle.load(open(fn, 'rb'))
+        li = pickle.load(gzip.GzipFile(fn, 'rb'))
         for item in li:
             ret[item.GetName()] = item
     return ret
