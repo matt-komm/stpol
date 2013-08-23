@@ -10,6 +10,7 @@ import tree
 from plots.common.cuts import Cuts, Weights
 import networkx as nx
 import argparse
+import numpy
 
 
 def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
@@ -62,33 +63,49 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
+    cut_jet_tag = Cuts.n_jets(2)*Cuts.n_tags(1)
+
     cuts = []
     for lep in ["mu", "ele"]:
         baseline = Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.metmt(lep) * Cuts.rms_lj
-        c2j1t = Cuts.n_jets(2)*Cuts.n_tags(1)
         cuts += [
-            ("%s_2j1t" % lep, baseline * c2j1t),
+            #Without the MET cut
+            ("%s_2j1t_nomet" % lep, Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.rms_lj * cut_jet_tag),
 
-            ("%s_2j1t_eta_lj" % lep,
-                baseline * c2j1t * Cuts.eta_lj
-            ),
+            #Baseline for fit
+            ("%s_2j1t_baseline" % lep, baseline * cut_jet_tag),
+            #("%s_2j1t_eta_lj" % lep,
+            #    baseline * cut_jet_tag * Cuts.eta_lj
+            #),
+
+            #Cut-based check
             ("%s_2j1t_cutbased_final" % lep,
-                baseline * Cuts.final(2,1)
+                baseline * cut_jet_tag * Cuts.top_mass_sig * Cuts.eta_lj
             ),
+
+            #MVA-based selection
             ("%s_2j1t_mva_loose" % lep,
-                baseline * c2j1t * Cuts.mva_wp(lep)
+                baseline * cut_jet_tag * Cuts.mva_wp(lep)
             ),
         ]
+        #MVA scan
+        for mva in numpy.linspace(0, 0.8, 9):
+            cuts.append(
+                ("%s_2j1t_mva_scan_%s" % (lep, str(mva).replace(".","_")),
+                    baseline * cut_jet_tag * Cuts.mva_wp(lep, mva)
+                ),
+            )
 
     import cPickle as pickle
     import gzip
     class PickleSaver:
         def __init__(self, fname):
             self.of = gzip.GzipFile(fname, 'wb')
+            self.nhists = 0
 
         def save(self, path, obj):
-            o = obj.Clone(path)
-            pickle.dump(o, self.of)
+            pickle.dump(obj, self.of)
+            self.nhists += 1
 
         def close(self):
             self.of.close()
@@ -100,13 +117,13 @@ if __name__=="__main__":
 
 
     #Construct the analysis chain
-    analysis_tree_all_reweighed(
-        graph, cuts, snodes,
-        filter_funcs=[
-        ]
-    )
+    analysis_tree_all_reweighed(graph, cuts, snodes)
 
-    print "Recursing down"
+    import time
+    t0 = time.time()
     for sn in snodes:
         sn.recurseDown()
+    t1 = time.time()
     out.close()
+    nevents = sum([sn.sample.getEventCount() for sn in snodes])
+    logger.info("STATS %d events, %d histograms, %d seconds" % (nevents, out.nhists, t1-t0))
