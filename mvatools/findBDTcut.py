@@ -38,9 +38,9 @@ for proc in ['ele', 'mu']:
     for b in range(100):
         bc=b*1./100
         mvayld = 0
-        mcut = Cuts.met
+        mcut = Cuts.met()
         if proc == 'mu':
-            mcut = Cuts.mt_mu
+            mcut = Cuts.mt_mu()
         for k,v in samples.items():
             mvayld+=v.getTree().Draw('cos_theta',weight_str+'*('+str(cutlist['2j1t']*cutlist['presel_'+proc]*mcut*Cut(mva_var[proc]+'>'+str(bc)))+')','goff BATCH')*v.lumiScaleFactor(lumi)
         if not found and mvayld < yld:
