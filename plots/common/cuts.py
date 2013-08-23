@@ -440,12 +440,21 @@ class Weights:
 
     mu = Weight("muon_IsoWeight")*Weight("muon_IDWeight")*Weight("muon_TriggerWeight")
     ele = Weight("electron_IDWeight")*Weight("electron_TriggerWeight")
+
+    
     sherpa_weight = Weight("gen_weight")
     sherpa_flavour_weight = Weight("wjets_sh_flavour_flat_weight")
 
     @staticmethod
     def total_weight(lepton):
-        return Weights.lepton_weight(lepton) * Weights.wjets_madgraph_flat_weight() * Weights.wjets_madgraph_shape_weight() * Weights.pu() * Weights.b_weight() * Weights.top_pt[0]
+        return (
+            Weights.lepton_weight(lepton) *
+            Weights.wjets_madgraph_flat_weight() *
+            Weights.wjets_madgraph_shape_weight() *
+            Weights.pu() *
+            Weights.b_weight() * 
+            Weights.top_pt[0]
+        )
 
     @staticmethod
     def asymmetry_weight(asymmetry):
@@ -459,42 +468,80 @@ class Weights:
     #Weights grouped by nominal, up, down for systematic access
     muon_sel = dict()
     muon_sel["id"] = (
-        Weight("muon_IDWeight"), Weight("muon_IDWeight_up"), Weight("muon_IDWeight_down")
+        Weight("muon_IDWeight"),
+        Weight("muon_IDWeight_up"),
+        Weight("muon_IDWeight_down")
     )
     muon_sel["trigger"] = (
-        Weight("muon_TriggerWeight"), Weight("muon_TriggerWeight_up"), Weight("muon_TriggerWeight_down")
+        Weight("muon_TriggerWeight"),
+        Weight("muon_TriggerWeight_up"),
+        Weight("muon_TriggerWeight_down")
     )
     muon_sel["iso"] = (
-        Weight("muon_IsoWeight"), Weight("muon_IsoWeight_up"), Weight("muon_IsoWeight_down")
+        Weight("muon_IsoWeight"),
+        Weight("muon_IsoWeight_up"),
+        Weight("muon_IsoWeight_down")
     )
 
+    #Check the effect of the lepton scale factor differing from unity (more correct would be mean weight)
+    muon_sel["shape"] = (
+        Weight("1.0 - 0*abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_nominal"),
+        Weight("1.0 + abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_up"),
+        Weight("1.0 - abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_down")
+    )
+
+
+    #Electron selection weights
     electron_sel = dict()
     electron_sel["id"] = (
-        Weight("electron_IDWeight"), Weight("electron_IDWeight_up"), Weight("electron_IDWeight_down")
+        Weight("electron_IDWeight"),
+        Weight("electron_IDWeight_up"),
+        Weight("electron_IDWeight_down")
     )
     electron_sel["trigger"] = (
-        Weight("electron_TriggerWeight"), Weight("electron_TriggerWeight_up"), Weight("electron_TriggerWeight_down")
+        Weight("electron_TriggerWeight"),
+        Weight("electron_TriggerWeight_up"),
+        Weight("electron_TriggerWeight_down")
+    )
+
+    #Check the shape variation on top of the nominal weight
+    electron_sel["shape"] = (
+        Weight("1.0 - 0*abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_nominal"),
+        Weight("1.0 + abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_up"),
+        Weight("1.0 - abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_down")
     )
 
 
     pu_syst = (
-        Weight("pu_weight"), Weight("pu_weight_up"), Weight("pu_weight_down")
+        Weight("pu_weight"),
+        Weight("pu_weight_up"),
+        Weight("pu_weight_down")
     )
 
     top_pt = (
-        Weight("ttbar_weight", "top_pt_nominal"), Weight("ttbar_weight*ttbar_weight", "top_pt_up"), Weight("1.0", "top_pt_down")
+        Weight("ttbar_weight", "top_pt_nominal"),
+        Weight("ttbar_weight*ttbar_weight", "top_pt_up"),
+        Weight("1.0", "top_pt_down")
     )
 
     wjets_yield_syst = (
-        Weight("wjets_mg_flavour_flat_weight"), Weight("wjets_mg_flavour_flat_weight_up"), Weight("wjets_mg_flavour_flat_weight_down"),
+        Weight("wjets_mg_flavour_flat_weight"),
+        Weight("wjets_mg_flavour_flat_weight_up"), 
+        Weight("wjets_mg_flavour_flat_weight_down"),
     )
 
     wjets_shape_syst = (
-        Weight("wjets_mg_flavour_shape_weight"), Weight("wjets_mg_flavour_shape_weight_up"), Weight("wjets_mg_flavour_shape_weight_down"),
+        Weight("wjets_mg_flavour_shape_weight"),
+        Weight("wjets_mg_flavour_shape_weight_up"),
+        Weight("wjets_mg_flavour_shape_weight_down"),
     )
 
     btag_syst = (
-        Weight("b_weight_nominal"), Weight("b_weight_nominal_BCup"), Weight("b_weight_nominal_BCdown"), Weight("b_weight_nominal_Lup"), Weight("b_weight_nominal_Ldown"),
+        Weight("b_weight_nominal"), 
+        Weight("b_weight_nominal_BCup"),
+        Weight("b_weight_nominal_BCdown"),
+        Weight("b_weight_nominal_Lup"),
+        Weight("b_weight_nominal_Ldown"),
     )
 
 

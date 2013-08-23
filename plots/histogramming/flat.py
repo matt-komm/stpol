@@ -13,8 +13,8 @@ import networkx as nx
 import argparse
 
 
-def analysis_tree(cuts, weights, variables, infiles, outfile):
-    out = tree.ObjectSaver(outfile)
+def analysis_tree(cuts, weights, variables, infiles):
+    out = tree.DictSaver()
 
     graph = nx.DiGraph()
 
@@ -26,12 +26,8 @@ def analysis_tree(cuts, weights, variables, infiles, outfile):
         histnode = tree.hist_node(graph, cut, weights, variables)
         histnode.addParents(snodes)
 
-    tree.HistNode.logger.setLevel(logging.INFO)
+    tree.HistNode.logger.setLevel("WARNING")
     
-    try:
-        nx.write_dot(graph, outfile.replace(".root", "_gviz.dot"))
-    except Exception as e:
-        logger.warning("Couldn't write .dot file for visual representation of analysis: %s" % str(e))
     return snodes, out
 
 
@@ -88,4 +84,4 @@ if __name__=="__main__":
     for sn in snodes:
         sn.recurseDown()
 
-    out.tfile.close()
+    out.close()
