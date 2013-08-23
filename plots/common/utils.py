@@ -174,12 +174,16 @@ PhysicsProcess.WJets_mg_exc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"],
 #    pretty_name="W(#rightarrow l #nu) + jets"
     pretty_name="W"
 )
+PhysicsProcess.WJets = PhysicsProcess.WJets_mg_exc
 PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"],
     pretty_name="DY"
 )
 PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"],
     pretty_name="t#bar{t}"
 )
+PhysicsProcess.TTJets = PhysicsProcess.TTJets_exc
+
+
 PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW")
 PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"],
     pretty_name="s-channel"
