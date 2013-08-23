@@ -1,1 +1,2 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/Tbar_tW/output_1_1_vrh.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/Tbar_tW/output_2_2_cSc.root

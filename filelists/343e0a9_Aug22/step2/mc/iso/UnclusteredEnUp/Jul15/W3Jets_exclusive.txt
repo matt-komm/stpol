@@ -1,4 +1,5 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_1_1_TtH.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_2_2_PM4.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_3_1_DFb.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_4_1_7f7.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_5_1_nxY.root
@@ -225,14 +226,17 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusi
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_226_1_tIv.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_227_1_efo.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_228_1_xhu.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_229_2_yB9.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_230_1_7Lk.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_231_1_6n9.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_232_1_TD6.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_233_1_0Hl.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_234_1_gbN.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_235_1_a00.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_236_2_tqy.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_237_1_HlU.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_238_1_aGm.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_239_2_Jw1.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_240_1_PNU.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_241_1_5gh.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_242_1_lVL.root
@@ -244,7 +248,9 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusi
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_248_1_AYD.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_249_1_4iM.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_250_1_TOl.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_251_2_NfF.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_252_1_yis.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_253_2_lXC.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_254_1_uD5.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_255_1_eE1.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_256_1_azx.root
@@ -429,6 +435,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusi
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_435_1_QY6.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_436_1_rb4.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_437_1_zVL.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_438_2_jcQ.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_439_1_6V5.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_440_1_Kqo.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/W3Jets_exclusive/output_441_1_S5F.root

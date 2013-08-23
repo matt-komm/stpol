@@ -1,4 +1,5 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/GJets1/output_1_1_N0Z.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/GJets1/output_2_2_Gei.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/GJets1/output_3_1_4dw.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/GJets1/output_4_1_W3y.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/GJets1/output_5_1_ChV.root

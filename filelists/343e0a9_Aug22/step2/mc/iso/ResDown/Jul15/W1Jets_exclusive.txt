@@ -170,6 +170,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/W1Jets_exclusive/outpu
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/W1Jets_exclusive/output_170_1_MwI.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/W1Jets_exclusive/output_171_1_Va4.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/W1Jets_exclusive/output_172_1_DkB.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/W1Jets_exclusive/output_173_2_8Tx.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/W1Jets_exclusive/output_174_1_GW5.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/W1Jets_exclusive/output_175_1_Iyx.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/W1Jets_exclusive/output_176_1_GOM.root

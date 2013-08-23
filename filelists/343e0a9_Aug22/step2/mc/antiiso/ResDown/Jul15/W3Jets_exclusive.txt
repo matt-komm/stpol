@@ -1,5 +1,6 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_1_1_Blb.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_2_1_Ctn.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_3_2_cqz.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_4_1_7Tp.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_5_1_2au.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_6_1_iVe.root
@@ -9,6 +10,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/o
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_10_1_GL5.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_11_1_vuU.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_12_1_a8x.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_13_2_lKw.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_14_1_zY6.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_15_1_HSq.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_16_1_7nt.root
@@ -477,6 +479,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/o
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_479_1_5u4.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_480_1_srW.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_481_1_rRg.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_482_2_WJ2.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_483_1_HMV.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_484_1_N35.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W3Jets_exclusive/output_485_1_Pih.root

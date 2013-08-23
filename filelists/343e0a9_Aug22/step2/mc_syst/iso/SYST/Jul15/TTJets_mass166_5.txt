@@ -1,5 +1,6 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/TTJets_mass166_5/output_1_1_4Og.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/TTJets_mass166_5/output_2_1_ILy.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/TTJets_mass166_5/output_3_2_ccR.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/TTJets_mass166_5/output_4_1_XX4.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/TTJets_mass166_5/output_5_1_T39.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/TTJets_mass166_5/output_6_1_8Ou.root

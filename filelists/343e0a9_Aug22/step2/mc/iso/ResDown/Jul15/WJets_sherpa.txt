@@ -428,6 +428,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_43
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_431_1_4dO.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_432_1_0M3.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_433_1_I7t.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_434_2_tJx.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_435_1_Rm9.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_436_1_aBk.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_437_1_WwJ.root

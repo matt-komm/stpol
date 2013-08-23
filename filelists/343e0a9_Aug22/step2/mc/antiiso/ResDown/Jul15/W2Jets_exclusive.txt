@@ -10,6 +10,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W2Jets_exclusive/o
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W2Jets_exclusive/output_10_1_Ufk.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W2Jets_exclusive/output_11_1_ioj.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W2Jets_exclusive/output_12_1_P6K.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W2Jets_exclusive/output_13_2_UUv.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W2Jets_exclusive/output_14_1_GXs.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W2Jets_exclusive/output_15_1_Opb.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/W2Jets_exclusive/output_16_1_lTC.root

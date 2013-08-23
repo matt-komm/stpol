@@ -10,3 +10,4 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/T_t/output_9
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/T_t/output_10_1_YQx.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/T_t/output_11_1_mLo.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/T_t/output_12_1_nN6.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/T_t/output_13_2_WFQ.root

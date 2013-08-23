@@ -89,6 +89,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/DYJets/output_88_1
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/DYJets/output_89_1_09j.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/DYJets/output_90_1_WDa.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/DYJets/output_91_1_38n.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/DYJets/output_92_2_7Qe.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/DYJets/output_93_1_eFM.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/DYJets/output_94_1_XIr.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/DYJets/output_95_1_kfc.root

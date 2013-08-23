@@ -3,6 +3,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_2_1_jk5.
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_3_1_Idw.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_4_1_8rQ.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_5_1_bbE.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_6_2_8M7.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_7_1_YkQ.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_8_1_I8i.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_9_1_Js0.root
