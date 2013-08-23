@@ -94,11 +94,13 @@ class PlotDef:
     from plots.vars import varnames
 
     defaults = dict(
+        
         log=False,
-        fit_sf=None,
+
         systematics=[],
         systematics_shapeonly=False,
         systematics_symmetric=True,
+
         x_label=r"%(var_name)s %(x_units)s",
         x_units='',
         y_units='',
@@ -108,13 +110,23 @@ class PlotDef:
         legend_nudge_x=0,
         legend_nudge_y=0,
 
-        lumi_pos='top-right',
+        legend_text_size=0.05,
+
+        #Normalize data yield to MC
         normalize=False,
 
         #The scale factor for the N(data, anti-iso)/N(QCD, iso) yields,
         process_scale_factor = []
     )
 
+    def get_lumi_pos(self):
+        if not hasattr(self, "lumi_pos"):
+            if self.legend_pos=="top-left":
+                self.lumi_pos = "top-right"
+            elif self.legend_pos=="top-right":
+                self.lumi_pos = "top-left"
+        return self.lumi_pos
+            
     def __init__(self, **kwargs):
 
         for k, v in self.defaults.items():
@@ -263,6 +275,13 @@ def data_mc_plot(pd):
         nom, all_systs,
     )
 
+    for k, v in hists_nominal.items():
+        if hasattr(PhysicsProcess, k):
+            pp = getattr(PhysicsProcess, k)
+            v.SetTitle(pp.pretty_name)
+        else:
+            logger.warning("Not setting pretty name for %s" % k)
+
     stacks_d = OrderedDict()
     stacks_d['mc'] = reorder(hists_nominal, PhysicsProcess.desired_plot_order_mc)
     stacks_d['data'] = [hists_nom_data]
@@ -276,7 +295,7 @@ def data_mc_plot(pd):
         s.SetLineStyle('dashed')
         s.SetTitle("stat. + syst.")
 
-    c = ROOT.TCanvas()
+    c = ROOT.TCanvas("c", "c", 1000, 1000)
     p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
@@ -295,6 +314,8 @@ def data_mc_plot(pd):
         nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=(-1, 1)
     )
 
+
+
     p1.cd()
     leg = legend(
         stacks_d['data'] +
@@ -303,10 +324,11 @@ def data_mc_plot(pd):
         legend_pos=pd.legend_pos,
         nudge_x=pd.legend_nudge_x,
         nudge_y=pd.legend_nudge_y,
+        legend_text_size=pd.legend_text_size
     )
     lb = lumi_textbox(pd.lumi,
         line2=pd.get_lumibox_comments(channel=pd.channel_pretty),
-        pos=pd.lumi_pos
+        pos=pd.get_lumi_pos()
     )
     c.children = [p1, ratio_pad, stacks, leg, lb]
 
@@ -318,6 +340,8 @@ def data_mc_plot(pd):
     print "MC: %.2f Data: %.2f" % (tot, tot_data)
     #import pdb; pdb.set_trace()
     return c
+
+
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
     tdrstyle()
@@ -361,7 +385,10 @@ if __name__=="__main__":
 
     from rootpy import ROOTError
     for channel in ["mu", "ele"]:
-        for var in ["top_mass_sr", "abs_eta_lj_4", "mtw_50_150", "cos_theta", "bdt_discr"]:
+        for var in [
+            "top_mass_sr", "abs_eta_lj_4",
+            "mtw_50_150", "cos_theta", "bdt_discr"
+            ]:
             h = PlotDef(
                 infile="out/hists/hists_merged__%s_%s.root" % (var, channel),
                 lumi=lumis["Aug4_0eb863_full"]["iso"][channel],
