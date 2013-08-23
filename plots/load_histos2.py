@@ -586,7 +586,7 @@ def combine_templates(template_d, patterns, conf):
     ROOT.gROOT.cd()
     for k in of.GetListOfKeys():
         hists[k.GetName()] = of.Get(k.GetName()).Clone()
-        hists[k.GetName()].Rebin(2)
+        #hists[k.GetName()].Rebin(2)
     logger.info("Loaded %d histograms from file %s" % (len(hists), of.GetPath()))
     of.Close()
 
@@ -647,34 +647,38 @@ if __name__=="__main__":
             channel=channel,
             basepath='.*/%(channel)s/',
             cutstr='%(channel)s_2j1t_mva_loose/',
-            cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
+            cutstr_antiiso='%(channel)s_2j1t/dR_QCD/',
             infile_pattern = 'hists/Aug22/*.root',
             outfile_unmerged=fpat_unmerged,
             outfile_merged=fpat_merged
         )
 
-        met = cos_theta.copy(
+        mtw = cos_theta.copy(
             varname='mtw_50_150',
-            cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
         )
 
         abs_eta_lj = cos_theta.copy(
             varname='abs_eta_lj',
-            cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
         )
 
         abs_eta_lj_4 = cos_theta.copy(
             varname='abs_eta_lj_4',
-            cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
         )
 
         top_mass_sr = cos_theta.copy(
             varname='top_mass_sr',
-            cutstr_antiiso='%(channel)s_2j1t_qcd_template/dR_QCD/',
         )
 
+        bdt = cos_theta.copy(
+            varname='bdt_discr',
+            cutstr='%(channel)s_2j1t/',
+        )
 
-        for var in [top_mass_sr, cos_theta, met, abs_eta_lj, abs_eta_lj_4]:
+        for var in [
+                top_mass_sr, cos_theta,
+                mtw, abs_eta_lj, abs_eta_lj_4,
+                bdt
+            ]:
             patterns = make_patterns(var)
             templates = load_file(var.get_infiles(), patterns)
             combine_templates(templates, patterns, var)
