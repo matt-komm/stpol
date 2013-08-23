@@ -103,7 +103,11 @@ class PlotDef:
         x_units='',
         y_units='',
         lumibox_format='%(channel)s channel%(lb_comments)s',
+        
         legend_pos='top-left',
+        legend_nudge_x=0,
+        legend_nudge_y=0,
+
         lumi_pos='top-right',
         normalize=False,
 
@@ -296,7 +300,9 @@ def data_mc_plot(pd):
         stacks_d['data'] +
         list(reversed(stacks_d['mc'])) +
         [syst_stat_up],
-        legend_pos=pd.legend_pos
+        legend_pos=pd.legend_pos,
+        nudge_x=pd.legend_nudge_x,
+        nudge_y=pd.legend_nudge_y,
     )
     lb = lumi_textbox(pd.lumi,
         line2=pd.get_lumibox_comments(channel=pd.channel_pretty),
@@ -324,41 +330,51 @@ if __name__=="__main__":
         "ele": "Electron",
     }
 
+    def load_qcd_sf(channel, met):
+        import os
+        base = os.path.join(os.environ['STPOL_DIR'], 'qcd_estimation', 'fitted', channel)
+        fn = base + '/2j1t_no_MC_subtraction_mt_%s_plus.txt' % met
+        fi = open(fn)
+        li = fi.readline().strip().split()
+        sf = float(li[0])
+        return sf
+
+    qcd_sfs = {
+        "mu": load_qcd_sf("mu", 50),
+        "ele":  load_qcd_sf("ele", 45),
+    }
+
     sfs = {
         "mu": [
             (["tchan"], 1.031894, -1),
             (["ttjets", "twchan", "schan"], 0.914750, -1),
-            (["qcd"], 0.914750 * 7, -1),
+            (["qcd"], 0.914750 * qcd_sfs["mu"], -1),
             (["wjets", "diboson", "dyjets"], 1.604641, -1),
         ],
         "ele": [
             (["tchan"], 0.956595, -1),
             (["ttjets", "twchan", "schan"], 0.982722, -1),
-            (["qcd"], 0.982722 * 0.0, -1),
+            (["qcd"], 0.982722 * qcd_sfs["ele"], -1),
             (["wjets", "diboson", "dyjets"], 1.382914, -1),
         ]
     }
 
-    # qcd_yields = {
-    #     "mu": 700,
-    #     "ele": 133.020387,
-    # }
-
+    from rootpy import ROOTError
     for channel in ["mu", "ele"]:
-        for var in ["top_mass_sr", "abs_eta_lj_4", "mtw_50_150", "cos_theta"]:
+        for var in ["top_mass_sr", "abs_eta_lj_4", "mtw_50_150", "cos_theta", "bdt_discr"]:
             h = PlotDef(
                 infile="out/hists/hists_merged__%s_%s.root" % (var, channel),
                 lumi=lumis["Aug4_0eb863_full"]["iso"][channel],
                 var=var,
                 channel_pretty=channels_pretty[channel],
-                leg_pos='top-right',
+                legend_pos='top-right',
                 systematics='.*',
                 log=False,
-                systematics_shapeonly=True,
+                systematics_shapeonly=False,
                 save_name='2j1t_mva__%s__all_syst_%s.png' % (var, channel),
                 #normalize=False,
                 lb_comments=', all syst.',
-                process_scale_factor = sfs[channel],
+                #process_scale_factor = sfs[channel],
                 #qcd_yield=qcd_yields[channel],
                 rebin=2
             )
@@ -370,7 +386,10 @@ if __name__=="__main__":
             # )
 
             for p in [h]:
-                c = data_mc_plot(p)
-                c.SaveAs(p.save_name)
-                p.res = c
-                c.Close()
+                try:
+                    c = data_mc_plot(p)
+                    c.SaveAs(p.save_name)
+                    p.res = c
+                    c.Close()
+                except ROOTError as e:
+                    print e

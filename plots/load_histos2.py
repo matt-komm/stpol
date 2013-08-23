@@ -31,7 +31,6 @@ def load_file(fnames, pats):
         logger.debug("Processing file %s" % fn)
         for root, dirs, items in fi.walk():
             for it in items:
-                n += 1
                 # if n%10==0:
                 #     sys.stdout.write(".")
                 #     sys.stdout.flush()
@@ -50,6 +49,7 @@ def load_file(fnames, pats):
                                 [root, it]
                             )
                         ).Clone()
+                n += 1
         fi.Close()
     logger.info("Matched %s histograms" % (str([(k, len(ret[k].keys())) for k in ret.keys()])))
     return ret
@@ -69,26 +69,26 @@ def get_syst_from_sample_name(sn):
     Gets the sample base name (process name), systematic
     scenario name and variation direction from the name
     of a systematically variated (at production) sample.
-    
+
     For example:
         'TTJets_FullLept_scaledown' =>
             ('TTJets_FullLept', 'ttbar_scale', 'down')
 
         'WJetsToLNu_matchingup' =>
             ('WJetsToLNu', 'wjets_matching', 'down')
-        
-        
+
+
         'T_t_ToLeptons_mass178_5' =>
             ('T_t_ToLeptons', 'mass', 'up')
-    
+
     Since there is no standard naming scheme for the
     systematic samples (yet), this mapping must be hardcoded
     at the moment (within reason)
-    
+
     Args:
         sn: a string with the sample name (the filename with
             the .root suffix removed)
-            
+
     Returns:
         A 3-tuple with (process_name, systematic_name, systematic_dir)
     """
@@ -97,7 +97,7 @@ def get_syst_from_sample_name(sn):
 
     #Check if the sample is MC and of the SYST type
     if si.has("mc") and si.has("syst"):
-        
+
         #All of these can be handled in the same way
         for k in ["mass", ".*scale", ".*matching", "sig_anom", "sig_gen"]:
             m = si.has(k + "__.*", ret=True)
@@ -105,13 +105,13 @@ def get_syst_from_sample_name(sn):
                 m = m[0]
                 syst, systdir = m.split("__")
                 return (si.subprocess, syst, systdir)
-            
+
     #If you called this method and got here: problems
-    raise Exception("Unhandled systematic: %s" % sn)        
+    raise Exception("Unhandled systematic: %s" % sn)
 
 def get_updown(syst):
     syst = syst.lower()
-    
+
     if syst=="unweighted" or syst == "nominal":
         return syst, None
     idx = None
@@ -121,7 +121,7 @@ def get_updown(syst):
             break
     if not idx:
         raise ValueError("Unrecognized syst: %s" % syst)
-    
+
     systtype = syst[0:idx]
     systtype = systtype.strip("_")#.strip("weight__")
     systdir = d
@@ -138,15 +138,15 @@ def split_name(name):
     spl = name.split("__")
     var = spl[0]
     sample = spl[1]
-    
+
     systtype = "nominal"
     systdir = None
-    
+
     if len(spl)>2:
         systtype = spl[2]
     if len(spl)>3:
         systdir = spl[3]
-        
+
     return {
         "var":var, "sample":sample,
         "type":systtype, "dir":systdir
@@ -190,20 +190,20 @@ def hname_decode(hname):
     spl = hname.split("__")
     var = spl[0]
     sample = spl[1]
-    
+
     systtype = "nominal"
     systdir = None
-    
+
     if len(spl)>2:
         systtype = spl[2]
     if len(spl)>3:
         systdir = spl[3]
-        
+
     return {
         "var":var, "sample":sample,
         "type":systtype, "dir":systdir
     }
-    
+
 def set_missing_hist(hist):
     hist.SetName(hist.GetName()+"__MISSING")
     #for i in range(hist.GetNbinsX()):
@@ -295,7 +295,7 @@ class HistDef:
 
     def get_cutstr(self):
         return self.cutstr % self.__dict__
-    
+
     def get_cutstr_antiiso(self):
         return self.cutstr_antiiso % self.__dict__
 
@@ -350,7 +350,7 @@ def make_patterns(conf):
 
     return pats
 
-def combine_templates(template_d, patterns, conf):
+def combine_templates(templates, patterns, conf):
     """
     Args:
         template_d: A dictionary which matches the /path/sample/cut/weight/histo to a histogram
@@ -362,16 +362,13 @@ def combine_templates(template_d, patterns, conf):
             mc_varsamp: MC with variated samples
     """
 
-    for k, v in template_d.items():
-        if len(v)==0:
-            raise ValueError("Could not match any histograms to pattern %s:%s" % (k, patterns[k]))
     hists = {}
 
     hsources = (
-        template_d["data"][patterns["data"]]+
-        template_d["mc_nom"][patterns["mc_nom"]]+
-        template_d["mc_varproc"][patterns["mc_varproc"]]+
-        template_d["mc_varsamp"][patterns["mc_varsamp"]]
+        templates[patterns["data"]]+
+        templates[patterns["mc_nom"]]+
+        templates[patterns["mc_varproc"]]+
+        templates[patterns["mc_varsamp"]]
     )
 
     if len(hsources)==0:
@@ -382,7 +379,7 @@ def combine_templates(template_d, patterns, conf):
     for syst in ["yield", "iso"]:
         for sdir in ["up", "down"]:
             hqcd[syst][sdir] = []
-    for keys, hist in template_d["data_antiiso"][patterns["data_antiiso"]]:
+    for keys, hist in templates[patterns["data_antiiso"]]:
         if keys[1].startswith("antiiso"):
             #We have isolation variations
             isodir = keys[1].split("_")[1]
@@ -459,10 +456,10 @@ def combine_templates(template_d, patterns, conf):
     for (sample_var, sample, weight_var), hist in hsources:
         # if "__ele" in weight_var:
         #     continue
-        
+
         if ".root" in sample:
             sample = sample[:sample.index(".root")]
-        
+
         if "__" in weight_var:
             spl = weight_var.split("__")
             wn = spl[1]
@@ -503,7 +500,7 @@ def combine_templates(template_d, patterns, conf):
             sample, systname, d = r
             #sample = map_syst_sample_to_nominal(sample)
             syst_scenarios[sample][systname][d] = hist
-        
+
         else:
             print weight_var
             systname, d = get_updown(syst)
@@ -540,34 +537,34 @@ def combine_templates(template_d, patterns, conf):
     allsyts = get_all_systs(syst_scenarios)
 
     for sampn, h1 in syst_scenarios.items():
-        
+
         #Consider all the possible systematic scenarios
         for systname in allsyts:
-            
+
             #If we have it available, fine, use it
             if systname in h1.keys():
                 h2 = h1[systname]
-                
+
             #If not, in case of MC and a non-trivial variation
             elif not sampn.startswith("Single") and systname not in ["unweighted", "nominal"]:
-                
+
                 #Try to get the unvariated template as a placeholder
                 h = h1.get("nominal", None)
                 if not h:
                     h = h1.get("unweighted", None)
                 if not h:
                     raise Exception("Could not get the nominal template for %s:%s" % (sampn, systname))
-                
+
                 #Our convention is that even the unvariated template is a dict with a single
                 #key for the direction of variation, which is 'None'
                 h = h[None]
-                
+
                 #Add placeholder templates
                 for systdir in ["up", "down"]:
                     h = h.Clone(hname_encode(conf.varname, sampn, systname, systdir))
-                    print "Missing template for %s:%s" % (sampn, systname) 
+                    print "Missing template for %s:%s" % (sampn, systname)
                     set_missing_hist(h)
-                    
+
                     #Save to file
                     h.SetDirectory(of)
                     h.Write()
@@ -647,47 +644,46 @@ def combine_templates(template_d, patterns, conf):
 
 if __name__=="__main__":
 
-    fpat_unmerged = 'out/hists/hists__%(varname)s_%(channel)s.root'
-    fpat_merged = 'out/hists/hists_merged__%(varname)s_%(channel)s.root'
 
+    templates = templates["all"]
     for channel in ["mu", "ele"]:
-        cos_theta = HistDef(
-            varname='cos_theta',
-            channel=channel,
-            basepath='.*/%(channel)s/',
-            cutstr='%(channel)s_2j1t_mva_loose/',
-            cutstr_antiiso='%(channel)s_2j1t/dR_QCD/',
-            infile_pattern = 'hists/Aug22/*.root',
-            outfile_unmerged=fpat_unmerged,
-            outfile_merged=fpat_merged
-        )
+        for cut in ["mva_loose", "cutbased_final"]:
+            fpat_unmerged = 'out/hists/hists__%s__%(varname)s_%(channel)s.root' % cut
+            fpat_merged = 'out/hists/hists_merged__%s__%(varname)s_%(channel)s.root' % cut
+            cos_theta = HistDef(
+                varname='cos_theta',
+                channel=channel,
+                basepath='.*/%(channel)s/',
+                cutstr='%(channel)s_2j1t_%s/' % cut,
+                cutstr_antiiso='%(channel)s_2j1t/dR_QCD/',
+                infile_pattern = 'hists/c/*.root',
+                outfile_unmerged=fpat_unmerged,
+                outfile_merged=fpat_merged
+            )
 
-        mtw = cos_theta.copy(
-            varname='mtw_50_150',
-        )
+            met = cos_theta.copy(
+                varname='mtw_50_150',
+            )
 
-        abs_eta_lj = cos_theta.copy(
-            varname='abs_eta_lj',
-        )
+            abs_eta_lj = cos_theta.copy(
+                varname='abs_eta_lj',
+            )
 
-        abs_eta_lj_4 = cos_theta.copy(
-            varname='abs_eta_lj_4',
-        )
+            abs_eta_lj_4 = cos_theta.copy(
+                varname='abs_eta_lj_4',
+            )
 
-        top_mass_sr = cos_theta.copy(
-            varname='top_mass_sr',
-        )
+            top_mass_sr = cos_theta.copy(
+                varname='top_mass_sr',
+            )
 
-        bdt = cos_theta.copy(
-            varname='bdt_discr',
-            cutstr='%(channel)s_2j1t/',
-        )
+            bdt = cos_theta.copy(
+                varname='bdt_discr',
+                cutstr='%(channel)s_2j1t/',
+            )
 
-        for var in [
-                top_mass_sr, cos_theta,
-                mtw, abs_eta_lj, abs_eta_lj_4,
-                bdt
-            ]:
-            patterns = make_patterns(var)
-            templates = load_file(var.get_infiles(), patterns)
-            combine_templates(templates, patterns, var)
+
+            for var in [top_mass_sr, cos_theta, met, abs_eta_lj, abs_eta_lj_4]:
+                patterns = make_patterns(var)
+                templates = load_file(var.get_infiles(), patterns)
+                combine_templates(templates, patterns, var)
