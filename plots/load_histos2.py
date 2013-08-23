@@ -56,11 +56,18 @@ def load_file(fnames, pats):
 def load_pickle(fnames):
     ret = PatternDict()
     import cPickle as pickle
+    import gzip
     for fn in fnames:
         print fn, len(ret)
-        li = pickle.load(gzip.GzipFile(fn, 'rb'))
-        for item in li:
-            ret[item.GetName()] = item
+
+        fi = gzip.GzipFile(fn, 'rb')
+        while True:
+            try:
+                item = pickle.load(fi)
+                ret[item.GetName()] = item
+            except EOFError:
+                break
+        fi.close()
     return ret
 
 from SingleTopPolarization.Analysis import sample_types
