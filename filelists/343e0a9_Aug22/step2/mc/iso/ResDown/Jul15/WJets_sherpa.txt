@@ -115,6 +115,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_11
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_115_1_Wl6.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_116_1_h7W.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_117_1_e0I.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_118_2_t21.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_119_1_CVm.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_120_1_CXg.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_121_1_D2F.root
@@ -207,6 +208,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_20
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_208_1_gza.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_209_1_mGX.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_210_1_1tH.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_211_2_YoF.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_212_1_o4s.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_213_1_DHw.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_214_1_M6o.root
@@ -222,6 +224,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_22
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_224_1_Umu.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_225_1_J4k.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_226_1_DVP.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_227_2_ryq.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_228_1_58y.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_229_1_8yL.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/WJets_sherpa/output_230_1_oFy.root
