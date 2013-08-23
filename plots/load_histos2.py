@@ -54,6 +54,15 @@ def load_file(fnames, pats):
     logger.info("Matched %s histograms" % (str([(k, len(ret[k].keys())) for k in ret.keys()])))
     return ret
 
+def load_pickle(fnames):
+    ret = PatternDict()
+    import cPickle as pickle
+    for fn in fnames:
+        li = pickle.load(open(fn, 'rb'))
+        for item in li:
+            ret[item.GetName()] = item
+    return ret
+
 from SingleTopPolarization.Analysis import sample_types
 def get_syst_from_sample_name(sn):
     """
