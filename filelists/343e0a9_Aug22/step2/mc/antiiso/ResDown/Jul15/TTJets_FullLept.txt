@@ -3,6 +3,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_FullLept/ou
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_FullLept/output_3_1_DLR.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_FullLept/output_4_1_NK8.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_FullLept/output_5_1_0DI.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_FullLept/output_6_2_D2p.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_FullLept/output_7_1_VJg.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_FullLept/output_8_1_lwz.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_FullLept/output_9_1_jFx.root

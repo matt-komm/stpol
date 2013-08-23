@@ -1,4 +1,6 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/DYJets/output_1_1_q2u.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/DYJets/output_2_2_ZqP.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/DYJets/output_3_2_C5q.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/DYJets/output_4_1_67Y.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/DYJets/output_5_1_BL2.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/DYJets/output_6_1_RaM.root

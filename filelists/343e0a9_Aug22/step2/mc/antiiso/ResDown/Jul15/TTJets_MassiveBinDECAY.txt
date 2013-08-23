@@ -1,4 +1,6 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_1_1_VQl.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_2_2_oNZ.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_3_2_tZY.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_4_1_9TR.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_5_1_r5e.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_6_1_kJT.root
@@ -11,6 +13,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinD
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_13_1_mg5.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_14_1_Rwg.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_15_1_zVC.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_16_2_dKP.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_17_1_ZZv.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_18_1_mEi.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/TTJets_MassiveBinDECAY/output_19_1_k1S.root

@@ -1,3 +1,6 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/TTJets_MassiveBinDECAY/output_1_2_m5M.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/TTJets_MassiveBinDECAY/output_2_2_dqO.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/TTJets_MassiveBinDECAY/output_3_2_BKx.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/TTJets_MassiveBinDECAY/output_4_1_cax.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/TTJets_MassiveBinDECAY/output_5_1_NWn.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnDown/TTJets_MassiveBinDECAY/output_6_1_brZ.root

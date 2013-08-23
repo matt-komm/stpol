@@ -91,6 +91,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/ou
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_91_1_tOI.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_92_1_zym.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_93_1_C5s.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_94_2_FHJ.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_95_1_EMj.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_96_1_4ZK.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_97_1_mwP.root
@@ -192,6 +193,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/ou
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_193_1_W1t.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_194_1_kER.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_195_1_ysP.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_196_2_XJl.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_197_1_iqM.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_198_1_CbD.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/WJets_inclusive/output_199_1_EBW.root

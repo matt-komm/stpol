@@ -1,4 +1,5 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_1_1_nzK.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_2_2_Wy8.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_3_1_sGU.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_4_1_fIf.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_5_1_WBC.root
@@ -77,6 +78,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_77_1_Bfn
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_78_1_Qca.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_79_1_QbW.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_80_1_IPu.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_81_2_xRO.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_82_1_5ch.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_83_1_bIw.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/GJets1/output_84_1_aG0.root
