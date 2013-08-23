@@ -1,21 +1,22 @@
 import os
 from plots.common.sample import Sample
 from plots.common.cross_sections import lumi_iso, lumi_antiiso
-from plots.common.utils import setErrors
+#from plots.common.utils import setErrors
 from unfold.utils import asymmetry_weight
 from copy import deepcopy
 from rootpy.io import File
 
 #Set as const right now.
 #If configurability needed in the future, do something with it
-COMPONENTS = 3
+COMPONENTS = 3#"all"
 
 def load_nominal_mc_samples(path, channel, iso):
     datadir = "/".join((path, channel, "mc", iso, "nominal", "Jul15"))
     samples = Sample.fromDirectory(datadir, out_type="dict")
     return samples
 
-def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["STPOL_DIR"], "step3_latest")), coupling="powheg"):
+
+def get_samples(path, channel, systematic):
     samples2 = None
     if systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
         datadir = "/".join((path, channel, "mc", "iso", systematic, "Jul15"))
@@ -34,9 +35,21 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
     samples.update(Sample.fromDirectory(datadir_data_Aug1, out_type="dict"))
     if samples2 is not None:
         samples.update(samples2)
-    wzjets_other = ["DYJets", "WW", "WZ", "ZZ"]
-    top = ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_FullLept", "TTJets_SemiLept"]
+    
+    if channel == "mu":
+        samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
+        samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
+        samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
+        samples["SingleMu_miss_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Aug1", "SingleMu_miss.root")))        
+    elif channel == "ele":
+        samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
+        samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
+        samples["SingleEle_miss_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Aug1", "SingleEle_miss.root")))
+    
+    return samples
 
+
+def get_sample_names(channel, systematic, coupling):
     if coupling == "powheg":
         tchan = ["T_t_ToLeptons", "Tbar_t_ToLeptons"]
     elif coupling == "comphep":
@@ -47,184 +60,117 @@ def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["
         tchan = ["TToBMuNu_anomWtb-unphys_t-channel", "TToBENu_anomWtb-unphys_t-channel", "TToBTauNu_anomWtb-unphys_t-channel"]
 
     if channel == "mu":
-        samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
-        samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
-        samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-        #samples["SingleMu4_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Aug1", "SingleMu_miss.root")))
-        datasamp = ["SingleMu1", "SingleMu2", "SingleMu3"]#, "SingleMu4"]
-        datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso"]#, "SingleMu4_aiso"]
+        datasamp = ["SingleMu1", "SingleMu2", "SingleMu3", "SingleMu_miss"]
+        datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso", "SingleMu_miss_aiso"]
     elif channel == "ele":
-        samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
-        samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-        #samples["SingleEle3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Aug1", "SingleEle_miss.root")))
         datasamp = ["SingleEle1", "SingleEle2"]
         datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
-        
-    wzjets = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
-    wzjets_regular = deepcopy(wzjets_other)
-    wzjets_regular.extend(wzjets)
     
-    if systematic in "nominal":
-        sampnames = (
-            ("tchan", tchan),
-            ("top", top),
-            ("wzjets", wzjets_regular),
-            ("DATA", datasamp),
-            ("qcd", datasamp_aiso),
-        )
+    dyjets = ["DYJets"]
+    dibosons = ["WW", "WZ", "ZZ"]
+    ttbar = ["TTJets_FullLept", "TTJets_SemiLept"]
+    schan = ["T_s", "Tbar_s"]
+    tWchan = ["T_tW", "Tbar_tW"]
+    wjets = ["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"]
+    
+    #nominal  ...  "EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"
+    sampnames = {
+            "tchan": tchan,
+            "schan": schan,
+            "tWchan": tWchan,
+            "ttbar": ttbar,
+            "wjets": wjets,
+            "dyjets": dyjets,
+            "dibosons": dibosons,
+            "DATA": datasamp,
+            "qcd": datasamp_aiso,
+    }
 
-    elif systematic in ["iso__up", "iso__down"]:
-        sampnames = (
-            ("qcd", datasamp_aiso),
-            ("top", top),
-        )
+    if systematic in ["iso__up", "iso__down"]:
+        sampnames["qcd"] = datasamp_aiso        
 
-    elif systematic in ["EnDown", "EnUp", "ResDown", "ResUp", "UnclusteredEnDown", "UnclusteredEnUp"]:
-        sampnames = (
-            ("tchan", tchan),
-            ("qcd", datasamp_aiso),
-            ("top", top),
-            ("wzjets", wzjets_regular),
-        )
     elif systematic == "mass__up":
-        wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        sampnames = (
-            ("tchan", ["TToLeptons_t-channel_mass166_5", "TbarToLeptons_t-channel_mass178_5"]),
-            ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass178_5"]),
-            ("qcd", datasamp_aiso),
-        )
+        #FIXME when TToLeptons_t-channel_mass178_5 available
+        sampnames["tchan"] = ["T_t_ToLeptons_mass166_5", "Tbar_t_ToLeptons_mass178_5"]
+        sampnames["ttbar"] = ["TTJets_mass178_5"]
+
     elif systematic == "mass__down":
-        #other.extend(["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass166_5"])
-        #other.extend(datasamp_aiso)
-        sampnames = (
-            ("tchan", ["TToLeptons_t-channel_mass166_5", "TbarToLeptons_t-channel_mass166_5"]),
-            ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_mass166_5"]),
-            ("qcd", datasamp_aiso),
-        )
+        sampnames["tchan"] = ["T_t_ToLeptons_mass166_5", "Tbar_t_ToLeptons_mass166_5"]
+        sampnames["ttbar"] = ["TTJets_mass166_5"]
+
     elif systematic == "tchan_scale__up":
-        sampnames = (
-            ("tchan", ["T_t_ToLeptons_scaleup", "Tbar_t_ToLeptons_scaleup"]),            
-        )
+        sampnames["tchan"] = ["T_t_ToLeptons_scaleup", "Tbar_t_ToLeptons_scaleup"]
 
     elif systematic == "tchan_scale__down":
-        sampnames = (
-            ("tchan", ["T_t_ToLeptons_scaledown", "Tbar_t_ToLeptons_scaledown"]),
-        )
+        sampnames["tchan"] = ["T_t_ToLeptons_scaledown", "Tbar_t_ToLeptons_scaledown"]
+
     elif systematic == "ttbar_scale__up":
-        wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        sampnames = (
-            ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_scaleup"]),
-            ("qcd", datasamp_aiso),
-        )
+        sampnames["ttbar"] = ["TTJets_scaleup"]
 
     elif systematic == "ttbar_scale__down":
-        wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        sampnames = (
-            ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_scaledown"]),
-            ("qcd", datasamp_aiso),
-        )
+        sampnames["ttbar"] = ["TTJets_scaledown"]
 
     elif systematic == "ttbar_matching__up":
-        sampnames = (
-            ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_matchingup"]),
-            ("qcd", datasamp_aiso),
-        )
+        sampnames["ttbar"] = ["TTJets_matchingup"]
 
     elif systematic == "ttbar_matching__down":
-        wzjets.extend(["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"])
-        other = wzjets
-        sampnames = (
-            ("top", ["T_tW", "Tbar_tW", "T_s", "Tbar_s", "TTJets_matchingdown"]),
-            ("qcd", datasamp_aiso),
-        )
+        sampnames["ttbar"] = ["TTJets_matchingdown"]
 
     elif systematic == "wjets_matching__down":
-        wzjets.extend(["WJetsToLNu_matchingdown"])
-        sampnames = (
-            ("wzjets", wzjets),
-        )
+        sampnames["wjets"] = ["WJetsToLNu_matchingdown"]
 
     elif systematic == "wjets_matching__up":
-        wzjets.extend(["WJetsToLNu_matchingup"])
-        sampnames = (
-            ("wzjets", wzjets),
-        )
+        sampnames["wjets"] = ["WJetsToLNu_matchingup"]
+
     elif systematic == "wjets_scale__down":
-        wzjets.extend(["WJetsToLNu_scaledown"])
-        sampnames = (
-            ("wzjets", wzjets),
-        )
+        sampnames["wjets"] = ["WJetsToLNu_scaledown"]
+
     elif systematic == "wjets_scale__up":
-        wzjets.extend(["WJetsToLNu_scaleup"])
-        sampnames = (
-            ("wzjets", wzjets),
-        )
+        sampnames["wjets"] = ["WJetsToLNu_scaleup"]
     
-    sampnames_new = get_sampnames_for_components(sampnames, COMPONENTS, tchan, wzjets_regular, top, datasamp_aiso)
+    return sampnames
+
+
+
+def load_samples(systematic="nominal", channel="mu", path="/".join((os.environ["STPOL_DIR"], "step3_latest")), coupling="powheg"):
+    
+    samples = get_samples(path, channel, systematic)
+    sampnames = get_sample_names(channel, systematic, coupling)
+
+    sampnames_new = group_sample_names(sampnames, COMPONENTS, systematic)
     return (samples, sampnames_new)
 
-def get_sampnames_for_components(sampnames, components, tchan, wzjets, top, qcd):
-    sampnames_new = ()    
-    names_tchan = None
-    names_wzjets = None
-    names_top = None
-    names_qcd = None
-    names_data = None
-    other = []
-    for entry in sampnames:
-        (a,b) = entry
-        if a in ["top", "qcd"] and components == 3:
-            other.extend(b)
-        elif a == "top":
-            names_top = b
-        elif a == "qcd":
-            names_qcd = b
-        elif a == "tchan":
-            names_tchan = b
-        elif a == "wzjets":
-            names_wzjets = b
-        elif a == "DATA":
-            names_data = b
-    if names_tchan == None:
-        names_tchan = tchan
-    if names_wzjets == None:
-        names_wzjets = wzjets
-    if len(other) == 0:
-        if names_top == None:
-            names_top = top
-        if names_qcd == None:
-            names_qcd = qcd
-    if names_data is not None:
-        if components == 3:
-            sampnames_new = (
-                ("tchan", names_tchan),
-                ("wzjets", names_wzjets),
-                ("other", other),
-                ("DATA", names_data),
-            )    
-        else:
-            sampnames_new = (
-                ("tchan", names_tchan),
-                ("wzjets", names_wzjets),
-                ("top", names_top),
-                ("qcd", names_qcd),
-                ("DATA", names_data),
-            )
+def group_sample_names(sampnames, components, systematic):
+    sampnames_new = {}
+
+    groups = {
+            "tchan": ["tchan"],
+            "schan": ["schan"],
+            "tWchan": ["tWchan"],
+            "ttbar": ["ttbar"],
+            "wjets": ["wjets"],
+            "dyjets": ["dyjets"],
+            "dibosons": ["dibosons"],
+            "qcd": ["qcd"]
+    }
+
+    if components == 3:
+        groups = {
+            "tchan": ["tchan"],
+            "other": ["schan", "tWchan", "ttbar", "qcd"],
+            "wzjets": ["wjets", "dyjets", "dibosons"]
+        }
+
+    if systematic == "nominal":
+        groups["DATA"] = ["DATA"]
+
+    for group, items in groups.items():
+        sampnames_new[group] = []
+        for process in items:
+            sampnames_new[group].extend(sampnames[process])
         
-    elif components == 3:
-        sampnames_new = (
-            ("tchan", names_tchan),
-            ("wzjets", names_wzjets),
-            ("other", other),
-        )    
-    else:
-        sampnames_new = (
-            ("tchan", names_tchan),
-            ("wzjets", names_wzjets),
-            ("top", names_top),
-            ("qcd", names_qcd),
-        )
-    return sampnames_new
+    names = sampnames_new.items()
+    return names
 
 
 def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
@@ -313,5 +259,5 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
         else:
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
         hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso, mtmetcut))
-    setErrors(hist)    #Set error in bins with 0 error to >0
+    #setErrors(hist)    #Set error in bins with 0 error to >0
     return hist
