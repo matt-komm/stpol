@@ -8,6 +8,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_7_1_YkQ.
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_8_1_I8i.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_9_1_Js0.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_10_1_0hL.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_11_2_y7X.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_12_1_0Te.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_13_1_obj.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/ZZ/output_14_1_TJJ.root
