@@ -105,14 +105,10 @@ class PlotDef:
         lumibox_format='%(channel)s channel%(lb_comments)s',
         legend_pos='top-left',
         lumi_pos='top-right',
+        normalize=False,
 
         #The scale factor for the N(data, anti-iso)/N(QCD, iso) yields,
-        process_scale_factor = [
-            (["tchan"], 1.0, -1),
-            (["ttjets"], 1.0, -1),
-            (["qcd"], 0.0, -1),
-            (["wjets"], 1.0, -1),
-        ]
+        process_scale_factor = []
     )
 
     def __init__(self, **kwargs):
@@ -126,8 +122,10 @@ class PlotDef:
 
         #The default variable pretty name is taken externally
         if not hasattr(self, "var_name"):
-            self.var_name = self.varnames[self.var]
-
+            try:
+                self.var_name = self.varnames[self.var]
+            except KeyError:
+                self.var_name = self.var
         #The systematic inclusion list is a list of regex patterns to include
         if isinstance(self.systematics, basestring):
             self.systematics = [self.systematics]
@@ -163,6 +161,10 @@ def data_mc_plot(pd):
         #Scale all MC samples except QCD to the luminosity
         if sample_types.is_mc(sample) and not sample=="qcd":
             hist.Scale(pd.lumi)
+        if hasattr(pd, "rebin"):
+            hist.Rebin(pd.rebin)
+        if sample=="qcd" and hasattr(pd, "qcd_yield"):
+            hist.Scale(pd.qcd_yield / hist.Integral())
 
         rescale_to_fit(sample, hist, pd.process_scale_factor)
         hist.SetTitle(sample)
@@ -302,6 +304,13 @@ def data_mc_plot(pd):
     )
     c.children = [p1, ratio_pad, stacks, leg, lb]
 
+    tot = 0
+    for k, v in hists_nominal.items():
+        print k, v.Integral(), v.GetEntries()
+        tot += v.Integral()
+    tot_data = hists_nom_data.Integral()
+    print "MC: %.2f Data: %.2f" % (tot, tot_data)
+    #import pdb; pdb.set_trace()
     return c
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
@@ -310,33 +319,58 @@ if __name__=="__main__":
     from plots.fit_scale_factors import fitpars_process
     from plots.common.cross_sections import lumis
 
-    pd1 = PlotDef(
-        infile="hists_out_merged.root",
-        lumi=lumis["Aug4_0eb863_full"]["iso"]["mu"],
-        var='cos_theta',
-        channel_pretty='Muon',
-        leg_pos='top-right',
-        systematics='tchan_scale',
-        log=False,
-        systematics_shapeonly=True,
-        #process_scale_factor=fitpars_process['final_2j1t_mva']['mu'],
-        save_name='2j1t_mva__cosTheta__tchan_scale.png',
-        normalize=True,
-        lb_comments=', t-channel Q^{2}'
-    )
-    pd2 = pd1.copy(
-        systematics='mass',
-        save_name='2j1t_mva__cosTheta__top_mass.png',
-        lb_comments=', M_{top}'
-    )
-    pd3 = pd1.copy(
-        systematics='.*',
-        save_name='2j1t_mva__cosTheta__all_syst.png',
-        lb_comments=', all syst.'
-    )
+    channels_pretty = {
+        "mu": "Muon",
+        "ele": "Electron",
+    }
 
-    for p in [pd1, pd2, pd3]:
-        c = data_mc_plot(p)
-        c.SaveAs(p.save_name)
-        p.res = c
-        #c.Close()
+    sfs = {
+        "mu": [
+            (["tchan"], 1.031894, -1),
+            (["ttjets", "twchan", "schan"], 0.914750, -1),
+            (["qcd"], 0.914750 * 7, -1),
+            (["wjets", "diboson", "dyjets"], 1.604641, -1),
+        ],
+        "ele": [
+            (["tchan"], 0.956595, -1),
+            (["ttjets", "twchan", "schan"], 0.982722, -1),
+            (["qcd"], 0.982722 * 0.0, -1),
+            (["wjets", "diboson", "dyjets"], 1.382914, -1),
+        ]
+    }
+
+    # qcd_yields = {
+    #     "mu": 700,
+    #     "ele": 133.020387,
+    # }
+
+    for channel in ["mu", "ele"]:
+        for var in ["top_mass_sr", "abs_eta_lj_4", "mtw_50_150", "cos_theta"]:
+            h = PlotDef(
+                infile="out/hists/hists_merged__%s_%s.root" % (var, channel),
+                lumi=lumis["Aug4_0eb863_full"]["iso"][channel],
+                var=var,
+                channel_pretty=channels_pretty[channel],
+                leg_pos='top-right',
+                systematics='.*',
+                log=False,
+                systematics_shapeonly=True,
+                save_name='2j1t_mva__%s__all_syst_%s.png' % (var, channel),
+                #normalize=False,
+                lb_comments=', all syst.',
+                process_scale_factor = sfs[channel],
+                #qcd_yield=qcd_yields[channel],
+                rebin=2
+            )
+            # h1 = h.copy(
+            #     systematics='en|res',
+            #     save_name='2j1t_mva__%s__jes_jer_%s.png' % (var, channel),
+            #     lb_comments=', JES+JER',
+            #     process_scale_factor = sfs[channel]
+            # )
+
+            for p in [h]:
+                c = data_mc_plot(p)
+                c.SaveAs(p.save_name)
+                p.res = c
+                c.Close()

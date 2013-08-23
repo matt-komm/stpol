@@ -228,11 +228,14 @@ if __name__=="__main__":
             make_cfgs(step1_base + fn, args.tag , "")
 
     #Step2
-    if "step2" in args.steps:
+    if "step2" in args.steps or "step2_syst" in args.steps:
         step2_base = dataset_dir + "/step2"
 
         logging.info("Writing step2 cfg files")
-        systs = ["nominal"]
+        systs=[]
+        if "step2" in args.steps: 
+            systs += ["nominal"]
+
         if "step2_syst" in args.steps:
             logging.info("Writing step2 systematic files")
             systs += ["EnUp", "EnDown", "ResUp", "ResDown", "UnclusteredEnUp", "UnclusteredEnDown"]
@@ -245,18 +248,19 @@ if __name__=="__main__":
                     cmdline_args += "systematic="+syst
                 make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso/%s" % syst)
                 make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso/%s" % syst)
-        #Don't variate QCD files
-        for fn in step2_mc_files_qcd:
-            cmdline_args = ""
-            syst="nominal"
-            make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso/%s" % syst)
-            make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso/%s" % syst)
+        if "step2" in args.steps:
+            #Don't variate QCD files
+            for fn in step2_mc_files_qcd:
+                cmdline_args = ""
+                syst="nominal"
+                make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso/%s" % syst)
+                make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso/%s" % syst)
 
-        #DATA
-        for fn in step2_data_files:
-            cmdline_args = ""
-            make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso")
-            make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso")
+            #DATA
+            for fn in step2_data_files:
+                cmdline_args = ""
+                make_cfgs(step2_base + fn, args.tag , cmdline_args, subdir="iso")
+                make_cfgs(step2_base + fn, args.tag , cmdline_args + " reverseIsoCut=True", subdir="antiiso")
 
         #Other systematics
         if "step2_syst" in args.steps:

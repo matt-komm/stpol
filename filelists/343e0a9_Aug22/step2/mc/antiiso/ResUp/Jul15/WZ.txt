@@ -1,0 +1,17 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_1_1_yiF.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_2_1_rOI.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_3_1_Yvf.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_4_1_s0g.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_5_1_5Js.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_6_1_Wso.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_7_1_5ky.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_8_1_5hF.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_9_1_HQx.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_10_1_nzJ.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_11_1_17q.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_12_1_CFj.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_13_1_IgL.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_14_1_rlq.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_15_1_QGb.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_16_1_omp.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResUp/WZ/output_17_1_9Ff.root

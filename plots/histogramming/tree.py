@@ -388,10 +388,11 @@ class ObjectSaver:
         obj.Write("", ROOT.TObject.kOverwrite)
         logger.debug("Saving object %s in %s" % (str(obj.name), d.GetPath()))
 
-    def __del__(self):
+    def close(self):
         if self.tfile:
             self.tfile.Write()
             self.tfile.Close()
+
 class CutNode(Node):
     def __init__(self, cut, *args, **kwargs):
         super(CutNode, self).__init__(*args, **kwargs)
@@ -445,6 +446,9 @@ class WeightNode(Node):
 class DictSaver(PatternDict):
     def save(self, path, obj):
         self[path] = obj
+
+    def close(self):
+        pass
 
 if __name__=="__main__":
     print "Constructing analysis tree..."

@@ -1,0 +1,17 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_1_1_tVS.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_2_1_sZM.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_3_1_HJQ.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_4_1_rsO.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_5_1_wQm.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_6_1_Aol.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_7_1_j0O.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_8_1_NmE.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_9_1_9pK.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_10_1_k2Z.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_11_1_EYa.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_12_1_55w.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_13_1_N3H.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_14_1_NHr.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_15_1_Fpk.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_16_1_iT6.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WW/output_17_1_D64.root
