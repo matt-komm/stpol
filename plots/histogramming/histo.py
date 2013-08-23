@@ -80,7 +80,20 @@ if __name__=="__main__":
             ),
         ]
 
-    out = tree.ObjectSaver(args.outfile)
+    class PickleSaver:
+        def __init__(self, fname):
+            self.ofname = fname
+            self.out = []
+
+        def save(self, path, obj):
+            self.out.append(obj.Clone(path))
+        def close(self):
+            of = open(self.ofname, 'wb')
+            import cPickle as pickle
+            pickle.dump(self.out, of)
+            of.close()
+
+    out = PickleSaver(args.outfile)
     graph = nx.DiGraph()
     snodes = [tree.SampleNode(out, graph, inf, [], []) for inf in args.infiles]
     logger.info("Done constructing sample nodes: %d" % len(snodes))
