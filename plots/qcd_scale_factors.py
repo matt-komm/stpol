@@ -1,4 +1,5 @@
 #Determined using qcd_estimation/get_qcd_yield.py and qcd_estimation/update_sf.py
+raise Exception("DEPRECATED: load the files from qcd_estimation/fitted/ instead")
 qcdScale = dict()
 qcdScale['mu'] = dict()
 qcdScale['ele'] = dict()
