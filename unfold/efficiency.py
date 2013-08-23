@@ -52,8 +52,8 @@ def get_signal_histo(var, weight, step3='/'.join([os.environ["STPOL_DIR"], "step
     return merged_hists[0]
 
 
-def efficiency(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None, coupling = "powheg", asymmetry=None):
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling, asymmetry)])
+def efficiency(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None, coupling = "powheg", asymmetry=None, extra=None):
+    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling, asymmetry, extra=extra)])
     mkdir_p(outdir)
     fo = root_open(outdir+"/rebinned.root","recreate")
     

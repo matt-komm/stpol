@@ -4,9 +4,10 @@ import shutil
 import argparse
 from efficiency import *
 from plots.common.cuts import *
+from plots.common.utils import mkdir_p
 from plots.common.make_systematics_histos import generate_out_dir, generate_systematics, make_systematics_histos
 #from binning import *
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 """
 Prepare histograms needed for unfolding
@@ -22,13 +23,14 @@ Command-lina arguments are mostly the same as for makehistos.py, except for:
 ./makeUnfoldingHistos.sh  is used to run a scan over MVA cut values producing histograms for each
 """
 
-def make_histos(binning, cut_str, cut_str_antiiso, indir, channel, mva_cut, coupling, asymmetry):
+def make_histos(binning, cut_str, cut_str_antiiso, indir, channel, mva_cut, coupling, asymmetry, extra):
     systematics = generate_systematics(channel, coupling)
     var = "cos_theta"
-    subdir = generate_out_dir(channel, var, mva_cut, coupling, asymmetry)
+    subdir = generate_out_dir(channel, var, mva_cut, coupling, asymmetry, extra=extra)
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", subdir])
     make_systematics_histos(var, cut_str, cut_str_antiiso, systematics, outdir, indir, channel, coupling, plot_range=binning, asymmetry=asymmetry)
-    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", subdir])+"/lqeta.root", '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", subdir])+"/data.root")
+    outdir_final = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", subdir])
+    shutil.move('/'.join([os.environ["STPOL_DIR"], "unfold", "histos", "input", subdir])+"/lqeta.root", outdir_final+"/data.root")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Makes systematics histograms for unfolding')
@@ -38,9 +40,10 @@ if __name__ == "__main__":
     parser.add_argument('--mva_var', dest='mva_var', default=None, help="MVA variable name")
     parser.add_argument('--cut', dest='cut', type=float, default=-1, help="MVA cut value")
     parser.add_argument('--coupling', dest='coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
-    #Not used currently    
+    #Not used currently
     #parser.add_argument('--binning', dest='binning', help="File from which to load a pre-calculated binning")
     parser.add_argument('--asymmetry', dest='asymmetry', help="Asymmetry to reweight generated distribution to", default=None)
+    parser.add_argument('--extra', help="extra info in dir name", default=None)
     args = parser.parse_args()
 
     indir = args.path    
@@ -63,8 +66,8 @@ if __name__ == "__main__":
     bins_rec = [12, -1, 1]
     bins_gen = [6, -1, 1]
     
-    efficiency(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry)
-    make_histos(bins_rec, cut_str, cut_str_antiiso, indir, args.channel, args.cut, args.coupling, args.asymmetry)
+    efficiency(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra)
+    make_histos(bins_rec, cut_str, cut_str_antiiso, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra)
     print "finished"
 
     #These were used with Steffen's rebinning system. Save here for reference, maybe still needed
