@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/SYST/T_t_ToLeptons_mass166_5/output_1_1_QCM.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/SYST/T_t_ToLeptons_mass166_5/output_2_1_JWr.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/SYST/T_t_ToLeptons_mass166_5/output_3_1_cOb.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/SYST/T_t_ToLeptons_mass166_5/output_4_1_vF4.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/SYST/T_t_ToLeptons_mass166_5/output_5_1_GJ2.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/SYST/T_t_ToLeptons_mass166_5/output_6_1_Khg.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/SYST/T_t_ToLeptons_mass166_5/output_7_1_P9o.root

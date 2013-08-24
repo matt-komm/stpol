@@ -5,9 +5,11 @@ from plots.common.cross_sections import lumi_iso, lumi_antiiso
 import logging
 import subprocess
 import shutil
-from plots.common.load_samples import load_samples, load_nominal_mc_samples, create_histogram_for_fit
+from load_samples import load_samples, load_nominal_mc_samples, create_histogram_for_fit, get_qcd_scale_factor
 from plots.common.cuts import *
 from rootpy.io import File
+import math
+import sys
 
 def generate_out_dir(channel, var, mva_cut="-1", coupling="powheg", asymmetry=None, mtmetcut=None, extra=None):
     dirname = channel + "__" +var
@@ -156,31 +158,32 @@ def add_histos(outdir, var, channel, mva, mtmetcut):
         for root, dirs, items in f.walk():
             for name in items:
                 h = f.Get(join(root, name))
-                if fname.endswith("DATA.root"):
+                """if fname.endswith("DATA.root"):
                     hists_data.append(h)
                     continue
                 elif fname.startswith("Single"):
                     hists_qcd.append(h)
-                    continue
+                    continue"""
                 if not name in hists:
                     hists[name] = []
-                if h.GetEntries()>0:
-                    print fname, "factor", h.Integral()/math.sqrt(h.GetEntries())
-                for bin in range(1, h.GetNbinsX()+1):
-                    print bin, h.GetBinContent(bin), h.GetBinError(bin)
+                #if h.GetEntries()>0:
+                #    print fname, "factor", h.Integral()/math.sqrt(h.GetEntries())
+                #for bin in range(1, h.GetNbinsX()+1):
+                #    print bin, h.GetBinContent(bin), h.GetBinError(bin)
                 hists[name].append(h)
                 #hists[name].SetTitle(name)
     
-    hist_data = hists_data[0]
+    """hist_data = hists_data[0]
     for i in range(1, len(hists_data)):
         hist_data.Add(hists_data[i])
+    print "hists qcd", hists_qcd
     hist_qcd = hists_qcd[0]
     print "data", "factor", hist_data.Integral()/math.sqrt(hist_data.GetEntries())
     for i in range(1, len(hists_qcd)):
         print "add", i
         hist_qcd.Add(hists_qcd[i])
     print "QCD", "factor", hist_qcd.Integral()/math.sqrt(hist_qcd.GetEntries())
-                
+
     for bin in range(1, hist_data.GetNbinsX()+1):
         hist_data.SetBinError(bin, math.sqrt(hist_data.GetBinContent(bin)))
         hist_qcd.SetBinError(bin, math.sqrt(hist_qcd.GetBinContent(bin)))
@@ -190,8 +193,12 @@ def add_histos(outdir, var, channel, mva, mtmetcut):
     for bin in range(1, hist_data.GetNbinsX()+1):
         print bin, hist_qcd.GetBinContent(bin), hist_qcd.GetBinError(bin)
     hists[hist_data.GetName()] = [hist_data]
+    print hists
     print hist_qcd.GetName()
+    if hist_qcd.GetName() not in hists:
+        hists[hist_qcd.GetName()] = []
     hists[hist_qcd.GetName()].append(hist_qcd)
+    print "QCD hists", hists[hist_qcd.GetName()]"""
     outfile = File(outdir+"/"+generate_file_name(False), "recreate")
 
     
@@ -202,28 +209,28 @@ def add_histos(outdir, var, channel, mva, mtmetcut):
         #total_hist.Sumw2()
         total_hist.SetNameTitle(category,category)
         outfile.cd()
-        print category
+        #print category
         for bin in range(1, total_hist.GetNbinsX()+1):
             zero_error = 0.
             zero_integral = 0.
             nonzero_error = 0.
             bin_sum = 0.
-            #max_zero_error = 0.
+            max_zero_error = 0.
             for hist in hists[category]:
-                print "hist", hist.GetBinContent(bin), hist.GetBinError(bin)**2
+                #print "hist", hist.GetBinContent(bin), hist.GetBinError(bin)**2
                 if hist.GetEntries()>0:
-                    factor = hist.Integral()/(math.sqrt(hist.GetEntries()) * total_hist.GetNbinsX()) 
+                    #factor = hist.Integral()/(math.sqrt(hist.GetEntries()) * total_hist.GetNbinsX()) 
                     #print "fact", factor,hist.Integral(), hist.GetEntries()
-                    """min_nonzero_error = sys.float_info.max
+                    min_nonzero_error = sys.float_info.max
                     for bin1 in range(1, hist.GetNbinsX()+1):
                         if hist.GetBinContent(bin1) > 0 and hist.GetBinError(bin1) < min_nonzero_error:
                             min_nonzero_error = hist.GetBinError(bin1)
-                    print "error", min_nonzero_error
+                    #print "error", min_nonzero_error
                 else:
-                    min_nonzero_error = 0."""
+                    min_nonzero_error = 0.
                 if hist.GetBinContent(bin) < 0.00001:
-                    zero_error += factor**2 * hist.Integral()
-                    #zero_error += min_nonzero_error**2
+                    #zero_error += factor**2 * hist.Integral()
+                    zero_error += min_nonzero_error**2
                     zero_integral += hist.Integral()
                 else:
                     bin_sum += hist.GetBinContent(bin)
@@ -239,7 +246,7 @@ def add_histos(outdir, var, channel, mva, mtmetcut):
             #print category, "bin", bin, "content", bin_sum, "error", total_error
             #print category, "bin", bin, "weight", total_error**2/bin_sum
         total_hist.Write()
-    for category in hists:       #Imitate hadd
+    """for category in hists:       #Imitate hadd
         #factor = 1.0    
         total_hist=hists[category][0].Clone()
         total_hist.Reset("ICE")
@@ -259,7 +266,7 @@ def add_histos(outdir, var, channel, mva, mtmetcut):
                 #total_hist.SetBinContent(bin, total_hist.GetBinContent(bin) + hist.GetBinContent(bin))
                 #total_hist.SetBinError(bin, total_hist.GetBinError(bin) + hist.GetBinError(bin))
             total_hist.Add(hist)
-        total_hist.Write()
+        total_hist.Write()"""
     outfile.Write()
     outfile.Close()
 
@@ -272,7 +279,7 @@ def generate_systematics(channel, coupling):
     systematics = {}
     systematics["nominal"]={}
     systematics["nominal"]["nominal"] = str(Weights.total_weight(channel))
-    systs_infile = ["btaggingBC", "btaggingL", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape"]
+    systs_infile = ["pileup", "top_pt", "btaggingBC", "btaggingL", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape"]
     if channel == "mu":
         systs_infile.append("leptonIso")
     for sys in systs_infile:
@@ -283,36 +290,34 @@ def generate_systematics(channel, coupling):
            systematics[sys] = {}
     
     #TODO: Add PDF-s
-    #TODO: Add pileup
-    #TODO: add ttbar
-    #systematics["nominal"]["pileup"]["up"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
-    #systematics["nominal"]["pileup"]["down"] = "pu_weight*b_weight_nominal*muon_IDWeight*muon_IsoWeight*muon_TriggerWeight*wjets_mg_flavour_flat_weight*wjets_mg_flavour_shape_weight"
-    systematics["nominal"]["btaggingBC"]["up"] = str(Weights.pu()*Weights.b_weight("BC", "up")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["btaggingBC"]["down"] = str(Weights.pu()*Weights.b_weight("BC", "down")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["btaggingL"]["up"] = str(Weights.pu()*Weights.b_weight("L", "up")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["btaggingL"]["down"] = str(Weights.pu()*Weights.b_weight("L", "down")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["wjets_flat"]["up"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight("wjets_up"))
-    systematics["nominal"]["wjets_flat"]["down"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight("wjets_down"))
-    systematics["nominal"]["wjets_shape"]["up"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight("wjets_up") * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["wjets_shape"]["down"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight("wjets_down") * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["leptonID"]["up"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "ID", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["leptonID"]["down"] =  str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "ID", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["pileup"]["up"] = str(Weights.pu("up")*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["pileup"]["down"] = str(Weights.pu("down")*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["top_pt"]["up"] = str(Weights.pu()*Weights.top_pt[1]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["top_pt"]["down"] = str(Weights.pu()*Weights.top_pt[2]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["btaggingBC"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight("BC", "up")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["btaggingBC"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight("BC", "down")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["btaggingL"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight("L", "up")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["btaggingL"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight("L", "down")*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["wjets_flat"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight("wjets_up"))
+    systematics["nominal"]["wjets_flat"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight("wjets_down"))
+    systematics["nominal"]["wjets_shape"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight("wjets_up") * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["wjets_shape"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight("wjets_down") * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["leptonID"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "ID", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["leptonID"]["down"] =  str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "ID", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     if channel == "mu":
-        systematics["nominal"]["leptonIso"]["up"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Iso", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-        systematics["nominal"]["leptonIso"]["down"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Iso", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["leptonTrigger"]["up"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
-    systematics["nominal"]["leptonTrigger"]["down"] = str(Weights.pu()*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+        systematics["nominal"]["leptonIso"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "Iso", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+        systematics["nominal"]["leptonIso"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "Iso", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["leptonTrigger"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+    systematics["nominal"]["leptonTrigger"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     
     
     systematics["partial"] = {}
-    #TODO - some mass files still not processed correctly...leave out for now
-    """systematics["partial"]["mass"] = {}
+    systematics["partial"]["mass"] = {}
     systematics["partial"]["mass"]["down"] = {}
-    systematics["partial"]["mass"]["up"] = {}"""
-    #TODO: add tchan-scale when next processing finishes    
-    """systematics["partial"]["tchan_scale"] = {}
+    systematics["partial"]["mass"]["up"] = {}
+    systematics["partial"]["tchan_scale"] = {}
     systematics["partial"]["tchan_scale"]["down"] = {}
-    systematics["partial"]["tchan_scale"]["up"] = {}"""
+    systematics["partial"]["tchan_scale"]["up"] = {}
     systematics["partial"]["ttbar_scale"] = {}
     systematics["partial"]["ttbar_scale"]["down"] = {}
     systematics["partial"]["ttbar_scale"]["up"] = {}
