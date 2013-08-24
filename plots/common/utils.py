@@ -98,6 +98,7 @@ class PhysicsProcess:
             out_d["data"] = self.SingleEle
         else:
             raise ValueError("Unrecognized lepton channel: %s" % lepton_channel)
+        
         out_d["diboson"] = self.diboson
         out_d["WJets"] = self.WJets_mg_exc
         out_d["DYJets"] = self.DYJets
@@ -105,7 +106,7 @@ class PhysicsProcess:
         out_d["tWchan"] = self.tWchan
         out_d["schan"] = self.schan
         out_d["qcd"] = self.qcd
-        out_d["tchan"] = self.tchan[systematic_scenario]
+        out_d["tchan"] = self.tchan_d[systematic_scenario]
         return out_d
 
     @classmethod
@@ -165,19 +166,35 @@ PhysicsProcess.WJets_mg_exc = PhysicsProcess("WJets", ["W[1-4]Jets_exclusive"],
 #    pretty_name="W(#rightarrow l #nu) + jets"
     pretty_name="W"
 )
+PhysicsProcess.WJets = PhysicsProcess.WJets_mg_exc
 PhysicsProcess.DYJets = PhysicsProcess("DYJets", ["DYJets"],
     pretty_name="DY"
 )
 PhysicsProcess.TTJets_exc = PhysicsProcess("TTJets", ["TTJets_.*Lept"],
     pretty_name="t#bar{t}"
 )
+PhysicsProcess.TTJets = PhysicsProcess.TTJets_exc
+
+
 PhysicsProcess.tWchan = PhysicsProcess("tW", ["T.*_tW"], pretty_name="tW")
 PhysicsProcess.schan = PhysicsProcess("s", ["T.*_s"],
     pretty_name="s-channel"
 )
 
-PhysicsProcess.tchan = {}
-PhysicsProcess.tchan["nominal"] = PhysicsProcess("tchan", ["T.*_t_ToLeptons"],
+"""
+FIXME: Probably it would be better to organize the systematics differently
+One PhysicsProcess should logically represent a group Feynman diagrams, e.g. t-channel
+and the systematics
+should be gathered somehow under the same PhysicsProcess
+I've renamed it to tchan_d for now (d for dict) so that other codes would still work.
+But we need to find a way to logically organize
+Samples (root files)
+physics processes: t-channel, W+jets etc
+systematic scenarios
+into a common structure
+"""
+PhysicsProcess.tchan_d = {}
+PhysicsProcess.tchan_d["nominal"] = PhysicsProcess("tchan", ["T.*_t_ToLeptons"],
     pretty_name="signal (t-channel)"
 )
 
@@ -185,35 +202,37 @@ PhysicsProcess.qcd = PhysicsProcess("qcd", ["qcd"],
     pretty_name="QCD"
 )
 
-PhysicsProcess.tchan["tchan_scale__down"] = PhysicsProcess("tchan_scale__down", ["T.*_t_ToLeptons_scaledown"],
+PhysicsProcess.tchan_d["tchan_scale__down"] = PhysicsProcess("tchan_scale__down", ["T.*_t_ToLeptons_scaledown"],
     pretty_name="signal (t-channel)"
 )
 
-PhysicsProcess.tchan["tchan_scale__up"] = PhysicsProcess("tchan_scale__up", ["T.*_t_ToLeptons_scaleup"],
+PhysicsProcess.tchan_d["tchan_scale__up"] = PhysicsProcess("tchan_scale__up", ["T.*_t_ToLeptons_scaleup"],
     pretty_name="signal (t-channel)"
 )
 
-PhysicsProcess.tchan["mass__down"] = PhysicsProcess("mass_down", ["T.*_t_ToLeptons_mass166_5"],
+PhysicsProcess.tchan_d["mass__down"] = PhysicsProcess("mass_down", ["T.*_t_ToLeptons_mass166_5"],
     pretty_name="signal (t-channel)"
 )
-
 #FIXME when sample available
-PhysicsProcess.tchan["mass__up"] = PhysicsProcess("mass__up", ["T.*_t_ToLeptons_mass178_5", "T_t_ToLeptons_mass166_5"],
+PhysicsProcess.tchan_d["mass__up"] = PhysicsProcess("mass__up", ["T.*_t_ToLeptons_mass178_5", "T_t_ToLeptons_mass166_5"],
     pretty_name="signal (t-channel)"
 )
 
 
-PhysicsProcess.tchan["comphep"] = PhysicsProcess("tchan_comphep", ["TToB(.*)Nu_t-channel"],
+PhysicsProcess.tchan_d["comphep"] = PhysicsProcess("tchan_comphep", ["TToB(.*)Nu_t-channel"],
     pretty_name="signal (t-channel) comphep"
 )
 
-PhysicsProcess.tchan["anomWtb-0100"] = PhysicsProcess("tchan_comphep_anomWtb-0100", ["TToB(.*)Nu_anomWtb-0100_t-channel"],
+PhysicsProcess.tchan_d["anomWtb-0100"] = PhysicsProcess("tchan_comphep_anomWtb-0100", ["TToB(.*)Nu_anomWtb-0100_t-channel"],
     pretty_name="anom. Wtb-0100 signal (t-channel)"
 )
 
-PhysicsProcess.tchan["anomWtb-unphys"] = PhysicsProcess("tchan_comphep_anomWtb_unphys", ["TToB(.*)Nu_anomWtb-unphys_t-channel"],
+PhysicsProcess.tchan_d["anomWtb-unphys"] = PhysicsProcess("tchan_comphep_anomWtb_unphys", ["TToB(.*)Nu_anomWtb-unphys_t-channel"],
     pretty_name="anom. unphys. signal (t-channel)"
 )
+
+PhysicsProcess.tchan = PhysicsProcess.tchan_d["nominal"]
+
 
 merge_cmds = PhysicsProcess.get_merge_dict(
     PhysicsProcess.get_proc_dict("mu")

@@ -62,9 +62,9 @@ class Sample:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
  #Switching off caching for now, as it is a huge memory hog and not very effective over /hdfs
- #       self.tree.SetBranchStatus("*", 1)
- #       self.tree.SetCacheSize(50*1024*1024)
- #       self.tree.AddBranchToCache("*")
+        self.tree.SetBranchStatus("*", 1)
+        self.tree.SetCacheSize(500*1024*1024)
+        self.tree.AddBranchToCache("*")
 
         if self.tfile.Get("trees/WJets_weights"):
             self.tree.AddFriend("trees/WJets_weights")
@@ -146,7 +146,7 @@ class Sample:
         logger.debug("drawHistogram: var=%s, cut_str=%sm kwargs=%s" % (str(var), str(cut_str), str(kwargs)))
         if not isinstance(var, basestring):
             raise TypeError("Sample.drawHistogram expects variable as a plain string, but received: %s" % str(var))
-        name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
+        #name = self.name + "_" + unique_name(var, cut_str, kwargs.get("weight"))
 
         #Internally use the same variable name, but for backwards compatibility still keep plot_range available
         #To be phased out
@@ -172,8 +172,8 @@ class Sample:
             raise ValueError("binning must be a 3-tuple (nbins, min, max) or a list [low1, low2, ..., highN]")
 
         hist.Sumw2()
-        name += "_" + hist.GetName()
-        hist.SetName(name)
+        #name += "_" + hist.GetName()
+        #hist.SetName(name)
 
         draw_cmd = var + ">>%s" % hist.GetName()
 
@@ -221,7 +221,8 @@ class Sample:
 
         ROOT.TH1F.AddDirectory(False)
 
-        hist_new = hist.Clone(filter_alnum(name))
+        #hist_new = hist.Clone(filter_alnum(name))
+        hist_new = hist
         logger.debug(list(hist_new.y()))
 
         return hist_new

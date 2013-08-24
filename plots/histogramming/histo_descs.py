@@ -12,8 +12,10 @@ nbins = 60 #Use 60 since it has many divisors for rebinning
 hdescs['all'] = [
     ("cos_theta", "cos_theta", [nbins, -1, 1]),
     ("met", "met", [nbins, 0, 300]),
+    ("C", "C", [nbins, 0, 1]),
     ("met_50_150", "met", [nbins, 50, 150]),
-    ("abs_eta_lj", "abs(eta_lj)", [nbins, 2.5, 5]),
+    ("abs_eta_lj", "abs(eta_lj)", [nbins, 0, 5]),
+    ("abs_eta_lj_2_5", "abs(eta_lj)", [nbins, 2.5, 5]),
     ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 5]),
     ("top_mass", "top_mass", [nbins, 80, 400]),
     ("top_mass_sr", "top_mass", [nbins, 130, 220]),
@@ -56,7 +58,7 @@ def hdesc(name, func, binning):
 
 def create_plots(graph, plot_nodes, filter_funcs=[]):
     from weights import reweight, syst_weights
-    from tree import HistNode    
+    from tree import HistNode
     #Add all the nodes for the final plots with all the possible reweighting combinations
     final_plots = dict()
     for t, descs in hdescs.items():
