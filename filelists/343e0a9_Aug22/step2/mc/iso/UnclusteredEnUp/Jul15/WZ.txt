@@ -1,5 +1,6 @@
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WZ/output_1_1_evu.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WZ/output_2_1_nm2.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WZ/output_3_2_ZoL.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WZ/output_4_1_TWq.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WZ/output_5_1_JV1.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/UnclusteredEnUp/WZ/output_6_1_pXc.root

@@ -104,6 +104,7 @@ if __name__=="__main__":
             self.nhists = 0
 
         def save(self, path, obj):
+            obj.SetName(path)
             pickle.dump(obj, self.of)
             self.nhists += 1
 
