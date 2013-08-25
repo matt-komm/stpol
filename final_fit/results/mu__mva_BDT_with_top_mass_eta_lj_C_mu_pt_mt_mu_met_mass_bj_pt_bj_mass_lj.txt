@@ -1,6 +1,6 @@
-rate, tchan, 1.031894, 0.060219
-rate, other, 0.914750, 0.106069
-rate, wzjets, 1.604641, 0.234251
+rate, tchan, 0.957673, 0.039493
+rate, other, 0.864907, 0.082663
+rate, wzjets, 1.751253, 0.185713
 shape, Res, 0.000000, 1.000000
 shape, __En, 0.000000, 1.000000
 shape, UnclusteredEn, 0.000000, 1.000000
@@ -10,12 +10,15 @@ shape, leptonID, 0.000000, 1.000000
 shape, leptonTrigger, 0.000000, 1.000000
 shape, wjets_flat, 0.000000, 1.000000
 shape, wjets_shape, 0.000000, 1.000000
+shape, pileup, 0.000000, 1.000000
+shape, top_pt, 0.000000, 1.000000
 shape, btaggingBC, 0.000000, 1.000000
 shape, btaggingL, 0.000000, 1.000000
+shape, mass, 0.000000, 1.000000
 shape, tchan_scale, 0.000000, 1.000000
 shape, wjets_scale, 0.000000, 1.000000
 shape, wjets_matching, 0.000000, 1.000000
 shape, iso, 0.000000, 1.000000
 shape, leptonIso, 0.000000, 1.000000
-corr, wzjets, other, -0.934076
+corr, wzjets, other, -0.984848
 mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj

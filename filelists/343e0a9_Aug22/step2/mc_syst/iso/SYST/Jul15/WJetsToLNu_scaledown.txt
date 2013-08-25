@@ -5,6 +5,7 @@ file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/WJetsToLNu_scaledown/outp
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/WJetsToLNu_scaledown/output_5_1_JvG.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/WJetsToLNu_scaledown/output_6_1_CxQ.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/WJetsToLNu_scaledown/output_7_1_wvy.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/WJetsToLNu_scaledown/output_8_2_tbL.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/WJetsToLNu_scaledown/output_9_1_yCT.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/WJetsToLNu_scaledown/output_10_1_XIL.root
 file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/WJetsToLNu_scaledown/output_11_1_K1Z.root

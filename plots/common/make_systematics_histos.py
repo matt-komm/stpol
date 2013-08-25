@@ -187,6 +187,7 @@ def add_histos(outdir, var, channel, mva, mtmetcut):
     hists_qcdvar = add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut)
     print "QCDVAR:", hists_qcdvar
     hists.update(hists_qcdvar)
+
     """hist_data = hists_data[0]
     for i in range(1, len(hists_data)):
         hist_data.Add(hists_data[i])
@@ -213,7 +214,8 @@ def add_histos(outdir, var, channel, mva, mtmetcut):
         hists[hist_qcd.GetName()] = []
     hists[hist_qcd.GetName()].append(hist_qcd)
     print "QCD hists", hists[hist_qcd.GetName()]"""
-    
+    outfile = File(outdir+"/"+generate_file_name(False), "recreate")
+
     write_histos_to_file(hists, outdir)
 
 def write_histos_to_file(hists, outdir, syst=""):
@@ -509,7 +511,6 @@ def generate_systematics(channel, coupling):
            systematics[sys] = {}
     
     #TODO: Add PDF-s
-    
     systematics["nominal"]["pileup"]["up"] = str(Weights.pu("up")*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     systematics["nominal"]["pileup"]["down"] = str(Weights.pu("down")*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     systematics["nominal"]["top_pt"]["up"] = str(Weights.pu()*Weights.top_pt[1]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())

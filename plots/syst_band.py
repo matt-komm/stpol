@@ -94,23 +94,39 @@ class PlotDef:
     from plots.vars import varnames
 
     defaults = dict(
+        
         log=False,
-        fit_sf=None,
+
         systematics=[],
         systematics_shapeonly=False,
         systematics_symmetric=True,
+
         x_label=r"%(var_name)s %(x_units)s",
         x_units='',
         y_units='',
         lumibox_format='%(channel)s channel%(lb_comments)s',
+        
         legend_pos='top-left',
-        lumi_pos='top-right',
+        legend_nudge_x=0,
+        legend_nudge_y=0,
+
+        legend_text_size=0.05,
+
+        #Normalize data yield to MC
         normalize=False,
 
         #The scale factor for the N(data, anti-iso)/N(QCD, iso) yields,
         process_scale_factor = []
     )
 
+    def get_lumi_pos(self):
+        if not hasattr(self, "lumi_pos"):
+            if self.legend_pos=="top-left":
+                self.lumi_pos = "top-right"
+            elif self.legend_pos=="top-right":
+                self.lumi_pos = "top-left"
+        return self.lumi_pos
+            
     def __init__(self, **kwargs):
 
         for k, v in self.defaults.items():
@@ -259,6 +275,13 @@ def data_mc_plot(pd):
         nom, all_systs,
     )
 
+    for k, v in hists_nominal.items():
+        if hasattr(PhysicsProcess, k):
+            pp = getattr(PhysicsProcess, k)
+            v.SetTitle(pp.pretty_name)
+        else:
+            logger.warning("Not setting pretty name for %s" % k)
+
     stacks_d = OrderedDict()
     stacks_d['mc'] = reorder(hists_nominal, PhysicsProcess.desired_plot_order_mc)
     stacks_d['data'] = [hists_nom_data]
@@ -272,7 +295,7 @@ def data_mc_plot(pd):
         s.SetLineStyle('dashed')
         s.SetTitle("stat. + syst.")
 
-    c = ROOT.TCanvas()
+    c = ROOT.TCanvas("c", "c", 1000, 1000)
     p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
@@ -291,16 +314,21 @@ def data_mc_plot(pd):
         nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=(-1, 1)
     )
 
+
+
     p1.cd()
     leg = legend(
         stacks_d['data'] +
         list(reversed(stacks_d['mc'])) +
         [syst_stat_up],
-        legend_pos=pd.legend_pos
+        legend_pos=pd.legend_pos,
+        nudge_x=pd.legend_nudge_x,
+        nudge_y=pd.legend_nudge_y,
+        legend_text_size=pd.legend_text_size
     )
     lb = lumi_textbox(pd.lumi,
         line2=pd.get_lumibox_comments(channel=pd.channel_pretty),
-        pos=pd.lumi_pos
+        pos=pd.get_lumi_pos()
     )
     c.children = [p1, ratio_pad, stacks, leg, lb]
 
@@ -312,6 +340,8 @@ def data_mc_plot(pd):
     print "MC: %.2f Data: %.2f" % (tot, tot_data)
     #import pdb; pdb.set_trace()
     return c
+
+
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
     tdrstyle()
@@ -324,41 +354,54 @@ if __name__=="__main__":
         "ele": "Electron",
     }
 
+    def load_qcd_sf(channel, met):
+        import os
+        base = os.path.join(os.environ['STPOL_DIR'], 'qcd_estimation', 'fitted', channel)
+        fn = base + '/2j1t_no_MC_subtraction_mt_%s_plus.txt' % met
+        fi = open(fn)
+        li = fi.readline().strip().split()
+        sf = float(li[0])
+        return sf
+
+    qcd_sfs = {
+        "mu": load_qcd_sf("mu", 50),
+        "ele":  load_qcd_sf("ele", 45),
+    }
+
     sfs = {
         "mu": [
             (["tchan"], 1.031894, -1),
             (["ttjets", "twchan", "schan"], 0.914750, -1),
-            (["qcd"], 0.914750 * 7, -1),
+            (["qcd"], 0.914750 * qcd_sfs["mu"], -1),
             (["wjets", "diboson", "dyjets"], 1.604641, -1),
         ],
         "ele": [
             (["tchan"], 0.956595, -1),
             (["ttjets", "twchan", "schan"], 0.982722, -1),
-            (["qcd"], 0.982722 * 0.0, -1),
+            (["qcd"], 0.982722 * qcd_sfs["ele"], -1),
             (["wjets", "diboson", "dyjets"], 1.382914, -1),
         ]
     }
 
-    # qcd_yields = {
-    #     "mu": 700,
-    #     "ele": 133.020387,
-    # }
-
+    from rootpy import ROOTError
     for channel in ["mu", "ele"]:
-        for var in ["top_mass_sr", "abs_eta_lj_4", "mtw_50_150", "cos_theta"]:
+        for var in [
+            "top_mass_sr", "abs_eta_lj_4",
+            "mtw_50_150", "cos_theta", "bdt_discr"
+            ]:
             h = PlotDef(
                 infile="out/hists/hists_merged__%s_%s.root" % (var, channel),
                 lumi=lumis["Aug4_0eb863_full"]["iso"][channel],
                 var=var,
                 channel_pretty=channels_pretty[channel],
-                leg_pos='top-right',
+                legend_pos='top-right',
                 systematics='.*',
                 log=False,
-                systematics_shapeonly=True,
+                systematics_shapeonly=False,
                 save_name='2j1t_mva__%s__all_syst_%s.png' % (var, channel),
                 #normalize=False,
                 lb_comments=', all syst.',
-                process_scale_factor = sfs[channel],
+                #process_scale_factor = sfs[channel],
                 #qcd_yield=qcd_yields[channel],
                 rebin=2
             )
@@ -370,7 +413,10 @@ if __name__=="__main__":
             # )
 
             for p in [h]:
-                c = data_mc_plot(p)
-                c.SaveAs(p.save_name)
-                p.res = c
-                c.Close()
+                try:
+                    c = data_mc_plot(p)
+                    c.SaveAs(p.save_name)
+                    p.res = c
+                    c.Close()
+                except ROOTError as e:
+                    print e

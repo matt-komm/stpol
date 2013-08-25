@@ -41,7 +41,7 @@ cutlist['bdt_mu_tight'] = Cuts.mt_mu()*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['t
 cutlist['bdt_ele_tight'] = Cuts.met()*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['tight']))
 
 # Using MVA based QCD removal
-cutlist['qcdmva_ele']=Cut('%s>%f' % (mva_var_qcd['mu'],bdt['ele_qcd']))
+cutlist['qcdmva_ele']=Cut('%s>%f' % (mva_var_qcd['ele'],bdt['ele_qcd']))
 cutlist['qcdmva_mu']=Cut('%s>%f' % (mva_var_qcd['mu'],bdt['mu_qcd']))
 cutlist['bdt_mu_loose_qcd'] = cutlist['qcdmva_mu']*Cut('%s>%f' % (mva_var['mu'],bdt['mu']['loose']))
 cutlist['bdt_ele_loose_qcd'] = cutlist['qcdmva_ele']*Cut('%s>%f' % (mva_var['ele'],bdt['ele']['loose']))
