@@ -1,10 +1,10 @@
 -------
-Sample: /hdfs/local/stpol/step3/343e0a9_Aug22/ 
+Sample: /hdfs/local/stpol/step3/37acf5_343e0a9_Aug22/
 step: step3
 luminosity: ??? FIXME@MARIO
-git hash: step2 343e0a9, step3 ???
+git hash: step2 343e0a9, step3 37acf5
 Explanation: Updated b-tagging SFs to 2013, switched off met phi corrections 
-parent: ???
+parent: filelists/343e0a9_Aug22/
 -------
 Sample: /hdfs/local/stpol/step3/Aug4_0eb863_full_with_Jul29_MVA
 step: step3
