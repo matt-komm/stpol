@@ -50,6 +50,7 @@ if __name__=="__main__":
     parser.add_argument('--coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
     parser.add_argument('--asymmetry', help="Asymmetry to reweight generated distribution to", default=None)
     parser.add_argument('--mtmetcut', help="MT/MET cut", default=None)
+    parser.add_argument('--extra', help="String to describe fit properties", default=None)
     args = parser.parse_args()
 
     #Most likely we'll want to fit on the BDT, so set this by default
@@ -72,7 +73,7 @@ if __name__=="__main__":
         var = "eta_lj"
         plot_range = [15, 0, 4.5]
     indir = args.path
-    outdir = os.path.join(os.environ["STPOL_DIR"], "final_fit", "histos", "input", generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry, args.mtmetcut))
+    outdir = os.path.join(os.environ["STPOL_DIR"], "final_fit", "histos", "input", generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry, args.mtmetcut, extra=args.extra))
     outdir_final = os.path.join(os.environ["STPOL_DIR"], "final_fit", "histos")
     #generate the systematics to use
     systematics = generate_systematics(args.channel, args.coupling)
@@ -84,7 +85,7 @@ if __name__=="__main__":
         '/'.join([outdir, "lqeta.root"]),
         '/'.join([
             outdir_final,
-            generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry, args.mtmetcut)+ ".root"]
+            generate_out_dir(args.channel, args.var, "-1", args.coupling, args.asymmetry, args.mtmetcut, extra=args.extra)+ ".root"]
         )
     )
     print "finished"
