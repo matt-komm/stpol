@@ -208,7 +208,7 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
         if sample.name.endswith("ToLeptons") and asymmetry is not None:
             weight_str = "("+str(weight)+") * "+str(Weights.asymmetry_weight(asymmetry))+")"
         if plot_range is not None:
-            hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, plot_range=plot_range)
+            hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, binning=plot_range)
         elif binning is not None:
             hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, binning=binning)
         else:
@@ -216,7 +216,7 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
         hist.Scale(sample.lumiScaleFactor(lumi))
     elif sample_name == "DATA":   #no weights here
         if plot_range is not None:
-        	hist = sample.drawHistogram(var, cut_str_iso, weight="1.0", plot_range=plot_range)
+        	hist = sample.drawHistogram(var, cut_str_iso, weight="1.0", binning=plot_range)
         elif binning is not None:
             hist = sample.drawHistogram(var, cut_str_iso, weight="1.0", binning=binning)
         else:

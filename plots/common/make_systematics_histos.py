@@ -58,7 +58,7 @@ def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".joi
     #hadd_histos(outdir)
 
     #Order is important here
-    add_histos_vary_components(outdir, var, channel, "mva" in cuts, mtmetcut)
+    #add_histos_vary_components(outdir, var, channel, "mva" in cuts, mtmetcut)
     add_histos(outdir, var, channel, "mva" in cuts, mtmetcut)
     
 def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling, binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
@@ -138,10 +138,11 @@ def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, 
     outfile.cd() #Must cd after histogram creation
 
     #Write histogram to file
-    logging.info("Writing histogram %s to file %s" % (hist.GetName(), outfile.GetPath()))
-    logging.info("%i entries, %.2f events" % (hist.GetEntries(), hist.Integral()))
-    (a,b) = hist.GetName().split("_")[0], hist.GetName().split("_")[1]
-    print "YIELD", a+"_"+b, hist.Integral()
+    #logging.info("Writing histogram %s to file %s" % (hist.GetName(), outfile.GetPath()))
+    #logging.info("%i entries, %.2f events" % (hist.GetEntries(), hist.Integral()))
+    
+    #(a,b) = hist.GetName().split("_")[0], hist.GetName().split("_")[1]
+    #print "YIELD", a+"_"+b, hist.Integral()
     hist.SetName(hname)
     hist.SetDirectory(outfile)
     outfile.Write()
@@ -323,7 +324,12 @@ def add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut):
                 integrals[name] += h.Integral()
                 #hists[name].SetTitle(name)
         f.Close()
-    variations = [("other", "QCD__down"), ("other", "QCD__up")]
+    variations = [("other", "QCD_fraction__down"), ("other", "QCD_fraction__up")
+        , ("other", "s_chan_fraction__down"), ("other", "s_chan_fraction__up")
+        , ("other", "tW_chan_fraction__up"), ("other", "tW_chan_fraction__down")
+        , ("wzjets", "Dibosons_fraction__up"), ("wzjets", "Dibosons_fraction__down")
+        , ("wzjets", "DYJets_fraction__up"), ("wzjets", "DYJets_fraction__down")
+        ]
     hists_var = {}
     for (var_component, var) in variations:
         print var
@@ -368,7 +374,7 @@ def add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut):
                 print "new int", new_integral
                 #for (fname,hist) in hists[name]:
                 #    print fname, hist.Integral()
-            elif not name.endswith("DATA"):
+            elif not name.endswith("DATA") and len(name.split("__"))==2:    #only add unc for nominal
                 if not name+"__"+var in hists_var:
                     hists_var[name+"__"+var] = []
                 for (fname, hist_orig) in hists[name]:
@@ -420,11 +426,11 @@ def add_histos_vary_components(outdir, var, channel, mva, mtmetcut):
         for (fname,hist) in hists[name]:
             print fname, hist.Integral()
 
-    variations = [("other", "QCD_down"), ("other", "QCD_up")
-        , ("other", "s_chan_down"), ("other", "s_chan_up")
-        , ("other", "tW_chan_up"), ("other", "tW_chan_down")
-        , ("wzjets", "Dibosons_up"), ("wzjets", "Dibosons_down")
-        , ("wzjets", "DYJets_up"), ("wzjets", "DYJets_down")
+    variations = [("other", "QCD_fraction__down"), ("other", "QCD_fraction__up")
+        , ("other", "s_chan_fraction__down"), ("other", "s_chan_fraction__up")
+        , ("other", "tW_chan_fraction__up"), ("other", "tW_chan_fraction__down")
+        , ("wzjets", "Dibosons_fraction__up"), ("wzjets", "Dibosons_fraction__down")
+        , ("wzjets", "DYJets_fraction__up"), ("wzjets", "DYJets_fraction__down")
         ]
     for (var_component, var) in variations:
         hists_var = {}
