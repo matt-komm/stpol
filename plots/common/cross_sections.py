@@ -103,6 +103,13 @@ lumis["83a02e9_Jul22"]["iso"]["mu"] = 6784+6398+5277
 lumis["83a02e9_Jul22"]["iso"]["ele"] = 12410+6144
 lumis["83a02e9_Jul22"]["antiiso"] = lumis["83a02e9_Jul22"]["iso"]
 
+lumis["343e0a9_Aug22"] = dict()
+lumis["343e0a9_Aug22"]["iso"] = dict()
+lumis["343e0a9_Aug22"]["antiiso"] = dict()
+lumis["343e0a9_Aug22"]["iso"]["mu"] = 19757
+lumis["343e0a9_Aug22"]["iso"]["ele"] = 19767
+lumis["343e0a9_Aug22"]["antiiso"] = lumis["343e0a9_Aug22"]["iso"]
+
 lumis["Aug4_0eb863_full"] = dict()
 lumis["Aug4_0eb863_full"]["iso"] = dict()
 lumis["Aug4_0eb863_full"]["antiiso"] = dict()
