@@ -66,7 +66,32 @@ if __name__ == "__main__":
     bins_rec = [12, -1, 1]
     bins_gen = [6, -1, 1]
     
-    efficiency(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra)
+    systematics = generate_systematics(args.channel, args.coupling)
+    for syst in systematics["nominal"]:
+        if "wjets" in syst: #ignore wjets as they don't change the signal
+            continue        
+        if syst == "nominal":
+            weight = systematics["nominal"][syst]
+            syst_name = syst
+            efficiency(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra, syst_name)
+        else:
+            for syst_type in systematics["nominal"][syst]:
+                weight = systematics["nominal"][syst][syst_type]
+                syst_name = syst+"__"+syst_type
+                efficiency(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra, syst_name)
+    if args.coupling == "powheg":
+        for syst in ["En", "Res", "UnclusteredEn"]:
+            for syst_type in systematics[syst]:
+                weight = str(Weights.total_weight(args.channel))
+                syst_name = syst+"__"+syst_type
+                efficiency(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra, syst_name)
+        for syst in systematics["partial"]:        
+            if syst not in ["tchan_scale", "mass"]:
+                    continue
+            for syst_type in systematics["partial"][syst]:
+                weight = str(Weights.total_weight(args.channel))
+                syst_name = syst+"__"+syst_type
+                efficiency(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra, syst_name)
     make_histos(bins_rec, cut_str, cut_str_antiiso, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra)
     print "finished"
 
