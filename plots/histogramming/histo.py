@@ -66,7 +66,7 @@ if __name__=="__main__":
     cuts_jet_tag = [
         ("%dj%dt"%(n,m), Cuts.n_jets(n)*Cuts.n_tags(m)) for n in [2,3] for m in [0,1,2]
     ]
-    
+
     cuts = []
     for cutname, cbline in cuts_jet_tag:
         for lep in ["mu", "ele"]:
@@ -89,13 +89,13 @@ if __name__=="__main__":
                     baseline * cbline * Cuts.mva_wp(lep)
                 ),
             ]
-            # #MVA scan
-            # for mva in numpy.linspace(0, 0.8, 9):
-            #     cuts.append(
-            #         ("%s_mva_scan_%s" % (cn, str(mva).replace(".","_")),
-            #             baseline * cbline * Cuts.mva_wp(lep, mva)
-            #         ),
-            #     )
+            #MVA scan
+            for mva in numpy.linspace(0, 0.8, 9):
+                cuts.append(
+                    ("%s_mva_scan_%s" % (cn, str(mva).replace(".","_")),
+                        baseline * cbline * Cuts.mva_wp(lep, mva)
+                    ),
+                )
 
     import cPickle as pickle
     import gzip
