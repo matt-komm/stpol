@@ -710,28 +710,30 @@ if __name__=="__main__":
                 )
 
 
-               # for var in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
-               #     patterns = make_patterns(var)
-               #     combine_templates(templates, patterns, var)
+            for var in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
+                patterns = make_patterns(var)
+                combine_templates(templates, patterns, var)
 
-            bdt = cos_theta.copy(
-                varname='bdt_discr',
-                channel=channel,
-                #For the BDT plot we don't want to apply the MVA cut
-                cutstr=cb + 'baseline/',
-                cutstr_antiiso= cb + 'baseline/(antiiso_.*)/',
-                outfile_unmerged = fpat(cutname, 'baseline'),
-                outfile_merged = fpat(cutname, 'baseline', True)
-            )
-            met = cos_theta.copy(
-                varname='met',
-                channel=channel,
-                #To show the MET distribution, don't apply the MET cut
-                cutstr=cb+'nomet/',
-                cutstr_antiiso=cb+'nomet/(antiiso_.*)/',
-                outfile_unmerged = fpat(cutname, 'baseline_nomet'),
-                outfile_merged = fpat(cutname, 'baseline_nomet', True)
-            )
-            for v in [bdt, met]:
-                patterns = make_patterns(v)
-                combine_templates(templates, patterns, v)
+        bdt = cos_theta.copy(
+            varname='bdt_discr',
+            channel=channel,
+            #For the BDT plot we don't want to apply the MVA cut
+            cutstr='%(channel)s_2j1t_baseline/',
+            cutstr_antiiso='%(channel)s_2j1t_baseline/(antiiso_.*)/',
+            outfile_unmerged = 'out/hists/hists__2j1t_baseline__%(varname)s_%(channel)s.root',
+            outfile_merged = 'out/hists/hists_merged__2j1t_baseline__%(varname)s_%(channel)s.root'
+        )
+        met = cos_theta.copy(
+            varname='met',
+            channel=channel,
+            #To show the MET distribution, don't apply the MET cut
+            cutstr='%(channel)s_2j1t_nomet/',
+            cutstr_antiiso='%(channel)s_2j1t_nomet/(antiiso_.*)/',
+            outfile_unmerged = 'out/hists/hists__2j1t_baseline_nomet__%(varname)s_%(channel)s.root',
+            outfile_merged = 'out/hists/hists_merged__2j1t_baseline_nomet__%(varname)s_%(channel)s.root'
+        )
+        mtw = met.copy(varname='mtw')
+
+        for v in [bdt, met, mtw]:
+            patterns = make_patterns(v)
+            combine_templates(templates, patterns, v)

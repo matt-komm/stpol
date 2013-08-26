@@ -1,14 +1,18 @@
+#!/bin/bash
 #NOTE: you must source this script, not execute it!
 #mv CMSSW_5_3_4_cand1/SingleTopPolarization ./
-
+set -x
 # Sanity check
-echo "Do you wish to really run setup?"
-select yn in "Yes" "No"; do
-	case $yn in
-		Yes ) break;;
-		No ) exit;;
-	esac
-done
+if [ "$1" != "--yes" ]
+then
+    echo "Do you wish to really run setup?"
+    select yn in "Yes" "No"; do
+    	case $yn in
+    		Yes ) break;;
+    		No ) return;;
+    	esac
+    done
+fi
 
 #Tags for https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATReleaseNotes52X#V08_09_43
 [[ ! -z "$CMSVERSION" ]] || CMSVERSION=CMSSW_5_3_11
@@ -16,12 +20,14 @@ done
 git stash #temporaryily store changes
 rm -Rf $CMSVERSION #remove the source tree for cmsrel to work
 export SCRAM_ARCH=slc5_amd64_gcc462
-cmsrel $CMSVERSION #Base code
-git checkout CMSSW_5_3_11
+scramv1 project CMSSW $CMSVERSION #Base code
+
 #git reset --hard #bring back the source tree
 cd $CMSVERSION 
 
-cmsenv
+eval `scramv1 runtime -sh`
+cd $CMSSW_BASE/..
+source setenv.sh
 cd $CMSSW_BASE/src
 
 #From official PAT recipe
@@ -52,19 +58,24 @@ cvs co -r V00-03-04 -d CMGTools/External UserCode/CMG/CMGTools/External
 addpkg RecoMET/METFilters V00-00-13-01
 addpkg RecoMET/METAnalyzers V00-00-08
 
+cd $CMSSW_BASE/..
+git checkout CMSSW_5_3_11
+
+
 #LHAPDF setup must be done prior to full compile
-cmsenv
 mkdir -p $STPOL_DIR/local/lib
 mkdir -p $STPOL_DIR/local/include
 $STPOL_DIR/setup/install_lhapdf.sh
-scram setup lhapdffull
-cmsenv
 
-scram b -j 8 &> scram_log
-cd $CMSSW_BASE/../
+cd $CMSSW_BASE/src
+scram setup lhapdffull
+eval `scramv1 runtime -sh`
+scram b -j 8
+
+cd $STPOL_DIR
 source setenv.sh
 
 $STPOL_DIR/setup/install_tunfold.sh
 $STPOL_DIR/setup/install_theta.sh
-$STPOL_DIR/setup/install_exempi.sh
+#$STPOL_DIR/setup/install_exempi.sh
 $STPOL_DIR/setup/install_pylibs.sh
