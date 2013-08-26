@@ -61,19 +61,21 @@ addpkg RecoMET/METAnalyzers V00-00-08
 cd $CMSSW_BASE/..
 git checkout CMSSW_5_3_11
 
+
 #LHAPDF setup must be done prior to full compile
-eval `scramv1 runtime -sh`
 mkdir -p $STPOL_DIR/local/lib
 mkdir -p $STPOL_DIR/local/include
 $STPOL_DIR/setup/install_lhapdf.sh
+
+cd $CMSSW_BASE
 scram setup lhapdffull
 eval `scramv1 runtime -sh`
+#scram b -j 8
 
-scram b -j 8
-cd $CMSSW_BASE/../
+cd $STPOL_DIR
 source setenv.sh
 
-$STPOL_DIR/setup/install_tunfold.sh
-$STPOL_DIR/setup/install_theta.sh
-$STPOL_DIR/setup/install_exempi.sh
-$STPOL_DIR/setup/install_pylibs.sh
+#$STPOL_DIR/setup/install_tunfold.sh
+#$STPOL_DIR/setup/install_theta.sh
+#$STPOL_DIR/setup/install_exempi.sh
+#$STPOL_DIR/setup/install_pylibs.sh
