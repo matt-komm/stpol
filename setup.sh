@@ -26,7 +26,8 @@ scramv1 project CMSSW $CMSVERSION #Base code
 cd $CMSVERSION 
 
 eval `scramv1 runtime -sh`
-export STPOL_DIR=$CMSSW_BASE/..
+cd $CMSSW_BASE/..
+source setenv.sh
 cd $CMSSW_BASE/src
 
 #From official PAT recipe
