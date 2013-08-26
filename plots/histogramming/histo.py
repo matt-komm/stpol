@@ -42,10 +42,10 @@ def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
     from histo_descs import create_plots
     create_plots(graph, cutnodes, **kwargs)
 
-    try:
-        nx.write_dot(graph, outfile.replace(".root", "_gviz.dot"))
-    except Exception as e:
-        logger.warning("Couldn't write .dot file for visual representation of analysis: %s" % str(e))
+    # try:
+    #     nx.write_dot(graph, outfile.replace(".root", "_gviz.dot"))
+    # except Exception as e:
+    #     logger.warning("Couldn't write .dot file for visual representation of analysis: %s" % str(e))
 
 if __name__=="__main__":
 
@@ -63,38 +63,39 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    cut_jet_tag = Cuts.n_jets(2)*Cuts.n_tags(1)
-
+    cuts_jet_tag = [
+        ("%dj%dt"%(n,m), Cuts.n_jets(n)*Cuts.n_tags(m)) for n in [2,3] for m in [0,1,2]
+    ]
+    
     cuts = []
-    for lep in ["mu", "ele"]:
-        baseline = Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.metmt(lep) * Cuts.rms_lj
-        cuts += [
-            #Without the MET cut
-            ("%s_2j1t_nomet" % lep, Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.rms_lj * cut_jet_tag),
+    for cutname, cbline in cuts_jet_tag:
+        for lep in ["mu", "ele"]:
+            cn = "%s_%s" % (lep, cutname)
+            baseline = Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.metmt(lep) * Cuts.rms_lj
+            cuts += [
+                #Without the MET cut
+                ("%s_nomet" % cn, Cuts.lepton(lep) * Cuts.hlt(lep) * Cuts.rms_lj * cbline),
 
-            #Baseline for fit
-            ("%s_2j1t_baseline" % lep, baseline * cut_jet_tag),
-            #("%s_2j1t_eta_lj" % lep,
-            #    baseline * cut_jet_tag * Cuts.eta_lj
-            #),
+                #Baseline for fit
+                ("%s_baseline" % cn, baseline * cbline),
 
-            #Cut-based check
-            ("%s_2j1t_cutbased_final" % lep,
-                baseline * cut_jet_tag * Cuts.top_mass_sig * Cuts.eta_lj
-            ),
-
-            #MVA-based selection
-            ("%s_2j1t_mva_loose" % lep,
-                baseline * cut_jet_tag * Cuts.mva_wp(lep)
-            ),
-        ]
-        #MVA scan
-        for mva in numpy.linspace(0, 0.8, 9):
-            cuts.append(
-                ("%s_2j1t_mva_scan_%s" % (lep, str(mva).replace(".","_")),
-                    baseline * cut_jet_tag * Cuts.mva_wp(lep, mva)
+                #Cut-based check
+                ("%s_cutbased_final" % cn,
+                    baseline * cbline * Cuts.top_mass_sig * Cuts.eta_lj
                 ),
-            )
+
+                #MVA-based selection
+                ("%s_mva_loose" % cn,
+                    baseline * cbline * Cuts.mva_wp(lep)
+                ),
+            ]
+            # #MVA scan
+            # for mva in numpy.linspace(0, 0.8, 9):
+            #     cuts.append(
+            #         ("%s_mva_scan_%s" % (cn, str(mva).replace(".","_")),
+            #             baseline * cbline * Cuts.mva_wp(lep, mva)
+            #         ),
+            #     )
 
     import cPickle as pickle
     import gzip
