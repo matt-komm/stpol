@@ -348,7 +348,7 @@ def data_mc_plot(pd):
     tot_data = hists_nom_data.Integral()
     print "MC: %.2f Data: %.2f" % (tot, tot_data)
     #import pdb; pdb.set_trace()
-    return c
+    return c, (hists_nominal, hists_nom_data)
 
 
 if __name__=="__main__":
