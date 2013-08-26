@@ -1,6 +1,6 @@
-rate, tchan, 0.957673, 0.039493
-rate, other, 0.864907, 0.082663
-rate, wzjets, 1.751253, 0.185713
+rate, tchan, 0.987681, 0.042276
+rate, other, 0.820195, 0.090454
+rate, wzjets, 1.923652, 0.205118
 shape, Res, 0.000000, 1.000000
 shape, __En, 0.000000, 1.000000
 shape, UnclusteredEn, 0.000000, 1.000000
@@ -20,5 +20,5 @@ shape, wjets_scale, 0.000000, 1.000000
 shape, wjets_matching, 0.000000, 1.000000
 shape, iso, 0.000000, 1.000000
 shape, leptonIso, 0.000000, 1.000000
-corr, wzjets, other, -0.984848
+corr, wzjets, other, -0.985979
 mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj
