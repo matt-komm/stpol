@@ -726,6 +726,8 @@ if __name__=="__main__":
             outfile_unmerged = 'out/hists/hists__2j1t_baseline_nomet__%(varname)s_%(channel)s.root',
             outfile_merged = 'out/hists/hists_merged__2j1t_baseline_nomet__%(varname)s_%(channel)s.root'
         )
-        for v in [bdt, met]:
+        mtw = met.copy(varname='mtw')
+
+        for v in [bdt, met, mtw]:
             patterns = make_patterns(v)
             combine_templates(templates, patterns, v)
