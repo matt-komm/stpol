@@ -212,26 +212,26 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
             hr.Add(hist_data, -1)
             hr.Divide(hist_data)
 
-            hr.SetFillStyle(syst_fill)
-            hr.SetFillColor(ROOT.kGray)
-            hr.SetLineColor(ROOT.kGray)
+            # hr.SetFillStyle(syst_fill)
+            # hr.SetFillColor(ROOT.kGray)
+            # hr.SetLineColor(ROOT.kGray)
 
             #Draw them as gray lines
             hr.Draw("same hist")
             logger.debug(list(hr.y()))
             syst_ratio_hists.append(hr)
 
-        #Set the possibly asymmteric error bars using a TGraphAsymmErrors
-        ratio_graph = ROOT.TGraphAsymmErrors(hist_ratio)
-        for i in range(hist_ratio.nbins()):
-            ylow = abs(hist_ratio[i]-syst_ratio_hists[0].GetBinContent(i+1))
-            yhigh = abs(hist_ratio[i]-syst_ratio_hists[1].GetBinContent(i+1))
-            ratio_graph.SetPoint(i+1, hist_ratio.GetBinCenter(i+1), hist_ratio.GetBinContent(i+1))
-            ratio_graph.SetPointEYlow(i+1, ylow)
-            ratio_graph.SetPointEYhigh(i+1, yhigh)
-        ratio_graph.Draw("SAME P")
+        # #Set the possibly asymmteric error bars using a TGraphAsymmErrors
+        # ratio_graph = ROOT.TGraphAsymmErrors(hist_ratio)
+        # for i in range(hist_ratio.nbins()):
+        #     ylow = abs(hist_ratio[i]-syst_ratio_hists[0].GetBinContent(i+1))
+        #     yhigh = abs(hist_ratio[i]-syst_ratio_hists[1].GetBinContent(i+1))
+        #     ratio_graph.SetPoint(i+1, hist_ratio.GetBinCenter(i+1), hist_ratio.GetBinContent(i+1))
+        #     ratio_graph.SetPointEYlow(i+1, ylow)
+        #     ratio_graph.SetPointEYhigh(i+1, yhigh)
+        # ratio_graph.Draw("SAME P")
         canv.syst_ratio_hists = syst_ratio_hists
-        canv.ratio_graph = ratio_graph
+        # canv.ratio_graph = ratio_graph
 
     return p2, hist_ratio
 
