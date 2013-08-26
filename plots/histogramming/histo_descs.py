@@ -25,7 +25,7 @@ hdescs['all'] = [
 #Lepton channels need to be separated out
 hdescs['mu'] = [
     ("bdt_discr", Cuts.mva_vars['mu'], [nbins, -1, 1]),
-    ("bdt_discr_zoom_tight", Cuts.mva_vars['mu'], [nbins, Cuts.mva_wps['bdt']['mu']['loose'], 1]),
+    ("bdt_discr_zoom_loose", Cuts.mva_vars['mu'], [nbins, Cuts.mva_wps['bdt']['mu']['loose'], 1]),
     ("lep_iso", 'mu_iso', [nbins, 0, 0.5]),
     ("mtw", "mt_mu", [nbins, 0, 300]),
     ("mtw_50_150", "mt_mu", [nbins, 50, 150]),
