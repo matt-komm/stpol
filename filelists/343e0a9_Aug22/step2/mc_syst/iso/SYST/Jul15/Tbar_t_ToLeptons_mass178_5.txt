@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/Tbar_t_ToLeptons_mass178_5/output_1_1_AVv.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/Tbar_t_ToLeptons_mass178_5/output_2_1_Swy.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/Tbar_t_ToLeptons_mass178_5/output_3_1_RgB.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/Tbar_t_ToLeptons_mass178_5/output_4_1_cvs.root
