@@ -29,7 +29,7 @@ if __name__=="__main__":
         slurmfiles = filter(lambda x: x.endswith(".out"), files)
 
         pat_done = re.compile("^step3 exit code: 0\n$")
-        pat_failed = re.compile("^step3 exit code: [^0].*")
+        pat_failed = re.compile(".*CANCELLED.*|^step3 exit code: [^0].*")
         donefiles = []
         failedfiles = []
         for fi in slurmfiles:
