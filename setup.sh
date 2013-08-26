@@ -1,3 +1,4 @@
+#!/bin/bash
 #NOTE: you must source this script, not execute it!
 #mv CMSSW_5_3_4_cand1/SingleTopPolarization ./
 
