@@ -77,7 +77,7 @@ def legend(hists, **kwargs):
     #[bottom_left_x, bottom_left_y, top_right_x, top_right_y]
     #FIXME: fine-tune and make your own
     if pos=="top-right":
-        leg_coords = [-1, -1, 0.93, 0.91]
+        leg_coords = [-1, -1, 0.90, 0.91]
     if pos=="top-left":
         leg_coords = [-1, -1, 0.45, 0.91]
 
