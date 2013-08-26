@@ -704,9 +704,9 @@ if __name__=="__main__":
             )
 
 
-           # for var in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
-           #     patterns = make_patterns(var)
-           #     combine_templates(templates, patterns, var)
+            for var in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
+                patterns = make_patterns(var)
+                combine_templates(templates, patterns, var)
 
         bdt = cos_theta.copy(
             varname='bdt_discr',
