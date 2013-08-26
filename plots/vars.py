@@ -12,6 +12,7 @@ varnames["n_tags"] = 'N_{tags}'
 varnames["n_jets"] = 'N_{jets}'
 varnames["rms_lj"] = 'RMS_{lj}'
 varnames["met_phi"] = '#Phi_{MET}'
+varnames["bdt_discr"] = 'BDT'
 
 varnames_mpl = dict()
 varnames_mpl["top_pt"] = r"top $p_{T}$"
