@@ -63,8 +63,8 @@ def get_sample_names(channel, systematic, coupling):
         datasamp = ["SingleMu1", "SingleMu2", "SingleMu3", "SingleMu_miss"]
         datasamp_aiso = ["SingleMu1_aiso", "SingleMu2_aiso", "SingleMu3_aiso", "SingleMu_miss_aiso"]
     elif channel == "ele":
-        datasamp = ["SingleEle1", "SingleEle2"]
-        datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso"]
+        datasamp = ["SingleEle1", "SingleEle2", "SingleEle_miss"]
+        datasamp_aiso = ["SingleEle1_aiso", "SingleEle2_aiso", "SingleEle_miss_aiso"]
     
     dyjets = ["DYJets"]
     dibosons = ["WW", "WZ", "ZZ"]
@@ -184,7 +184,7 @@ def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
     if var == "cos_theta" and mva is None:  #final cut based
         filename = "final__2j1t"
     elif var == "abs(eta_lj)":
-        filename = "fit__2j1t"
+        filename = "fit_2j1t"
     else:
         filename = "2j1t"
     filename += ("_mt_%s_plus.txt" % mtmetcut)
@@ -208,7 +208,7 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
         if sample.name.endswith("ToLeptons") and asymmetry is not None:
             weight_str = "("+str(weight)+") * "+str(Weights.asymmetry_weight(asymmetry))+")"
         if plot_range is not None:
-            hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, plot_range=plot_range)
+            hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, binning=plot_range)
         elif binning is not None:
             hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, binning=binning)
         else:
@@ -216,7 +216,7 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
         hist.Scale(sample.lumiScaleFactor(lumi))
     elif sample_name == "DATA":   #no weights here
         if plot_range is not None:
-        	hist = sample.drawHistogram(var, cut_str_iso, weight="1.0", plot_range=plot_range)
+        	hist = sample.drawHistogram(var, cut_str_iso, weight="1.0", binning=plot_range)
         elif binning is not None:
             hist = sample.drawHistogram(var, cut_str_iso, weight="1.0", binning=binning)
         else:
@@ -260,4 +260,5 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
         hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso, mtmetcut))
     #setErrors(hist)    #Set error in bins with 0 error to >0
+    #print "sample", sample_name, hist.GetName()
     return hist
