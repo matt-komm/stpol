@@ -1,7 +1,7 @@
 #!/bin/bash
 #NOTE: you must source this script, not execute it!
 #mv CMSSW_5_3_4_cand1/SingleTopPolarization ./
-
+set -x
 # Sanity check
 if [ "$1" != "--yes" ]
 then
@@ -67,7 +67,7 @@ mkdir -p $STPOL_DIR/local/lib
 mkdir -p $STPOL_DIR/local/include
 $STPOL_DIR/setup/install_lhapdf.sh
 
-cd $CMSSW_BASE
+cd $CMSSW_BASE/src
 scram setup lhapdffull
 eval `scramv1 runtime -sh`
 scram b -j 8
