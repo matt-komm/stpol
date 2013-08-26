@@ -77,7 +77,7 @@ def legend(hists, **kwargs):
     #[bottom_left_x, bottom_left_y, top_right_x, top_right_y]
     #FIXME: fine-tune and make your own
     if pos=="top-right":
-        leg_coords = [-1, -1, 0.93, 0.91]
+        leg_coords = [-1, -1, 0.90, 0.91]
     if pos=="top-left":
         leg_coords = [-1, -1, 0.45, 0.91]
 
@@ -94,10 +94,10 @@ def legend(hists, **kwargs):
 
     #Expand the array using the wildcard
     leg = ROOT.TLegend(*leg_coords)
-    leg.SetFillStyle(0)
+    #leg.SetFillStyle(0)
 
     if "names" in kwargs:
-        raise Exception("Deprecated stuff. Don't use")
+        raise Exception("Deprecated stuff. Instead, names are taken from the histogram title.")
         rnames = names[::-1]
         data = rnames.pop()
         rnames.insert(0,data)

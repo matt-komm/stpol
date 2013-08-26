@@ -110,7 +110,10 @@ class PlotDef:
         legend_nudge_x=0,
         legend_nudge_y=0,
 
-        legend_text_size=0.05,
+        #legend_text_size=0.05,
+
+        max_bin_mult_log=200,
+        max_bin_mult=1.8,
 
         #Normalize data yield to MC
         normalize=False,
@@ -136,22 +139,29 @@ class PlotDef:
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+        #The systematic inclusion list is a list of regex patterns to include
+        if isinstance(self.systematics, basestring):
+            self.systematics = [self.systematics]
+
+    def get_x_label(self):
         #The default variable pretty name is taken externally
         if not hasattr(self, "var_name"):
             try:
                 self.var_name = self.varnames[self.var]
             except KeyError:
                 self.var_name = self.var
-        #The systematic inclusion list is a list of regex patterns to include
-        if isinstance(self.systematics, basestring):
-            self.systematics = [self.systematics]
 
-    def get_x_label(self):
         return self.x_label % self.__dict__
 
     def get_lumibox_comments(self, **kwargs):
         kwargs.update(**self.__dict__)
         return self.lumibox_format % kwargs
+
+    def get_max_bin_mult(self):
+        if self.log:
+            return self.max_bin_mult_log
+        else:
+            return self.max_bin_mult
 
     def __repr__(self):
         return self.__dict__
@@ -282,16 +292,23 @@ def data_mc_plot(pd):
         else:
             logger.warning("Not setting pretty name for %s" % k)
 
+
+    #If QCD is high-stats, put it in the bottom
+    plotorder = copy.copy(PhysicsProcess.desired_plot_order_mc)
+    if hists_nominal["qcd"].GetEntries()>100:
+        plotorder.pop(plotorder.index("qcd"))
+        plotorder.insert(0, "qcd")
+
     stacks_d = OrderedDict()
-    stacks_d['mc'] = reorder(hists_nominal, PhysicsProcess.desired_plot_order_mc)
+    stacks_d['mc'] = reorder(hists_nominal, plotorder)
     stacks_d['data'] = [hists_nom_data]
 
     #Systematic style
     for s in [syst_stat_up, syst_stat_down]:
         s.SetFillStyle(0)
-        s.SetLineWidth(2)
+        s.SetLineWidth(3)
         s.SetMarkerSize(0)
-        s.SetLineColor(ROOT.kGray+2)
+        s.SetLineColor(ROOT.kBlue+2)
         s.SetLineStyle('dashed')
         s.SetTitle("stat. + syst.")
 
@@ -303,7 +320,7 @@ def data_mc_plot(pd):
     p1.SetFillStyle(0);
     p1.cd()
 
-    stacks = plot_hists_stacked(p1, stacks_d, x_label=pd.get_x_label(), max_bin_mult=1.5 if not pd.log else 100)
+    stacks = plot_hists_stacked(p1, stacks_d, x_label=pd.get_x_label(), max_bin_mult=pd.get_max_bin_mult())
     p1.SetLogy(pd.log)
 
     syst_stat_up.Draw("SAME hist")
@@ -321,10 +338,9 @@ def data_mc_plot(pd):
         stacks_d['data'] +
         list(reversed(stacks_d['mc'])) +
         [syst_stat_up],
-        legend_pos=pd.legend_pos,
         nudge_x=pd.legend_nudge_x,
         nudge_y=pd.legend_nudge_y,
-        legend_text_size=pd.legend_text_size
+        **pd.__dict__
     )
     lb = lumi_textbox(pd.lumi,
         line2=pd.get_lumibox_comments(channel=pd.channel_pretty),
@@ -339,7 +355,7 @@ def data_mc_plot(pd):
     tot_data = hists_nom_data.Integral()
     print "MC: %.2f Data: %.2f" % (tot, tot_data)
     #import pdb; pdb.set_trace()
-    return c
+    return c, (hists_nominal, hists_nom_data)
 
 
 if __name__=="__main__":
