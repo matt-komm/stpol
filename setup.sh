@@ -20,10 +20,12 @@ git stash #temporaryily store changes
 rm -Rf $CMSVERSION #remove the source tree for cmsrel to work
 export SCRAM_ARCH=slc5_amd64_gcc462
 scramv1 project CMSSW $CMSVERSION #Base code
+
 #git reset --hard #bring back the source tree
 cd $CMSVERSION 
 
 eval `scramv1 runtime -sh`
+export STPOL_DIR=$CMSSW_BASE/..
 cd $CMSSW_BASE/src
 
 #From official PAT recipe
@@ -54,6 +56,7 @@ cvs co -r V00-03-04 -d CMGTools/External UserCode/CMG/CMGTools/External
 addpkg RecoMET/METFilters V00-00-13-01
 addpkg RecoMET/METAnalyzers V00-00-08
 
+cd $CMSSW_BASE/..
 git checkout CMSSW_5_3_11
 
 #LHAPDF setup must be done prior to full compile
