@@ -112,6 +112,9 @@ class PlotDef:
 
         legend_text_size=0.05,
 
+        max_bin_mult_log=200,
+        max_bin_mult=1.8,
+
         #Normalize data yield to MC
         normalize=False,
 
@@ -152,6 +155,12 @@ class PlotDef:
     def get_lumibox_comments(self, **kwargs):
         kwargs.update(**self.__dict__)
         return self.lumibox_format % kwargs
+
+    def get_max_bin_mult(self):
+        if self.log:
+            return self.max_bin_mult_log
+        else:
+            return self.max_bin_mult
 
     def __repr__(self):
         return self.__dict__
@@ -303,7 +312,7 @@ def data_mc_plot(pd):
     p1.SetFillStyle(0);
     p1.cd()
 
-    stacks = plot_hists_stacked(p1, stacks_d, x_label=pd.get_x_label(), max_bin_mult=1.5 if not pd.log else 100)
+    stacks = plot_hists_stacked(p1, stacks_d, x_label=pd.get_x_label(), max_bin_mult=pd.get_max_bin_mult())
     p1.SetLogy(pd.log)
 
     syst_stat_up.Draw("SAME hist")
