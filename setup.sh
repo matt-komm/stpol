@@ -70,12 +70,12 @@ $STPOL_DIR/setup/install_lhapdf.sh
 cd $CMSSW_BASE
 scram setup lhapdffull
 eval `scramv1 runtime -sh`
-#scram b -j 8
+scram b -j 8
 
 cd $STPOL_DIR
 source setenv.sh
 
-#$STPOL_DIR/setup/install_tunfold.sh
-#$STPOL_DIR/setup/install_theta.sh
-#$STPOL_DIR/setup/install_exempi.sh
-#$STPOL_DIR/setup/install_pylibs.sh
+$STPOL_DIR/setup/install_tunfold.sh
+$STPOL_DIR/setup/install_theta.sh
+$STPOL_DIR/setup/install_exempi.sh
+$STPOL_DIR/setup/install_pylibs.sh
