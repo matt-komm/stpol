@@ -96,13 +96,13 @@ dgDataMuons = DatasetGroup("Data", kBlack, False)
 dDataMuons1 = Dataset("DataMu1", "SingleMu1.root", MC=False)
 dDataMuons2 = Dataset("DataMu2", "SingleMu2.root", MC=False)
 dDataMuons3 = Dataset("DataMu3", "SingleMu3.root", MC=False)
-dDataMuons4 = Dataset("DataMu4", "../Aug1/SingleMu_miss.root", MC=False)
+dDataMuons4 = Dataset("DataMu4", "SingleMu_miss.root", MC=False)
 dgDataMuons.add([dDataMuons1, dDataMuons2, dDataMuons3, dDataMuons4])
 
 dgDataElectrons = DatasetGroup("Data", kBlack, False)
 dDataElectrons1 = Dataset("DataEle1","SingleEle1.root", MC=False)
 dDataElectrons2 = Dataset("DataEle2","SingleEle2.root", MC=False)
-dDataElectrons3 = Dataset("DataEle3","../Aug1/SingleEle_miss.root", MC=False)
+dDataElectrons3 = Dataset("DataEle3","SingleEle_miss.root", MC=False)
 dgDataElectrons.add([dDataElectrons1, dDataElectrons2, dDataElectrons3])
 
 #Define sets of dataset groups for muons

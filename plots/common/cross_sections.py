@@ -120,11 +120,11 @@ lumis["Aug4_0eb863_full"]["antiiso"]["ele"] = 917 + 12409 + 6482
 
 # References to the 'latest' luminosities.
 lumi_iso = {
-    "ele": lumis["Aug4_0eb863_full"]["iso"]["ele"],
-    "mu": lumis["Aug4_0eb863_full"]["iso"]["mu"]
+    "ele": lumis["343e0a9_Aug22"]["iso"]["ele"],
+    "mu": lumis["343e0a9_Aug22"]["iso"]["mu"]
 }
 
 lumi_antiiso = {
-    "ele": lumis["Aug4_0eb863_full"]["antiiso"]["ele"],
-    "mu": lumis["Aug4_0eb863_full"]["antiiso"]["mu"]
+    "ele": lumis["343e0a9_Aug22"]["antiiso"]["ele"],
+    "mu": lumis["343e0a9_Aug22"]["antiiso"]["mu"]
 }
