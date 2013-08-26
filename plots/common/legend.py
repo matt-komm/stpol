@@ -94,10 +94,10 @@ def legend(hists, **kwargs):
 
     #Expand the array using the wildcard
     leg = ROOT.TLegend(*leg_coords)
-    leg.SetFillStyle(0)
+    #leg.SetFillStyle(0)
 
     if "names" in kwargs:
-        raise Exception("Deprecated stuff. Don't use")
+        raise Exception("Deprecated stuff. Instead, names are taken from the histogram title.")
         rnames = names[::-1]
         data = rnames.pop()
         rnames.insert(0,data)
