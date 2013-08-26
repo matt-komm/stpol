@@ -40,11 +40,11 @@ def get_samples(path, channel, systematic):
         samples["SingleMu1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu1.root")))
         samples["SingleMu2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu2.root")))
         samples["SingleMu3_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu3.root")))
-        samples["SingleMu_miss_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Aug1", "SingleMu_miss.root")))        
+        samples["SingleMu_miss_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleMu_miss.root")))        
     elif channel == "ele":
         samples["SingleEle1_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle1.root")))
         samples["SingleEle2_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle2.root")))
-        samples["SingleEle_miss_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Aug1", "SingleEle_miss.root")))
+        samples["SingleEle_miss_aiso"] = Sample.fromFile("/".join((path, channel, "data", "antiiso", "Jul15", "SingleEle_miss.root")))
     
     return samples
 
