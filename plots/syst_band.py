@@ -115,12 +115,17 @@ class PlotDef:
         max_bin_mult_log=200,
         max_bin_mult=1.8,
 
+        min_bin=1,
+
         #Normalize data yield to MC
         normalize=False,
 
         #The scale factor for the N(data, anti-iso)/N(QCD, iso) yields,
         process_scale_factor = []
     )
+
+    def get_min_bin(self):
+        return self.min_bin
 
     def get_lumi_pos(self):
         if not hasattr(self, "lumi_pos"):
@@ -323,7 +328,7 @@ def data_mc_plot(pd):
     stacks = plot_hists_stacked(
         p1, stacks_d,
         x_label=pd.get_x_label(), max_bin_mult=pd.get_max_bin_mult(),
-        min_bin=1
+        min_bin=pd.get_min_bin()
     )
     p1.SetLogy(pd.log)
 
