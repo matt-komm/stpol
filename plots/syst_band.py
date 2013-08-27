@@ -320,7 +320,11 @@ def data_mc_plot(pd):
     p1.SetFillStyle(0);
     p1.cd()
 
-    stacks = plot_hists_stacked(p1, stacks_d, x_label=pd.get_x_label(), max_bin_mult=pd.get_max_bin_mult())
+    stacks = plot_hists_stacked(
+        p1, stacks_d,
+        x_label=pd.get_x_label(), max_bin_mult=pd.get_max_bin_mult(),
+        min_bin=1
+    )
     p1.SetLogy(pd.log)
 
     syst_stat_up.Draw("SAME hist")
