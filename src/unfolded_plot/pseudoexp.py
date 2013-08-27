@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 """
 Plots the distribution from the pseudo-experiments drawn by theta.
 """
@@ -95,7 +95,7 @@ def asymmetry(hist, center):
             which to calculate the asymmetry.
 
     Returns:
-        A numberical value of the 
+        A numberical value of the
     """
     def my_int(a, b):
         #print "Integrating over ",range(a, b)
@@ -114,6 +114,10 @@ from plots.fit_scale_factors import fitpars_process
 fitpars = {}
 fitpars['mu'] = fitpars_process['final_2j1t_mva']['mu'][0][1]
 fitpars['ele'] = fitpars_process['final_2j1t_mva']['ele'][0][1]
+
+measured_asym_errs = dict()
+measured_asym_errs['mu'] = (0.08, 0.12)
+measured_asym_errs['ele'] = (0.12, 0.22)
 
 measured_asym_errs = dict()
 measured_asym_errs['mu'] = (0.08, 0.12)
@@ -185,7 +189,7 @@ if __name__=="__main__":
         center = find_bin_idx(list(hi.x()), 0)
 
         logger.info("Central bin index = %d" % center)
-        
+
         #Fill the bin contents vector and the asymmetry histogram by looping over the events
         for ev in t:
             bins[i] = np.array(list(hi.y()), dtype='f')
@@ -290,7 +294,6 @@ if __name__=="__main__":
     logger.info("Data={0:.0f}, powheg={1:.0f}, comphep={0:.0f}".format(data_post.Integral(), htrue.Integral(), hcomphep.Integral()))
     #Normalize to same area
     #htrue.Scale(data_post.Integral() / htrue.Integral())
-    
     measured_asym = asymmetry(data_post, len(binning)/2 + 1)
 
 
@@ -350,7 +353,7 @@ if __name__=="__main__":
     # from plots.common.histogram import norm
     # norm(pe_asym)
     # norm(data_asym)
-    
+
     #data_asym.SetMarkerSize(1)
 
     canv = plot_hists(hi, x_label="asymmetry", draw_cmd=["l2"])
