@@ -148,6 +148,12 @@ class PlotDef:
         if isinstance(self.systematics, basestring):
             self.systematics = [self.systematics]
 
+    def get_ratio_minmax(self):
+        if hasattr(self, "ratio_limit"):
+            return (-self.ratio_limit, self.ratio_limit)
+        else:
+            return 2.0
+
     def get_x_label(self):
         #The default variable pretty name is taken externally
         if not hasattr(self, "var_name"):
@@ -317,7 +323,8 @@ def data_mc_plot(pd):
         s.SetLineStyle('dashed')
         s.SetTitle("stat. + syst.")
 
-    c = ROOT.TCanvas("c", "c", 1000, 1000)
+    #c = ROOT.TCanvas("c", "c", 1000, 1000)
+    c = ROOT.TCanvas("c", "c")
     p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
@@ -337,7 +344,7 @@ def data_mc_plot(pd):
 
     ratio_pad, hratio = plot_data_mc_ratio(
         c, hists_nom_data,
-        nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=(-1, 1)
+        nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=pd.get_ratio_minmax()
     )
 
 
