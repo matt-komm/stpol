@@ -93,7 +93,7 @@ class PlotDef:
     from plots.vars import varnames
 
     defaults = dict(
-        
+
         log=False,
 
         systematics=[],
@@ -104,7 +104,7 @@ class PlotDef:
         x_units='',
         y_units='',
         lumibox_format='%(channel)s channel%(lb_comments)s',
-        
+
         legend_pos='top-left',
         legend_nudge_x=0,
         legend_nudge_y=0,
@@ -133,7 +133,7 @@ class PlotDef:
             elif self.legend_pos=="top-right":
                 self.lumi_pos = "top-left"
         return self.lumi_pos
-            
+
     def __init__(self, **kwargs):
 
         for k, v in self.defaults.items():
@@ -234,7 +234,7 @@ def data_mc_plot(pd):
     nom = sum(hists_nom_mc)
 
     if pd.normalize:
-        ratio = hists_nom_data.Integral() / nom.Integral() 
+        ratio = hists_nom_data.Integral() / nom.Integral()
         hists_nom_data.Scale(1.0/ratio)
 
     #Get all the variated up/down total templates
