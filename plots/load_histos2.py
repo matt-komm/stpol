@@ -54,11 +54,16 @@ def _load_pickle(x):
     import cPickle as pickle
     import gzip
     ret = []
-    fi = gzip.GzipFile(x, 'rb')
+    fn, patterns = x
+    rpat = map(re.compile, patterns)
+    fi = gzip.GzipFile(fn, 'rb')
     while True:
         try:
             item = pickle.load(fi)
-            ret.append(item)
+            for pat in rpat:
+                if pat.match(item.GetName()):
+                    ret.append(item)
+                    break
         except EOFError:
             break
     fi.close()
@@ -68,14 +73,15 @@ def make_hist(item):
     item.__class__ = Hist
     item._post_init()
 
-def load_pickle(fnames):
+def load_pickle(fnames, patterns):
     ret = PatternDict()
 
     from multiprocessing import Pool
-    p = Pool(20)
+    p = Pool(30)
 
     logger.info("Loading pickles")
-    rets = p.map(_load_pickle, fnames)
+    args = [(fn, patterns) for fn in fnames]
+    rets = p.map(_load_pickle, args)
     logger.info("Combining")
     n = 0
     for r in rets:
@@ -557,6 +563,9 @@ def combine_templates(templates, patterns, conf):
     syst_scenarios = syst_scenarios.as_dict()
 
     #Create the output file
+    p = os.path.dirname(conf.get_outfile_unmerged())
+    if not os.path.exists(p):
+        os.makedirs(p)
     of = ROOT.TFile(conf.get_outfile_unmerged() , "RECREATE")
     of.cd()
 
@@ -636,6 +645,10 @@ def combine_templates(templates, patterns, conf):
         spl = split_name(k)
         hsysts[spl["type"]][spl["dir"]][spl["sample"]] = v
     hsysts = hsysts.as_dict()
+
+    p = os.path.dirname(conf.get_outfile_merged())
+    if not os.path.exists(p):
+        os.makedirs(p)
     of = ROOT.TFile(conf.get_outfile_merged(), "RECREATE")
     of.cd()
 
@@ -672,19 +685,19 @@ def combine_templates(templates, patterns, conf):
 if __name__=="__main__":
     import sys
     inf = sys.argv[1] + '/hists-*.pickle'
-
-    templates = load_pickle(glob.glob(inf))
+    flist = glob.glob(inf)
 
     def fpat(cutname, subcut, merged=False):
-        return 'out/hists/' + 'hists__' if not merged else 'hists_merged__' + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
-    
+        return 'out/hists1/' + ('hists__' if not merged else 'hists_merged__') + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
+
     for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
         for channel in ["mu", "ele"]:
-            for cut in ["baseline", "mva_loose", "cutbased_final"]:
+    #        for cut in ["baseline", "mva_loose", "cutbased_final"]:
+            for cut in ["baseline"]:
                 cb = "%(channel)s_" + cutname + "_"
 
-                fpat_unmerged = 'out/hists/hists__' + cutname + '_' + cut + '__%(varname)s_%(channel)s.root'
-                fpat_merged = 'out/hists/hists_merged__' + cutname + '_' + cut + '__%(varname)s_%(channel)s.root'
+                #fpat_unmerged = 'out/hists/hists__' + cutname + '_' + cut + '__%(varname)s_%(channel)s.root'
+                #fpat_merged = 'out/hists/hists_merged__' + cutname + '_' + cut + '__%(varname)s_%(channel)s.root'
 
                 cutstr = cb + cut + '/'
                 cos_theta = HistDef(
@@ -710,30 +723,38 @@ if __name__=="__main__":
                 )
 
 
-            for var in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
-                patterns = make_patterns(var)
-                combine_templates(templates, patterns, var)
+                #for var in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
+                for var in [cos_theta, abs_eta_lj]:
+                    logger.info("Plotting variable %s" % var.varname)
+                    patterns = make_patterns(var)
+                    templates = load_pickle(flist, patterns.values())
+                    combine_templates(templates, patterns, var)
 
         bdt = cos_theta.copy(
             varname='bdt_discr',
             channel=channel,
             #For the BDT plot we don't want to apply the MVA cut
-            cutstr='%(channel)s_2j1t_baseline/',
-            cutstr_antiiso='%(channel)s_2j1t_baseline/(antiiso_.*)/',
-            outfile_unmerged = 'out/hists/hists__2j1t_baseline__%(varname)s_%(channel)s.root',
-            outfile_merged = 'out/hists/hists_merged__2j1t_baseline__%(varname)s_%(channel)s.root'
+            cutstr='%(channel)s_' + cutname + '_baseline/',
+            cutstr_antiiso='%(channel)s_' + cutname + '_baseline/(antiiso_.*)/',
+            outfile_unmerged = fpat(cutname, 'baseline'),
+            outfile_merged = fpat(cutname, 'baseline', merged=True)
         )
+        bdt_zoom_loose = bdt.copy(varname='bdt_discr_zoom_loose')
+
         met = cos_theta.copy(
             varname='met',
             channel=channel,
             #To show the MET distribution, don't apply the MET cut
-            cutstr='%(channel)s_2j1t_nomet/',
-            cutstr_antiiso='%(channel)s_2j1t_nomet/(antiiso_.*)/',
-            outfile_unmerged = 'out/hists/hists__2j1t_baseline_nomet__%(varname)s_%(channel)s.root',
-            outfile_merged = 'out/hists/hists_merged__2j1t_baseline_nomet__%(varname)s_%(channel)s.root'
+            cutstr='%(channel)s_'+cutname+'_nomet/',
+            cutstr_antiiso='%(channel)s_'+cutname+'_nomet/(antiiso_.*)/',
+            outfile_unmerged = fpat(cutname, 'nomet'),
+            outfile_merged = fpat(cutname, 'nomet', True),
         )
         mtw = met.copy(varname='mtw')
 
-        for v in [bdt, met, mtw]:
+        #for v in [bdt, met, mtw]:
+        for v in [bdt]:
+            logger.info("Plotting variable %s" % var.varname)
             patterns = make_patterns(v)
+            templates = load_pickle(flist, patterns.values())
             combine_templates(templates, patterns, v)
