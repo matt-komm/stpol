@@ -55,15 +55,21 @@ def _load_pickle(x):
     import gzip
     ret = []
     fn, patterns = x
-    rpat = map(re.compile, patterns)
+
+    if patterns is not None:
+        rpat = map(re.compile, patterns)
+
     fi = gzip.GzipFile(fn, 'rb')
     while True:
         try:
             item = pickle.load(fi)
-            for pat in rpat:
-                if pat.match(item.GetName()):
-                    ret.append(item)
-                    break
+            if patterns is None:
+                ret.append(item)
+            else:
+                for pat in rpat:
+                    if pat.match(item.GetName()):
+                        ret.append(item)
+                        break
         except EOFError:
             break
     fi.close()
@@ -687,17 +693,17 @@ if __name__=="__main__":
     inf = sys.argv[1] + '/hists-*.pickle'
     flist = glob.glob(inf)
 
+    #templates = load_pickle(flist, None)
     def fpat(cutname, subcut, merged=False):
-        return 'out/hists1/' + ('hists__' if not merged else 'hists_merged__') + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
+        return 'out/hists2/' + ('hists__' if not merged else 'hists_merged__') + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
 
-    for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
+    #for cutname in ["2j1t"]:
+    #for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
+    for cutname in ["2j0t", "3j0t", "3j2t"]:
         for channel in ["mu", "ele"]:
-    #        for cut in ["baseline", "mva_loose", "cutbased_final"]:
+            #for cut in ["baseline", "mva_loose", "cutbased_final"]:
             for cut in ["baseline"]:
                 cb = "%(channel)s_" + cutname + "_"
-
-                #fpat_unmerged = 'out/hists/hists__' + cutname + '_' + cut + '__%(varname)s_%(channel)s.root'
-                #fpat_merged = 'out/hists/hists_merged__' + cutname + '_' + cut + '__%(varname)s_%(channel)s.root'
 
                 cutstr = cb + cut + '/'
                 cos_theta = HistDef(
@@ -722,39 +728,38 @@ if __name__=="__main__":
                     varname='top_mass_sr',
                 )
 
-
                 #for var in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
-                for var in [cos_theta, abs_eta_lj]:
-                    logger.info("Plotting variable %s" % var.varname)
-                    patterns = make_patterns(var)
-                    templates = load_pickle(flist, patterns.values())
-                    combine_templates(templates, patterns, var)
+                #for var in [cos_theta, abs_eta_lj]:
+                #    logger.info("Plotting variable %s" % var.varname)
+                #    patterns = make_patterns(var)
+                #    #templates = load_pickle(flist, patterns.values())
+                #    combine_templates(templates, patterns, var)
 
-        bdt = cos_theta.copy(
-            varname='bdt_discr',
-            channel=channel,
-            #For the BDT plot we don't want to apply the MVA cut
-            cutstr='%(channel)s_' + cutname + '_baseline/',
-            cutstr_antiiso='%(channel)s_' + cutname + '_baseline/(antiiso_.*)/',
-            outfile_unmerged = fpat(cutname, 'baseline'),
-            outfile_merged = fpat(cutname, 'baseline', merged=True)
-        )
-        bdt_zoom_loose = bdt.copy(varname='bdt_discr_zoom_loose')
+            bdt = cos_theta.copy(
+                varname='bdt_discr',
+                channel=channel,
+                #For the BDT plot we don't want to apply the MVA cut
+                cutstr='%(channel)s_' + cutname + '_baseline/',
+                cutstr_antiiso='%(channel)s_' + cutname + '_baseline/(antiiso_.*)/',
+                outfile_unmerged = fpat(cutname, 'baseline'),
+                outfile_merged = fpat(cutname, 'baseline', merged=True)
+            )
+            bdt_zoom_loose = bdt.copy(varname='bdt_discr_zoom_loose')
 
-        met = cos_theta.copy(
-            varname='met',
-            channel=channel,
-            #To show the MET distribution, don't apply the MET cut
-            cutstr='%(channel)s_'+cutname+'_nomet/',
-            cutstr_antiiso='%(channel)s_'+cutname+'_nomet/(antiiso_.*)/',
-            outfile_unmerged = fpat(cutname, 'nomet'),
-            outfile_merged = fpat(cutname, 'nomet', True),
-        )
-        mtw = met.copy(varname='mtw')
+            met = cos_theta.copy(
+                varname='met',
+                channel=channel,
+                #To show the MET distribution, don't apply the MET cut
+                cutstr='%(channel)s_'+cutname+'_nomet/',
+                cutstr_antiiso='%(channel)s_'+cutname+'_nomet/(antiiso_.*)/',
+                outfile_unmerged = fpat(cutname, 'nomet'),
+                outfile_merged = fpat(cutname, 'nomet', True),
+            )
+            mtw = met.copy(varname='mtw')
 
-        #for v in [bdt, met, mtw]:
-        for v in [bdt]:
-            logger.info("Plotting variable %s" % var.varname)
-            patterns = make_patterns(v)
-            templates = load_pickle(flist, patterns.values())
-            combine_templates(templates, patterns, v)
+            #for v in [bdt, met, mtw, bdt_zoom]:
+            for v in [bdt]:
+                logger.info("Plotting variable %s" % v.varname)
+                patterns = make_patterns(v)
+                templates = load_pickle(flist, patterns.values())
+                combine_templates(templates, patterns, v)
