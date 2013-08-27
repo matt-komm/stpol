@@ -261,7 +261,7 @@ if __name__=="__main__":
         h.SetMarkerSize(0)
     of = OutputFolder(subdir='unfolding/%s' % lep)
     canv = plot_hists(hi_norm, x_label="cos #theta", draw_cmd=["E1", "E1"], y_label="a.u.")
-    leg = legend(hi, styles=['p', 'f'], legend_pos='top-left', nudge_x=-0.08)
+    leg = legend(hi, styles=['p', 'f'], legend_pos='top-left', nudge_x=-0.06)
     lb = lumi_textbox(lumi,
             pos='top-right',
             line2="#scale[3.0]{A = %.2f #pm %.2f}" % (data_asym.GetMean(), pe_asym.GetRMS())

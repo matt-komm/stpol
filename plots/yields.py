@@ -45,21 +45,21 @@ if __name__ == "__main__":
 	for line1, line2 in zip(inf1.readlines(), inf2.readlines()):
 		samp, first_tot, first_err = parse_line(line1)
 		samp, second_tot, second_err = parse_line(line2)
-		vals[samp] = first_tot, first_err, second_tot, second_err
+		vals[samp.lower()] = first_tot, first_err, second_tot, second_err
 
-	s2 = print_proc(r"\ttbar    " , *vals["TTJets"])
-	s2 += print_proc(r"\wjets    ", *vals["WJets"])
-	s2 += print_proc(r"\zjets    ", *vals["DYJets"])
-	s2 += print_proc(r"\QCD      ", *vals["QCD"])
+	s2 = print_proc(r"\ttbar    " , *vals["ttjets"])
+	s2 += print_proc(r"\wjets    ", *vals["wjets"])
+	s2 += print_proc(r"\zjets    ", *vals["dyjets"])
+	s2 += print_proc(r"\QCD      ", *vals["qcd"])
 	s2 += print_proc(r"Diboson   ", *vals["diboson"])
-	s2 += print_proc(r"tW        ", *vals["tWchan"])
+	s2 += print_proc(r"tW        ", *vals["twchan"])
 	s2 += print_proc(r"s-channel ", *vals["schan"])
 	s2 += "\n" + r"\hline"
 	s2 += print_proc(r"t-channel ", *vals["tchan"])
 	s2 += "\n" + r"\hline"
-	s2 += print_proc(r"Total MC  ", *vals["MC"])
+	s2 += print_proc(r"Total MC  ", *vals["mc"])
 	s2 += "\n" + r"\hline"
 	s2 += "\n" + r"Data       & %.1f  & %.1f \\" % (vals["data"][0], vals["data"][2])
-
+	s2 += "\n" + r"\hline"
 
 	print s1+s2+s3
