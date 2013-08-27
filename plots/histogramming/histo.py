@@ -102,15 +102,18 @@ if __name__=="__main__":
     class PickleSaver:
         def __init__(self, fname):
             self.of = gzip.GzipFile(fname, 'wb')
+            self.of_list = open(fname+".header", 'wb')
             self.nhists = 0
 
         def save(self, path, obj):
+            self.of_list.write(path + "\n")
             obj.SetName(path)
             pickle.dump(obj, self.of)
             self.nhists += 1
 
         def close(self):
             self.of.close()
+            self.of_list.close()
 
     out = PickleSaver(args.outfile)
     graph = nx.DiGraph()
