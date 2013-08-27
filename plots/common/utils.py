@@ -98,7 +98,7 @@ class PhysicsProcess:
             out_d["data"] = self.SingleEle
         else:
             raise ValueError("Unrecognized lepton channel: %s" % lepton_channel)
-        
+
         out_d["diboson"] = self.diboson
         out_d["WJets"] = self.WJets_mg_exc
         out_d["DYJets"] = self.DYJets
@@ -316,7 +316,7 @@ def merge_hists(hists_d, merge_groups, order=PhysicsProcess.desired_plot_order):
     Merges the dictionary of input histograms according to the merge rules, which are specified
     as a key-value dictionary, where the key is the target and value a list of (regular) expressions
     to merge under the key.
-    
+
     For example, {
         "WJets": ["W[1-4]Jets_.*"],
         "tchan": ["T_t_ToLeptons", "Tbar_t_ToLeptons"],
