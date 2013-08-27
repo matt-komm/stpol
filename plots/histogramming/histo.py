@@ -90,12 +90,12 @@ if __name__=="__main__":
                 ),
             ]
             #MVA scan
-            for mva in numpy.linspace(0, 0.8, 9):
-                cuts.append(
-                    ("%s_mva_scan_%s" % (cn, str(mva).replace(".","_")),
-                        baseline * cbline * Cuts.mva_wp(lep, mva)
-                    ),
-                )
+           # for mva in numpy.linspace(0, 0.8, 9):
+           #     cuts.append(
+           #         ("%s_mva_scan_%s" % (cn, str(mva).replace(".","_")),
+           #             baseline * cbline * Cuts.mva_wp(lep, mva)
+           #         ),
+           #     )
 
     import cPickle as pickle
     import gzip
