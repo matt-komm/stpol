@@ -266,7 +266,7 @@ def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):
         coords[1]-=0.05
 
     text = ROOT.TPaveText(coords[0], coords[1], coords[2], coords[3], "NDC")
-    text.AddText("CMS %s #sqrt{s} = 8 TeV, #int L dt = %.2f fb^{-1}" % (state, float(lumi)/1000.0))
+    text.AddText("#scale[1.2]{CMS %s #sqrt{s} = 8 TeV, #int L dt = %.2f fb^{-1}}" % (state, float(lumi)/1000.0))
     if line2:
         text.AddText(line2)
     text.SetShadowColor(ROOT.kWhite)
