@@ -1,7 +1,6 @@
-rate, tchan, 0.819823, 0.194284
-rate, top, 0.991397, 0.050994
-rate, qcd, 1.040652, 0.796352
-rate, wzjets, 1.413117, 0.226122
+rate, tchan, 0.805103, 0.100596
+rate, other, 1.007617, 0.053248
+rate, wzjets, 1.689531, 0.190702
 shape, Res, 0.000000, 1.000000
 shape, __En, 0.000000, 1.000000
 shape, UnclusteredEn, 0.000000, 1.000000
@@ -11,10 +10,14 @@ shape, leptonID, 0.000000, 1.000000
 shape, leptonTrigger, 0.000000, 1.000000
 shape, wjets_flat, 0.000000, 1.000000
 shape, wjets_shape, 0.000000, 1.000000
+shape, pileup, 0.000000, 1.000000
+shape, top_pt, 0.000000, 1.000000
 shape, btaggingBC, 0.000000, 1.000000
 shape, btaggingL, 0.000000, 1.000000
+shape, mass, 0.000000, 1.000000
 shape, tchan_scale, 0.000000, 1.000000
 shape, wjets_scale, 0.000000, 1.000000
 shape, wjets_matching, 0.000000, 1.000000
 shape, iso, 0.000000, 1.000000
-corr, wzjets, top, -0.677312
+corr, wzjets, other, -0.951219
+ele__C
