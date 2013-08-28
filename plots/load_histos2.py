@@ -69,6 +69,37 @@ def _load_pickle(x):
     fi.close()
     return ret
 
+
+def load_rootfiles(fnames, patterns):
+    klist = dict()
+    pats = map(re.compile,
+        map(lambda x: x.replace("/", "___"), patterns)
+    )
+    for fn in fnames:
+        fi = ROOT.TFile(fn)
+        kl = [k.GetName() for k in fi.GetListOfKeys()]
+        kl_filtered = []
+        for k in kl:
+            for pat in pats:
+                if pat.match(k):
+                    kl_filtered.append(k)
+                    break
+        klist[fn] = kl_filtered
+        fi.Close()
+    rets = []
+    for fn, kl in klist.items():
+        fi = ROOT.TFile(fn)
+        for k in kl:
+            ROOT.gROOT.cd()
+            it = fi.Get(k).Clone()
+            it.SetName(it.GetName().replace("___", "/"))
+            if not it:
+                logger.error("Couldn't find object %s" % k)
+                raise Exception()
+            rets.append(it)
+
+    return rets
+
 def make_hist(item):
     item.__class__ = Hist
     item._post_init()
