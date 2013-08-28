@@ -11,6 +11,7 @@ from plots.common.cuts import Cuts, Weights
 import networkx as nx
 import argparse
 import numpy
+import ROOT
 
 
 def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
@@ -115,7 +116,28 @@ if __name__=="__main__":
             self.of.close()
             self.of_list.close()
 
-    out = PickleSaver(args.outfile)
+
+    class FlatROOTSaver:
+        def __init__(self, fname):
+            self.of = ROOT.TFile(fname, "RECREATE")
+            #self.of_list = open(fname+".header", 'wb')
+            self.nhists = 0
+
+        def save(self, path, obj):
+            #self.of_list.write(path + "\n")
+            obj.SetName(path.replace("/", "___"))
+            self.of.cd()
+            #obj.SetDirectory(self.of)
+            obj.Write("", ROOT.TObject.kOverwrite)
+            #pickle.dump(obj, self.of)
+            self.nhists += 1
+
+        def close(self):
+            #self.of.Write()
+            self.of.Close()
+            #self.of_list.close()
+
+    out = FlatROOTSaver(args.outfile)
     graph = nx.DiGraph()
     snodes = [tree.SampleNode(out, graph, inf, [], []) for inf in args.infiles]
     logger.info("Done constructing sample nodes: %d" % len(snodes))
