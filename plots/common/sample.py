@@ -68,7 +68,7 @@ class Sample:
         self.do_caching = kwargs.get("do_caching", False)
         if self.do_caching:
             self.tree.SetBranchStatus("*", 1)
-            self.tree.SetCacheSize(500*1024*1024)
+            self.tree.SetCacheSize(10*1024*1024)
             self.tree.AddBranchToCache("*")
 
         if self.tfile.Get("trees/WJets_weights"):
