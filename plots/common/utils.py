@@ -258,9 +258,9 @@ def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):
     A TPaveText instance with the lumi information
     """
     if pos=="top-left":
-        coords = [0.2, 0.86, 0.66, 0.91]
+        coords = [0.2, 0.80, 0.66, 0.91]
     if pos=="top-right":
-        coords = [0.5, 0.86, 0.96, 0.91]
+        coords = [0.48, 0.80, 0.96, 0.91]
 
     if line2:
         coords[1]-=0.05
@@ -272,6 +272,8 @@ def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):
     text.SetShadowColor(ROOT.kWhite)
     text.SetLineColor(ROOT.kWhite)
     text.SetFillColor(ROOT.kWhite)
+    text.SetTextFont(43)
+    text.SetTextSize(14)
     text.Draw()
     return text
 

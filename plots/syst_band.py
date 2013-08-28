@@ -115,12 +115,17 @@ class PlotDef:
         max_bin_mult_log=200,
         max_bin_mult=1.8,
 
+        min_bin=1,
+
         #Normalize data yield to MC
         normalize=False,
 
         #The scale factor for the N(data, anti-iso)/N(QCD, iso) yields,
         process_scale_factor = []
     )
+
+    def get_min_bin(self):
+        return self.min_bin
 
     def get_lumi_pos(self):
         if not hasattr(self, "lumi_pos"):
@@ -142,6 +147,12 @@ class PlotDef:
         #The systematic inclusion list is a list of regex patterns to include
         if isinstance(self.systematics, basestring):
             self.systematics = [self.systematics]
+
+    def get_ratio_minmax(self):
+        if hasattr(self, "ratio_limit"):
+            return (-self.ratio_limit, self.ratio_limit)
+        else:
+            return 2.0
 
     def get_x_label(self):
         #The default variable pretty name is taken externally
@@ -312,7 +323,8 @@ def data_mc_plot(pd):
         s.SetLineStyle('dashed')
         s.SetTitle("stat. + syst.")
 
-    c = ROOT.TCanvas("c", "c", 1000, 1000)
+    #c = ROOT.TCanvas("c", "c", 1000, 1000)
+    c = ROOT.TCanvas("c", "c")
     p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
@@ -320,7 +332,11 @@ def data_mc_plot(pd):
     p1.SetFillStyle(0);
     p1.cd()
 
-    stacks = plot_hists_stacked(p1, stacks_d, x_label=pd.get_x_label(), max_bin_mult=pd.get_max_bin_mult())
+    stacks = plot_hists_stacked(
+        p1, stacks_d,
+        x_label=pd.get_x_label(), max_bin_mult=pd.get_max_bin_mult(),
+        min_bin=pd.get_min_bin()
+    )
     p1.SetLogy(pd.log)
 
     syst_stat_up.Draw("SAME hist")
@@ -328,7 +344,7 @@ def data_mc_plot(pd):
 
     ratio_pad, hratio = plot_data_mc_ratio(
         c, hists_nom_data,
-        nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=(-1, 1)
+        nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=pd.get_ratio_minmax()
     )
 
 

@@ -7,7 +7,7 @@ except ImportError:
     from odict import OrderedDict
 import logging
 logger = logging.getLogger("stack_plot")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 
 def plot_hists_stacked(canv, hist_groups, **kwargs):
     """
@@ -112,10 +112,10 @@ def plot_hists_stacked(canv, hist_groups, **kwargs):
 
         #Set the plot style on the first stack
         if first:
-            logger.info('minimum: %1.3f maximum: %1.3f' % (min_bin, max_bin_mult*max_bin))
+            logger.debug('minimum: %1.3f maximum: %1.3f' % (min_bin, max_bin_mult*max_bin))
             stack.SetMaximum(max_bin_mult*max_bin)
-            if do_log_y:
-                stack.SetMinimum(min_bin)
+            #if do_log_y:
+            stack.SetMinimum(min_bin)
             stack.SetTitle(title)
             stack.GetXaxis().SetTitle(x_label)
             if len(y_label)>0:
