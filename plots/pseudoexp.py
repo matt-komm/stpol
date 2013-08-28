@@ -114,6 +114,10 @@ fitpars = {}
 fitpars['mu'] = 1.03
 fitpars['ele'] = 0.95
 
+measured_asym_errs = dict()
+measured_asym_errs['mu'] = (0.08, 0.12)
+measured_asym_errs['ele'] = (0.12, 0.22)
+
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
     tdrstyle()
@@ -158,7 +162,6 @@ if __name__=="__main__":
         t.SetBranchAddress(brname, ROOT.AddressOf(hi))
         #Initialize the histogram
         t.GetEntry(0)
-
 
         #Now we can have a proper histogram with the right bins
         binning = get_binning(hi)
@@ -207,28 +210,57 @@ if __name__=="__main__":
         logger.debug("Posterior binning B = %s" % (str(get_binning(posterior))))
         return posterior, hasym, binning
 
-    #Take the lumis from a central database
-    lumi = lumis["83a02e9_Jul22"]["iso"][lep]
+    def get_posterior_method2(fn):
+        fi = ROOT.TFile(fn)
+        ROOT.gROOT.cd()
+        posterior = fi.Get("unfolded").Clone()
+        hasym = fi.Get("asymmetry").Clone()
+        binning = get_binning(posterior)
+        return posterior, hasym, binning
 
-    pe_post, pe_asym, binning = get_posterior(args.infileMC)
-    data_post, data_asym, binning = get_posterior(args.infileD)
+    def rebin(hi, binning):
+
+        n = 1
+        hnew = Hist(binning, name=hi.name, title=hi.title)
+        for i in range(hi.nbins()):
+            hnew[i] = hi[i]
+            hnew.SetBinError(i+1, hi.GetBinError(i+1))
+        return hnew
+
+
+    #Take the lumis from a central database
+    lumi = lumis["343e0a9_Aug22"]["iso"][lep]
+
+    pe_post, pe_asym, binning = get_posterior_method2(args.infileMC)
+    data_post, data_asym, binning = get_posterior_method2(args.infileD)
+    data_post.__class__ = Hist
+    data_post._post_init()
+
+    data_asym.__class__ = Hist
+    data_asym._post_init()
+
+    binning = np.linspace(-1, 1, len(binning))
+    logger.info(str(binning))
 
     data_post.SetTitle("unfolded data")
     data_asym.SetTitle("unfolded data")
-    
-    # Make the ansatz that the pseudo-experiment distribution
-    # describes the distribution of the unfolding result, that is
-    # that we can take the PE error as the final error on the unfolding.
-    for i in range(1, data_post.nbins()+1):
-        data_post.SetBinError(i, pe_post.GetBinError(i))
+
+    data_post = rebin(data_post, binning)
+    # disabled since now the unfolded distribution already has an error
+    # # Make the ansatz that the pseudo-experiment distribution
+    # # describes the distribution of the unfolding result, that is
+    # # that we can take the PE error as the final error on the unfolding.
+    # for i in range(1, data_post.nbins()+1):
+    #     data_post.SetBinError(i, pe_post.GetBinError(i))
 
     # Get the true distribution at generator level,
     # requiring the presence of a lepton with the
     # correct gen flavour
     htrue = None
     for fn in ["T_t_ToLeptons", "Tbar_t_ToLeptons"]:
-        s = Sample.fromFile("data/Step3_Jul26/%s/mc/iso/nominal/Jul15/%s.root" % (lep, fn))
-        hi = s.drawHistogram("true_cos_theta", str(Cuts.true_lepton(lep)), binning=binning)
+        #s = Sample.fromFile("data/Step3_Jul26/%s/mc/iso/nominal/Jul15/%s.root" % (lep, fn))
+        s = Sample.fromFile("data/37acf5_343e0a9_Aug22/%s.root" % (fn))
+        hi = s.drawHistogram("true_cos_theta", str(Cuts.true_lepton(lep)), binning=list(binning))
         hi.Scale(s.lumiScaleFactor(lumi))
         if htrue:
             htrue += hi
@@ -241,6 +273,11 @@ if __name__=="__main__":
 
     #Normalize to same area
     #htrue.Scale(data_post.Integral() / htrue.Integral())
+    logger.info(str(list(htrue.y())))
+    logger.info(str(list(data_post.y())))
+
+    measured_asym = asymmetry(data_post, len(binning)/2 + 1)
+
 
     #####################
     # Plot the unfolded #
@@ -256,6 +293,7 @@ if __name__=="__main__":
     hi = [data_post, htrue]
     chi2 = data_post.Chi2Test(htrue, "WW CHI2/NDF")
     htrue.SetTitle(htrue.GetTitle() + " #chi^{2}/#nu = %.1f" % chi2)
+    #hi_norm = hi
     hi_norm = map(post_normalize, hi)
     for h in hi[1:]:
         h.SetMarkerSize(0)
@@ -264,7 +302,9 @@ if __name__=="__main__":
     leg = legend(hi, styles=['p', 'f'], legend_pos='top-left', nudge_x=-0.06)
     lb = lumi_textbox(lumi,
             pos='top-right',
-            line2="#scale[3.0]{A = %.2f #pm %.2f}" % (data_asym.GetMean(), pe_asym.GetRMS())
+            line2="#scale[1.5]{A = %.2f #pm %.2f (stat.) #pm %.2f (syst.)}" % (
+                measured_asym, measured_asym_errs[lep][0],  measured_asym_errs[lep][1]
+            )
         )
     pmi = PlotMetaInfo('costheta_unfolded_%s' % lep, 'genlevel', 'None', [args.infileMC, args.infileD])
     of.savePlot(canv, pmi)
@@ -274,15 +314,41 @@ if __name__=="__main__":
     ######################
     hi = [pe_asym]
     Styling.mc_style(pe_asym, 'T_t')
-    pe_asym.SetMarkerSize(0)
-    Styling.data_style(data_asym)
+    #Styling.data_style(data_asym)
+    pe_asym.SetTitle("exp. asymmetry")
+
+    # from plots.common.histogram import norm
+    # norm(pe_asym)
+    # norm(data_asym)
+    
+    #data_asym.SetMarkerSize(1)
+
     canv = plot_hists(hi, x_label="asymmetry", draw_cmd=["l2"])
-    line = ROOT.TLine(data_asym.GetMean(), 0, data_asym.GetMean(), 0.5*pe_asym.GetMaximum())
-    lb = lumi_textbox(lumi, line2="exp. %.2f #pm %.2f, meas. %.2f" % (pe_asym.GetMean(), pe_asym.GetRMS(), data_asym.GetMean()))
+    line = ROOT.TLine(measured_asym, 0, measured_asym, 0.5*pe_asym.GetMaximum())
+    def line_title():
+        return "meas. (stat. + syst.)"
+    line.GetTitle = line_title
+
+    import math
+    err = math.sqrt(reduce(lambda x, y: x**2 + y**2, list(measured_asym_errs[lep])))
+    low, high = measured_asym - err, measured_asym + err
+
+    line_low = ROOT.TLine(low, 0, low, 0.5*pe_asym.GetMaximum())
+    line_high = ROOT.TLine(high, 0, high, 0.5*pe_asym.GetMaximum())
+
+    for l in [line_low, line_high]:
+        l.SetLineStyle(2)
+
+    lb = lumi_textbox(lumi, line2="exp. %.2f #pm %.2f, meas. %.2f #pm %.2f (stat.) #pm %.2f (syst.)" % (
+        pe_asym.GetMean(), pe_asym.GetRMS(), measured_asym, measured_asym_errs[lep][0],  measured_asym_errs[lep][1])
+    )
     line.Draw("SAME")
-    leg = legend(hi, styles=['f'])
+    line_low.Draw("SAME")
+    line_high.Draw("SAME")
+
+    leg = legend(hi + [line], styles=['f', 'f'], nudge_x=-0.05)
     pmi = PlotMetaInfo('asymmetry_%s' % lep, 'genlevel', 'None', [args.infileMC, args.infileD])
     of.savePlot(canv, pmi)
     print 80*"-"
-    print "Expected %.2f ± %.2f, measured %.2f" % (pe_asym.GetMean(), pe_asym.GetRMS(), data_asym.GetMean())
+    print "Expected %.2f ± %.2f, measured %.2f" % (pe_asym.GetMean(), pe_asym.GetRMS(), measured_asym)
     print "All done"
