@@ -61,7 +61,6 @@ class Sample:
         if not self.tree:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
- #Switching off caching for now, as it is a huge memory hog and not very effective over /hdfs
         self.tree.SetBranchStatus("*", 1)
         self.tree.SetCacheSize(500*1024*1024)
         self.tree.AddBranchToCache("*")
