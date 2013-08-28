@@ -62,6 +62,7 @@ def make_histos_with_cuts(var,
    outfile.cd()
    fit.orig = {}      
    #non-QCD
+   fit.shapes = []
    for s in systematics:
       if s == "Nominal":
          stack = stacks[var.name+s+"iso"]
@@ -72,6 +73,8 @@ def make_histos_with_cuts(var,
                 hWJ.Add(h)            
             else:
                 h1.Add(h)
+            h.SetDirectory(0)
+            fit.shapes.append(h)
             #if componentShapes == True:
             #    h.Scale(1/h.Integral())
             #    h.Write()
@@ -105,6 +108,7 @@ def make_histos_with_cuts(var,
    #print dataGroup._histograms
    hData = dataGroup.getHistogram(var, "Nominal", "iso", cuts.name)
    hData.SetName(var.shortName+"__DATA")
+   fit.shapes.append(hData)            
    print "data integral", hData.Integral()
    hData.Write()
          
@@ -178,7 +182,8 @@ def make_histos_with_cuts(var,
       print "QCD isoDown integral", hQCDisoDown.GetEntries(), hQCDisoDown.Integral()
       hQCDisoUp.Write()
       hQCDisoDown.Write()
-   
+   fit.shapes.append(hQCD)
+            
    outfile.Write()   
    outfile.Close()
 

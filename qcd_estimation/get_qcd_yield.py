@@ -133,7 +133,7 @@ if __name__=="__main__":
         cut = cuts[cutn]
         try:
             (results, fit) = get_qcd_yield_with_selection(cut, True, args.channel, base_path=args.path, do_systematics=args.doSystematics, doSystematicCuts = args.doSystematicCuts)
-        except rootpy.ROOTError, TypeError:
+        except:# rootpy.ROOTError:
             failed += [cutn]
             continue
         (y, error_mtcut) = results["mt"]
@@ -144,11 +144,13 @@ if __name__=="__main__":
         print "QCD scale factor, with m_t/met cut:", qcd_sf, "from", fit.orig["qcd_no_mc_sub"], "to ", y
         print "QCD scale factor, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_no_mc_sub_nomtcut"], "to ", y_nomtcut
         print "Fit information", fit
+        #print "Non-QCD: ", fit.nonqcd, "+-", fit.nonqcd_uncert
+        #print "W+jets: ", fit.wjets, "+-", fit.wjets_uncert
         print "QCD scale factor with MC subtraction, with m_t/met cut:", y/fit.orig["qcd"], "from", fit.orig["qcd"], "to ", y
         #print "QCD scale factor with MC subtraction, without m_t/met cut:", qcd_sf_nomt, "from", fit.orig["qcd_nomtcut"], "to ", y_nomtcut
         
         plot_fit(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
-        #plot_fit_shapes(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel])
+        #plot_fit_shapes(fit.var, cut, fit.dataHisto, fit, lumi_iso[args.channel], fit.shapes)
         n_bins = fit.dataHisto.GetNbinsX()
     
         infile = "fits/"+fit.var.shortName+"_fit_"+cut.name+".root"

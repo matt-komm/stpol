@@ -45,7 +45,7 @@ def fit_qcd(variable, identifier, fit):
    infile = indir+variable.shortName+"_templates_"+identifier+".root"
    outfile = outdir+variable.shortName+"_fit_"+identifier+".root"
    results_file.write("# "+identifier+"...")
-   
+   fit.coeff = {}   
    for i in range(0,1000):
       try:
          model = get_model(infile, i)  
@@ -55,6 +55,9 @@ def fit_qcd(variable, identifier, fit):
          #print "_____"
          #print "res_"+identifier+".res="+str(result)
          fit.result=result
+        
+         fit.coeff["wjets"] = math.log(init_val_wjets+i*step)
+         fit.coeff["nonqcd"] = math.log(init_val+i*step)
          #print fit.result
          values = {}
          values_minus = {}
