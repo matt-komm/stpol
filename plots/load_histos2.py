@@ -677,7 +677,7 @@ if __name__=="__main__":
 
     def fpat(cutname, subcut, merged=False):
         return 'out/hists/' + 'hists__' if not merged else 'hists_merged__' + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
-    
+
     for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
         for channel in ["mu", "ele"]:
             for cut in ["baseline", "mva_loose", "cutbased_final"]:

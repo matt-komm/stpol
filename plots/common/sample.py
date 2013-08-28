@@ -33,7 +33,11 @@ class Sample:
         logger.debug("Closing sample %s" % self.name)
         self.tfile.Close()
 
-    def __init__(self, name, file_name, tree_name = "Events", process_name=None):
+    def __init__(self,
+            name, file_name,
+            tree_name = "Events", process_name=None,
+            **kwargs
+        ):
         """
             name - The name of this sample. Typically the filename of the .root file containing the TTree
             file_name - The path to the file that you want to open as a TFile
@@ -61,10 +65,11 @@ class Sample:
         if not self.tree:
             raise TObjectOpenException("Could not open tree "+tree_name+" from file %s: %s" % (self.tfile.GetName(), self.tree))
 
- #Switching off caching for now, as it is a huge memory hog and not very effective over /hdfs
-        self.tree.SetBranchStatus("*", 1)
-        self.tree.SetCacheSize(500*1024*1024)
-        self.tree.AddBranchToCache("*")
+        self.do_caching = kwargs.get("do_caching", False)
+        if self.do_caching:
+            self.tree.SetBranchStatus("*", 1)
+            self.tree.SetCacheSize(500*1024*1024)
+            self.tree.AddBranchToCache("*")
 
         if self.tfile.Get("trees/WJets_weights"):
             self.tree.AddFriend("trees/WJets_weights")
