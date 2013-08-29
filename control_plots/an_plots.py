@@ -103,7 +103,7 @@ if __name__=="__main__":
         """
         Rebin factor
         """
-        return 4
+        return 2
 
     def lgp(varname):
         if varname in ["cos_theta"]:
