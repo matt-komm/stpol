@@ -558,9 +558,10 @@ def generate_systematics(channel, coupling):
     systematics["partial"]["mass"] = {}
     systematics["partial"]["mass"]["down"] = {}
     systematics["partial"]["mass"]["up"] = {}
-    systematics["partial"]["tchan_scale"] = {}
-    systematics["partial"]["tchan_scale"]["down"] = {}
-    systematics["partial"]["tchan_scale"]["up"] = {}
+    if coupling == "powheg":
+        systematics["partial"]["tchan_scale"] = {}
+        systematics["partial"]["tchan_scale"]["down"] = {}
+        systematics["partial"]["tchan_scale"]["up"] = {}
     systematics["partial"]["ttbar_scale"] = {}
     systematics["partial"]["ttbar_scale"]["down"] = {}
     systematics["partial"]["ttbar_scale"]["up"] = {}
@@ -571,7 +572,7 @@ def generate_systematics(channel, coupling):
     #systematics["partial"]["wjets_scale"] = {}
     #systematics["partial"]["wjets_scale"]["down"] = {}
     #systematics["partial"]["wjets_scale"]["up"] = {}
-    systematics["partial"]["wjets_matching"] = {}
+    #systematics["partial"]["wjets_matching"] = {}
     #systematics["partial"]["wjets_matching"]["down"] = {}
     #systematics["partial"]["wjets_matching"]["up"] = {}
     systematics["partial"]["iso"] = {}
