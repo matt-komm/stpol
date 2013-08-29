@@ -72,14 +72,7 @@ def get_signal_histo(var, weight, step3='/'.join([os.environ["STPOL_DIR"], "step
     return merged_hists[0]
 
 
-def efficiency(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None, coupling = "powheg", asymmetry=None, extra=None, systematic="nominal"):
-    outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling, asymmetry, extra=extra)])
-    try:
-        shutil.rmtree(outdir)
-    except OSError:
-        logging.warning("Couldn't remove directory %s" % outdir)
-    mkdir_p(outdir)
-        
+def efficiency(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None, coupling = "powheg", asymmetry=None, extra=None, systematic="nominal", outdir="."):
     fo = root_open(outdir+"/rebinned_"+systematic+".root","recreate")
     
     TH1.SetDefaultSumw2(True)
