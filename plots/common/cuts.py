@@ -59,8 +59,8 @@ class Cuts:
     _antiiso = {
         "mu": {
             "nominal": Cut("mu_iso>0.2 && mu_iso<0.5"),
-            "up": Cut("mu_iso>0.3 && mu_iso<0.5"),
-            "down": Cut("mu_iso>0.2 && mu_iso<0.4"),
+            "up": Cut("mu_iso>0.22 && mu_iso<0.5"),
+            "down": Cut("mu_iso>0.2 && mu_iso<0.45"),
         },
         "ele": {
             "nominal": Cut("el_iso > 0.15 && el_iso < 0.5"),
@@ -462,7 +462,7 @@ class Weights:
         reweight to given asymmetry.
         FIXME@Andres: mathematical description of what and why you are doing so that we don't forget.
         """
-        weight = Weight(str(asymmetry)+" * true_cos_theta + 0.5) / (0.44*true_cos_theta + 0.5))")
+        weight = Weight("(("+str(asymmetry)+" * true_cos_theta + 0.5) / (0.44*true_cos_theta + 0.5))")
         return weight
 
     #Weights grouped by nominal, up, down for systematic access
