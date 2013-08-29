@@ -5,12 +5,17 @@ import logging
 logger = logging.getLogger("fit.py")
 logger.setLevel(logging.INFO)
 
+SIGNAL = 'tchan'
+#SIGNAL = 'wzjets'
+
+
 class Fit:
     def __init__(self
             , filename
             , name = None
             , rates = {"tchan": inf,  "wzjets": inf, "other": 0.2}
-            , shapes = ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"] #"__En" to avoid matching with UnclusteredEn
+            #, shapes = ["Res", "__En", "ttbar_matching", "ttbar_scale", "iso"] #"__En" to avoid matching with UnclusteredEn
+            , shapes = []
             , correlations = [("wzjets", "other")]):
 
         self.filename = filename
@@ -28,7 +33,7 @@ class Fit:
 
     @staticmethod
     def getShapeSystematics(fit):
-        systematics = ["Res", "__En", "UnclusteredEn", "ttbar_matching", "ttbar_scale", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape", "btaggingBC", "btaggingL", "tchan_scale", "wjets_scale", "wjets_matching", "iso"]
+        systematics = ["Res", "__En", "UnclusteredEn", "ttbar_matching", "ttbar_scale", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape", "pileup", "top_pt", "btaggingBC", "btaggingL", "mass","tchan_scale", "wjets_scale", "wjets_matching", "iso"]
         if fit.filename.startswith("mu"):
             systematics.append("leptonIso")
         return systematics
@@ -43,6 +48,9 @@ class Fit:
     def setCorrelations(self, correlations):
         self.correlations = correlations
 
+    def getName(self):
+        return self.name
+    
     def setName(self, name):
         self.name = name
 
@@ -51,7 +59,7 @@ class Fit:
 
     def add_uncertainties_to_model(self, model):
         for (channel, prior) in self.rates.items():
-            if channel == "tchan":
+            if channel == SIGNAL:
                 continue
             add_normal_uncertainty(model, channel, prior, channel)
         #add_normal_uncertainty(model, "top", 0.2, "top")
@@ -61,7 +69,7 @@ class Fit:
     def get_type(self, fit, name, name2 = None):
         if name2 is not None:
             return "corr"
-        elif name.replace("beta_signal", "tchan") in Fit.getRateSystematics():
+        elif name.replace("beta_signal", SIGNAL) in Fit.getRateSystematics():
             return "rate"
         elif name in Fit.getShapeSystematics(fit):
             return "shape"
@@ -84,8 +92,8 @@ class Fit:
         f = open(fname, 'w')
         for (syst, prior) in Fit.getRateSystematics().items():
             st_type = self.get_type(fit, syst)
-            if syst in fitresults.keys() or (syst == "tchan" and "beta_signal" in fitresults.keys()):
-                line = '%s, %s, %f, %f\n' % (st_type, syst, fitresults[syst.replace("tchan", "beta_signal")][0], fitresults[syst.replace("tchan", "beta_signal")][1])
+            if syst in fitresults.keys() or (syst == SIGNAL and "beta_signal" in fitresults.keys()):
+                line = '%s, %s, %f, %f\n' % (st_type, syst, fitresults[syst.replace(SIGNAL, "beta_signal")][0], fitresults[syst.replace(SIGNAL, "beta_signal")][1])
                 print line,
             else:
                 line = '%s, %s, %f, %f\n' % (st_type, syst, 1.0, prior)
@@ -101,8 +109,8 @@ class Fit:
         n = cor.GetNbinsX()
         for i in range(1, n+1):
             for j in range(1, n+1):
-                xlabel = cor.GetXaxis().GetBinLabel(i).replace("beta_signal", "tchan")
-                ylabel = cor.GetYaxis().GetBinLabel(j).replace("beta_signal", "tchan")
+                xlabel = cor.GetXaxis().GetBinLabel(i).replace("beta_signal", SIGNAL)
+                ylabel = cor.GetYaxis().GetBinLabel(j).replace("beta_signal", SIGNAL)
                 if (xlabel, ylabel) in self.correlations:
                     cor_value = cor.GetBinContent(i,j)
                     line = 'corr, %s, %s, %f\n' % (xlabel, ylabel, cor_value)
@@ -156,7 +164,7 @@ class Fit:
         canvas2 = ROOT.TCanvas("Correlation","Correlation")
         corr.Draw("COLZ TEXT")
         canvas2.Print("plots/"+self.name+"/corr.png")
-        canvas2.Print("plots/"+self.name+"/corr.pdf")
+        canvas2.Print("plots/"+self.name+"/"+self.name+"_corr.pdf")
         corr.Write()
         cov.Write()
         fcov.Close()
@@ -204,6 +212,14 @@ def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'
 Fit.mu_mva_BDT = Fit("mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj")
 Fit.ele_mva_BDT = Fit("ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj")
 
+Fit.ele_mva_BDT_nominal = deepcopy(Fit.ele_mva_BDT)
+Fit.mu_mva_BDT_nominal = deepcopy(Fit.mu_mva_BDT)
+Fit.ele_mva_BDT_nominal.setShapes([])   #no shape uncertainties
+Fit.mu_mva_BDT_nominal.setShapes([])
+
+Fit.mu_mva_BDT.setName(Fit.mu_mva_BDT.getName()+"_with_systematics")
+Fit.ele_mva_BDT.setName(Fit.ele_mva_BDT.getName()+"_with_systematics")
+
 Fit.ele_mva_BDT_qcd_0 = deepcopy(Fit.ele_mva_BDT)
 Fit.ele_mva_BDT_qcd_0.setName("QCD fixed to 0")
 Fit.ele_mva_BDT_qcd_0.addRescale("qcd", 0.)
@@ -231,11 +247,11 @@ Fit.mu_eta_lj = Fit("mu__eta_lj")
 Fit.ele_eta_lj = Fit("ele__eta_lj")
 
 Fit.fits = {}
-Fit.fits["mva_BDT"] = set([Fit.mu_mva_BDT, Fit.ele_mva_BDT])
+Fit.fits["mva_BDT"] = set([Fit.mu_mva_BDT_nominal, Fit.ele_mva_BDT_nominal]) #Fit.mu_mva_BDT, Fit.ele_mva_BDT, 
 Fit.fits["eta_lj"] = set([Fit.mu_eta_lj, Fit.ele_eta_lj])
-Fit.fits["C"] = set([Fit.ele_C])
-Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_eta_lj, Fit.mu_C])
-Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_eta_lj, Fit.ele_mva_BDT_qcd_0, Fit.ele_mva_BDT_qcd_0_5, Fit.ele_mva_BDT_qcd_1_0, Fit.ele_mva_BDT_qcd_1_5, Fit.ele_mva_BDT_qcd_2_0, Fit.ele_C])
+Fit.fits["C"] = set([Fit.ele_C, Fit.mu_C])
+Fit.fits["mu"] = set([Fit.mu_mva_BDT, Fit.mu_mva_BDT_nominal, Fit.mu_eta_lj, Fit.mu_C])
+Fit.fits["ele"] = set([Fit.ele_mva_BDT, Fit.ele_mva_BDT_nominal, Fit.ele_eta_lj, Fit.ele_mva_BDT_qcd_0, Fit.ele_mva_BDT_qcd_0_5, Fit.ele_mva_BDT_qcd_1_0, Fit.ele_mva_BDT_qcd_1_5, Fit.ele_mva_BDT_qcd_2_0, Fit.ele_C])
 
 Fit.all_fits = deepcopy(Fit.fits["mu"])
 Fit.all_fits = Fit.all_fits.union(Fit.fits["ele"])
