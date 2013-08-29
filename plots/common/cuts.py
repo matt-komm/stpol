@@ -312,7 +312,9 @@ class Weight:
             self.name = escape(weight_str)
         else:
             self.name = name
-        self.weight_str = weight_str
+
+        #Weight needs to be bracketed to avoid crazy results when mulitplying
+        self.weight_str = "(%s)" % weight_str
 
     def __mul__(self, other):
         weight_str = '('+self.weight_str+') * ('+other.weight_str+')'
@@ -441,7 +443,7 @@ class Weights:
     mu = Weight("muon_IsoWeight")*Weight("muon_IDWeight")*Weight("muon_TriggerWeight")
     ele = Weight("electron_IDWeight")*Weight("electron_TriggerWeight")
 
-    
+
     sherpa_weight = Weight("gen_weight")
     sherpa_flavour_weight = Weight("wjets_sh_flavour_flat_weight")
 
@@ -452,7 +454,7 @@ class Weights:
             Weights.wjets_madgraph_flat_weight() *
             Weights.wjets_madgraph_shape_weight() *
             Weights.pu() *
-            Weights.b_weight() * 
+            Weights.b_weight() *
             Weights.top_pt[0]
         )
 
@@ -485,7 +487,7 @@ class Weights:
 
     #Check the effect of the lepton scale factor differing from unity (more correct would be mean weight)
     muon_sel["shape"] = (
-        Weight("1.0 - 0*abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_nominal"),
+        Weight("1.0 - 0.0*abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_nominal"),
         Weight("1.0 + abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_up"),
         Weight("1.0 - abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_down")
     )
@@ -526,7 +528,7 @@ class Weights:
 
     wjets_yield_syst = (
         Weight("wjets_mg_flavour_flat_weight"),
-        Weight("wjets_mg_flavour_flat_weight_up"), 
+        Weight("wjets_mg_flavour_flat_weight_up"),
         Weight("wjets_mg_flavour_flat_weight_down"),
     )
 
@@ -537,7 +539,7 @@ class Weights:
     )
 
     btag_syst = (
-        Weight("b_weight_nominal"), 
+        Weight("b_weight_nominal"),
         Weight("b_weight_nominal_BCup"),
         Weight("b_weight_nominal_BCdown"),
         Weight("b_weight_nominal_Lup"),
