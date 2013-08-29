@@ -7,6 +7,7 @@ from plots.common.cross_sections import lumi_iso
 from plots.common.sample import Sample
 from plots.common.cuts import *
 from plots.common.load_samples import get_sample_names
+import shutil
 
 var_min = -1
 var_max = 1
@@ -59,7 +60,7 @@ def get_signal_histo(var, weight, step3='/'.join([os.environ["STPOL_DIR"], "step
     hists_mc = {}
     samples = get_signal_samples(coupling, step3, proc, systematic)
     if asymmetry is not None:
-        weight = asymmetry_weight(asymmetry, weight)
+        weight = str(Weight(str(weight)) * Weights.asymmetry_weight(asymmetry))
     for name, sample in samples.items():
         if sample.isMC:
             hist = sample.drawHistogram(var, cuts, weight=weight, plot_range=plot_range)
@@ -73,7 +74,12 @@ def get_signal_histo(var, weight, step3='/'.join([os.environ["STPOL_DIR"], "step
 
 def efficiency(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None, coupling = "powheg", asymmetry=None, extra=None, systematic="nominal"):
     outdir = '/'.join([os.environ["STPOL_DIR"], "unfold", "histos", generate_out_dir(proc, "cos_theta", mva_cut, coupling, asymmetry, extra=extra)])
+    try:
+        shutil.rmtree(outdir)
+    except OSError:
+        logging.warning("Couldn't remove directory %s" % outdir)
     mkdir_p(outdir)
+        
     fo = root_open(outdir+"/rebinned_"+systematic+".root","recreate")
     
     TH1.SetDefaultSumw2(True)
@@ -83,9 +89,9 @@ def efficiency(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None,
     samples = get_signal_samples(coupling, indir, proc, systematic)
     cuts_presel = str(Cuts.true_lepton(proc))
     presel_weight = "1"
-    if asymmetry is not None:
-        presel_weight = asymmetry_weight(asymmetry, presel_weight)
-        weight = asymmetry_weight(asymmetry, weight)
+    if asymmetry is not None:        
+        presel_weight = str(Weights.asymmetry_weight(asymmetry))
+        weight = str(Weight(str(weight)) * Weights.asymmetry_weight(asymmetry))
     for name, sample in samples.items():
         hist_presel = sample.drawHistogram(var_x, cuts_presel, weight=presel_weight, plot_range=bins_x)
         hist_presel.Scale(sample.lumiScaleFactor(lumi))
@@ -136,7 +142,7 @@ def efficiency(cuts, weight, bins_x, bins_y, indir, proc = "mu", mva_cut = None,
     lumi = lumi_iso[proc]
     matrices = {}
     if asymmetry is not None:
-        weight = asymmetry_weight(asymmetry, weight)
+        weight = str(Weight(str(weight)) * Weights.asymmetry_weight(asymmetry))
     for name, sample in samples.items():
         matrix = sample.drawHistogram2D(var_x, var_y, cuts, weight=weight, binning_x=bins_x, binning_y=bins_y)
         matrix.Scale(sample.lumiScaleFactor(lumi))
