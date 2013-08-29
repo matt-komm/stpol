@@ -56,7 +56,7 @@ def make_systematics_histos(var, cuts, cuts_antiiso, systematics, outdir="/".joi
             make_histos_for_syst(var, systname, sub_systs, cuts, cuts_antiiso, outdir, indir, channel, coupling=coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
     
     #hadd_histos(outdir)
-
+    
     #Order is important here
     #add_histos_vary_components(outdir, var, channel, "mva" in cuts, mtmetcut)
     add_histos(outdir, var, channel, "mva" in cuts, mtmetcut)
@@ -225,7 +225,7 @@ def write_histos_to_file(hists, outdir, syst=""):
         filename = filename.replace("/lqeta","")
     #filename += ".root"
     outfile = File(filename, "recreate")
-    print "writing to file", filename
+    #rint "writing to file", filename
     for category in hists:
         factor = 1.0    
         total_hist=hists[category][0].Clone()
@@ -233,39 +233,55 @@ def write_histos_to_file(hists, outdir, syst=""):
         #total_hist.Sumw2()
         total_hist.SetNameTitle(category,category)
         outfile.cd()
-        #print category
+        #print "CAT",category
         for bin in range(1, total_hist.GetNbinsX()+1):
             zero_error = 0.
             zero_integral = 0.
             nonzero_error = 0.
             bin_sum = 0.
-            max_zero_error = 0.
+            max_zero_error = 0.            
+            zero_errors = {}
+            zero_errors[category] = []
             for hist in hists[category]:
                 #print "hist", hist.GetBinContent(bin), hist.GetBinError(bin)**2
-                if hist.GetEntries()>0:
+                zero_errors[category].append(sys.float_info.max)
+                if hist.Integral()>0:
                     #factor = hist.Integral()/(math.sqrt(hist.GetEntries()) * total_hist.GetNbinsX()) 
                     #print "fact", factor,hist.Integral(), hist.GetEntries()
-                    min_nonzero_error = sys.float_info.max
                     for bin1 in range(1, hist.GetNbinsX()+1):
-                        if hist.GetBinContent(bin1) > 0 and hist.GetBinError(bin1) < min_nonzero_error:
-                            min_nonzero_error = hist.GetBinError(bin1)
+                        if hist.GetBinContent(bin1) > 0 and hist.GetBinError(bin1) < zero_errors[category][-1]:
+                            zero_errors[category][-1] = hist.GetBinError(bin1)**2
                     #print "error", min_nonzero_error
                 else:
-                    min_nonzero_error = 0.
+                    zero_errors[category][-1] = 0.
+                if zero_errors[category][-1] > 10000:
+                    #rint "ZERO error NOT ASSIGNED"
+                    #or bin1 in range(1, hist.GetNbinsX()+1):
+                    #   print bin1, hist.GetBinContent(bin1), hist.GetBinError(bin1)
+                    zero_errors[category][-1] = 0.
                 if hist.GetBinContent(bin) < 0.00001:
                     #zero_error += factor**2 * hist.Integral()
-                    zero_error += min_nonzero_error**2
+                    #zero_error += min_nonzero_error**2
                     zero_integral += hist.Integral()
                 else:
                     bin_sum += hist.GetBinContent(bin)
                     nonzero_error += hist.GetBinError(bin)**2
+                    zero_errors[category][-1] = 0.
+
+                #for bin1 in range(1, hist.GetNbinsX()+1):
+                #        print hist.GetBinContent(bin1), math.sqrt(hist.GetBinError(bin1))
+                #rint bin, hist.GetName(), hist.GetBinContent(bin), hist.GetBinError(bin), zero_errors[category][-1]
+                    
                 #print "...hist", hist.GetBinContent(bin), hist.GetBinError(bin)**2
             total_hist.SetBinContent(bin, bin_sum)
-            if zero_integral > 0:
-                #total_error = math.sqrt(nonzero_error + zero_error / zero_integral)
-                total_error = math.sqrt(nonzero_error + zero_error)
-            else:
-                total_error = math.sqrt(nonzero_error)
+            zero_error = 0.
+            for err in zero_errors[category]:
+                if err > zero_error:
+                    zero_error = err
+            #rint "ZERO error:", bin, math.sqrt(zero_error)
+            
+            total_error = math.sqrt(nonzero_error + zero_error)
+            #rint math.sqrt(nonzero_error), math.sqrt(zero_error), total_error
             total_hist.SetBinError(bin, total_error)
             #print category, "bin", bin, "content", bin_sum, "error", total_error
             #print category, "bin", bin, "weight", total_error**2/bin_sum
