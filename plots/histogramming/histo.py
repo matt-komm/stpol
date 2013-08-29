@@ -67,6 +67,9 @@ if __name__=="__main__":
     cuts_jet_tag = [
         ("%dj%dt"%(n,m), Cuts.n_jets(n)*Cuts.n_tags(m)) for n in [2,3] for m in [0,1,2]
     ]
+    # cuts_jet_tag = [
+    #     ("2j1t", Cuts.n_jets(2)*Cuts.n_tags(1))
+    # ]
 
     cuts = []
     for cutname, cbline in cuts_jet_tag:
@@ -120,22 +123,16 @@ if __name__=="__main__":
     class FlatROOTSaver:
         def __init__(self, fname):
             self.of = ROOT.TFile(fname, "RECREATE")
-            #self.of_list = open(fname+".header", 'wb')
             self.nhists = 0
 
         def save(self, path, obj):
-            #self.of_list.write(path + "\n")
             obj.SetName(path.replace("/", "___"))
             self.of.cd()
-            #obj.SetDirectory(self.of)
             obj.Write("", ROOT.TObject.kOverwrite)
-            #pickle.dump(obj, self.of)
             self.nhists += 1
 
         def close(self):
-            #self.of.Write()
             self.of.Close()
-            #self.of_list.close()
 
     out = FlatROOTSaver(args.outfile)
     graph = nx.DiGraph()
