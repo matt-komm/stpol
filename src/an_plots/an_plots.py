@@ -1,7 +1,11 @@
-from plots.syst_band import PlotDef, data_mc_plot, logger
-from plots.common.cuts import Cuts
+import logging
+logger = logging.getLogger(__name__)
 
-logger.setLevel("DEBUG")
+if __name__=="__main__":
+    logging.basicConfig(level=logging.INFO)
+
+from plots.syst_band import PlotDef, data_mc_plot
+from plots.common.cuts import Cuts
 from plots.common.cross_sections import lumis
 from plots.common.tdrstyle import tdrstyle
 
