@@ -11,22 +11,22 @@ Process & cut-based & BDT  \\
 def print_proc(pname, t1, e1, t2, e2):
 	return "\n"+r"%s & %.1f $\pm$ %.1f  & %.1f $\pm$ %.1f \\"%(pname, t1, e1, t2, e2)
 
-s2 = r"""
-\ttbar    & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-\wjets    & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-\zjets    & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-\QCD      & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-Diboson   & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-tW        & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-s-channel & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-\hline
-t-channel & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-\hline
-Total MC  & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
-\hline
-Data      & FIXME  & FIXME \\
-\hline
-""".strip()
+# s2 = r"""
+# \ttbar    & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# \wjets    & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# \zjets    & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# \QCD      & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# Diboson   & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# tW        & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# s-channel & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# \hline
+# t-channel & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# \hline
+# Total MC  & FIXME $\pm$ FIXME  & FIXME $\pm$ FIXME \\
+# \hline
+# Data      & FIXME  & FIXME \\
+# \hline
+# """.strip()
 
 s3 = "\n"+r"""
 \end{tabular}
