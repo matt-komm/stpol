@@ -140,7 +140,7 @@ if __name__=="__main__":
             ("MC", reduce(lambda x,y: x+y, hmc.values())),
             ("data", hdata)
         ]
-        
+
         #Get the uncertainties that remain after the BDT fit
         errs_fit = dict()
         for k, v in hmc.items():
@@ -187,7 +187,7 @@ if __name__=="__main__":
             #Total error is statistical (Poisson) + fit error (indep.)
             tot_err = math.sqrt(e**2 + fit_unc**2)
 
-            of.write("%s | %.2f | %.2f | %.2f\n" % (k, i, e, tot_err))
+            of.write("%s | %.2f | %.2f \n" % (k, i, tot_err))
         of.close()
 
     def plot(varname, cutname, **kwargs):
@@ -230,7 +230,6 @@ if __name__=="__main__":
         save_name=outdir + '/control/2j1t_cosTheta_cutbased_{channel}.pdf',
         save_yields=True
     )
-
 
     plot("cos_theta", "2j0t_baseline", rebin=4, legend_pos='top-left', lb_comments=', 2J0T', max_bin_mult=2.5, save_name=outdir + '/control/2j0t_cosTheta_{channel}.pdf')
     plot("cos_theta", "3j0t_baseline", rebin=4, legend_pos='top-left', lb_comments=', 3J0T', max_bin_mult=2.5, save_name=outdir + '/control/3j0t_cosTheta_{channel}.pdf')
