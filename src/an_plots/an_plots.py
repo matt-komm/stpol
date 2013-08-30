@@ -1,7 +1,7 @@
 from plots.syst_band import PlotDef, data_mc_plot, logger
 from plots.common.cuts import Cuts
 
-logger.setLevel("INFO")
+logger.setLevel("DEBUG")
 from plots.common.cross_sections import lumis
 from plots.common.tdrstyle import tdrstyle
 
@@ -12,13 +12,14 @@ from plots.vars import varnames
 from plots.common.histogram import calc_int_err
 
 import os, copy, math
+import numpy as np
 
 channels_pretty = {"mu":"Muon", "ele":"Electron"}
 
 #Determined from the QCD fit
 qcd_mt_fit_sfs = dict()
-qcd_mt_fit_sfs['mu'] = load_qcd_sf('mu', 50)
-qcd_mt_fit_sfs['ele'] = load_qcd_sf('ele', 45)
+qcd_mt_fit_sfs['mu'] = load_qcd_sf('mu', 50, do_uncertainty=True)
+qcd_mt_fit_sfs['ele'] = load_qcd_sf('ele', 45, do_uncertainty=True)
 
 #Determined as the ratio of the integral of anti-iso data after full selection / full selection minus MVA
 #See qcd_scale_factors.ipynb for determination
@@ -27,6 +28,27 @@ qcd_loose_to_MVA_sfs = qcd_cut_SF['mva']['loose']
 fit_sfs = dict()
 fit_sfs['mu'] = [x[1:] for x in fitpars_process['final_2j1t_mva']['mu']]
 fit_sfs['ele'] = [x[1:] for x in fitpars_process['final_2j1t_mva']['ele']]
+
+
+#FIXME: load from file
+Rab = 0 #tchan top
+Rac = 0.0 #tchan wzjets
+Rbc = -1 #top wzjets
+corr_mat = [
+    #tchan  #ttbar  #tw     #s      #qcd    #w      #dy     #diboson
+    [1,     Rab,    Rab,    Rab,    Rab,    Rac,    Rac,    Rac], #tchan
+    [0,     1,      1,      1,      1,      Rbc,    Rbc,    Rbc], #ttbar
+    [0,     0,      1,      1,      1,      Rbc,    Rbc,    Rbc], #tw
+    [0,     0,      0,      1,      1,      Rbc,    Rbc,    Rbc], #s
+    [0,     0,      0,      0,      1,      Rbc,    Rbc,    Rbc], #qcd
+    [0,     0,      0,      0,      0,      1,      1,      1  ], #w
+    [0,     0,      0,      0,      0,      0,      1,      1  ], #dy
+    [0,     0,      0,      0,      0,      0,      0,      1  ], #diboson
+]
+diag  = np.diag(corr_mat)
+corr_mat = np.triu(corr_mat).T + np.triu(corr_mat)
+corr_mat[np.diag_indices(8)] = diag
+
 
 def scale_factors(channel, cut, apply_signal_cut=True, mt_cut=False):
     tchan, tchan_err = fit_sfs[channel][0]
@@ -44,14 +66,24 @@ def scale_factors(channel, cut, apply_signal_cut=True, mt_cut=False):
         elif "cutbased_final" in cut:
             qcd = qcd * qcd_cut_SF['cutbased']['final'][channel]
     if mt_cut is False:
-        qcd = qcd * qcd_mt_fit_sfs[channel]
+        qcd_sf, qcd_err = qcd_mt_fit_sfs[channel]
     else:
-        qcd = qcd * load_qcd_sf(channel, mt_cut)
-                             
+        qcd_sf, qcd_err = load_qcd_sf(channel, mt_cut, do_uncertainty=True)
+    qcd = qcd * qcd_sf
+
+    # Calculate the total error in the QCD scale factor from the error in
+    # the MET fit (qcd_err) and the BDT fit (top_err) assuming uncorrelate
+    # errors.
+    rel_qcd_err = qcd_err / qcd_sf
+    rel_top_err = top_err / top
+
+    tot_rel_qcd_err = math.sqrt(sum([x**2 for x in [rel_top_err, rel_qcd_err]]))
+    tot_qcd_err = tot_rel_qcd_err * qcd
+
     ret = [
         (['tchan'], tchan, tchan_err),
         (['TTJets', 'tWchan', 'schan'], top, top_err),
-        (['qcd'], qcd, top_err),
+        (['qcd'], qcd, tot_qcd_err),
         (['WJets', 'diboson', 'DYJets'], wzjets, wzjets_err)
     ]
     return ret
@@ -80,7 +112,6 @@ def save_canv(canv, path):
     elif "baseline_bdt_discr" in path:
         path = path.replace("baseline_bdt_discr", "BDT/mva_bdt")
     elif "baseline_cosTheta" in path:
-        import pdb; pdb.set_trace()
         p = os.path.dirname(path)
         b = os.path.basename(path)
         p += "control/" + b.split("_")[0] + ""
@@ -92,6 +123,9 @@ def save_canv(canv, path):
 
 if __name__=="__main__":
     tdrstyle()
+
+    #Fully correlated errors
+    #corr_mat = np.eye(8)
 
     def save_yields(hists, ofn, scale_factors):
         hmc, hdata = hists
@@ -107,20 +141,41 @@ if __name__=="__main__":
         errs_fit = dict()
         for k, v in hmc.items():
             unc_fit = 0
-            if k.lower() in ["dyjets", "diboson", "wjets"]:
-                unc_fit = scale_factors["wzjets"][1]
-            elif k.lower() in ["ttjets", "twchan", "schan"]:
-                unc_fit = scale_factors["topqcd"][1]
-            elif k.lower() in ["tchan"]:
-                unc_fit = scale_factors["tchan"][1]
 
-            errs_fit[k] = unc_fit * v.Integral()
+            def ratio(x):
+                """
+                Calculates the relative uncertainty of the scale factor of a
+                process
+
+                Args:
+                    x - process name185GB
+                """
+                return scale_factors[x][1] / scale_factors[x][0]
+            if k.lower() in ["dyjets", "diboson", "wjets"]:
+                unc_fit = ratio("wzjets")
+            elif k.lower() in ["ttjets", "twchan", "schan"]:
+                unc_fit = ratio("top")
+            elif k.lower() in ["qcd"]:
+                unc_fit = ratio("qcd")
+            elif k.lower() in ["tchan"]:
+                unc_fit = ratio("tchan")
+            errs_fit[k.lower()] = unc_fit * v.Integral()
+            logger.debug("Fit uncertainty for {0}={1:.2f}".format(k, unc_fit))
 
         #Assume that the fit results are uncorrelated for total MC
-        errs_fit["MC"] = math.sqrt(sum([x**2 for x in errs_fit.values()]))
-        errs_fit["qcd"] = hmc["qcd"].Integral()
+        err_vec = np.array([
+            errs_fit["tchan"], errs_fit["ttjets"], errs_fit["twchan"],
+            errs_fit["schan"], errs_fit["qcd"], errs_fit["wjets"],
+            errs_fit["dyjets"], errs_fit["diboson"]
+        ])
+
+        #Naive error
+        #err1 = math.sqrt(sum([x**2 for x in errs_fit.values()]))
+
+        errs_fit["mc"] = math.sqrt(np.dot(err_vec, np.dot(corr_mat, err_vec.T)))
 
         for k, v in sorted(items, key=lambda x: x[0]):
+            k = k.lower()
             i, e = calc_int_err(v)
 
             fit_unc = errs_fit.get(k, 0)
@@ -150,12 +205,14 @@ if __name__=="__main__":
             save_canv(canv, h.save_name)
             canv.Close()
             if do_save_yields:
+                #import pdb; pdb.set_trace()
                 save_yields(
                     hists,
                     "results/yields/{0}_{1}.txt".format(cutname, channel),
                     {"tchan": h.process_scale_factor[0][1:],
-                    "topqcd": h.process_scale_factor[1][1:],
-                    "wzjets": h.process_scale_factor[2][1:]}
+                    "top": h.process_scale_factor[1][1:],
+                    "qcd": h.process_scale_factor[2][1:],
+                    "wzjets": h.process_scale_factor[3][1:]}
                 )
 
     outdir = "out/plots/an/"
