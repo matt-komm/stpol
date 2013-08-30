@@ -239,7 +239,7 @@ merge_cmds = PhysicsProcess.get_merge_dict(
     PhysicsProcess.get_proc_dict("mu")
 )
 
-def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):
+def lumi_textbox(lumi, **kwargs):
     """
     This method creates and draws the "CMS Preliminary" luminosity box,
     displaying the lumi in 1/fb and the COM energy.
@@ -257,23 +257,36 @@ def lumi_textbox(lumi, pos="top-left", state='preliminary', line2=None):
     **returns:
     A TPaveText instance with the lumi information
     """
+    pos = kwargs.get("pos", "top-left")
     if pos=="top-left":
         coords = [0.2, 0.80, 0.66, 0.91]
     if pos=="top-right":
         coords = [0.48, 0.80, 0.96, 0.91]
+    if pos=="top-center":
+        coords = [0.37, 0.80, 0.85, 0.91]
+
+    state = kwargs.get("state", "preliminary")
+    line2 = kwargs.get("line2", None)
+
+    nudge_x = kwargs.get("nudge_x", 0.0)
+    nudge_y = kwargs.get("nudge_y", 0.0)
+    coords[0] += nudge_x
+    coords[2] += nudge_x
+    coords[1] += nudge_y
+    coords[3] += nudge_y
 
     if line2:
         coords[1]-=0.05
 
     text = ROOT.TPaveText(coords[0], coords[1], coords[2], coords[3], "NDC")
-    text.AddText("CMS %s #sqrt{s} = 8 TeV, #int L dt = %.2f fb^{-1}" % (state, float(lumi)/1000.0))
+    text.AddText("CMS %s #sqrt{s} = 8 TeV, L = %.0f fb^{-1}" % (state, float(lumi)/1000.0))
     if line2:
         text.AddText(line2)
     text.SetShadowColor(ROOT.kWhite)
     text.SetLineColor(ROOT.kWhite)
     text.SetFillColor(ROOT.kWhite)
     text.SetTextFont(43)
-    text.SetTextSize(14)
+    text.SetTextSize(20)
     text.Draw()
     return text
 
