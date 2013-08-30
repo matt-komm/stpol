@@ -276,7 +276,7 @@ if __name__=="__main__":
             htrue += hi
         else:
             htrue = hi
-    htrue.SetTitle("generated (powheg)")
+    htrue.SetTitle("generated (POWHEG)")
     #Scale to the final fit
     htrue.Scale(fitpars[lep])
 
@@ -289,7 +289,7 @@ if __name__=="__main__":
         else:
             hcomphep = hi
     hcomphep.Scale(fitpars[lep])
-    hcomphep.SetTitle("generated (comphep)")
+    hcomphep.SetTitle("generated (CompHEP)")
 
     logger.info("Data={0:.0f}, powheg={1:.0f}, comphep={0:.0f}".format(data_post.Integral(), htrue.Integral(), hcomphep.Integral()))
     #Normalize to same area
@@ -318,7 +318,7 @@ if __name__=="__main__":
 
     hi = [data_post, htrue, hcomphep]
     chi2 = data_post.Chi2Test(htrue, "WW CHI2/NDF")
-    htrue.SetTitle(htrue.GetTitle() + " #chi^{2}/#nu = %.1f" % chi2)
+    #htrue.SetTitle(htrue.GetTitle() + " #chi^{2}/#nu = %.1f" % chi2)
     #hi_norm = hi
     hi_norm = map(post_normalize, hi)
     for h in hi[1:]:
