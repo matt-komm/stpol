@@ -92,7 +92,7 @@ def scale_factors(channel, cut, apply_signal_cut=True, mt_cut=False):
     ]
     return ret
 
-def pd(var, cut, channel, hpath="hists/Aug27/", **kwargs):
+def pd(var, cut, channel, hpath="results/hists/hists_4ee08d9ca6e666ba2e8d42ada075061c58368c56/", **kwargs):
     return PlotDef(
         infile=hpath+"/hists_merged__%s__%s_%s.root" % (cut, var, channel),
         lumi=lumis["Aug4_0eb863_full"]["iso"][channel],
