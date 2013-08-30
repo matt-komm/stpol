@@ -5,7 +5,9 @@ from rootpy.plotting import Hist
 import itertools
 from plots.common.utils import NestedDict, PatternDict
 import ROOT
+import time
 import logging
+import cPickle as pickle
 
 logger = logging.getLogger("load_histos2")
 logger.setLevel(logging.INFO)
@@ -13,61 +15,60 @@ logger.setLevel(logging.INFO)
 qcd_yield_variations = (2.0, 0.5)
 skipped_systs = ["wjets_matching", "wjets_scale", "sig_gen", "sig_anom"]
 
-def load_file(fnames, pats):
-    res = {}
-    ret = {}
-    for patn, pat in pats.items():
-        res[patn] = re.compile(pat)
-        ret[patn] = PatternDict()
-
-    n = 0
-    for fn in fnames:
-        fi = File(fn)
-        ROOT.gROOT.cd()
-        logger.debug("Processing file %s" % fn)
-        for root, dirs, items in fi.walk():
-            for it in items:
-                # if n%10==0:
-                #     sys.stdout.write(".")
-                #     sys.stdout.flush()
-                if n%25000 == 0:
-                    logger.info("%d, %s, %s" % (
-                            n,
-                            str([(k, len(ret[k].keys())) for k in ret.keys()]),
-                            fi.GetPath()
-                        )
-                    )
-                    #logger.debug(root)
-                for patn, pat in res.items():
-                    if pat.match(root):
-                        ret[patn][root] = fi.Get(
-                            "/".join(
-                                [root, it]
-                            )
-                        ).Clone()
-                n += 1
-        fi.Close()
-    logger.info("Matched %s histograms" % (str([(k, len(ret[k].keys())) for k in ret.keys()])))
-    return ret
-
-def _load_pickle(x):
-    import cPickle as pickle
-    import gzip
-    ret = []
-    fn, patterns = x
-    rpat = map(re.compile, patterns)
-    fi = gzip.GzipFile(fn, 'rb')
-    while True:
-        try:
-            item = pickle.load(fi)
-            for pat in rpat:
-                if pat.match(item.GetName()):
-                    ret.append(item)
-                    break
-        except EOFError:
-            break
-    fi.close()
-    return ret
+#def load_file(fnames, pats):
+#    res = {}
+#    ret = {}
+#    for patn, pat in pats.items():
+#        res[patn] = re.compile(pat)
+#        ret[patn] = PatternDict()
+#
+#    n = 0
+#    for fn in fnames:
+#        fi = File(fn)
+#        ROOT.gROOT.cd()
+#        logger.debug("Processing file %s" % fn)
+#        for root, dirs, items in fi.walk():
+#            for it in items:
+#                # if n%10==0:
+#                #     sys.stdout.write(".")
+#                #     sys.stdout.flush()
+#                if n%25000 == 0:
+#                    logger.info("%d, %s, %s" % (
+#                            n,
+#                            str([(k, len(ret[k].keys())) for k in ret.keys()]),
+#                            fi.GetPath()
+#                        )
+#                    )
+#                    #logger.debug(root)
+#                for patn, pat in res.items():
+#                    if pat.match(root):
+#                        ret[patn][root] = fi.Get(
+#                            "/".join(
+#                                [root, it]
+#                            )
+#                        ).Clone()
+#                n += 1
+#        fi.Close()
+#    logger.info("Matched %s histograms" % (str([(k, len(ret[k].keys())) for k in ret.keys()])))
+#    return ret
+#
+#def _load_pickle(x):
+#    import gzip
+#    ret = []
+#    fn, patterns = x
+#    rpat = map(re.compile, patterns)
+#    fi = gzip.GzipFile(fn, 'rb')
+#    while True:
+#        try:
+#            item = pickle.load(fi)
+#            for pat in rpat:
+#                if pat.match(item.GetName()):
+#                    ret.append(item)
+#                    break
+#        except EOFError:
+#            break
+#    fi.close()
+#    return ret
 
 def _load_rootfiles(args):
     fn, patterns = args
@@ -86,54 +87,66 @@ def _load_rootfiles(args):
     fi.Close()
     return kl_filtered
 
-def load_rootfiles(fnames, patterns, n_cores=30):
-    rets = []
+def load_rootfiles(fnames, patterns, n_cores=25):
+    rets = PatternDict()
     from multiprocessing import Pool
-    p = Pool(n_cores)
-
+    p = None
+    while not p:
+        try:
+            p = Pool(n_cores)
+        except OSError as e:
+            p = None
+            logger.warning("Could not create multiprocessing.Pool: {0}".format(str(e)))
+            time.sleep(10)
     logger.info("Loading root keys")
     args = [(fn, patterns) for fn in fnames]
 
     klists = p.map(_load_rootfiles, args)
     klist = dict(zip(fnames, klists))
-
+    p.close()
+    p.join()
+    logger.info("Loading histograms by keys: %d" % sum([len(k) for k in klist]))
+    flist = []
     for fn, kl in klist.items():
         fi = ROOT.TFile(fn)
+        flist.append(fi)
+        logger.debug("Loading from file: %s" % fn)
         for k in kl:
-            ROOT.gROOT.cd()
-            it = fi.Get(k).Clone()
+            #ROOT.gROOT.cd()
+            #it = fi.Get(k).Clone()
+            it = fi.Get(k)
             name = it.GetName()
             name = name.replace("___", "/")
             it.SetName(name)
             if not it:
                 logger.error("Couldn't find object %s" % k)
                 raise Exception()
-            rets.append(it)
-
-    return rets
+            rets[name] = it
+        #fi.Close()
+    return rets, flist
 
 def make_hist(item):
     item.__class__ = Hist
     item._post_init()
 
-def load_pickle(fnames, patterns):
-    ret = PatternDict()
-
-    from multiprocessing import Pool
-    p = Pool(30)
-
-    logger.info("Loading pickles")
-    args = [(fn, patterns) for fn in fnames]
-    rets = p.map(_load_pickle, args)
-    logger.info("Combining")
-    n = 0
-    for r in rets:
-        for item in r:
-            #if isinstance(item, ROOT.TH1F):
-            ret[item.GetName()] = item
-        n += 1
-    logger.info("Done loading templates from pickles: %d" % len(ret))
-    return ret
+#def load_pickle(fnames, patterns):
+#    ret = PatternDict()
+#
+#    from multiprocessing import Pool
+#    p = Pool(30)
+#
+#    logger.info("Loading pickles")
+#    args = [(fn, patterns) for fn in fnames]
+#    rets = p.map(_load_pickle, args)
+#    logger.info("Combining")
+#    n = 0
+#    for r in rets:
+#        for item in r:
+#            #if isinstance(item, ROOT.TH1F):
+#            ret[item.GetName()] = item
+#        n += 1
+#    logger.info("Done loading templates from pickles: %d" % len(ret))
+#    return ret
 
 from SingleTopPolarization.Analysis import sample_types
 def get_syst_from_sample_name(sn):
@@ -587,16 +600,21 @@ def combine_templates(templates, patterns, conf):
     ### Save systematics, fill missing ###
     ######################################
 
+    #########
+    # tchan #
+    #########
     #T_t_ToLeptons mass_up is missing, take the mass down and flip the difference with the nominal
     mnomt = syst_scenarios["T_t_ToLeptons"]["nominal"][None].Clone()
     mdownt = syst_scenarios["T_t_ToLeptons"]["mass"]["down"].Clone()
     mupt = (mnomt+mnomt-mdownt)
     syst_scenarios["T_t_ToLeptons"]["mass"]["up"] = mupt
 
-
+    #########
+    # TTBar #
+    #########
     #TTbar variations are provided for the inclusive only, fill them for the exclusive
     nom_ttbar = syst_scenarios["TTJets_FullLept"]["nominal"][None] + syst_scenarios["TTJets_SemiLept"]["nominal"][None]
-    for syst in ["mass", "ttbar_scale"]:
+    for syst in ["mass", "ttbar_scale", "ttbar_matching"]:
         for sample in ["TTJets_FullLept", "TTJets_SemiLept"]:
             for sd in ["up", "down"]:
                 syst_scenarios[sample][syst][sd] = syst_scenarios[sample]["nominal"][None] * syst_scenarios["TTJets"][syst][sd] / nom_ttbar
@@ -613,7 +631,6 @@ def combine_templates(templates, patterns, conf):
     of.cd()
 
     #Get the list of all possible systematic scenarios that we have available
-
     allsyts = get_all_systs(syst_scenarios)
 
     for sampn, h1 in syst_scenarios.items():
@@ -642,7 +659,7 @@ def combine_templates(templates, patterns, conf):
                 #Add placeholder templates
                 for systdir in ["up", "down"]:
                     h = h.Clone(hname_encode(conf.varname, sampn, systname, systdir))
-                    print "Missing template for %s:%s" % (sampn, systname)
+                    #print "Missing template for %s:%s" % (sampn, systname)
                     set_missing_hist(h)
 
                     #Save to file
@@ -662,19 +679,19 @@ def combine_templates(templates, patterns, conf):
                 h.Write()
     nkeys = len(of.GetListOfKeys())
     logger.info("Saved %d histograms to file %s" % (nkeys, of.GetPath()))
-    of.Close()
+#    of.Close()
 
     ########################
     ### Load systematics ###
     ########################
-    of = File(conf.get_outfile_unmerged())
+#    of_unmerged = File(conf.get_outfile_unmerged())
     hists = dict()
-    ROOT.gROOT.cd()
+#    ROOT.gROOT.cd()
     for k in of.GetListOfKeys():
-        hists[k.GetName()] = of.Get(k.GetName()).Clone()
+        hists[k.GetName()] = of.Get(k.GetName())
         #hists[k.GetName()].Rebin(2)
     logger.info("Loaded %d histograms from file %s" % (len(hists), of.GetPath()))
-    of.Close()
+    #of_unmerged.Close()
 
     ########################
     ###      Merge       ###
@@ -727,20 +744,15 @@ def combine_templates(templates, patterns, conf):
 
 if __name__=="__main__":
     import sys
-    inf = sys.argv[1] + '/hists-*.pickle'
-    flist = glob.glob(inf)
+    histstack = []
 
     def fpat(cutname, subcut, merged=False):
-        return 'out/hists1/' + ('hists__' if not merged else 'hists_merged__') + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
+        return 'results/' + ('hists__' if not merged else 'hists_merged__') + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
 
     for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
         for channel in ["mu", "ele"]:
-    #        for cut in ["baseline", "mva_loose", "cutbased_final"]:
-            for cut in ["baseline"]:
+            for cut in ["baseline", "mva_loose", "cutbased_final"]:
                 cb = "%(channel)s_" + cutname + "_"
-
-                #fpat_unmerged = 'out/hists/hists__' + cutname + '_' + cut + '__%(varname)s_%(channel)s.root'
-                #fpat_merged = 'out/hists/hists_merged__' + cutname + '_' + cut + '__%(varname)s_%(channel)s.root'
 
                 cutstr = cb + cut + '/'
                 cos_theta = HistDef(
@@ -765,13 +777,8 @@ if __name__=="__main__":
                     varname='top_mass_sr',
                 )
 
-
-                #for var in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
-                for var in [cos_theta, abs_eta_lj]:
-                    logger.info("Plotting variable %s" % var.varname)
-                    patterns = make_patterns(var)
-                    templates = load_rootfiles(flist, patterns.values())
-                    combine_templates(templates, patterns, var)
+                for v in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
+                    histstack.append(v)
 
         bdt = cos_theta.copy(
             varname='bdt_discr',
@@ -795,9 +802,10 @@ if __name__=="__main__":
         )
         mtw = met.copy(varname='mtw')
 
-        #for v in [bdt, met, mtw]:
-        for v in [bdt]:
-            logger.info("Plotting variable %s" % var.varname)
-            patterns = make_patterns(v)
-            templates = load_rootfiles(flist, patterns.values())
-            combine_templates(templates, patterns, v)
+        for v in [bdt_zoom_loose, bdt, met, mtw]:
+            histstack.append(v)
+
+    i = 0
+    for hdef in histstack:
+        pickle.dump(hdef, open("results/hist_defs/hist_def_%d.pickle" % i, "wb"))
+        i += 1
