@@ -8,7 +8,18 @@ def load_qcd_sf(channel, met, cut="2j1t"):
     fi = open(fn)
     li = fi.readline().strip().split()
     sf = float(li[0])
-    return sf
+
+    #The yield and its uncertainty
+    y = float(li[1])
+    uncy = float(li[2])
+
+    #Calculate the uncertainty of the scale factor
+    unc_sf = uncy/y
+
+    if not do_uncertainty:
+        return sf
+    else:
+        return sf, unc_sf * sf
 
 qcdScale = dict()
 qcdScale['mu'] = dict()
