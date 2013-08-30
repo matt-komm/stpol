@@ -110,9 +110,10 @@ def asymmetry(hist, center):
     return asy
 
 
+from plots.fit_scale_factors import fitpars_process
 fitpars = {}
-fitpars['mu'] = 1.03
-fitpars['ele'] = 0.95
+fitpars['mu'] = fitpars_process['final_2j1t_mva']['mu'][0][1]
+fitpars['ele'] = fitpars_process['final_2j1t_mva']['ele'][0][1]
 
 measured_asym_errs = dict()
 measured_asym_errs['mu'] = (0.08, 0.12)
@@ -257,25 +258,39 @@ if __name__=="__main__":
     # requiring the presence of a lepton with the
     # correct gen flavour
     htrue = None
+    datadir = "data/37acf5_343e0a9_Aug22"
+    def gen_hist(sample):
+        hi = sample.drawHistogram("true_cos_theta", str(Cuts.true_lepton(lep)), binning=list(binning))
+        hi.Scale(s.lumiScaleFactor(lumi))
+        return hi
+
     for fn in ["T_t_ToLeptons", "Tbar_t_ToLeptons"]:
         #s = Sample.fromFile("data/Step3_Jul26/%s/mc/iso/nominal/Jul15/%s.root" % (lep, fn))
         s = Sample.fromFile("data/37acf5_343e0a9_Aug22/%s.root" % (fn))
-        hi = s.drawHistogram("true_cos_theta", str(Cuts.true_lepton(lep)), binning=list(binning))
-        hi.Scale(s.lumiScaleFactor(lumi))
+        hi = gen_hist(s)
         if htrue:
             htrue += hi
         else:
             htrue = hi
-    htrue.SetTitle("generated")
-
+    htrue.SetTitle("generated (powheg)")
     #Scale to the final fit
     htrue.Scale(fitpars[lep])
 
+    hcomphep = None
+    for fn in ["TToBENu_t-channel", "TToBMuNu_t-channel", "TToBTauNu_t-channel"]:
+        s = Sample.fromFile(datadir  + "/{0}/{1}.root".format(lep, fn))
+        hi = gen_hist(s)
+        if hcomphep:
+            hcomphep += hi
+        else:
+            hcomphep = hi
+    hcomphep.Scale(fitpars[lep])
+    hcomphep.SetTitle("generated (comphep)")
+
+    logger.info("Data={0:.0f}, powheg={1:.0f}, comphep={0:.0f}".format(data_post.Integral(), htrue.Integral(), hcomphep.Integral()))
     #Normalize to same area
     #htrue.Scale(data_post.Integral() / htrue.Integral())
-    logger.info(str(list(htrue.y())))
-    logger.info(str(list(data_post.y())))
-
+    
     measured_asym = asymmetry(data_post, len(binning)/2 + 1)
 
 
@@ -288,9 +303,17 @@ if __name__=="__main__":
     htrue.SetLineColor(ROOT.kGreen)
     htrue.SetFillColor(ROOT.kGreen)
     htrue.SetMarkerSize(0)
+
+    Styling.mc_style(hcomphep, 'T_t')
+    hcomphep.SetLineColor(ROOT.kRed)
+    hcomphep.SetFillColor(ROOT.kRed)
+    hcomphep.SetFillStyle('/')
+    hcomphep.SetLineStyle('dashed')
+    hcomphep.SetMarkerSize(0)
+
     Styling.data_style(data_post)
 
-    hi = [data_post, htrue]
+    hi = [data_post, htrue, hcomphep]
     chi2 = data_post.Chi2Test(htrue, "WW CHI2/NDF")
     htrue.SetTitle(htrue.GetTitle() + " #chi^{2}/#nu = %.1f" % chi2)
     #hi_norm = hi
@@ -298,15 +321,22 @@ if __name__=="__main__":
     for h in hi[1:]:
         h.SetMarkerSize(0)
     of = OutputFolder(subdir='unfolding/%s' % lep)
-    canv = plot_hists(hi_norm, x_label="cos #theta", draw_cmd=["E1", "E1"], y_label="a.u.")
-    leg = legend(hi, styles=['p', 'f'], legend_pos='top-left', nudge_x=-0.06)
+    canv = plot_hists(hi_norm, x_label="cos #theta", draw_cmd=len(hi)*["E1"], y_label="a.u.")
+    #leg = legend(hi, styles=['p', 'f'], legend_pos='bottom-right', nudge_x=-0.29, nudge_y=-0.08)
+    leg = legend(hi, styles=['p', 'f'], legend_pos='top-left', nudge_y=-0.14)
     lb = lumi_textbox(lumi,
-            pos='top-right',
-            line2="#scale[1.5]{A = %.2f #pm %.2f (stat.) #pm %.2f (syst.)}" % (
-                measured_asym, measured_asym_errs[lep][0],  measured_asym_errs[lep][1]
-            )
-        )
-    pmi = PlotMetaInfo('costheta_unfolded_%s' % lep, 'genlevel', 'None', [args.infileMC, args.infileD])
+        pos='top-center',
+        line2="#scale[1.5]{A = %.2f #pm %.2f (stat.) #pm %.2f (syst.)}" % (
+            measured_asym, measured_asym_errs[lep][0],  measured_asym_errs[lep][1]
+        ), nudge_y=0.03
+    )
+    pmi = PlotMetaInfo(
+        'costheta_unfolded',
+        '2j1t_mva_loose {0}'.format(channel),
+        'weighted to lumi={0}, sf(tchan)={1}'.format(lumi, fitpars[lep]),
+        [args.infileMC, args.infileD]
+    )
+
     of.savePlot(canv, pmi)
 
     ######################
@@ -339,15 +369,23 @@ if __name__=="__main__":
     for l in [line_low, line_high]:
         l.SetLineStyle(2)
 
-    lb = lumi_textbox(lumi, line2="exp. %.2f #pm %.2f, meas. %.2f #pm %.2f (stat.) #pm %.2f (syst.)" % (
-        pe_asym.GetMean(), pe_asym.GetRMS(), measured_asym, measured_asym_errs[lep][0],  measured_asym_errs[lep][1])
+    lb = lumi_textbox(lumi,
+        pos='top-center',
+        line2="#scale[1.5]{A = %.2f #pm %.2f (stat.) #pm %.2f (syst.)}" % (
+            measured_asym, measured_asym_errs[lep][0],  measured_asym_errs[lep][1]
+        ), nudge_y=0.03
     )
     line.Draw("SAME")
     line_low.Draw("SAME")
     line_high.Draw("SAME")
 
-    leg = legend(hi + [line], styles=['f', 'f'], nudge_x=-0.05)
-    pmi = PlotMetaInfo('asymmetry_%s' % lep, 'genlevel', 'None', [args.infileMC, args.infileD])
+    leg = legend(hi + [line], styles=['f', 'f'], legend_pos='top-left', nudge_y=-0.14)
+    pmi = PlotMetaInfo(
+        'asymmetry',
+        '2j1t_mva_loose {0}'.format(channel),
+        'weighted to lumi={0}, sf(tchan)={1}'.format(lumi, fitpars[lep]),
+        [args.infileMC, args.infileD]
+    )
     of.savePlot(canv, pmi)
     print 80*"-"
     print "Expected %.2f ± %.2f, measured %.2f" % (pe_asym.GetMean(), pe_asym.GetRMS(), measured_asym)
