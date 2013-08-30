@@ -47,7 +47,7 @@ def legend(hists, **kwargs):
     pos = kwargs.get("legend_pos", "top-right")
     
     #The relative size of the text in the legend
-    text_size = kwargs.get("legend_text_size", 0.03)
+    text_size = kwargs.get("legend_text_size", 0.04)
     
     nudge_x = kwargs.get("nudge_x", 0.0)
     nudge_y = kwargs.get("nudge_y", 0.0)
@@ -79,7 +79,10 @@ def legend(hists, **kwargs):
     if pos=="top-right":
         leg_coords = [-1, -1, 0.90, 0.91]
     if pos=="top-left":
-        leg_coords = [-1, -1, 0.45, 0.91]
+        leg_coords = [-1, -1, 0.40, 0.91]
+
+    if pos=="bottom-right":
+        leg_coords = [-1, -1, 0.90, 0.35]
 
     #Calculate the bottom-left coordinate from top right using the width and height
     if leg_coords[0]==-1:
