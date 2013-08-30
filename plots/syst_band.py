@@ -64,7 +64,6 @@ def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     if not ignore_missing:
         raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
 
-
 def load_fit_results(fn):
     """
     Opens the fit results file and returns the per-sample scale factors.
@@ -152,7 +151,7 @@ class PlotDef:
         if hasattr(self, "ratio_limit"):
             return (-self.ratio_limit, self.ratio_limit)
         else:
-            return 2.0
+            return [-1.0, 1.0]
 
     def get_x_label(self):
         #The default variable pretty name is taken externally
