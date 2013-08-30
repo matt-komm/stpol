@@ -1,7 +1,7 @@
 from plots.common.utils import NestedDict
 
 #Determined using qcd_estimation/get_qcd_yield.py and qcd_estimation/update_sf.py
-def load_qcd_sf(channel, met, cut="2j1t"):
+def load_qcd_sf(channel, met, cut="2j1t", do_uncertainty=False):
     import os
     base = os.path.join(os.environ['STPOL_DIR'], 'qcd_estimation', 'fitted', channel)
     fn = base + '/%s_no_MC_subtraction_mt_%s_plus.txt' % (cut, met)
