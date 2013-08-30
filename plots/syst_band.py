@@ -2,6 +2,10 @@
 """
 Uses the unfolding histograms to make a final plot with the systematic band.
 """
+
+import logging
+logger = logging.getLogger(__name__)
+
 from rootpy.io import File
 from os.path import join
 from plots.common.utils import NestedDict
@@ -15,14 +19,8 @@ from plots.common.utils import lumi_textbox
 from plots.load_histos2 import load_theta_format, SystematicHistCollection
 from plots.common.utils import reorder, PhysicsProcess
 from SingleTopPolarization.Analysis import sample_types
+import numpy, re, math, copy, rootpy
 
-
-import numpy, re, math, logging, copy
-
-logger = logging.getLogger(__name__)
-import rootpy
-rootpy.log.basic_config_colorized()
-logger.setLevel(logging.INFO)
 
 import ROOT
 ROOT.gROOT.SetBatch(True)
