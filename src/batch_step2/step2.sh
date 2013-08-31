@@ -9,7 +9,7 @@ COUNTER=0
 for line in `cat $1 | $STPOL_DIR/src/batch_step2/chunk.py`
 do
     cd $JOBNAME
-    echo sbatch $STPOL_DIR/src/batch_ste2/cmsRun.sh $CFG isMC=True subChannel=WJets inputFiles=$line > job_$COUNTER
+    echo sbatch $STPOL_DIR/src/batch_step2/cmsRun.sh $CFG isMC=True subChannel=WJets inputFiles=$line > job_$COUNTER
     cd ..
 
     COUNTER=$((COUNTER + 1))
