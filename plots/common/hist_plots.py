@@ -137,7 +137,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
 
     height = kwargs.get("height", 0.3)
     syst_hists = kwargs.get("syst_hists", None)
-    min_max = kwargs.get("min_max", (-1, 1))
+    min_max = kwargs.get("min_max", 2.0)
     syst_fill = kwargs.get("syst_fill", 0)
 
     p2 = ROOT.TPad("p2", "p2", 0, 0, 1, height)
@@ -163,7 +163,9 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
     #and content to 0
     for i in range(hist_ratio.nbins()):
         if hist_data[i] == 0:
-            hist_ratio.SetBinError(i+1, max(list(map(abs, min_max))))
+            hist_ratio.SetBinError(i+1,
+                min_max if isinstance(min_max, float) else 2.0
+            )
             hist_ratio.SetBinContent(i+1, 0)
 
 
@@ -193,8 +195,17 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
     #Draw the ratio histogram with default (statistical error bars) to get the correct axis
     #This histogram will not be visible in the end
     hist_ratio.Draw("p0e1")
-    hist_ratio.SetMinimum(min_max[0])
-    hist_ratio.SetMaximum(min_max[1])
+
+    if isinstance(min_max, float):
+        _minmax = min_max*max(map(lambda x: abs(x),
+                [hist_ratio.GetMinimum(), hist_ratio.GetMaximum()]
+            )
+        )
+        hist_ratio.SetMinimum(-_minmax)
+        hist_ratio.SetMaximum(_minmax)
+    else:
+        hist_ratio.SetMinimum(min(min_max))
+        hist_ratio.SetMaximum(max(min_max))
     #logger.debug(list(hist_ratio.y()))
 
     hist_line = ROOT.TH1F("0line","0line",hist_mc.GetNbinsX(),hist_mc.GetBinLowEdge(1),hist_mc.GetBinLowEdge(hist_mc.GetNbinsX()+1))

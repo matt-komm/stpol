@@ -69,6 +69,49 @@ def _load_pickle(x):
     fi.close()
     return ret
 
+def _load_rootfiles(args):
+    fn, patterns = args
+    import ROOT, re
+    pats = map(re.compile,
+        map(lambda x: x.replace("/", "___"), patterns)
+    )
+    fi = ROOT.TFile(fn)
+    kl = [k.GetName() for k in fi.GetListOfKeys()]
+    kl_filtered = []
+    for k in kl:
+        for pat in pats:
+            if pat.match(k):
+                kl_filtered.append(k)
+                break
+    fi.Close()
+    return kl_filtered
+
+def load_rootfiles(fnames, patterns, n_cores=30):
+    rets = []
+    from multiprocessing import Pool
+    p = Pool(n_cores)
+
+    logger.info("Loading root keys")
+    args = [(fn, patterns) for fn in fnames]
+
+    klists = p.map(_load_rootfiles, args)
+    klist = dict(zip(fnames, klists))
+
+    for fn, kl in klist.items():
+        fi = ROOT.TFile(fn)
+        for k in kl:
+            ROOT.gROOT.cd()
+            it = fi.Get(k).Clone()
+            name = it.GetName()
+            name = name.replace("___", "/")
+            it.SetName(name)
+            if not it:
+                logger.error("Couldn't find object %s" % k)
+                raise Exception()
+            rets.append(it)
+
+    return rets
+
 def make_hist(item):
     item.__class__ = Hist
     item._post_init()
@@ -727,7 +770,7 @@ if __name__=="__main__":
                 for var in [cos_theta, abs_eta_lj]:
                     logger.info("Plotting variable %s" % var.varname)
                     patterns = make_patterns(var)
-                    templates = load_pickle(flist, patterns.values())
+                    templates = load_rootfiles(flist, patterns.values())
                     combine_templates(templates, patterns, var)
 
         bdt = cos_theta.copy(
@@ -756,5 +799,5 @@ if __name__=="__main__":
         for v in [bdt]:
             logger.info("Plotting variable %s" % var.varname)
             patterns = make_patterns(v)
-            templates = load_pickle(flist, patterns.values())
+            templates = load_rootfiles(flist, patterns.values())
             combine_templates(templates, patterns, v)

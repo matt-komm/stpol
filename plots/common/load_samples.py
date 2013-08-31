@@ -5,6 +5,7 @@ from plots.common.cross_sections import lumi_iso, lumi_antiiso
 from unfold.utils import asymmetry_weight
 from copy import deepcopy
 from rootpy.io import File
+from plots.common.cuts import *
 
 #Set as const right now.
 #If configurability needed in the future, do something with it
@@ -206,7 +207,7 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
     #weight_str = "1"
     if sample_name not in ["DATA", "qcd"] and not sample.name.startswith("Single"):
         if sample.name.endswith("ToLeptons") and asymmetry is not None:
-            weight_str = "("+str(weight)+") * "+str(Weights.asymmetry_weight(asymmetry))+")"
+            weight_str = str(Weight(str(weight)) * Weights.asymmetry_weight(asymmetry))
         if plot_range is not None:
             hist = sample.drawHistogram(var, cut_str_iso, weight=weight_str, binning=plot_range)
         elif binning is not None:
@@ -230,11 +231,14 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
                 h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, binning=plot_range)
                 h.Scale(sample.lumiScaleFactor(lumi))
                 hist.Add(h, -1)
+                h.SetDirectory(0)
             if qcd_extra is not None: #iso down or up - get nominal integral
                 hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", binning=plot_range)
+                hist_nomi.SetDirectory(0)
                 for s in nominals:
                     h1 = sample.drawHistogram(var, qcd_extra, weight=weight, binning=plot_range)
                     h1.Scale(sample.lumiScaleFactor(lumi))
+                    h1.SetDirectory(0)
                     hist_nomi.Add(h1, -1)
                 if hist.Integral() > 0:
                     hist.Scale(hist_nomi.Integral()/hist.Integral())
@@ -246,19 +250,26 @@ def create_histogram_for_fit(sample_name, sample, weight, cut_str_iso, cut_str_a
             #print("before subtraction", hist.Integral())
             for s in nominals:
                 h = sample.drawHistogram(var, cut_str_antiiso, weight=weight, binning=binning)
+                h.SetDirectory(0)
                 hist.Add(h, -1)
             #print("after subtraction", hist.Integral())
             if qcd_extra is not None: #iso down or up - get nominal integral
                 hist_nomi = sample.drawHistogram(var, qcd_extra, weight="1.0", binning=binning)
+                hist_nomi.SetDirectory(0)
                 for s in nominals:
                     h1 = sample.drawHistogram(var, qcd_extra, weight=weight, binning=binning)
                     h1.Scale(sample.lumiScaleFactor(lumi))
+                    h1.SetDirectory(0)
                     hist_nomi.Add(h1, -1)
                 if hist.Integral() > 0:
                     hist.Scale(hist_nomi.Integral()/hist.Integral())
         else:
             raise ValueError("Must specify either plot_range=(nbins, min, max) or binning=numpy.array(..)")
         hist.Scale(get_qcd_scale_factor(var, channel, "mva" in cut_str_iso, mtmetcut))
+        #Set MC errors to 0 for QCD        
+        for bin in range(1, hist.GetNbinsX()+1):
+            hist.SetBinError(bin, 0.000001)        
     #setErrors(hist)    #Set error in bins with 0 error to >0
     #print "sample", sample_name, hist.GetName()
+    hist.SetDirectory(0)
     return hist

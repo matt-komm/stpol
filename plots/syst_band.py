@@ -2,6 +2,10 @@
 """
 Uses the unfolding histograms to make a final plot with the systematic band.
 """
+
+import logging
+logger = logging.getLogger(__name__)
+
 from rootpy.io import File
 from os.path import join
 from plots.common.utils import NestedDict
@@ -15,14 +19,8 @@ from plots.common.utils import lumi_textbox
 from plots.load_histos2 import load_theta_format, SystematicHistCollection
 from plots.common.utils import reorder, PhysicsProcess
 from SingleTopPolarization.Analysis import sample_types
+import numpy, re, math, copy, rootpy
 
-
-import numpy, re, math, logging, copy
-
-logger = logging.getLogger(__name__)
-import rootpy
-rootpy.log.basic_config_colorized()
-logger.setLevel(logging.INFO)
 
 import ROOT
 ROOT.gROOT.SetBatch(True)
@@ -64,7 +62,6 @@ def rescale_to_fit(sample_name, hist, fitpars, ignore_missing=True):
     if not ignore_missing:
         raise KeyError("Couldn't match sample %s to fit parameters!" % sample_name)
 
-
 def load_fit_results(fn):
     """
     Opens the fit results file and returns the per-sample scale factors.
@@ -94,7 +91,7 @@ class PlotDef:
     from plots.vars import varnames
 
     defaults = dict(
-        
+
         log=False,
 
         systematics=[],
@@ -105,7 +102,7 @@ class PlotDef:
         x_units='',
         y_units='',
         lumibox_format='%(channel)s channel%(lb_comments)s',
-        
+
         legend_pos='top-left',
         legend_nudge_x=0,
         legend_nudge_y=0,
@@ -134,7 +131,7 @@ class PlotDef:
             elif self.legend_pos=="top-right":
                 self.lumi_pos = "top-left"
         return self.lumi_pos
-            
+
     def __init__(self, **kwargs):
 
         for k, v in self.defaults.items():
@@ -147,6 +144,12 @@ class PlotDef:
         #The systematic inclusion list is a list of regex patterns to include
         if isinstance(self.systematics, basestring):
             self.systematics = [self.systematics]
+
+    def get_ratio_minmax(self):
+        if hasattr(self, "ratio_limit"):
+            return (-self.ratio_limit, self.ratio_limit)
+        else:
+            return [-1.0, 1.0]
 
     def get_x_label(self):
         #The default variable pretty name is taken externally
@@ -229,7 +232,7 @@ def data_mc_plot(pd):
     nom = sum(hists_nom_mc)
 
     if pd.normalize:
-        ratio = hists_nom_data.Integral() / nom.Integral() 
+        ratio = hists_nom_data.Integral() / nom.Integral()
         hists_nom_data.Scale(1.0/ratio)
 
     #Get all the variated up/down total templates
@@ -317,7 +320,8 @@ def data_mc_plot(pd):
         s.SetLineStyle('dashed')
         s.SetTitle("stat. + syst.")
 
-    c = ROOT.TCanvas("c", "c", 1000, 1000)
+    #c = ROOT.TCanvas("c", "c", 1000, 1000)
+    c = ROOT.TCanvas("c", "c")
     p1 = ROOT.TPad("p1", "p1", 0, 0.3, 1, 1)
     p1.Draw()
     p1.SetTicks(1, 1);
@@ -337,7 +341,7 @@ def data_mc_plot(pd):
 
     ratio_pad, hratio = plot_data_mc_ratio(
         c, hists_nom_data,
-        nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=(-1, 1)
+        nom, syst_hists=(syst_stat_down, syst_stat_up), min_max=pd.get_ratio_minmax()
     )
 
 

@@ -5,7 +5,7 @@ import math
 def get_type(name, name2 = None):
     if name2 is not None:
         return "corr"
-    elif name in ["beta_signal", "tchan", "qcd", "top", "wzjets"]:
+    elif name in ["beta_signal", "other", "tchan", "qcd", "top", "wzjets"]:
         return "rate"
     else:
         return "shape"

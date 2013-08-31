@@ -11,6 +11,7 @@ from plots.common.cuts import Cuts, Weights
 import networkx as nx
 import argparse
 import numpy
+import ROOT
 
 
 def analysis_tree_all_reweighed(graph, cuts, snodes, **kwargs):
@@ -66,6 +67,9 @@ if __name__=="__main__":
     cuts_jet_tag = [
         ("%dj%dt"%(n,m), Cuts.n_jets(n)*Cuts.n_tags(m)) for n in [2,3] for m in [0,1,2]
     ]
+    # cuts_jet_tag = [
+    #     ("2j1t", Cuts.n_jets(2)*Cuts.n_tags(1))
+    # ]
 
     cuts = []
     for cutname, cbline in cuts_jet_tag:
@@ -102,17 +106,35 @@ if __name__=="__main__":
     class PickleSaver:
         def __init__(self, fname):
             self.of = gzip.GzipFile(fname, 'wb')
+            self.of_list = open(fname+".header", 'wb')
             self.nhists = 0
 
         def save(self, path, obj):
+            self.of_list.write(path + "\n")
             obj.SetName(path)
             pickle.dump(obj, self.of)
             self.nhists += 1
 
         def close(self):
             self.of.close()
+            self.of_list.close()
 
-    out = PickleSaver(args.outfile)
+
+    class FlatROOTSaver:
+        def __init__(self, fname):
+            self.of = ROOT.TFile(fname, "RECREATE")
+            self.nhists = 0
+
+        def save(self, path, obj):
+            obj.SetName(path.replace("/", "___"))
+            self.of.cd()
+            obj.Write("", ROOT.TObject.kOverwrite)
+            self.nhists += 1
+
+        def close(self):
+            self.of.Close()
+
+    out = FlatROOTSaver(args.outfile)
     graph = nx.DiGraph()
     snodes = [tree.SampleNode(out, graph, inf, [], []) for inf in args.infiles]
     logger.info("Done constructing sample nodes: %d" % len(snodes))

@@ -12,7 +12,7 @@ $STPOL_DIR/final_fit/compare_template_shapes.py compares the shapes of templates
 The systematics which match in shape with the nominal should not be used for the fit as the fit might not converge. The are absorbed in the rate uncertainties.
 """
 if __name__=="__main__":
-    parser = argparse.ArgumentParser(description='Do the final fit')
+    parser = argparse.ArgumentParser(description='')
     parser.add_argument('--path', dest='path', default="/hdfs/local/stpol/fit_histograms/07_08_2013/")
     args = parser.parse_args()
     

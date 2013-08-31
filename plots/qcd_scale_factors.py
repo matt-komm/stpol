@@ -1,14 +1,25 @@
 from plots.common.utils import NestedDict
 
 #Determined using qcd_estimation/get_qcd_yield.py and qcd_estimation/update_sf.py
-def load_qcd_sf(channel, met, cut="2j1t"):
+def load_qcd_sf(channel, met, cut="2j1t", do_uncertainty=False):
     import os
     base = os.path.join(os.environ['STPOL_DIR'], 'qcd_estimation', 'fitted', channel)
     fn = base + '/%s_no_MC_subtraction_mt_%s_plus.txt' % (cut, met)
     fi = open(fn)
     li = fi.readline().strip().split()
     sf = float(li[0])
-    return sf
+
+    #The yield and its uncertainty
+    y = float(li[1])
+    uncy = float(li[2])
+
+    #Calculate the uncertainty of the scale factor
+    unc_sf = uncy/y
+
+    if not do_uncertainty:
+        return sf
+    else:
+        return sf, unc_sf * sf
 
 qcdScale = dict()
 qcdScale['mu'] = dict()

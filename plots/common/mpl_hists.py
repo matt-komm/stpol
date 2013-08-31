@@ -1,7 +1,7 @@
 from plots.common.mpl_tdrstyle import plt
 from rootpy.plotting import Hist
 
-def draw_hists(hists, **kwargs):
+def draw_hists(hists, names=None, **kwargs):
     fig = plt.figure(
         figsize=(10,10)
     )
@@ -12,6 +12,8 @@ def draw_hists(hists, **kwargs):
         hlist = hists.items()
     elif isinstance(hists, list):
         hlist = [(h.GetTitle(), h) for h in hists]
+    if names and len(names)==len(hists):
+        hlist = zip(names, hists)
 
     for hn, h in hlist:
 
