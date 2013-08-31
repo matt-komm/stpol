@@ -780,30 +780,30 @@ if __name__=="__main__":
                 for v in [top_mass_sr, cos_theta, abs_eta_lj, mtw]:
                     histstack.append(v)
 
-        bdt = cos_theta.copy(
-            varname='bdt_discr',
-            channel=channel,
-            #For the BDT plot we don't want to apply the MVA cut
-            cutstr='%(channel)s_' + cutname + '_baseline/',
-            cutstr_antiiso='%(channel)s_' + cutname + '_baseline/(antiiso_.*)/',
-            outfile_unmerged = fpat(cutname, 'baseline'),
-            outfile_merged = fpat(cutname, 'baseline', merged=True)
-        )
-        bdt_zoom_loose = bdt.copy(varname='bdt_discr_zoom_loose')
+            bdt = cos_theta.copy(
+                varname='bdt_discr',
+                channel=channel,
+                #For the BDT plot we don't want to apply the MVA cut
+                cutstr='%(channel)s_' + cutname + '_baseline/',
+                cutstr_antiiso='%(channel)s_' + cutname + '_baseline/(antiiso_.*)/',
+                outfile_unmerged = fpat(cutname, 'baseline'),
+                outfile_merged = fpat(cutname, 'baseline', merged=True)
+            )
+            bdt_zoom_loose = bdt.copy(varname='bdt_discr_zoom_loose')
 
-        met = cos_theta.copy(
-            varname='met',
-            channel=channel,
-            #To show the MET distribution, don't apply the MET cut
-            cutstr='%(channel)s_'+cutname+'_nomet/',
-            cutstr_antiiso='%(channel)s_'+cutname+'_nomet/(antiiso_.*)/',
-            outfile_unmerged = fpat(cutname, 'nomet'),
-            outfile_merged = fpat(cutname, 'nomet', True),
-        )
-        mtw = met.copy(varname='mtw')
+            met = cos_theta.copy(
+                varname='met',
+                channel=channel,
+                #To show the MET distribution, don't apply the MET cut
+                cutstr='%(channel)s_'+cutname+'_nomet/',
+                cutstr_antiiso='%(channel)s_'+cutname+'_nomet/(antiiso_.*)/',
+                outfile_unmerged = fpat(cutname, 'nomet'),
+                outfile_merged = fpat(cutname, 'nomet', True),
+            )
+            mtw = met.copy(varname='mtw')
 
-        for v in [bdt_zoom_loose, bdt, met, mtw]:
-            histstack.append(v)
+            for v in [bdt_zoom_loose, bdt, met, mtw]:
+                histstack.append(v)
 
     i = 0
     for hdef in histstack:
