@@ -79,8 +79,6 @@ private:
 
     void combinations(const unsigned int n, const unsigned int k, Combinations &combs);
 
-    //const std::unique_ptr<std::map<BTagSystematicsWeightProducer::Flavour, double>> effs_in2J;
-    //const std::unique_ptr<std::map<BTagSystematicsWeightProducer::Flavour, double>> effs_in3J;
     const edm::InputTag jetSrc;
     const edm::InputTag nJetSrc, nTagSrc;
     Combinations combs;
