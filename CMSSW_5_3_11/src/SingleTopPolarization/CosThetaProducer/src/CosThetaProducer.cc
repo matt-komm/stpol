@@ -104,6 +104,9 @@ CosThetaProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
         const reco::Candidate &top = tops->at(0);
         const reco::Candidate &jet = jets->at(0);
         const reco::Candidate &lepton = leptons->at(0);
+        LogDebug("costheta_input") << "top: " << top.pt() << ":" << top.eta() << ":" << top.phi();
+        LogDebug("costheta_input") << "jet: " << jet.pt() << ":" << jet.eta() << ":" << jet.phi();
+        LogDebug("costheta_input") << "lepton: " << lepton.pt() << ":" << lepton.eta() << ":" << lepton.phi();
 
         ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > boostedLeptonVec = ROOT::Math::VectorUtil::boost(lepton.p4(), top.p4().BoostToCM());
         ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > boostedJetVec = ROOT::Math::VectorUtil::boost(jet.p4(), top.p4().BoostToCM());

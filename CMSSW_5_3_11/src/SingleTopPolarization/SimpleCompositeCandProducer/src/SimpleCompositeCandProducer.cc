@@ -113,12 +113,13 @@ SimpleCompositeCandProducer::produce(edm::Event& iEvent, const edm::EventSetup& 
     iEvent.getByLabel(source, pIn);
     int i = 0;
     for (auto& particle : *pIn) {
-      LogDebug("produce()") << "Adding particle " << i << " from collection "  << source.label() << " as daughter";
+      LogDebug("produce()") << "Adding particle " << i << " from collection "  << source.encode() << " as daughter";
+      LogDebug("produce()") << "Pt=" << particle.pt() << " eta=" << particle.eta() << " phi=" << particle.phi();
       outCand.addDaughter(particle);
       i++;
     }
    }
-   LogDebug("produce()") << "Adding 4-momenta of daughters";
+   LogDebug("produce()") << "Adding 4-momenta of daughters: " << outCand.numberOfDaughters();
    AddFourMomenta adder;
    adder.set(outCand);
    
