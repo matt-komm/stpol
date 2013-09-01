@@ -31,12 +31,16 @@ class SampleInfo:
 
 def is_wjets_mg(sample_name):
     if re.match("w[0-9]jets_exclusive.*", sample_name.lower()):
-    	return True
+        return True
     else:
-    	return False
+        return False
 
 def is_wjets(sample_name):
-    return is_wjets_mg(sample_name) or sample_name.lower().startswith("wjets")
+    return (
+        is_wjets_mg(sample_name) or
+        sample_name.lower().startswith("wjets") or
+        re.match(".*w[0-9]jets.*", sample_name.lower())!=None
+    )
 
 def is_ttbar(sample_name):
     return sample_name.lower().startswith("ttjets") or sample_name.lower().startswith("ttbar")
