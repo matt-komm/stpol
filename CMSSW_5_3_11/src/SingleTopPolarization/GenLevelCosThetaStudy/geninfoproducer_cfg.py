@@ -1,33 +1,31 @@
 import FWCore.ParameterSet.Config as cms
+import sys
 
 process = cms.Process("GENSTUDY")
+
 
 
 from PhysicsTools.JetMCAlgos.SelectPartons_cff import *
 from PhysicsTools.JetMCAlgos.IC5CaloJetsMCFlavour_cff import *
 from PhysicsTools.JetMCAlgos.AK5CaloJetsMCFlavour_cff import *
 
-process.load("FWCore.MessageLogger.MessageLogger_cfi")
-#process.MessageLogger = cms.Service("MessageLogger",
-#        destinations=cms.untracked.vstring(
-#            'cout',
-#            'debug'
-#        ),
-#        debugModules=cms.untracked.vstring('*'),
-#        cout=cms.untracked.PSet(threshold=cms.untracked.string('WARNING')),
-#        debug=cms.untracked.PSet(threshold=cms.untracked.string('DEBUG')),
-#)
-
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(1000000)
 )
+
+process.load("FWCore.MessageLogger.MessageLogger_cfi")
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+
+#inf = []
+#for line in sys.stdin.readlines():
+#    line = line.strip()
+#    line = "file:" + line
+#    inf.append(line)
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(
-        'file:/home/joosep/fromdima/GEN/gen_10018_17635.root'
-    )
+    fileNames = cms.untracked.vstring()
 )
-
+process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 process.myPartons = cms.EDProducer("PartonSelector",
      withLeptons = cms.bool(True),
@@ -76,6 +74,7 @@ process.out = cms.OutputModule("PoolOutputModule",
     outputCommands=cms.untracked.vstring(
         'drop *',
         'keep *_cosTheta_*_*',
+        'keep double_particleSelector_*_*',
         'keep floats_*_*_*'
     ),
     dropMetaData=cms.untracked.string("DROPPED"),
@@ -133,3 +132,6 @@ process.genParticlePath = cms.Path(
 )
 
 process.e = cms.EndPath(process.out)
+
+from SingleTopPolarization.Analysis.cmdlineParsing import enableCommandLineArguments
+enableCommandLineArguments(process)
