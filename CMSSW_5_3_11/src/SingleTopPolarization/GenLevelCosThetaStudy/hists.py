@@ -21,6 +21,7 @@ class Histo:
         self.handle = Handle(src[0])
         self.label = src[1]
         self.hist = ROOT.TH1F(*args)
+        self.hist.Sumw2()
         if not fillfn:
             self.fillfn = lambda x: x[0] if len(x)>0 else 0
         else:
