@@ -12,7 +12,11 @@ if __name__=="__main__":
 
     fileD = dict()
     for line in lines:
+        line = line.strip()
         mat = pat.match(line)
+        if not mat:
+            print "no match:", line
+            continue
         jobN = mat.group(1)
         fileN = mat.group(2)
         fileD[jobN] = line
