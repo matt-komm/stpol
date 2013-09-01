@@ -1,4 +1,16 @@
 -------
+Sample: /hdfs/local/stpol/step3/Sep1_wjets_fsim/
+step: step3
+parent: filelists/step2/mc_syst/nominal/wjets_fsim/
+Explanation: WJets fastsim systematic samples, produced without PDF weights, iso only
+-------
+Sample: filelists/step2/mc_syst/nominal/wjets_fsim/
+step: step2
+parent:
+    filelists/Jul10_5a56de/step1/mc/wjets_FSIM_Summer12/
+    /home/joosep/singletop/stpol/crabs/Jul10_5a56de/step1/mc/wjets_FSIM_Summer12/WD_* (UNPUBLISHED DUE TO CRAB ERRORS)
+Explanation: WJets fastsim systematic samples, produced manually, not via crab
+-------
 Sample: /hdfs/local/stpol/step3/37acf5_343e0a9_Aug22/
 step: step3
 luminosity: ??? FIXME@MARIO
