@@ -26,7 +26,7 @@ process.myPartons = cms.EDProducer("PartonSelector",
 
 #Match jets to partons
 process.flavourByRef = cms.EDProducer("JetPartonMatcher",
-     jets = cms.InputTag("ak5GenJetsNoNu"),
+     jets = cms.InputTag("ak5GenJets"),
      coneSizeToAssociate = cms.double(0.3),
      partons = cms.InputTag("myPartons")
 )
