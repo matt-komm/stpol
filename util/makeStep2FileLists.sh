@@ -8,7 +8,9 @@ fi
 
 for i in `find $1 -type d`
 do
+    echo $i
     foldername=`basename $i`
     i=`readlink -f $i` 
-    find $i -name "*.root" | $STPOL_DIR/util/dedupe.py | $STPOL_DIR/util/prependPrefix.py file:
+    #find $i -name "*.root" | $STPOL_DIR/util/dedupe.py | $STPOL_DIR/util/prependPrefix.py file:
+    find $i -name "*.root" | $STPOL_DIR/util/prependPrefix.py file: > $foldername.txt
 done
