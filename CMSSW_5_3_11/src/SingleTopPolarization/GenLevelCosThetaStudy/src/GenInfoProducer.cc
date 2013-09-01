@@ -66,6 +66,10 @@
 #include "SimDataFormats/JetMatching/interface/MatchedPartons.h"
 #include "SimDataFormats/JetMatching/interface/JetMatchedPartons.h"
 
+//For gen-level weight
+#include <SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h>
+
+//For random number generator
 #include <TRandom.h>
 
 class GenInfoProducer : public edm::EDFilter
@@ -120,6 +124,8 @@ GenInfoProducer::GenInfoProducer(const edm::ParameterSet &iConfig)
     produces<std::vector<reco::CompositeCandidate> >("selectedMETs");
     produces<std::vector<reco::CompositeCandidate> >("selectedBTagJets");
     produces<std::vector<reco::CompositeCandidate> >("selectedLightJets");
+    
+    produces<double>("genWeight");
 
     rng = new TRandom();
 }
@@ -149,6 +155,11 @@ GenInfoProducer::filter(edm::Event &iEvent, const edm::EventSetup &iSetup)
 {
     using namespace edm;
     using namespace std;
+    
+    //edm::Handle<GenEventInfoProduct> genEventInfo;
+    //edm::InputTag genWeightSrc("generator");
+    //iEvent.getByLabel(genWeightSrc, genEventInfo);
+    //iEvent.put(std::auto_ptr<double>(new double(genEventInfo->weight())), "genWeight");
 
     std::auto_ptr<std::vector<reco::CompositeCandidate> > muColl(new std::vector<reco::CompositeCandidate>);
     //std::auto_ptr<std::vector<reco::CompositeCandidate> > bJetColl(new std::vector<reco::CompositeCandidate>);
@@ -178,7 +189,7 @@ GenInfoProducer::filter(edm::Event &iEvent, const edm::EventSetup &iSetup)
         throw 1;
     }
 
-
+    int n_partons = 0;
     for (size_t i = 0; i < genParticles->size(); ++i)
     {
         const Candidate &p = (*genParticles)[i];
@@ -193,7 +204,21 @@ GenInfoProducer::filter(edm::Event &iEvent, const edm::EventSetup &iSetup)
             muColl->push_back(*cand);
             delete cand;
         }
+        if(p.status() == 3) {
+            LogDebug("stat3") << "Status 3 particle: " << p.pdgId() << " " << p.pt(); 
+            n_partons += 1; 
+        }
     }
+
+    //Take into account the enhanced production
+    double gen_weight = 1.0;
+    if(n_partons==3) {
+        gen_weight = 1.0/2.0; 
+    }
+    else if(n_partons>3) {
+        gen_weight = 1.0/5.0; 
+    }
+    iEvent.put(std::auto_ptr<double>(new double(gen_weight)), "genWeight");
 
     if (muColl->size() != 1)
     {
