@@ -1,3 +1,4 @@
+
 // -*- C++ -*-
 //
 // Package:    BTagEfficiencyAnalyzer
@@ -18,6 +19,7 @@
 //
 
 
+/*
 // system include files
 #include <memory>
 
@@ -201,4 +203,6 @@ BTagEfficiencyAnalyzer::fillDescriptions(edm::ConfigurationDescriptions &descrip
     descriptions.addDefault(desc);
 }
 
-v.begin(), v.end()DEFINE_FWK_MODULE(BTagEfficiencyAnalyzer);
+DEFINE_FWK_MODULE(BTagEfficiencyAnalyzer);
+
+*/

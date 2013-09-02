@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import sys
 
-csize = 120
+csize = 5
 
 def clean(line):
     line = line.strip()

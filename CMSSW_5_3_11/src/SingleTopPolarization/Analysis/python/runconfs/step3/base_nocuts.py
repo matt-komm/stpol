@@ -61,6 +61,7 @@ parser.add_option("--doControlVars", dest="doControlVars", action="store_true", 
 parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root",
     description="Filename of the flat ROOT output file."
 )
+doPDF = True #FIXME: hardcoding...
 
 options, args = parser.parse_args()
 
@@ -338,7 +339,7 @@ PDFSets = [
 
 process.pdfWeights = cms.PSet(
     #PDF stuff
-    enabled = cms.bool(options.isMC and options.systematic=="nominal"),
+    enabled = cms.bool(options.isMC and options.systematic=="nominal" and doPDF),
     scalePDFSrc = cms.InputTag("PDFweights", "scalePDF"),
 	x1Src = cms.InputTag("PDFweights", "x1"),
 	x2Src = cms.InputTag("PDFweights", "x2"),

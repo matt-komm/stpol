@@ -164,9 +164,8 @@ if __name__=="__main__":
             elif k.lower() in ["tchan"]:
                 unc_fit = ratio("tchan")
             errs_fit[k.lower()] = unc_fit * v.Integral()
-            logger.debug("Fit uncertainty for {0}={1:.2f}".format(k, unc_fit))
+            logger.debug("Fit uncertainty forforfor {0}={1:.2f}".format(k, unc_fit))
 
-        #Assume that the fit results are uncorrelated for total MC
         err_vec = np.array([
             errs_fit["tchan"], errs_fit["ttjets"], errs_fit["twchan"],
             errs_fit["schan"], errs_fit["qcd"], errs_fit["wjets"],
@@ -174,8 +173,9 @@ if __name__=="__main__":
         ])
 
         #Naive error
-        #err1 = math.sqrt(sum([x**2 for x in errs_fit.values()]))
+        #errs_fit["mc"] = math.sqrt(sum([x**2 for x in errs_fit.values()]))
 
+        #Calculate the error using the covariance matrix
         errs_fit["mc"] = math.sqrt(np.dot(err_vec, np.dot(corr_mat, err_vec.T)))
 
         for k, v in sorted(items, key=lambda x: x[0]):
@@ -197,7 +197,13 @@ if __name__=="__main__":
             lb_comments = _kwargs.pop("lb_comments", "")
             lb_comments = lb_comments.format(bdt_cut=Cuts.mva_wps['bdt'][channel]['loose'])
             save_name = _kwargs.pop("save_name", outdir + '/{cutname}_{varname}.pdf')
-            save_name = save_name.format(channel=channel, varname=varname, cutname=cutname)
+            
+            #Inconsistency between code and AN/PAS
+            channel_an = channel
+            if channel=="ele":
+                channel_an = "el"
+            
+            save_name = save_name.format(channel=channel_an, varname=varname, cutname=cutname)
             _kwargs["save_name"] = save_name
             h = pd(varname, cutname, channel,
                 lb_comments = lb_comments,
@@ -209,7 +215,6 @@ if __name__=="__main__":
             save_canv(canv, h.save_name)
             canv.Close()
             if do_save_yields:
-                #import pdb; pdb.set_trace()
                 save_yields(
                     hists,
                     "results/yields/{0}_{1}.txt".format(cutname, channel),
@@ -222,12 +227,12 @@ if __name__=="__main__":
     outdir = "out/plots/an/"
     plot("cos_theta", "2j1t_mva_loose", rebin=4, legend_pos='top-left',
         lb_comments=', 2J1T BDT > {bdt_cut:.2f}',
-        save_name=outdir + '/control/2j1t_cosTheta_mva_{channel}.pdf',
+        save_name=outdir + '/control/final_cosTheta_mva_loose_fit_{channel}.pdf',
         save_yields=True
     )
     plot("cos_theta", "2j1t_cutbased_final", rebin=4, legend_pos='top-left',
         lb_comments=', 2J1T cut-based',
-        save_name=outdir + '/control/2j1t_cosTheta_cutbased_{channel}.pdf',
+        save_name=outdir + '/control/final_cosTheta_fit_{channel}.pdf',
         save_yields=True
     )
 
@@ -236,10 +241,12 @@ if __name__=="__main__":
     plot("cos_theta", "3j1t_baseline", rebin=4, legend_pos='top-left', lb_comments=', 3J1T', max_bin_mult=2.5, save_name=outdir + '/control/3j1t_cosTheta_{channel}.pdf')
     plot("cos_theta", "3j2t_baseline", rebin=4, legend_pos='top-left', lb_comments=', 3J2T', max_bin_mult=2.5, save_name=outdir + '/control/3j2t_cosTheta_{channel}.pdf')
 
-    plot("bdt_discr", "2j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J0T', log=True, save_name=outdir + '/BDT/2j0t_mva_bdt_{channel}.pdf', min_bin=100)
-    plot("bdt_discr", "3j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J0T', log=True, save_name=outdir + '/BDT/3j0t_mva_bdt_{channel}.pdf', min_bin=100)
-    plot("bdt_discr", "3j1t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J1T', log=True, save_name=outdir + '/BDT/3j1t_mva_bdt_{channel}.pdf', min_bin=10)
-    plot("bdt_discr", "3j2t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J2T', log=True, save_name=outdir + '/BDT/3j2t_mva_bdt_{channel}.pdf')
+    plot("bdt_discr", "2j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J0T', log=True, save_name=outdir + '/BDT/2j0t_BDT_{channel}.pdf', min_bin=100)
+    plot("bdt_discr", "2j1t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J1T', log=True, save_name=outdir + '/BDT/mva_bdt_{channel}.pdf', min_bin=100)
+    plot("bdt_discr_zoom_loose", "2j1t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J1T', save_name=outdir + '/BDT/mva_bdt_zoom_{channel}.pdf')
+    plot("bdt_discr", "3j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J0T', log=True, save_name=outdir + '/BDT/3j0t_BDT_{channel}.pdf', min_bin=100)
+    plot("bdt_discr", "3j1t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J1T', log=True, save_name=outdir + '/BDT/3j1t_BDT_{channel}.pdf', min_bin=10)
+    plot("bdt_discr", "3j2t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J2T', log=True, save_name=outdir + '/BDT/3j2t_BDT_{channel}.pdf')
 
     plot("abs_eta_lj", "2j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J0T', save_name=outdir + '/control/2j0t_etaLj_{channel}.pdf')
     plot("abs_eta_lj", "3j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J0T', save_name=outdir + '/control/3j0t_etaLj_{channel}.pdf')

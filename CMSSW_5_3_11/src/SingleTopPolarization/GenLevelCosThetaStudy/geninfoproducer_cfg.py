@@ -1,50 +1,43 @@
 import FWCore.ParameterSet.Config as cms
+import sys
 
 process = cms.Process("GENSTUDY")
-
 
 from PhysicsTools.JetMCAlgos.SelectPartons_cff import *
 from PhysicsTools.JetMCAlgos.IC5CaloJetsMCFlavour_cff import *
 from PhysicsTools.JetMCAlgos.AK5CaloJetsMCFlavour_cff import *
 
-process.load("FWCore.MessageLogger.MessageLogger_cfi")
-#process.MessageLogger = cms.Service("MessageLogger",
-#        destinations=cms.untracked.vstring(
-#            'cout',
-#            'debug'
-#        ),
-#        debugModules=cms.untracked.vstring('*'),
-#        cout=cms.untracked.PSet(threshold=cms.untracked.string('WARNING')),
-#        debug=cms.untracked.PSet(threshold=cms.untracked.string('DEBUG')),
-#)
-
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
+    input = cms.untracked.int32(1000000)
 )
+
+process.load("FWCore.MessageLogger.MessageLogger_cfi")
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.source = cms.Source("PoolSource",
-    fileNames = cms.untracked.vstring(
-        'file:/home/joosep/fromdima/GEN/gen_10018_17635.root'
-    )
+    fileNames = cms.untracked.vstring()
 )
-
+process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
 process.myPartons = cms.EDProducer("PartonSelector",
      withLeptons = cms.bool(True),
      src = cms.InputTag("genParticles")
 )
 
+#Match jets to partons
 process.flavourByRef = cms.EDProducer("JetPartonMatcher",
-     jets = cms.InputTag("ak5GenJetsNoNu"),
+     jets = cms.InputTag("ak5GenJets"),
      coneSizeToAssociate = cms.double(0.3),
      partons = cms.InputTag("myPartons")
 )
 
+#Generate jets with flavour
 process.flavourByVal = cms.EDProducer("JetFlavourIdentifier",
      srcByReference = cms.InputTag("flavourByRef"),
      physicsDefinition = cms.bool(False)
  )
 
+#Select 1 lepton, 2J topology events
 process.particleSelector = cms.EDFilter('GenInfoProducer',
     srcSelectedPartons = cms.InputTag("myPartons"),
     srcByValue = cms.InputTag("flavourByVal")
@@ -53,11 +46,15 @@ process.particleSelector = cms.EDFilter('GenInfoProducer',
 lep = cms.InputTag("particleSelector", "selectedLeptons")
 bjet = cms.InputTag("particleSelector", "selectedBTagJets")
 ljet = cms.InputTag("particleSelector", "selectedLightJets")
+
+#Reconstruct the neutrino
 process.recoNu = cms.EDProducer('ClassicReconstructedNeutrinoProducer',
     leptonSrc=lep,
     bjetSrc=bjet,
     metSrc=cms.InputTag("particleSelector", "selectedMETs")
 )
+
+#Reconstruct the top using vector addition
 process.recoTop = cms.EDProducer('SimpleCompositeCandProducer',
     sources=cms.VInputTag([
         "recoNu",
@@ -65,6 +62,8 @@ process.recoTop = cms.EDProducer('SimpleCompositeCandProducer',
         lep
     ])
 )
+
+#Calculate the angle between the lepton and light jet in the top mass frame
 process.cosTheta = cms.EDProducer('CosThetaProducer',
     topSrc=cms.InputTag("recoTop"),
     jetSrc=ljet,
@@ -76,6 +75,7 @@ process.out = cms.OutputModule("PoolOutputModule",
     outputCommands=cms.untracked.vstring(
         'drop *',
         'keep *_cosTheta_*_*',
+        'keep double_particleSelector_*_*',
         'keep floats_*_*_*'
     ),
     dropMetaData=cms.untracked.string("DROPPED"),
@@ -85,6 +85,7 @@ process.out = cms.OutputModule("PoolOutputModule",
      ),
 )
 
+#Make ntuples
 def ntupleCollection(items):
     varVPSet = cms.VPSet()
     for item in items:
@@ -110,12 +111,8 @@ process.btaggedJet = cms.EDProducer(
         ]
   )
 )
-process.lightJet = process.btaggedJet.clone(
-    src=ljet
-)
-process.lepton = process.btaggedJet.clone(
-    src=lep
-)
+process.lightJet = process.btaggedJet.clone(src=ljet)
+process.lepton = process.btaggedJet.clone(src=lep)
 
 process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
 
@@ -133,3 +130,7 @@ process.genParticlePath = cms.Path(
 )
 
 process.e = cms.EndPath(process.out)
+
+#Enable command line args (has to be done at the end to have access to process.source/out)
+from SingleTopPolarization.Analysis.cmdlineParsing import enableCommandLineArguments
+enableCommandLineArguments(process)
