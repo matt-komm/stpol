@@ -92,6 +92,10 @@ xs["WJetsToLNu_matchingup"] = xs["WJets_inclusive"]
 xs["WJetsToLNu_scaledown"] = xs["WJets_inclusive"]
 xs["WJetsToLNu_scaleup"] = xs["WJets_inclusive"]
 
+#Define the cross-sections for the W+jets fastsim samples
+for nj in [1,2,3,4]:
+    for syst in ["", "_matchingup", "_matchingdown", "_scaleup", "scaledown"]
+        xs["W%dJetsToLNu"%nj + syst] = xs["W%dJets_exclusive" % nj]
 
 # Use this dict to create lumis corresponding to step2 processings.
 # Please don't overwrite old lumis
