@@ -19,8 +19,8 @@ hdescs['all'] = [
     ("abs_eta_lj_2_5", "abs(eta_lj)", [nbins, 2.5, 4.5]),
     ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 4.5]),
     ("top_mass", "top_mass", [nbins, 80, 400]),
-    ("bj_pt", "bj_pt", [nbins, 0, 300]),
-    ("bj_mass", "bj_mass", [nbins, 0, 300]),
+    ("bj_pt", "pt_bj", [nbins, 0, 300]),
+    ("bj_mass", "mass_bj", [nbins, 0, 300]),
     ("top_mass_sr", "top_mass", [nbins, 130, 220]),
     #("eta_lj", "eta_lj", [40, -5, 5]),
 ]
