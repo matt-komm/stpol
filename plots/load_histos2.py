@@ -1,3 +1,9 @@
+import logging
+logger = logging.getLogger(__name__)
+if __name__=="__main__":
+    logger.setLevel(logging.INFO)
+    logging.basicConfig(level=logging.INFO)
+
 import re, glob, sys, os, copy
 from collections import deque
 from rootpy.io import File
@@ -6,11 +12,8 @@ import itertools
 from plots.common.utils import NestedDict, PatternDict
 import ROOT
 import time
-import logging
 import cPickle as pickle
 
-logger = logging.getLogger("load_histos2")
-logger.setLevel(logging.INFO)
 
 qcd_yield_variations = (2.0, 0.5)
 skipped_systs = ["wjets_matching", "wjets_scale", "sig_gen", "sig_anom"]
@@ -177,7 +180,6 @@ def get_syst_from_sample_name(sn):
     Returns:
         A 3-tuple with (process_name, systematic_name, systematic_dir)
     """
-
     si = sample_types.sample_infos[sn]
 
     #Check if the sample is MC and of the SYST type
@@ -205,7 +207,10 @@ def get_updown(syst):
             idx = syst.index(d)
             break
     if not idx:
-        raise ValueError("Unrecognized syst: %s" % syst)
+        if not "notapplied" in syst:
+            raise ValueError("Unrecognized syst: %s" % syst)
+        else:
+            logger.info("Systematic scenario was: %s, which will not be propagated" % syst)
 
     systtype = syst[0:idx]
     systtype = systtype.strip("_")#.strip("weight__")
@@ -382,6 +387,9 @@ class HistDef:
         else:
             return self.cutstr_antiiso % self.__dict__
 
+    def get_nominal_weight(self):
+        return self.nominal_weight
+
 def make_patterns(conf):
     cutstr = conf.get_cutstr()
     base = conf.basepath
@@ -452,8 +460,6 @@ def combine_templates(templates, patterns, conf):
     for k in ["data", "mc_nom", "mc_varsamp", "mc_varproc"]:
         items = templates[patterns[k]]
         if len(items)==0:
-            for _k, _v in dict.items(templates):
-                print _k, _v
             raise MatchingException("Nothing matched to %s:%s" % (k, patterns[k]))
         hsources += items
 
@@ -565,9 +571,6 @@ def combine_templates(templates, patterns, conf):
 
         syst = None
 
-        # if sample=="qcd":
-        #     pdb.set_trace()
-
         #Nominal weight, look for variated samples
         if wn=="nominal":
             syst = sample_var
@@ -579,23 +582,29 @@ def combine_templates(templates, patterns, conf):
                 continue
             syst = wn
 
-
-        if wn=="nominal" and sample_var=="nominal":
+        if wn==conf.get_nominal_weight() and sample_var=="nominal":
+            logger.info("Using %s:%s as nominal sample for %s" % (wn, sample_var, sample))
             syst_scenarios[sample]["nominal"][None] = hist
-
         #A systematic scenario which has a separate systematic sample
         elif sample_var == "syst":
-            r = get_syst_from_sample_name(sample)
+            try:
+                r = get_syst_from_sample_name(sample)
+            except Exception as e:
+                logger.warning("Unhandled systematic: %s" % str(e))
+                r = None
             if not r:
                 continue
             sample, systname, d = r
             #sample = map_syst_sample_to_nominal(sample)
             syst_scenarios[sample][systname][d] = hist
-
         else:
+            logger.debug("Systematically variated weight: %s:%s %s" % (wn, sample_var, sample))
             systname, d = get_updown(syst)
             syst_scenarios[sample][systname][d] = hist
-
+    logger.info("histogram W3Jets_exclusive nominal: " + "%f %d" % (
+        syst_scenarios["W3Jets_exclusive"]["nominal"][None].Integral(),
+        syst_scenarios["W3Jets_exclusive"]["nominal"][None].GetEntries())
+    )
     ######################################
     ### Save systematics, fill missing ###
     ######################################
@@ -631,12 +640,11 @@ def combine_templates(templates, patterns, conf):
     of.cd()
 
     #Get the list of all possible systematic scenarios that we have available
-    allsyts = get_all_systs(syst_scenarios)
-
+    allsysts = get_all_systs(syst_scenarios)
     for sampn, h1 in syst_scenarios.items():
 
         #Consider all the possible systematic scenarios
-        for systname in allsyts:
+        for systname in allsysts:
 
             #If we have it available, fine, use it
             if systname in h1.keys():
@@ -659,7 +667,6 @@ def combine_templates(templates, patterns, conf):
                 #Add placeholder templates
                 for systdir in ["up", "down"]:
                     h = h.Clone(hname_encode(conf.varname, sampn, systname, systdir))
-                    #print "Missing template for %s:%s" % (sampn, systname)
                     set_missing_hist(h)
 
                     #Save to file
@@ -689,6 +696,7 @@ def combine_templates(templates, patterns, conf):
 #    ROOT.gROOT.cd()
     for k in of.GetListOfKeys():
         hists[k.GetName()] = of.Get(k.GetName())
+        h = hists[k.GetName()]
         #hists[k.GetName()].Rebin(2)
     logger.info("Loaded %d histograms from file %s" % (len(hists), of.GetPath()))
     #of_unmerged.Close()
@@ -746,12 +754,21 @@ if __name__=="__main__":
     import sys
     histstack = []
 
+    import ConfigParser
+    Config = ConfigParser.ConfigParser()
+    Config.read(sys.argv[1])
+    nominal_weight = Config.get("Base", "nominal_weight")
+    ofdir = Config.get("Base", "ofdir")
+    logger.info("nominal_weight = " + nominal_weight)
+
     def fpat(cutname, subcut, merged=False):
         return 'results/' + ('hists__' if not merged else 'hists_merged__') + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
 
-    for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
+    #for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
+    for cutname in ["2j1t"]:
         for channel in ["mu", "ele"]:
-            for cut in ["baseline", "mva_loose", "cutbased_final"]:
+            #for cut in ["baseline", "mva_loose", "cutbased_final"]:
+            for cut in ["baseline"]:
                 cb = "%(channel)s_" + cutname + "_"
 
                 cutstr = cb + cut + '/'
@@ -762,7 +779,8 @@ if __name__=="__main__":
                     cutstr=cutstr,
                     cutstr_antiiso=cb + 'baseline/(antiiso_.*)/',
                     outfile_unmerged=fpat(cutname, cut),
-                    outfile_merged=fpat(cutname, cut, True)
+                    outfile_merged=fpat(cutname, cut, True),
+                    nominal_weight=nominal_weight
                 )
 
                 mtw = cos_theta.copy(
@@ -807,5 +825,9 @@ if __name__=="__main__":
 
     i = 0
     for hdef in histstack:
-        pickle.dump(hdef, open("results/hist_defs/hist_def_%d.pickle" % i, "wb"))
+        of = ofdir + "/hist_def_%d.pickle" % i
+        dn = os.path.dirname(of)
+        if not os.path.exists(dn):
+            os.makedirs(dn)
+        pickle.dump(hdef, open(of, "wb"))
         i += 1
