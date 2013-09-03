@@ -34,10 +34,12 @@ fit_sfs['mu'] = [x[1:] for x in fitpars_process['final_2j1t_mva']['mu']]
 fit_sfs['ele'] = [x[1:] for x in fitpars_process['final_2j1t_mva']['ele']]
 
 
-#FIXME: load from file
-Rab = 0 #tchan top
-Rac = 0.0 #tchan wzjets
-Rbc = -1 #top wzjets
+# FIXME: load from file
+# final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj.txt
+# final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt
+Rab = 0.358255 #tchan top
+Rac = -0.425863 #tchan wzjets
+Rbc = -0.989548 #top wzjets
 corr_mat = [
     #tchan  #ttbar  #tw     #s      #qcd    #w      #dy     #diboson
     [1,     Rab,    Rab,    Rab,    Rab,    Rac,    Rac,    Rac], #tchan

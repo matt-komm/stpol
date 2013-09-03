@@ -98,10 +98,12 @@ def asymmetry(hist, center):
         A numberical value of the
     """
     def my_int(a, b):
-        #print "Integrating over ",range(a, b)
         I = sum([hist.GetBinContent(i) for i in range(a, b)])
-        #print a,b, I
         return I
+
+    #An even number of bins which are equidistant
+    if hist.nbins()%2 == 0 and std(list(h.xwidth()))<0.001:
+        assert(hist.nbins()/2+1 == center, "Wrong central bin provided")
     low = my_int(1, center)
     high = my_int(center, hist.nbins()+1)
     if (low+high - hist.Integral())>0.01:
