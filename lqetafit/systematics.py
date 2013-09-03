@@ -1,10 +1,10 @@
 import ROOT
-
+import sys
 
 
 def add_uncertainties(model, qcd, top):
-    add_normal_uncertainty(model, 'qcd', qcd, 'qcd')
-    add_normal_uncertainty(model, 'top', top, 'top')
+    #add_normal_uncertainty(model, 'qcd', qcd, 'qcd')
+    add_normal_uncertainty(model, 'other', top, 'other')
     add_normal_uncertainty(model, 'wzjets', inf, 'wzjets')
 
 signal = 'tchan'
@@ -18,7 +18,8 @@ current_syst = ''
 #systematics = ['btaggingBC', 'btaggingL', 'muonID', 'muonIso', 'muonTrigger', 'pileup', 'wjets_flat', 'wjets_shape', 'ttbar_scale']
 #systematics = ['btaggingBC', 'btaggingL', 'muonID', 'muonIso', 'muonTrigger', 'ttbar_scale','wjets_shape','wjets_flat']
 #systematics = ['En', 'Res', 'UnclusteredEn','btaggingBC', 'btaggingL', 'leptonID', 'leptonIso', 'leptonTrigger', 'ttbar_scale', 'ttbar_matching',  'wjets_shape','wjets_flat']
-systematics = ['wjets_flat', 'Res', 'ttbar_scale', 'ttbar_matching', 'wjets_shape', 'En',  'UnclusteredEn','btaggingBC', 'btaggingL', 'leptonID', 'leptonTrigger']
+#systematics = ['wjets_flat', 'Res', 'ttbar_scale', 'ttbar_matching', 'wjets_shape', 'En',  'UnclusteredEn','btaggingBC', 'btaggingL', 'leptonID', 'leptonTrigger', 'pdf']
+systematics = ['pdf']
 #systematics = ['wjets_flat']
 
 def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'):
@@ -96,13 +97,13 @@ def write_cov_matrix(syst, mname, model, result):
 def get_model():
     # FIXME
     #model = build_model_from_rootfile('histos/lqeta.root', include_mc_uncertainties = False, histogram_filter = histofilter)
-    model = build_model_from_rootfile('histos/mu_mva_BDT/lqeta.root', include_mc_uncertainties = False, histogram_filter = histofilter)
+    model = build_model_from_rootfile('histos/testmu.root', include_mc_uncertainties = True, histogram_filter = histofilter)
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
     return model
 
 qcd = 1.0
-top = 0.1
+top = 0.2
 #wzjets = 0.5
 
 for i in range(10000):
@@ -162,7 +163,7 @@ for i in range(10000):
                 write_cov_matrix(current_syst, mname, model, res)
                 model.distribution = orig_dist
         print "SUCCESS"
-        system.exit(0)
+        sys.exit(0)
     except RuntimeError as rt:
              print "error"
              print str(rt)
