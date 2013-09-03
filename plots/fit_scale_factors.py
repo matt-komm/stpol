@@ -81,10 +81,10 @@ def from_file(fn, match_fmt='sample'):
 #A list of the fit result files, separated by cut and channel
 fit_files = [
     ('final_2j1t_mva', 'ele', os.environ["STPOL_DIR"] +
-        '/final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj.txt'
+        '/final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__no_metphi.txt'
     ),
     ('final_2j1t_mva', 'mu', os.environ["STPOL_DIR"] +
-        '/final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt'
+        '/final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__no_metphi.txt'
     ),
 ]
 
