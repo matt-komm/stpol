@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import os
 import re
 import logging
@@ -31,6 +32,7 @@ step2_mc_files_qcd = [
 step2_mc_syst_files = [
 #    "/mc_syst/Apr19",
     "/mc_syst/Jul15",
+    "/mc_syst/Sep3",
 ]
 
 step2_data_files = [
@@ -233,7 +235,7 @@ if __name__=="__main__":
 
         logging.info("Writing step2 cfg files")
         systs=[]
-        if "step2" in args.steps: 
+        if "step2" in args.steps:
             systs += ["nominal"]
 
         if "step2_syst" in args.steps:
