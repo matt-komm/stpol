@@ -1,6 +1,6 @@
 #Given in ROOT's pseudo-LaTeX
 varnames = dict()
-varnames["cos_theta"] = 'cos #theta'
+varnames["cos_theta"] = 'cos #theta*'
 varnames["eta_lj"] = "#eta of the light jet"
 varnames["abs_eta_lj"] = "|#eta_{lj}|" #Like it is in the AN
 varnames["top_mass"] = 'M_{b l #nu} [GeV]'
