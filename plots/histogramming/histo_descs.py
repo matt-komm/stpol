@@ -14,10 +14,13 @@ hdescs['all'] = [
     ("met", "met", [nbins, 0, 300]),
     ("C", "C", [nbins, 0, 1]),
     ("met_50_150", "met", [nbins, 50, 150]),
-    ("abs_eta_lj", "abs(eta_lj)", [nbins, 0, 5]),
-    ("abs_eta_lj_2_5", "abs(eta_lj)", [nbins, 2.5, 5]),
-    ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 5]),
+    ("eta_lj", "eta_lj", [nbins, -4.5, 4.5]),
+    ("abs_eta_lj", "abs(eta_lj)", [nbins, 0, 4.5]),
+    ("abs_eta_lj_2_5", "abs(eta_lj)", [nbins, 2.5, 4.5]),
+    ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 4.5]),
     ("top_mass", "top_mass", [nbins, 80, 400]),
+    ("bj_pt", "bj_pt", [nbins, 0, 300]),
+    ("bj_mass", "bj_mass", [nbins, 0, 300]),
     ("top_mass_sr", "top_mass", [nbins, 130, 220]),
     #("eta_lj", "eta_lj", [40, -5, 5]),
 ]
@@ -27,6 +30,7 @@ hdescs['mu'] = [
     ("bdt_discr", Cuts.mva_vars['mu'], [nbins, -1, 1]),
     ("bdt_discr_zoom_loose", Cuts.mva_vars['mu'], [nbins, Cuts.mva_wps['bdt']['mu']['loose'], 1]),
     ("lep_iso", 'mu_iso', [nbins, 0, 0.5]),
+    ("lep_pt", 'mu_pt', [nbins, 0, 200]),
     ("mtw", "mt_mu", [nbins, 0, 300]),
     ("mtw_50_150", "mt_mu", [nbins, 50, 150]),
 ]
@@ -34,6 +38,7 @@ hdescs['ele'] = [
     ("bdt_discr", Cuts.mva_vars['ele'], [nbins, -1, 1]),
     ("bdt_discr_zoom_loose", Cuts.mva_vars['ele'], [nbins, Cuts.mva_wps['bdt']['ele']['loose'], 1]),
     ("lep_iso", 'el_iso', [nbins, 0, 0.5]),
+    ("lep_pt", 'el_pt', [nbins, 0, 200]),
     ("mtw", "mt_el", [nbins, 0, 300]),
     ("mtw_50_150", "mt_el", [nbins, 50, 150]),
 ]
