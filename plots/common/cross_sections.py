@@ -94,7 +94,7 @@ xs["WJetsToLNu_scaleup"] = xs["WJets_inclusive"]
 
 #Define the cross-sections for the W+jets fastsim samples
 for nj in [1,2,3,4]:
-    for syst in ["", "_nominal", "_matchingup", "_matchingdown", "_scaleup", "scaledown"]:
+    for syst in ["", "_nominal", "_matchingup", "_matchingdown", "_scaleup", "_scaledown"]:
         xs["W%dJetsToLNu"%nj + syst] = xs["W%dJets_exclusive" % nj]
         xs["W%dJets_FSIM"%nj + syst] = xs["W%dJets_exclusive" % nj]
 
