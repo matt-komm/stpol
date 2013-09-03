@@ -102,8 +102,9 @@ def asymmetry(hist, center):
         return I
 
     #An even number of bins which are equidistant
-    if hist.nbins()%2 == 0 and std(list(h.xwidth()))<0.001:
-        assert(hist.nbins()/2+1 == center, "Wrong central bin provided")
+    if hist.nbins()%2 == 0 and np.std(list(hist.xwidth()))<0.001:
+        if hist.nbins()/2+1 != center:
+            raise ValueError("Wrong central bin provided: %d, %d" % (center, hist.nbins()))
     low = my_int(1, center)
     high = my_int(center, hist.nbins()+1)
     if (low+high - hist.Integral())>0.01:
