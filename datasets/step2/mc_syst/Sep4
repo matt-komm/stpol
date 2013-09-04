@@ -9,7 +9,3 @@ TTJets_mass175_5 /TTJets_mass175_5_TuneZ2star_8TeV-madgraph-tauola/jpata-Sep3_ma
 
 Tbar_t_ToLeptons_scaleup /TBarToLeptons_t-channel_scaleup_8TeV-powheg-tauola/jpata-Sep2_54244c-e6cee8f160cb239f414a74aa40d88ea9/USER
 
-#Is really muon, but has a wrong dataset name
-TToBMuNu_anomWtb-unphys_t-channel_FSIM /TToBENu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
-
-TToBENu_anomWtb-0100_t-channel_FSIM /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
