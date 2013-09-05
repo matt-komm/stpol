@@ -447,10 +447,6 @@ class Weights:
     sherpa_weight = Weight("gen_weight")
     sherpa_flavour_weight = Weight("wjets_sh_flavour_flat_weight")
 
-    pdf_refweight = Weight("1")#sqrt(pdf_w0_CT10)/sqrt(pdf_w0_MSTW2008nlo68cl)")
-    #pdf_refweight = Weight("sqrt(pdf_w0_CT10)/sqrt(pdf_w0_CT10)")
-    #pdf_refweight = Weight("sqrt(pdf_w0_CT10)/sqrt(pdf_w0_cteq66)")
-
     @staticmethod
     def total_weight(lepton):
         return (
