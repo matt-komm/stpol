@@ -72,7 +72,7 @@ bool PDFWeights::process(const edm::EventBase& event) {
 	branch_vars.vars_int["pdf_id2"] = genprod->pdf()->id.second;
     
     // Ad-hoc fix for POWHEG
-    if (generatorName.compare("PowHeg")==0) {
+    if (generatorName.compare("powheg")==0) {
         edm::Handle<reco::GenParticleCollection> genParticles;
         if (!event.getByLabel(genParticlesSrc, genParticles)) {
             //edm::LogError("PDFWeightProducer") << ">>> genParticles  not found: " << genParticlesSrc.encode() << " !!!";

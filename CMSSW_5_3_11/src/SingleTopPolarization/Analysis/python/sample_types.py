@@ -63,6 +63,9 @@ def sample_info(sample_name):
         raise ValueError("Couldn't parse sample info: %s => %s" % (sample_name, si))
     return si
 
+def is_powheg(sample_name):
+    return sample_name in ["Tbar_tW", "T_tW", "T_t", "Tbar_t", "T_s", "Tbar_s", "T_t_ToLeptons", "Tbar_t_ToLeptons"]
+
 sample_infos = {}
 fi = open(os.path.join(os.environ["STPOL_DIR"], "datasets", "sample_descs.txt"))
 for li in fi.readlines():

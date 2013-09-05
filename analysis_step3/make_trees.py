@@ -70,6 +70,9 @@ if __name__=="__main__":
             if isMC:
                 args += " --isMC"
 
+                if sample_types.is_powheg(sampn):
+                    args += " --generator=powheg"
+
                 #!!!!!!!FIXME: cleverer way of getting the systematic scenario
                 if "nominal" in fi:
                     args += " --systematic=nominal"

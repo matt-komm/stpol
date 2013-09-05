@@ -58,7 +58,7 @@ parser.add_option("--isMC", dest="isMC", action="store_true", default=False,
 parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False,
     description="Add several additional variables in the trees."
 )
-parser.add_option("--generator", dest="generator", default="MadGraph", choices=["PowHeg", "Comphep", "MadGraph"],
+parser.add_option("--generator", dest="generator", default="madgraph", choices=["powheg", "comphep", "madgraph"],
     description="Set Generator name"
 )
 parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root",
