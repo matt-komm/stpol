@@ -5,8 +5,8 @@ void PDFWeights::initialize_branches() {
     branch_vars.vars_float["pdf_scalePDF"] = BranchVars::def_val;
     branch_vars.vars_float["pdf_x1"] = BranchVars::def_val;
     branch_vars.vars_float["pdf_x2"] = BranchVars::def_val;
-    branch_vars.vars_float["pdf_id1"] = BranchVars::def_val;
-    branch_vars.vars_float["pdf_id2"] = BranchVars::def_val;
+    branch_vars.vars_int["pdf_id1"] = BranchVars::def_val;
+    branch_vars.vars_int["pdf_id2"] = BranchVars::def_val;
 }
 
 
@@ -68,13 +68,6 @@ bool PDFWeights::process(const edm::EventBase& event) {
 	branch_vars.vars_float["pdf_x2"] = genprod->pdf()->x.second;
 	branch_vars.vars_int["pdf_id1"] = genprod->pdf()->id.first;
 	branch_vars.vars_int["pdf_id2"] = genprod->pdf()->id.second;
-    
-    //branch_vars.vars_float["pdf_scalePDF"] = get_collection<float>(event, scalePDFSrc, BranchVars::def_val);
-    //branch_vars.vars_float["pdf_x1"] = get_collection<float>(event, x1Src, BranchVars::def_val);
-    //branch_vars.vars_float["pdf_x2"] = get_collection<float>(event, x2Src, BranchVars::def_val);
-    //branch_vars.vars_int["pdf_id1"] = get_collection<int>(event, id1Src, BranchVars::def_val);
-    //branch_vars.vars_int["pdf_id2"] = get_collection<int>(event, id2Src, BranchVars::def_val);
-    
     
     for( unsigned int i = 0; i < PDFSets.size(); i++ ) {
         int InitNr = i+1;

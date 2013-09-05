@@ -102,8 +102,9 @@ def asymmetry(hist, center):
         return I
 
     #An even number of bins which are equidistant
-    if hist.nbins()%2 == 0 and std(list(h.xwidth()))<0.001:
-        assert(hist.nbins()/2+1 == center, "Wrong central bin provided")
+    if hist.nbins()%2 == 0 and np.std(list(hist.xwidth()))<0.001:
+        if hist.nbins()/2+1 != center:
+            raise ValueError("Wrong central bin provided: %d, %d" % (center, hist.nbins()))
     low = my_int(1, center)
     high = my_int(center, hist.nbins()+1)
     if (low+high - hist.Integral())>0.01:
@@ -118,12 +119,8 @@ fitpars['mu'] = fitpars_process['final_2j1t_mva']['mu'][0][1]
 fitpars['ele'] = fitpars_process['final_2j1t_mva']['ele'][0][1]
 
 measured_asym_errs = dict()
-measured_asym_errs['mu'] = (0.08, 0.12)
-measured_asym_errs['ele'] = (0.12, 0.22)
-
-measured_asym_errs = dict()
-measured_asym_errs['mu'] = (0.08, 0.12)
-measured_asym_errs['ele'] = (0.12, 0.22)
+measured_asym_errs['mu'] = (0.07, 0.15)
+measured_asym_errs['ele'] = (0.11, 0.28)
 
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
@@ -221,7 +218,10 @@ if __name__=="__main__":
         fi = ROOT.TFile(fn)
         ROOT.gROOT.cd()
         posterior = fi.Get("unfolded").Clone()
-        hasym = fi.Get("asymmetry").Clone()
+        try:
+            hasym = fi.Get("asymmetry").Clone()
+        except:
+            hasym = None
         binning = get_binning(posterior)
         return posterior, hasym, binning
 
@@ -243,14 +243,14 @@ if __name__=="__main__":
     data_post.__class__ = Hist
     data_post._post_init()
 
-    data_asym.__class__ = Hist
-    data_asym._post_init()
+    #data_asym.__class__ = Hist
+    #data_asym._post_init()
 
     binning = np.linspace(-1, 1, len(binning))
     logger.info(str(binning))
 
     data_post.SetTitle("unfolded data")
-    data_asym.SetTitle("unfolded data")
+    #data_asym.SetTitle("unfolded data")
 
     data_post = rebin(data_post, binning)
     # disabled since now the unfolded distribution already has an error

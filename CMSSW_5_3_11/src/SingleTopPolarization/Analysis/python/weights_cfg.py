@@ -13,7 +13,14 @@ def WeightSetup(process, conf):
         channel["TTJets_FullLept"] = "FullLept"
         channel["TTJets_SemiLept"] = "SemiLept"
 
-        for s in ["TTbar", "TTJets", "TTJets_MassiveBinDECAY", "TTJets_mass166_5", "TTJets_mass178_5", "TTJets_matchingdown", "TTJets_matchingup", "TTJets_scaleup", "TTJets_scaledown"]:
+        #FIXME: general sample metadata mechanism
+        for s in [
+            "TTbar", "TTJets", "TTJets_MassiveBinDECAY",
+            "TTJets_mass166_5", "TTJets_mass178_5",
+            "TTJets_mass169_5", "TTJets_mass175_5",
+            "TTJets_matchingdown", "TTJets_matchingup",
+            "TTJets_scaleup", "TTJets_scaledown"
+        ]:
             channel[s] = "FullSemiLept"
 
         process.ttbarTopWeight = cms.EDProducer(

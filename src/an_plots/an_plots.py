@@ -37,9 +37,9 @@ fit_sfs['ele'] = [x[1:] for x in fitpars_process['final_2j1t_mva']['ele']]
 # FIXME: load from file
 # final_fit/results/ele__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj.txt
 # final_fit/results/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.txt
-Rab = 0.358255 #tchan top
-Rac = -0.425863 #tchan wzjets
-Rbc = -0.989548 #top wzjets
+Rab = 0.289989 #tchan top
+Rac = -0.378867 #tchan wzjets
+Rbc = -0.984823 #top wzjets
 corr_mat = [
     #tchan  #ttbar  #tw     #s      #qcd    #w      #dy     #diboson
     [1,     Rab,    Rab,    Rab,    Rab,    Rac,    Rac,    Rac], #tchan
@@ -101,7 +101,7 @@ def pd(var, cut, channel, hpath="results/hists/hists_4ee08d9ca6e666ba2e8d42ada07
         var=var,
         channel_pretty=channels_pretty[channel],
         systematics='.*',
-        systematic_shapeonly=not 'mva' in cut,
+        systematics_shapeonly=False,
         lb_comments=kwargs.pop("lb_comments", ""),
         process_scale_factor = scale_factors(channel, cut),
         **kwargs

@@ -534,12 +534,14 @@ class Weights:
         Weight("wjets_mg_flavour_flat_weight"),
         Weight("wjets_mg_flavour_flat_weight_up"),
         Weight("wjets_mg_flavour_flat_weight_down"),
+        Weight("1.0", name="wjets_mf_flavour_flat_weight_notapplied"),
     )
 
     wjets_shape_syst = (
         Weight("wjets_mg_flavour_shape_weight"),
         Weight("wjets_mg_flavour_shape_weight_up"),
         Weight("wjets_mg_flavour_shape_weight_down"),
+        Weight("1.0", name="wjets_mf_flavour_shape_weight_notapplied"),
     )
 
     btag_syst = (

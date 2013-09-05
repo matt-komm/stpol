@@ -1140,6 +1140,13 @@ int main(int argc, char *argv[])
         float *p_branch = &(elem.second);
         out_tree_pdf->Branch(br_name.c_str(), p_branch);
     }
+    for (auto & elem : branch_vars_pdf.vars_int)
+    {
+        const std::string &br_name = elem.first;
+        std::cout << br_name << ", ";
+        int *p_branch = &(elem.second);
+        out_tree_pdf->Branch(br_name.c_str(), p_branch);
+    }
     for (auto & elem : branch_vars_pdf.vars_vfloat)
     {
         std::cout << elem.first << ", ";
