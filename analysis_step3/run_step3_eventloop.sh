@@ -1,6 +1,8 @@
 #!/bin/bash
 #set -e #Abort if errors
 uname -a
+set -e
+unset DISPLAY
 echo "SLURM job ID="$SLURM_JOBID
 WD=$STPOL_DIR
 INFILE=$1
@@ -34,4 +36,8 @@ echo $CONF
 echo "Input file is "$INFILE
 cat $INFILE | $CMSSW_BASE/bin/slc5_amd64_gcc462/Step3_EventLoop $CONF --outputFile=out_step3_$OFNAME.root
 echo "step3 exit code: "$?
-echo ""
+cd $STPOL_DIR/mvatools
+echo "Adding MVA"
+./addMVAasFriend.py -f $OUTDIR/out_step3_$OFNAME.root
+cd $WD
+echo "Done"
