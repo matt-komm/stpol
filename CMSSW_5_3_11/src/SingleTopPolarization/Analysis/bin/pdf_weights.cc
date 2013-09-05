@@ -1,5 +1,6 @@
 #include "pdf_weights.h"
 #include <SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h>
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 void PDFWeights::initialize_branches() {
     branch_vars.vars_float["pdf_scalePDF"] = BranchVars::def_val;
@@ -15,7 +16,7 @@ CutsBase(_branch_vars)
 {
     PDFSets = pars.getParameter<std::vector<std::string>>("PDFSets");
     enabled = pars.getParameter<bool>("enabled");
-    
+    generatorName = pars.getParameter<std::string>("generatorName");
     ////LHAPDF cannot manage with more PDF sets
     //if(PDFSets.size()>2)
     //    throw("Must specify at most 2 PDF sets");
@@ -61,6 +62,7 @@ bool PDFWeights::process(const edm::EventBase& event) {
 
 	edm::Handle<GenEventInfoProduct> genprod;
     edm::InputTag genWeightSrc1("generator");
+    edm::InputTag genParticlesSrc("genParticles");
 	event.getByLabel(genWeightSrc1, genprod);
 
 	branch_vars.vars_float["pdf_scalePDF"] = genprod->pdf()->scalePDF;
@@ -69,6 +71,30 @@ bool PDFWeights::process(const edm::EventBase& event) {
 	branch_vars.vars_int["pdf_id1"] = genprod->pdf()->id.first;
 	branch_vars.vars_int["pdf_id2"] = genprod->pdf()->id.second;
     
+    // Ad-hoc fix for POWHEG
+    if (generatorName.compare("PowHeg")==0) {
+        edm::Handle<reco::GenParticleCollection> genParticles;
+        if (!event.getByLabel(genParticlesSrc, genParticles)) {
+            //edm::LogError("PDFWeightProducer") << ">>> genParticles  not found: " << genParticlesSrc.encode() << " !!!";
+            return false;
+        }
+        unsigned int gensize = genParticles->size();
+        double mtop = 0.;
+        for(unsigned int i = 0; i<gensize; ++i) {
+            const reco::GenParticle& part = (*genParticles)[i];
+            int status = part.status();
+            if (status!=3) continue;
+            int id = part.pdgId();
+            if (abs(id) != 6) continue;
+            mtop = part.mass();
+            //cout << "found top with mass " << mtop << endl;
+            break;
+        }
+        branch_vars.vars_float["pdf_scalePDF"] = sqrt(mtop*mtop+branch_vars.vars_float["pdf_scalePDF"]*branch_vars.vars_float["pdf_scalePDF"]);
+    }
+
+
+
     for( unsigned int i = 0; i < PDFSets.size(); i++ ) {
         int InitNr = i+1;
         

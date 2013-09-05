@@ -35,6 +35,7 @@ public:
     
     std::vector<std::string> PDFSets;
     std::vector<std::string> PDFnames;
+    std::string generatorName;
 
     void initialize_branches();
     PDFWeights(const edm::ParameterSet& pars, BranchVars& _branch_vars);

@@ -58,6 +58,9 @@ parser.add_option("--isMC", dest="isMC", action="store_true", default=False,
 parser.add_option("--doControlVars", dest="doControlVars", action="store_true", default=False,
     description="Add several additional variables in the trees."
 )
+parser.add_option("--generator", dest="generator", default="MadGraph", choices=["PowHeg", "Comphep", "MadGraph"],
+    description="Set Generator name"
+)
 parser.add_option("--outputFile", dest="outputFile", type="string", default="step3.root",
     description="Filename of the flat ROOT output file."
 )
@@ -347,7 +350,8 @@ process.pdfWeights = cms.PSet(
 	id2Src = cms.InputTag("PDFweights", "id2"),
 
     #PDFSets = cms.vstring('cteq66.LHgrid','MSTW2008nlo68cl.LHgrid') #ok
-	PDFSets	= cms.vstring(PDFSets)
+	PDFSets	= cms.vstring(PDFSets),
+    generatorName = cms.string(options.generator) #workaround for PowHeg
 )
 
 process.lumiBlockCounters = cms.PSet(
