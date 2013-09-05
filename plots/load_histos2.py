@@ -764,11 +764,11 @@ if __name__=="__main__":
     def fpat(cutname, subcut, merged=False):
         return 'results/' + ('hists__' if not merged else 'hists_merged__') + cutname + '_' + subcut + '__%(varname)s_%(channel)s.root'
 
-    #for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
-    for cutname in ["2j1t"]:
+    for cutname in ["2j1t", "2j0t", "3j0t", "3j1t", "3j2t"]:
+    #for cutname in ["2j1t"]:
         for channel in ["mu", "ele"]:
-            #for cut in ["baseline", "mva_loose", "cutbased_final"]:
-            for cut in ["baseline"]:
+            for cut in ["baseline", "mva_loose", "cutbased_final"]:
+            #for cut in ["baseline"]:
                 cb = "%(channel)s_" + cutname + "_"
 
                 cutstr = cb + cut + '/'
@@ -789,6 +789,10 @@ if __name__=="__main__":
 
                 abs_eta_lj = cos_theta.copy(
                     varname='abs_eta_lj',
+                )
+
+                eta_lj = cos_theta.copy(
+                    varname='eta_lj',
                 )
 
                 top_mass_sr = cos_theta.copy(

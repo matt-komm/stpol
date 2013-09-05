@@ -139,7 +139,6 @@ if __name__=="__main__":
     snodes = [tree.SampleNode(out, graph, inf, [], []) for inf in args.infiles]
     logger.info("Done constructing sample nodes: %d" % len(snodes))
 
-
     #Construct the analysis chain
     analysis_tree_all_reweighed(graph, cuts, snodes)
 

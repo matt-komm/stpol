@@ -15,6 +15,8 @@ hdescs['all'] = [
     ("C", "C", [nbins, 0, 1]),
     ("met_50_150", "met", [nbins, 50, 150]),
     ("eta_lj", "eta_lj", [nbins, -4.5, 4.5]),
+    ("n_jets", "n_jets", [3, 2, 4]),
+    ("n_tags", "n_tags", [3, 0, 2]),
     ("abs_eta_lj", "abs(eta_lj)", [nbins, 0, 4.5]),
     ("abs_eta_lj_2_5", "abs(eta_lj)", [nbins, 2.5, 4.5]),
     ("abs_eta_lj_4", "abs(eta_lj)", [nbins, 4, 4.5]),
