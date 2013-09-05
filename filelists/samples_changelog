@@ -1,3 +1,7 @@
+Sample: /hdfs/local/stpol/step3/Sep4_syst_a554579
+step: step3
+parent: filelists/Sep4_syst_a554579, filelists/343e0a9_Aug22 (nominal)
+Explanation: added PDF weighting pdf_id1,2, tbar t scaleup, top mass 3GeV samples
 -------
 Sample: /hdfs/local/stpol/step3/Sep1_wjets_fsim/
 step: step3
