@@ -8,7 +8,9 @@ if __name__=="__main__":
         print fi
         samp = Sample.fromFile(fi)
 
-        for lep in ["mu"]:
+        for lep in ["mu", "ele"]:
+            if "/%s/"%lep not in fi:
+                continue
             print lep
             cut = None
             for cutname, _cut in [
@@ -25,10 +27,14 @@ if __name__=="__main__":
                     cut = _cut
                 else:
                     cut *= _cut
-                hi = samp.drawHistogram("eta_lj", str(cut), plot_range=[50, -5, 5])
-                hi.Scale(samp.lumiScaleFactor(20000))
-                print cutname
-                print hi.GetEntries(), hi.Integral()
+                try:
+                    hi = samp.drawHistogram("eta_lj", str(cut), binning=[50, -5, 5])
+                    hi.Scale(samp.lumiScaleFactor(20000))
+                    print cutname
+                    print hi.GetEntries(), hi.Integral()
+                except:
+                    print "-1 -1"
+
             for cutname, _cut in [
                 ("HLT", Cuts.hlt(lep)),
                 ("lep", Cuts.single_lepton(lep)),
@@ -40,7 +46,10 @@ if __name__=="__main__":
                     cut = _cut
                 else:
                     cut *= _cut
-                hi = samp.drawHistogram("eta_lj", str(cut), plot_range=[50, -5, 5])
-                hi.Scale(samp.lumiScaleFactor(20000))
-                print cutname
-                print hi.GetEntries(), hi.Integral()
+                try:
+                    hi = samp.drawHistogram("eta_lj", str(cut), binning=[50, -5, 5])
+                    hi.Scale(samp.lumiScaleFactor(20000))
+                    print cutname
+                    print hi.GetEntries(), hi.Integral()
+                except:
+                    print "-1 -1"
