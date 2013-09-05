@@ -16,7 +16,7 @@ class Fit:
             , rates = {"tchan": inf,  "wzjets": inf, "other": 0.2}
             #, shapes = ["Res", "__En", "ttbar_matching", "ttbar_scale", "iso"] #"__En" to avoid matching with UnclusteredEn
             , shapes = []
-            , correlations = [("wzjets", "other")]):
+            , correlations = [("wzjets", "other"), ("wzjets", "tchan"), ("tchan", "other")]):
 
         self.filename = filename
         self.name = name
@@ -102,8 +102,8 @@ class Fit:
             st_type = self.get_type(fit, syst)
             if syst in fitresults.keys():
                 print '%s, %s, %f, %f\n' % (st_type, syst.replace("__En","En"), fitresults[syst][0], fitresults[syst][1]),
-            line = '%s, %s, %f, %f\n' % (st_type, syst, 0.0, 1.0)
-            f.write(line)
+                line = '%s, %s, %f, %f\n' % (st_type, syst, 0.0, 1.0)
+                f.write(line)
 
 
         n = cor.GetNbinsX()

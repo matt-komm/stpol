@@ -211,11 +211,11 @@ PhysicsProcess.tchan_d["tchan_scale__up"] = PhysicsProcess("tchan_scale__up", ["
     pretty_name="signal (t-channel)"
 )
 
-PhysicsProcess.tchan_d["mass__down"] = PhysicsProcess("mass_down", ["T.*_t_ToLeptons_mass166_5"],
+PhysicsProcess.tchan_d["mass__down"] = PhysicsProcess("mass_down", ["T.*_t_ToLeptons_mass169_5"],
     pretty_name="signal (t-channel)"
 )
-#FIXME when sample available
-PhysicsProcess.tchan_d["mass__up"] = PhysicsProcess("mass__up", ["T.*_t_ToLeptons_mass178_5", "T_t_ToLeptons_mass166_5"],
+
+PhysicsProcess.tchan_d["mass__up"] = PhysicsProcess("mass__up", ["T.*_t_ToLeptons_mass175_5"],
     pretty_name="signal (t-channel)"
 )
 

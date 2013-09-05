@@ -1,26 +1,12 @@
 import ROOT
-import sys
-
-
-def add_uncertainties(model, qcd, top):
-    #add_normal_uncertainty(model, 'qcd', qcd, 'qcd')
-    add_normal_uncertainty(model, 'other', top, 'other')
-    add_normal_uncertainty(model, 'wzjets', inf, 'wzjets')
 
 signal = 'tchan'
 
 current_syst = ''
-#systematics = ['unclusen','en','res']
-#systematics = ['mass','scale','unclusen','en']
-# res up not working
-#systematics = ['en','unclusen', 'mass','top_scale','tchan_scale','matching']
-# FIXME new
-#systematics = ['btaggingBC', 'btaggingL', 'muonID', 'muonIso', 'muonTrigger', 'pileup', 'wjets_flat', 'wjets_shape', 'ttbar_scale']
-#systematics = ['btaggingBC', 'btaggingL', 'muonID', 'muonIso', 'muonTrigger', 'ttbar_scale','wjets_shape','wjets_flat']
-#systematics = ['En', 'Res', 'UnclusteredEn','btaggingBC', 'btaggingL', 'leptonID', 'leptonIso', 'leptonTrigger', 'ttbar_scale', 'ttbar_matching',  'wjets_shape','wjets_flat']
-#systematics = ['wjets_flat', 'Res', 'ttbar_scale', 'ttbar_matching', 'wjets_shape', 'En',  'UnclusteredEn','btaggingBC', 'btaggingL', 'leptonID', 'leptonTrigger', 'pdf']
+# mu working without cov matrix
+#systematics = ['En','UnclusteredEn', 'Res','btaggingBC', 'btaggingL', 'leptonIso','leptonID', 'leptonTrigger', 'ttbar_scale', 'ttbar_matching', 'wjets_shape', 'wjets_flat' ]
+# new syst
 systematics = ['pdf']
-#systematics = ['wjets_flat']
 
 def add_normal_uncertainty(model, u_name, rel_uncertainty, procname, obsname='*'):
     found_match = False
@@ -45,6 +31,7 @@ def norm_shape(model, process, syst):
         nom = hf.get_nominal_histo().get_value_sum()
         hplus = hf.get_plus_histo(syst)
         hminus = hf.get_minus_histo(syst)
+        print process, hf.get_nominal_histo().get_value_sum(), hf.get_plus_histo().get_value_sum(), hf.get_minus_histo().get_value_sum()
         hplus = hplus.scale(nom / hplus.get_value_sum())
         hminus = hminus.scale(nom / hminus.get_value_sum())
         #print nom
@@ -59,6 +46,15 @@ def histofilter(s):
         #    return False
         if not current_syst == syst:
             return False
+        print current_syst, syst, True
+    else:        
+        if "FSIM" in s:
+            print "S!",s
+            return False
+        """if "tchan" not in s:
+            print "S2!",s
+            return False
+        print "s?", s"""
     return True
 
 def write_cov_matrix(syst, mname, model, result):
@@ -95,75 +91,71 @@ def write_cov_matrix(syst, mname, model, result):
 
 
 def get_model():
-    # FIXME
-    #model = build_model_from_rootfile('histos/lqeta.root', include_mc_uncertainties = False, histogram_filter = histofilter)
-    model = build_model_from_rootfile('histos/testmu.root', include_mc_uncertainties = True, histogram_filter = histofilter)
+    # FIXME sample
+    model = build_model_from_rootfile('../final_fit/histos/mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__no_powheg_fix.root', include_mc_uncertainties = True, histogram_filter = histofilter)
+    #model = build_model_from_rootfile('../final_fit/histos/mu__mva_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj__no_metphi.root', include_mc_uncertainties = True, histogram_filter = histofilter)
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
     return model
 
-qcd = 1.0
-top = 0.2
-#wzjets = 0.5
 
-for i in range(10000):
-    try:
-        for syst in systematics:
-            current_syst = syst
-            print 'Checking systematics for', current_syst
-            factor = float(i)/10000
-            print ("Uncertainties: qcd %f, top %f\n" % (qcd+factor, top+factor))
+for syst in systematics:
+    current_syst = syst
+    print 'Checking systematics for', current_syst
 
-            model = get_model()
+    # Reads in model with current systematic
+    model = get_model()
 
-            #print 'Processes:', sorted(model.processes)
-            #execfile('uncertainties.py')
-            add_uncertainties(model, qcd+factor, top+factor)
+    #print 'Processes:', sorted(model.processes)
+    execfile('uncertainties.py')
 
-            # only consider shape, normalize up/down histo to nominal
-            if current_syst == 'mass': norm_shape(model, 'top','mass')
-            #if current_syst == 'scale': norm_shape(model, 'ttbar','scale')
+    # only consider shape, normalize up/down histo to nominal
+    #if current_syst == 'mass': norm_shape(model, 'top','mass')
+    #if current_syst == 'scale': norm_shape(model, 'ttbar','scale')
 
-            fit_dist = copy.deepcopy(model.distribution)
-            pars = model.get_parameters('')
-            #print 'Model parameters:', pars
-            # set all other systematics to zero
-            #for p in pars:
-            #    if p in systematics: continue
-            #    #fit_dist.set_distribution_parameters(p, width=0.0)
+    fit_dist = copy.deepcopy(model.distribution)
+    
+    pars = model.get_parameters('')
+    print 'Model parameters:', pars
 
-            model.distribution = get_fixed_dist(model.distribution)
-            options = Options()
+    options = Options()
+    options.set("minimizer","strategy","newton_vanilla")
+    #options.set("minimizer","strategy","robust")
 
-            shifts = []
-            #for p in systematics:
-            p = current_syst
-            orig_dist = copy.deepcopy(model.distribution)
-            for new_mean in (-1.0, 1.0):
-                print '=== shift %s to %f ===' % (p, new_mean)
-                if new_mean == 1.0:
-                    shift = 'up'
-                else:
-                    shift = 'down'
-                model.distribution.set_distribution_parameters(p, mean = new_mean, range = (new_mean, new_mean))
-                res = mle(model, input = 'toys-asimov:1.0', n = 1, with_covariance = True, nuisance_constraint = fit_dist, options = options)
-                fitresults = {}
-                for process in res[signal]:
-                    if '__' in process: continue
-                    fitresults[process] = [res[signal][process][0][0], res[signal][process][0][1]]
-                f = open('results/syst_'+p+'__'+shift+'.txt','w')
-                for key in sorted(fitresults.keys()):
-                    if key == current_syst: continue
-                    line = '%s %f %f\n' % (key, fitresults[key][0], fitresults[key][1])
-                    f.write(line)
-                    print line,
-                f.close()
-                # write covariance matrix
-                mname = 'syst_'+p+'__'+shift
-                write_cov_matrix(current_syst, mname, model, res)
-                model.distribution = orig_dist
-        print "SUCCESS"
-        sys.exit(0)
-    except RuntimeError as rt:
-             print "error"
-             print str(rt)
+    shifts = []
+    #for p in systematics:
+    p = current_syst
+    orig_dist = copy.deepcopy(model.distribution)
+    for new_mean in (-1.0, 1.0):
+        print '=== shift %s to %f ===' % (p, new_mean)
+        if new_mean == 1.0:
+            shift = 'up'
+        else:
+            shift = 'down'
+
+        # Switch syst templates to -+ sigma variation
+        fit_dist = get_fixed_dist_at_values({current_syst : new_mean})
+        model_summary(model)
+        res = mle(model, input = 'data', n = 1, nuisance_constraint = fit_dist, options = options) # FIXME use nominal cov now
+        #res = mle(model, input = 'data', n = 1, with_covariance = True, nuisance_constraint = fit_dist, options = options)
+        #res = mle(model, input = 'toys-asimov:1.0', n = 1, with_covariance = True, nuisance_constraint = fit_dist, options = options)
+        #report.write_html('htmlout_fit'+p+shift)
+        
+        # calculate and save fit result
+        fitresults = {}
+        for process in res[signal]:
+            if '__' in process: continue
+            fitresults[process] = [res[signal][process][0][0], res[signal][process][0][1]]
+        f = open('results/syst_'+p+'__'+shift+'.txt','w')
+        for key in sorted(fitresults.keys()):
+            if key == current_syst: continue
+            line = '%s %f %f\n' % (key, fitresults[key][0], fitresults[key][1])
+            f.write(line)
+            print line,
+        f.close()
+        # write covariance matrix
+        mname = 'syst_'+p+'__'+shift
+        # Use nominal cov matrix
+        #write_cov_matrix(current_syst, mname, model, res)
+        model.distribution = orig_dist
+        

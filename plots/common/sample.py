@@ -75,6 +75,8 @@ class Sample:
             self.tree.AddFriend("trees/WJets_weights")
         if self.tfile.Get("trees/MVA"):
             self.tree.AddFriend("trees/MVA")
+        if self.tfile.Get("trees/pdf_weights"):
+            self.tree.AddFriend("trees/pdf_weights")
         #self.tree.AddBranchToCache("*", 1)
 
         # add friend tree from another file containing mva values
