@@ -3,7 +3,7 @@ from theta_auto import *
 from Fit import Fit
 
 init_val = 1.2
-init_val_wjets = 2.0
+init_val_wjets = 500.
 step = 0.0001
 
 def get_model(infile, i=0):
@@ -33,7 +33,7 @@ def get_model(infile, i=0):
     # will be 100% correlated.
     print "Trying fit with uncertainty",init_val+i*step
     model.add_lognormal_uncertainty('nonqcd_rate', math.log(init_val+i*step), 'nonqcd')
-    model.add_lognormal_uncertainty('wjets_rate', math.log(init_val_wjets+i*step), 'wjets')
+    model.add_lognormal_uncertainty('wjets_rate', init_val_wjets, 'wjets')
     return model
 
 def fit_qcd(variable, identifier, fit):
@@ -56,7 +56,7 @@ def fit_qcd(variable, identifier, fit):
          #print "res_"+identifier+".res="+str(result)
          fit.result=result
         
-         fit.coeff["wjets"] = math.log(init_val_wjets+i*step)
+         fit.coeff["wjets"] = init_val_wjets#math.log(init_val_wjets+i*step)
          fit.coeff["nonqcd"] = math.log(init_val+i*step)
          #print fit.result
          values = {}

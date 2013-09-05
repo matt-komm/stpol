@@ -131,11 +131,11 @@ if __name__=="__main__":
     failed = []
     for cutn in args.cuts:
         cut = cuts[cutn]
-        try:
-            (results, fit) = get_qcd_yield_with_selection(cut, True, args.channel, base_path=args.path, do_systematics=args.doSystematics, doSystematicCuts = args.doSystematicCuts)
-        except:# rootpy.ROOTError:
-            failed += [cutn]
-            continue
+        #try:
+        (results, fit) = get_qcd_yield_with_selection(cut, True, args.channel, base_path=args.path, do_systematics=args.doSystematics, doSystematicCuts = args.doSystematicCuts)
+        #except:# rootpy.ROOTError:
+        #    failed += [cutn]
+        #    continue
         (y, error_mtcut) = results["mt"]
         (y_nomtcut, error_nomtcut) = results["nomt"]
         qcd_sf = y/fit.orig["qcd_no_mc_sub"]
