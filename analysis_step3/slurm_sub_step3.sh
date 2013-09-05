@@ -31,7 +31,7 @@ if [[ "$INFILE" == *T_t* ]] || [[ "$INFILE" == *Tbar_t* ]]; then
 elif [[ "$INFILE" == *nominal* ]]; then
     N=5;
 else
-    N=50;
+    N=20;
 fi
 
 split $INFILE -a8 -l $N -d
