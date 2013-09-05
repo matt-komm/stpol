@@ -66,7 +66,9 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
             ss_type=sub_systs[sub_systs.keys()[0]]
         elif sub_systs.keys()[0] in ["up", "down"]:
             ss_type=main_syst + "__" + sub_systs.keys()[0]
-        else:
+        elif main_syst.startswith("wjets") and sub_systs.keys()[0] == "nominal":
+            ss_type=main_syst+"_nominal"
+        else: 
             ss_type=main_syst
         (samples, sampnames) = load_samples(ss_type, channel, indir, coupling)
         
@@ -75,7 +77,7 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
             hists = []
             for sampn in samps:
                 for sys, sys_types in sub_systs.items():
-                    if sys == "nominal":
+                    if sys == "nominal" and not main_syst.startswith("wjets"):
                         weight_str = sys_types
                         hname = "%s__%s" % (var, sn)
                         write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
@@ -87,6 +89,8 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                             continue
                         hname = "%s__%s__%s__%s" % (var, sn, main_syst, sys)
                         write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
+                    elif main_syst=="pdf":
+                            make_pdf_histos(var, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
                     elif main_syst=="nominal":
                         for st_name, st in sys_types.items():
                             weight_str = st
@@ -97,6 +101,129 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                         write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel,  coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
 
 
+
+
+def make_pdf_histos(var, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
+    if sn == "qcd" and coupling == "powheg":
+        hname = "%s__%s__%s__%s" % (var, sn, "pdf", "up")
+        write_histogram(var, hname, str(weight), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
+        hname = "%s__%s__%s__%s" % (var, sn, "pdf", "down")
+        write_histogram(var, hname, str(weight), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
+        return
+    if sampn.startswith("Single") or coupling != "powheg":
+        return
+    nPDFSet_size = 44
+    weight_str = str(weight)
+    samp = samples[sampn]
+    hname_up = "%s__%s__pdf__up" % (var, sn)
+    hname_down = "%s__%s__pdf__down" % (var, sn)
+    #outfile = File(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
+    outfile = File(outdir + "/%s_%s_pdf.root" % (sampn, var), "RECREATE")
+    if sn=="DATA":
+        weight_str = "1"
+    if var == "eta_lj":
+        var = "abs("+var+")"
+    
+    hist_orig = create_histogram_for_fit(sn, samp, str(weight), cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=None, mtmetcut=mtmetcut)
+    hist_std = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=None, mtmetcut=mtmetcut)
+
+    hist_plus = hist_orig.Clone(hname_up)
+    hist_minus = hist_orig.Clone(hname_down)
+    print sn, samp
+    weighted_histos = []    
+    for i in range(nPDFSet_size):
+        #print "pdf nr = ", i
+        #weight_str = str(weight * Weights.pdf_refweight * Weight("pdf_weights_MSTW2008nlo68cl["+str(i)+"]"))
+        #weight_str = str(weight * Weights.pdf_refweight * Weight("pdf_weights_CT10.pdf_weights_CT10["+str(i)+"]"))
+        weight_str = str(weight * Weight("pdf_weights_cteq66["+str(i)+"]"))
+        hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=None, mtmetcut=mtmetcut)
+        hist.SetDirectory(0)
+        weighted_histos.append(hist)
+    
+    outfile.cd() #Must cd after histogram creation
+
+    (hist_plus, hist_minus) = calculate_PDF_uncertainties(hist_std, weighted_histos, hist_plus, hist_minus, orig=hist_orig)
+    #hist_std.Write()
+    hist_plus.Write()
+    hist_minus.Write()
+
+    
+    #Write histogram to file
+    #logging.info("Writing histogram %s to file %s" % (hist.GetName(), outfile.GetPath()))
+    #logging.info("%i entries, %.2f events" % (hist.GetEntries(), hist.Integral()))
+    
+    #(a,b) = hist.GetName().split("_")[0], hist.GetName().split("_")[1]
+    #print "YIELD", a+"_"+b, hist.Integral()
+    #hist.SetName(hname)
+    #hist.SetDirectory(outfile)
+    outfile.Write()
+    outfile.Close()
+    samples = None
+    #return (hist.GetName(), hist.Integral())
+
+
+def calculate_PDF_uncertainties(bestfit, pdf_weighted, histo_plus, histo_minus, scale_to_nominal = True, orig=None):
+    #http://cms.cern.ch/iCMS/jsp/openfile.jsp?tp=draft&files=AN2009_048_v1.pdf Equations 3 and 4
+    # calculate relative uncertaities around bestfit histogram based on pdf_weighted replicas of the histograms
+    nmax = bestfit.GetNbinsX()
+    for bin in range(1, nmax+1):
+        X = bestfit.GetBinContent(bin)
+
+        # Master formula: w_plus, w_minus, w_mean
+        nPDFSet_size_2 = len(pdf_weighted) / 2
+        sum_plus	= 0.
+        sum_minus	= 0.
+        n_plus		= 0
+        n_minus		= 0
+        for i in range(nPDFSet_size_2):
+            # get weighted values
+            x0 = bestfit.GetBinContent(bin)
+            xp = pdf_weighted[2*i].GetBinContent(bin)
+            xm = pdf_weighted[2*i+1].GetBinContent(bin)
+            dp = xp - x0
+            dm = xm - x0
+            """# sum plus
+            if dp > 0 or dm > 0:
+                n_plus += 1
+                if( dp > dm ):
+                    sum_plus += dp*dp
+                else:
+                    sum_plus += dm*dm
+	        # sum minus
+            if -dp > 0 or -dm > 0:
+                n_minus += 1
+                if( -dp > -dm ):
+                    sum_minus += dp*dp
+                else:
+                    sum_minus += dp*dp"""
+            if (dp>dm):
+                if dp<0.: dp = 0.
+                if dm>0.: dm = 0.
+                sum_plus += dp*dp
+                sum_minus += dm*dm
+            else:
+                if dm<0.: dm = 0.
+                if dp>0.: dp = 0.
+                sum_plus += dm*dm
+                sum_minus += dp*dp
+
+        sum_plus	= math.sqrt(sum_plus)
+        sum_minus	= math.sqrt(sum_minus)
+        # put to histo
+        
+        if X > 0.:
+            if scale_to_nominal:
+                #print "bin", bin, X, orig.GetBinContent(bin), sum_plus, sum_minus
+                #histo_plus.SetBinContent(bin, orig.GetBinContent(bin) * (1 + sum_plus/X))
+                #histo_minus.SetBinContent(bin, orig.GetBinContent(bin) * (1 - sum_minus/X))
+                histo_plus.SetBinContent(bin, orig.GetBinContent(bin) * (1 + sum_plus/X))
+                histo_minus.SetBinContent(bin, orig.GetBinContent(bin) * (1 - sum_minus/X))
+            else:
+                histo_plus.SetBinContent(bin, sum_plus/X)
+                histo_minus.SetBinContent(bin, sum_minus/X)
+        #print "bin", bin, X, orig.GetBinContent(bin), histo_plus.GetBinContent(bin), histo_minus.GetBinContent(bin)
+    return (histo_plus, histo_minus)
+		
 def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
     weight_str = weight
     samp = samples[sampn]
@@ -113,11 +240,10 @@ def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, 
             cuts_antiiso = str(Cuts.eta_fit_antiiso_down(channel))
             qcd_extra = str(Cuts.eta_fit_antiiso(channel)) #hack for now
         else:
+            cut = "1"
             for x in str(cuts_antiiso).split("&&"):
                 if "mva" in x:
-                    cut = x
-                else:
-                    cut = "1"
+                    cut = x                
             cut = cut.replace("(","").replace(")","")
             cuts_antiiso = str(Cuts.mva_antiiso_down(channel, mva_var=var)) + " && ("+cut+")"
             qcd_extra = str(Cuts.mva_antiiso(channel, mva_var=var)) + " && ("+cut+")" #hack for now
@@ -126,15 +252,14 @@ def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, 
             cuts_antiiso = str(Cuts.eta_fit_antiiso_up(channel))
             qcd_extra = str(Cuts.eta_fit_antiiso(channel)) #hack for now
         else:
+            cut = "1"
             for x in str(cuts_antiiso).split("&&"):
                 if "mva" in x:
                     cut = x
-                else:
-                    cut = "1"
             cut = cut.replace("(","").replace(")","")
             cuts_antiiso = str(Cuts.mva_antiiso_up(channel, mva_var=var)) + " && ("+cut+")"
             qcd_extra = str(Cuts.mva_antiiso(channel, mva_var=var)) + " && ("+cut+")" #hack for now
-    hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=qcd_extra, mtmetcut=mtmetcut)
+    hist = create_histogram_for_fit(sn, samp, weight_str, cuts, cuts_antiiso, channel, coupling, var, binning=binning, plot_range=plot_range, asymmetry=asymmetry, qcd_extra=qcd_extra, mtmetcut=mtmetcut, hname=hname)
     outfile.cd() #Must cd after histogram creation
 
     #Write histogram to file
@@ -185,9 +310,10 @@ def add_histos(outdir, var, channel, mva, mtmetcut):
                 hists[name].append(h)
                 #hists[name].SetTitle(name)
         f.Close()
-    hists_qcdvar = add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut)
-    print "QCDVAR:", hists_qcdvar
-    hists.update(hists_qcdvar)
+    #hists_qcdvar = add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut)
+    #print "QCDVAR:", hists_qcdvar
+    #hists.update(hists_qcdvar)
+    
 
     """hist_data = hists_data[0]
     for i in range(1, len(hists_data)):
@@ -321,7 +447,7 @@ def add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut):
     integrals = dict()
     
     for fname in onlyfiles:
-        print "filename", fname
+        #print "filename", fname
         f = File(outdir+"/"+fname)
         for root, dirs, items in f.walk():
             for name in items:
@@ -348,13 +474,13 @@ def add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut):
         ]
     hists_var = {}
     for (var_component, var) in variations:
-        print var
+        #print var
         for name in hists:
             if name.endswith(var_component):            
                 new_integral = 0
                 integral = integrals[name]
                 integral_orig = integral
-                print "start", integral, integral_orig
+                #print "start", integral, integral_orig
                 if not name+"__"+var in hists_var:
                     hists_var[name+"__"+var] = []
                 for (fname,hist_orig) in hists[name]:
@@ -364,30 +490,31 @@ def add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut):
                         if var.endswith("down"):
                             scale = 0.5
                             if var.startswith("QCD"):
-                                scale = 0.0001  #to not have all bins completely empty
+                                scale = 0.0
                         elif var.endswith("up"):
                             scale = 1.5
                             if var.startswith("QCD"):
                                 scale = 2.0
                         hist.Scale(scale)
                         integral = integral - hist.Integral()
-                        print fname, hist.Integral()
-                        print "sub", integral, integral_orig                
+                        #print fname, hist.Integral()
+                        #print "sub", integral, integral_orig                
                         new_integral += hist.Integral()
                         hist.SetNameTitle(hist.GetName()+"__"+var, hist.GetTitle()+"__"+var)
                         hists_var[name+"__"+var].append(hist)
                 for (fname, hist_orig) in hists[name]:
                     if not check_starts(var, fname):
                         hist = hist_orig.Clone()
-                        print "SF", integral/integral_orig
-                        hist.Scale(integral/integral_orig)
-                        print fname, hist.Integral()
+                        if integral_orig>0:
+                            #print "SF", integral/integral_orig
+                            hist.Scale(integral/integral_orig)
+                        #print fname, hist.Integral()
                         new_integral += hist.Integral()
                         hist.SetNameTitle(hist.GetName()+"__"+var, hist.GetTitle()+"__"+var)
                         hists_var[name+"__"+var].append(hist)
                 #for (fname,hist) in hists[name]:
                     
-                print "new int", new_integral
+                #print "new int", new_integral
                 #for (fname,hist) in hists[name]:
                 #    print fname, hist.Integral()
             elif not name.endswith("DATA") and len(name.split("__"))==2:    #only add unc for nominal
@@ -400,102 +527,6 @@ def add_qcd_yield_unc(outdir, var, channel, mva, mtmetcut):
     return hists_var
     #write_histos_to_file(hists_var, outdir.replace("input",""), var)
 
-
-def add_histos_vary_components(outdir, var, channel, mva, mtmetcut):
-    from os import listdir
-    from os.path import isfile, join
-    
-    
-    onlyfiles = [ f for f in listdir(outdir) if isfile(join(outdir,f)) ]
-    hists = dict()
-    integrals = dict()
-    
-    hists_data = []
-    hists_qcd = []
-    for fname in onlyfiles:
-        print "filename", fname
-        f = File(outdir+"/"+fname)
-        for root, dirs, items in f.walk():
-            for name in items:
-                h = f.Get(join(root, name))
-                h.SetDirectory(0)
-                """if fname.endswith("DATA.root"):
-                    hists_data.append(h)
-                    continue
-                elif fname.startswith("Single"):
-                    hists_qcd.append(h)
-                    continue"""
-                if not name in hists:
-                    hists[name] = []
-                    integrals[name] = 0.
-                #if h.GetEntries()>0:
-                #    print fname, "factor", h.Integral()/math.sqrt(h.GetEntries())
-                #for bin in range(1, h.GetNbinsX()+1):
-                #    print bin, h.GetBinContent(bin), h.GetBinError(bin)
-                hists[name].append((fname, h))
-                integrals[name] += h.Integral()
-                #hists[name].SetTitle(name)
-        f.Close()
-    for name in hists:
-        print name, integrals[name]
-        #print hists[name]
-        for (fname,hist) in hists[name]:
-            print fname, hist.Integral()
-
-    variations = [("other", "QCD_fraction__down"), ("other", "QCD_fraction__up")
-        , ("other", "s_chan_fraction__down"), ("other", "s_chan_fraction__up")
-        , ("other", "tW_chan_fraction__up"), ("other", "tW_chan_fraction__down")
-        , ("wzjets", "Dibosons_fraction__up"), ("wzjets", "Dibosons_fraction__down")
-        , ("wzjets", "DYJets_fraction__up"), ("wzjets", "DYJets_fraction__down")
-        ]
-    for (var_component, var) in variations:
-        hists_var = {}
-        print var
-        for name in hists:
-            if name.endswith(var_component):            
-                new_integral = 0
-                integral = integrals[name]
-                integral_orig = integral
-                print "start", integral, integral_orig
-                if not name in hists_var:
-                    hists_var[name] = []
-                for (fname,hist_orig) in hists[name]:
-                    if check_starts(var, fname):
-                        hist = hist_orig.Clone()
-                        integral_orig = integral_orig - hist.Integral()
-                        if var.endswith("down"):
-                            scale = 0.5
-                            if var.startswith("QCD"):
-                                scale = 0.0001  #to not have all bins completely empty
-                        elif var.endswith("up"):
-                            scale = 1.5
-                            if var.startswith("QCD"):
-                                scale = 2.0
-                        hist.Scale(scale)
-                        integral = integral - hist.Integral()
-                        print fname, hist.Integral()
-                        print "sub", integral, integral_orig                
-                        new_integral += hist.Integral()
-                        hists_var[name].append(hist)
-                for (fname, hist_orig) in hists[name]:
-                    if not check_starts(var, fname):
-                        hist = hist_orig.Clone()
-                        print "SF", integral/integral_orig
-                        hist.Scale(integral/integral_orig)
-                        print fname, hist.Integral()
-                        new_integral += hist.Integral()
-                        hists_var[name].append(hist)
-                #for (fname,hist) in hists[name]:
-                    
-                print "new int", new_integral
-                #for (fname,hist) in hists[name]:
-                #    print fname, hist.Integral()
-            else:
-                if not name in hists_var:
-                    hists_var[name] = []
-                for (fname, hist_orig) in hists[name]:
-                    hists_var[name].append(hist_orig)
-        write_histos_to_file(hists_var, outdir.replace("input",""), var)
 
 
 def check_starts(var, fname):
@@ -522,7 +553,7 @@ def generate_systematics(channel, coupling):
     systematics = {}
     systematics["nominal"]={}
     systematics["nominal"]["nominal"] = str(Weights.total_weight(channel))
-    systs_infile = ["pileup", "top_pt", "btaggingBC", "btaggingL", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape"]
+    systs_infile = ["pileup", "top_pt", "btaggingBC", "btaggingL", "leptonID", "leptonTrigger", "wjets_flat", "wjets_shape", "lepton_weight_shape"]
     if channel == "mu":
         systs_infile.append("leptonIso")
     for sys in systs_infile:
@@ -532,7 +563,6 @@ def generate_systematics(channel, coupling):
         for sys in systs_infile_file:
            systematics[sys] = {}
     
-    #TODO: Add PDF-s
     systematics["nominal"]["pileup"]["up"] = str(Weights.pu("up")*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     systematics["nominal"]["pileup"]["down"] = str(Weights.pu("down")*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     systematics["nominal"]["top_pt"]["up"] = str(Weights.pu()*Weights.top_pt[1]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
@@ -550,6 +580,12 @@ def generate_systematics(channel, coupling):
     if channel == "mu":
         systematics["nominal"]["leptonIso"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "Iso", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
         systematics["nominal"]["leptonIso"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "Iso", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
+        systematics["nominal"]["lepton_weight_shape"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight() * Weights.muon_sel["shape"][2])
+        systematics["nominal"]["lepton_weight_shape"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight() * Weights.muon_sel["shape"][1])
+    elif channel == "ele":
+        systematics["nominal"]["lepton_weight_shape"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight() * Weights.electron_sel["shape"][2])
+        systematics["nominal"]["lepton_weight_shape"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel) * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight() * Weights.electron_sel["shape"][1])
+    
     systematics["nominal"]["leptonTrigger"]["up"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "up") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     systematics["nominal"]["leptonTrigger"]["down"] = str(Weights.pu()*Weights.top_pt[0]*Weights.b_weight()*Weights.lepton_weight(channel, "Trigger", "down") * Weights.wjets_madgraph_shape_weight() * Weights.wjets_madgraph_flat_weight())
     
@@ -568,13 +604,15 @@ def generate_systematics(channel, coupling):
     systematics["partial"]["ttbar_matching"] = {}
     systematics["partial"]["ttbar_matching"]["down"] = {}
     systematics["partial"]["ttbar_matching"]["up"] = {}
-    #TODO: W+jets scale/matching not processed
-    #systematics["partial"]["wjets_scale"] = {}
-    #systematics["partial"]["wjets_scale"]["down"] = {}
-    #systematics["partial"]["wjets_scale"]["up"] = {}
-    #systematics["partial"]["wjets_matching"] = {}
-    #systematics["partial"]["wjets_matching"]["down"] = {}
-    #systematics["partial"]["wjets_matching"]["up"] = {}
+    
+    systematics["partial"]["wjets_FSIM"] = {}
+    systematics["partial"]["wjets_FSIM"]["nominal"] = str(Weights.total_weight(channel))
+    systematics["partial"]["wjets_FSIM_scale"] = {}
+    systematics["partial"]["wjets_FSIM_scale"]["down"] = {}
+    systematics["partial"]["wjets_FSIM_scale"]["up"] = {}
+    systematics["partial"]["wjets_FSIM_matching"] = {}
+    systematics["partial"]["wjets_FSIM_matching"]["down"] = {}
+    systematics["partial"]["wjets_FSIM_matching"]["up"] = {}
     systematics["partial"]["iso"] = {}
     systematics["partial"]["iso"]["down"] = {}
     systematics["partial"]["iso"]["up"] = {}
@@ -586,4 +624,7 @@ def generate_systematics(channel, coupling):
         systematics["En"]["up"]="EnUp"
         systematics["UnclusteredEn"]["down"]="UnclusteredEnDown"
         systematics["UnclusteredEn"]["up"]="UnclusteredEnUp"
+        systematics["pdf"] = {}
+        systematics["pdf"][""] = {}
+            
     return systematics

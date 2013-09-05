@@ -100,6 +100,13 @@ if __name__ == "__main__":
                 weight = str(Weights.total_weight(args.channel))
                 syst_name = syst+"__"+syst_type
                 efficiency(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra, syst_name, outdir)
+        for syst in systematics["pdf"]: 
+            print systematics["pdf"]       
+            #for syst_type in systematics["pdf"][syst]:
+            weight = str(Weights.total_weight(args.channel))
+            print weight
+            syst_name = "pdf"#syst+"__"+syst_type
+            efficiency_pdf(cut_str, weight, bins_gen, bins_rec, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra, syst_name, outdir)
     make_histos(bins_rec, cut_str, cut_str_antiiso, indir, args.channel, args.cut, args.coupling, args.asymmetry, args.extra)
     print "finished"
 
