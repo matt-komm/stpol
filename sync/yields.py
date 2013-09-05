@@ -7,7 +7,7 @@ if __name__=="__main__":
     for fi in sys.argv[1:]:
         print fi
         samp = Sample.fromFile(fi)
-
+        print "Lumi scale factor: ", samp.lumiScaleFactor(20000)
         for lep in ["mu", "ele"]:
             if "/%s/"%lep not in fi:
                 continue
