@@ -108,13 +108,6 @@ lumis["83a02e9_Jul22"]["iso"]["mu"] = 6784+6398+5277
 lumis["83a02e9_Jul22"]["iso"]["ele"] = 12410+6144
 lumis["83a02e9_Jul22"]["antiiso"] = lumis["83a02e9_Jul22"]["iso"]
 
-lumis["343e0a9_Aug22"] = dict()
-lumis["343e0a9_Aug22"]["iso"] = dict()
-lumis["343e0a9_Aug22"]["antiiso"] = dict()
-lumis["343e0a9_Aug22"]["iso"]["mu"] = 19757
-lumis["343e0a9_Aug22"]["iso"]["ele"] = 19767
-lumis["343e0a9_Aug22"]["antiiso"] = lumis["343e0a9_Aug22"]["iso"]
-
 lumis["Aug4_0eb863_full"] = dict()
 lumis["Aug4_0eb863_full"]["iso"] = dict()
 lumis["Aug4_0eb863_full"]["antiiso"] = dict()
@@ -123,13 +116,27 @@ lumis["Aug4_0eb863_full"]["iso"]["ele"] = 917 + 12378 + 6421
 lumis["Aug4_0eb863_full"]["antiiso"]["mu"] = 1094 + 5319 + 6528 + 6823
 lumis["Aug4_0eb863_full"]["antiiso"]["ele"] = 917 + 12409 + 6482
 
+lumis["343e0a9_Aug22"] = dict()
+lumis["343e0a9_Aug22"]["iso"] = dict()
+lumis["343e0a9_Aug22"]["antiiso"] = dict()
+lumis["343e0a9_Aug22"]["iso"]["mu"] = 19757
+lumis["343e0a9_Aug22"]["iso"]["ele"] = 19767
+lumis["343e0a9_Aug22"]["antiiso"] = lumis["343e0a9_Aug22"]["iso"]
+
+lumis["343e0a9_Aug22_newLumiCal"] = dict()
+lumis["343e0a9_Aug22_newLumiCal"]["iso"] = dict()
+lumis["343e0a9_Aug22_newLumiCal"]["antiiso"] = dict()
+lumis["343e0a9_Aug22_newLumiCal"]["iso"]["mu"] = 19680
+lumis["343e0a9_Aug22_newLumiCal"]["iso"]["ele"] = 19690
+lumis["343e0a9_Aug22_newLumiCal"]["antiiso"] = lumis["343e0a9_Aug22"]["iso"]
+
 # References to the 'latest' luminosities.
 lumi_iso = {
-    "ele": lumis["343e0a9_Aug22"]["iso"]["ele"],
-    "mu": lumis["343e0a9_Aug22"]["iso"]["mu"]
+    "ele": lumis["343e0a9_Aug22_newLumiCal"]["iso"]["ele"],
+    "mu": lumis["343e0a9_Aug22_newLumiCal"]["iso"]["mu"]
 }
 
 lumi_antiiso = {
-    "ele": lumis["343e0a9_Aug22"]["antiiso"]["ele"],
-    "mu": lumis["343e0a9_Aug22"]["antiiso"]["mu"]
+    "ele": lumis["343e0a9_Aug22_newLumiCal"]["antiiso"]["ele"],
+    "mu": lumis["343e0a9_Aug22_newLumiCal"]["antiiso"]["mu"]
 }
