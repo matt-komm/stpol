@@ -80,7 +80,8 @@ bool PDFWeights::process(const edm::EventBase& event) {
         edm::Handle<reco::GenParticleCollection> genParticles;
         if (!event.getByLabel(genParticlesSrc, genParticles)) {
             //edm::LogError("PDFWeightProducer") << ">>> genParticles  not found: " << genParticlesSrc.encode() << " !!!";
-            return false;
+            std::cerr << "Could not get genparticle collection: " << genParticlesSrc.encode() << std::endl; 
+            throw 1;
         }
         unsigned int gensize = genParticles->size();
         double mtop = 0.;
@@ -98,7 +99,7 @@ bool PDFWeights::process(const edm::EventBase& event) {
     }
 
 
-
+    //std::cout << "PDFSets.size() = " << PDFSets.size() << std::endl;
     for( unsigned int i = 0; i < PDFSets.size(); i++ ) {
         int InitNr = i+1;
         
@@ -128,6 +129,7 @@ bool PDFWeights::process(const edm::EventBase& event) {
             double xpdf2_new = LHAPDF::xfx(InitNr, branch_vars.vars_float["pdf_x2"], branch_vars.vars_float["pdf_scalePDF"], branch_vars.vars_int["pdf_id2"]);
             double pweight = xpdf1_new * xpdf2_new / w0;
             weights[p-1] = (float)(pweight);
+            //std::cout << weights[p-1] << std::endl;
         }
         
         // save weights
