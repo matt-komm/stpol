@@ -20,7 +20,11 @@ CutsBase(_branch_vars)
     ////LHAPDF cannot manage with more PDF sets
     //if(PDFSets.size()>2)
     //    throw("Must specify at most 2 PDF sets");
-    
+    if (generatorName.compare("powheg")==0) {
+        std::cout << "powheg enabled" << std::endl;
+    } else {
+        std::cout << "powheg disabled" << std::endl;
+    }
     std::map<string,int> map_name;
 
     for( unsigned int i = 0; i < PDFSets.size(); i++ ) {
