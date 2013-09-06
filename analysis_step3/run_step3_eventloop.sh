@@ -35,9 +35,11 @@ cd $OUTDIR
 echo $CONF
 echo "Input file is "$INFILE
 cat $INFILE | $CMSSW_BASE/bin/slc5_amd64_gcc462/Step3_EventLoop $CONF --outputFile=out_step3_$OFNAME.root
-echo "step3 exit code: "$?
 cd $STPOL_DIR/mvatools
 echo "Adding MVA"
 ./addMVAasFriend.py -f $OUTDIR/out_step3_$OFNAME.root
 cd $WD
+SAMPNAME="${INFILE##*.}"
+ISWJETS=`python -c "import os; import SingleTopPolarization.Analysis.sample_types as st; print int(st.is_wjets(os.getenv('SAMPNAME')))"`
 echo "Done"
+echo "step3 exit code: "$?
