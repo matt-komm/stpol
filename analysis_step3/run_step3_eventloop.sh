@@ -40,6 +40,4 @@ echo "Adding MVA"
 ./addMVAasFriend.py -f $OUTDIR/out_step3_$OFNAME.root
 cd $WD
 SAMPNAME="${INFILE##*.}"
-ISWJETS=`python -c "import os; import SingleTopPolarization.Analysis.sample_types as st; print int(st.is_wjets(os.getenv('SAMPNAME')))"`
-echo "Done"
 echo "step3 exit code: "$?
