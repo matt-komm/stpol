@@ -1,4 +1,4 @@
-Sample: /hdfs/local/stpol/step3/Sep5_597228_powheg_only
+Sample: /hdfs/local/stpol/step3/Sep6_597228_powheg_only
 step: step3
 parent: filelists/343e0a9_Aug22/ (only the powheg samples)
 Explanation: PDF weighting has powheg-specific processing for Q2
