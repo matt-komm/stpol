@@ -1,7 +1,7 @@
-Sample: /hdfs/local/stpol/step3/Sep6_597228_powheg_only
+Sample: /hdfs/local/stpol/step3/Sep6_760158_powheg_genparticles
 step: step3
-parent: filelists/343e0a9_Aug22/ (only the powheg samples)
-Explanation: PDF weighting has powheg-specific processing for Q2
+parent: filelists/Sep6_760158_powheg_genparticles 
+Explanation: PDF weighting has powheg-specific processing for Q2, genparticles saved @ step2
 -------
 Sample: /hdfs/local/stpol/step3/Sep4_syst_a554579
 step: step3
