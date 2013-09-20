@@ -306,6 +306,14 @@ def SingleTopStep2():
     process.trueLightJetNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueLightJet", "STPOLSEL2"),
     )
+
+    nanval = '-10000000000'
+    def userfloat(key):
+        return "? hasUserFloat('{0}') ? userFloat('{0}') : {1}".format(key, nanval)
+
+    def userint(key):
+        return "? hasUserInt('{0}') ? userInt('{0}') : {1}".format(key, nanval)
+
     process.goodSignalMuonsNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag("goodSignalMuons"),
@@ -317,24 +325,24 @@ def SingleTopStep2():
                 ["Pt", "pt"],
                 ["Eta", "eta"],
                 ["Phi", "phi"],
-                ["relIso", "userFloat('%s')" % Config.Muons.relIsoType],
+                ["relIso", userfloat(Config.Muons.relIsoType)],
                 ["Charge", "charge"],
-                ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
-                ["motherGenPdgId", "? genParticlesSize() > 0 ? genParticle(0).mother(0).pdgId() : 0"],
-                ["normChi2", "? globalTrack().isNonnull() ? normChi2 : -1.0"],
-                ["trackhitPatterntrackerLayersWithMeasurement", "userFloat('track_hitPattern_trackerLayersWithMeasurement')"],
-                ["globalTrackhitPatternnumberOfValidMuonHits", "userFloat('globalTrack_hitPattern_numberOfValidMuonHits')"],
-                ["innerTrackhitPatternnumberOfValidPixelHits", "userFloat('innerTrack_hitPattern_numberOfValidPixelHits')"],
+                ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : {0}".format(nanval)],
+                ["motherGenPdgId", "? genParticlesSize() > 0 ? genParticle(0).mother(0).pdgId() : {0}".format(nanval)],
+                ["normChi2", "? globalTrack().isNonnull() ? normChi2 : {0}".format(nanval)],
+                ["trackhitPatterntrackerLayersWithMeasurement", userfloat("track_hitPattern_trackerLayersWithMeasurement")],
+                ["globalTrackhitPatternnumberOfValidMuonHits", userfloat("globalTrack_hitPattern_numberOfValidMuonHits")],
+                ["innerTrackhitPatternnumberOfValidPixelHits", userfloat("innerTrack_hitPattern_numberOfValidPixelHits")],
                 ["db", "dB"],
-                ["dz", "userFloat('dz')"],
+                ["dz", userfloat("dz")],
                 ["numberOfMatchedStations", "numberOfMatchedStations"],
-                ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : 0.0".format(Config.Muons.triggerPath)],
+                ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : {1}".format(Config.Muons.triggerPath, nanval)],
             ]
       )
     )
 
     process.isoMuonsNTP = process.goodSignalMuonsNTupleProducer.clone(
-        src=cms.InputTag("muonsWithID")
+        src=cms.InputTag("muonsWithIso")
     )
 
     process.allMuonsNTP = process.goodSignalMuonsNTupleProducer.clone(
@@ -352,21 +360,21 @@ def SingleTopStep2():
                     ["Pt", "%s" % Config.Electrons.pt],
                     ["Eta", "eta"],
                     ["Phi", "phi"],
-                    ["relIso", "userFloat('%s')" % Config.Electrons.relIsoType],
+                    ["relIso", userfloat(Config.Electrons.relIsoType)],
                     ["mvaID", "electronID('mvaTrigV0')"],
                     ["Charge", "charge"],
                     ["superClustereta", "superCluster.eta"],
                     ["passConversionVeto", "passConversionVeto()"],
-                    ["gsfTracktrackerExpectedHitsInnernumberOfHits", "userInt('gsfTrack_trackerExpectedHitsInner_numberOfHits')"],
-                    ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : 0.0".format(Config.Electrons.triggerPath)],
-                    ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : 0"],
-                    ["motherGenPdgId", "? genParticlesSize() > 0 ? genParticle(0).mother(0).pdgId() : 0"],
+                    ["gsfTracktrackerExpectedHitsInnernumberOfHits", userint('gsfTrack_trackerExpectedHitsInner_numberOfHits')],
+                    ["triggerMatch", "? triggerObjectMatchesByPath('{0}').size()==1 ? triggerObjectMatchByPath('{0}').hasPathLastFilterAccepted() : {1}".format(Config.Electrons.triggerPath, nanval)],
+                    ["genPdgId", "? genParticlesSize() > 0 ? genParticle(0).pdgId() : {0}".format(nanval)],
+                    ["motherGenPdgId", "? genParticlesSize() > 0 ? genParticle(0).mother(0).pdgId() : {0}".format(nanval)],
                 ]
       )
     )
 
     process.isoElectronsNTP = process.goodSignalElectronsNTupleProducer.clone(
-        src=cms.InputTag("electronsWithID")
+        src=cms.InputTag("electronsWithIso")
     )
 
     process.allElectronsNTP = process.goodSignalElectronsNTupleProducer.clone(
@@ -387,8 +395,8 @@ def SingleTopStep2():
                     ["Mass", "mass"],
                     #["bDiscriminator", "bDiscriminator('%s')" % Config.Jets.bTagDiscriminant],
                     ["bDiscriminatorTCHP", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.TCHP],
-                    #["bDiscriminatorCSV_MVA", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV_MVA],
-                    ["rms", "userFloat('rms')"],
+                    ["bDiscriminatorCSVMVA", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV_MVA],
+                    ["rms", userfloat('rms')],
                     ["partonFlavour", "partonFlavour()"],
                     ["area", "jetArea()"],
 
@@ -397,7 +405,7 @@ def SingleTopStep2():
                     #["n60", "n60()"],
 
                     #["genJetFlavour", "? genJet()>0 ? (genJet()->pdgId()) : 0"], #FIXME
-                    ["deltaR", "userFloat('deltaR')"],
+                    ["deltaR", userfloat('deltaR')],
 
                     ["numberOfDaughters", "numberOfDaughters"],
                     ["neutralHadronEnergy", "neutralHadronEnergy"],
@@ -406,10 +414,10 @@ def SingleTopStep2():
                     ["neutralEmEnergyFraction", "neutralEmEnergyFraction"],
                     ["chargedHadronEnergyFraction", "chargedHadronEnergyFraction"],
                     ["chargedMultiplicity", "chargedMultiplicity"],
-                    ["nParticles", "userFloat('nParticles')"],
-                    ["puMva", "userFloat('mva')"],
-                    ["nCharged", "userFloat('nCharged')"],
-                    ["nNeutral", "userFloat('nNeutral')"],
+                    ["nParticles", userfloat('nParticles')],
+                    ["puMva", userfloat('mva')],
+                    ["nCharged", userfloat('nCharged')],
+                    ["nNeutral", userfloat('nNeutral')],
                 ]
         )
     )
@@ -430,9 +438,7 @@ def SingleTopStep2():
         process.goodSignalMuonsNTupleProducer *
         process.goodSignalElectronsNTupleProducer *
         process.isoMuonsNTP *
-        process.allMuonsNTP *
-        process.isoElectronsNTP *
-        process.allElectronsNTP
+        process.isoElectronsNTP
     )
     #-----------------------------------------------
     # Flavour analyzer

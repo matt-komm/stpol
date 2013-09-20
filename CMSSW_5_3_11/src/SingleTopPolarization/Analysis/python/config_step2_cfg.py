@@ -79,8 +79,8 @@ class Config(C):
 
             WP = {"TCHPT":3.41, "CSVT":0.898, "CSVM":0.679}
 
-        bTagDiscriminant = BTagDiscriminant.TCHP
-        bTagWorkingPoint = BTagWorkingPoint.TCHPT
+        bTagDiscriminant = BTagDiscriminant.CSV_MVA
+        bTagWorkingPoint = BTagWorkingPoint.CSVM
 
         @classmethod
         def BTagWorkingPointVal(c):
