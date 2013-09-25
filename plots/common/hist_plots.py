@@ -10,7 +10,7 @@ logger.setLevel(logging.WARNING)
 
 from plots.common.mpl_hists import hist_err, ipy_show_canv
 
-def plot_hists(hists, name="canv", **kwargs):
+def plot_hists(hists, **kwargs):
     """
     Draws a list of histograms side-by-side on a new canvas.
 
@@ -39,7 +39,8 @@ def plot_hists(hists, name="canv", **kwargs):
             of hists
     """
 
-    canv = ROOT.TCanvas(name, name)
+    canv = kwargs.get("canvas", ROOT.TCanvas())
+    canv.cd()
     draw_cmd = kwargs["draw_cmd"] if "draw_cmd" in kwargs.keys() else "E1"
     x_label = kwargs.get("x_label", "XLABEL")
     y_label = kwargs.get("y_label", "")
@@ -153,6 +154,7 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
     p2.cd()
 
     hist_ratio = hist_mc.Clone()
+    hdata_orig = hist_data.Clone()
 
     # (MC-data) / data
     hist_ratio.SetName("ratio")
@@ -220,27 +222,13 @@ def plot_data_mc_ratio(canv, hist_data, hist_mc, **kwargs):
             raise Exception("Must specify the systematic histograms as a 2-tuple (down, up), got %s" % str(syst_hists))
         for h in list(syst_hists):
             hr = h.Clone()
-            hr.Add(hist_data, -1)
-            hr.Divide(hist_data)
-
-            # hr.SetFillStyle(syst_fill)
-            # hr.SetFillColor(ROOT.kGray)
-            # hr.SetLineColor(ROOT.kGray)
-
+            hr.Add(hdata_orig, -1)
+            hr.Divide(hdata_orig)
             #Draw them as gray lines
             hr.Draw("same hist")
-            logger.debug(list(hr.y()))
+            logger.debug("systematic ratio = %s" % str(list(hr.y())))
             syst_ratio_hists.append(hr)
 
-        # #Set the possibly asymmteric error bars using a TGraphAsymmErrors
-        # ratio_graph = ROOT.TGraphAsymmErrors(hist_ratio)
-        # for i in range(hist_ratio.nbins()):
-        #     ylow = abs(hist_ratio[i]-syst_ratio_hists[0].GetBinContent(i+1))
-        #     yhigh = abs(hist_ratio[i]-syst_ratio_hists[1].GetBinContent(i+1))
-        #     ratio_graph.SetPoint(i+1, hist_ratio.GetBinCenter(i+1), hist_ratio.GetBinContent(i+1))
-        #     ratio_graph.SetPointEYlow(i+1, ylow)
-        #     ratio_graph.SetPointEYhigh(i+1, yhigh)
-        # ratio_graph.Draw("SAME P")
         canv.syst_ratio_hists = syst_ratio_hists
         # canv.ratio_graph = ratio_graph
 
