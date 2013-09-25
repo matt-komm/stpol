@@ -519,7 +519,7 @@ def SingleTopStep2():
             'drop *',
             'keep edmMergeableCounter_*__*',
             'keep *_generator__*',
-            'keep *_genParticles__*', #hack for powheg PDF sets
+            #'keep *_genParticles__*', #hack for powheg PDF sets
             'keep edmTriggerResults_TriggerResults__*',
             'keep *_flavourAnalyzer_*_STPOLSEL2',
             'keep floats_*_*_STPOLSEL2',
