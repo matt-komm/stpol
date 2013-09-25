@@ -24,7 +24,7 @@ def draw_hists(hists, names=None, **kwargs):
         h = h.Clone()
         hi = hist_err(ax, h, label=hn, **kwargs)
 
-    leg = ax.legend()
+    leg = ax.legend(fontsize=16)
     return ax
 
 def hist_err(axes, hist, yerr=None, **kwargs):
