@@ -251,11 +251,13 @@ if __name__=="__main__":
     plot("bdt_discr", "3j2t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J2T', log=True, save_name=outdir + '/BDT/3j2t_BDT_{channel}.pdf')
 
     plot("abs_eta_lj", "2j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J0T', save_name=outdir + '/control/2j0t_etaLj_{channel}.pdf')
+    plot("abs_eta_lj", "2j1t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J1T', save_name=outdir + '/control/2j1t_etaLj_{channel}.pdf')
     plot("abs_eta_lj", "3j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J0T', save_name=outdir + '/control/3j0t_etaLj_{channel}.pdf')
     plot("abs_eta_lj", "3j1t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J1T', save_name=outdir + '/control/3j1t_etaLj_{channel}.pdf')
     plot("abs_eta_lj", "3j2t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J2T', save_name=outdir + '/control/3j2t_etaLj_{channel}.pdf')
 
     plot("top_mass_sr", "2j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J0T', save_name=outdir + '/control/2j0t_topMass_{channel}.pdf')
+    plot("top_mass_sr", "2j1t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 2J1T', save_name=outdir + '/control/2j1t_topMass_{channel}.pdf')
     plot("top_mass_sr", "3j0t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J0T', save_name=outdir + '/control/3j0t_topMass_{channel}.pdf')
     plot("top_mass_sr", "3j1t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J1T', save_name=outdir + '/control/3j1t_topMass_{channel}.pdf')
     plot("top_mass_sr", "3j2t_baseline", rebin=4, legend_pos='top-right', lb_comments=', 3J2T', save_name=outdir + '/control/3j2t_topMass_{channel}.pdf')
