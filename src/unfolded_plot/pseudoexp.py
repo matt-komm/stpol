@@ -120,7 +120,7 @@ fitpars['ele'] = fitpars_process['final_2j1t_mva']['ele'][0][1]
 
 measured_asym_errs = dict()
 measured_asym_errs['mu'] = (0.07, 0.15)
-measured_asym_errs['ele'] = (0.11, 0.28)
+measured_asym_errs['ele'] = (0.11, 0.23)
 
 if __name__=="__main__":
     from plots.common.tdrstyle import tdrstyle
@@ -326,7 +326,7 @@ if __name__=="__main__":
     for h in hi[1:]:
         h.SetMarkerSize(0)
     of = OutputFolder(subdir='unfolding/%s' % lep)
-    canv = plot_hists(hi_norm, x_label="cos #theta", draw_cmd=len(hi)*["E1"], y_label="a.u.")
+    canv = plot_hists(hi_norm, x_label="cos #theta*", draw_cmd=len(hi)*["E1"], y_label="a.u.")
     #leg = legend(hi, styles=['p', 'f'], legend_pos='bottom-right', nudge_x=-0.29, nudge_y=-0.08)
     leg = legend(hi, styles=['p', 'f'], legend_pos='top-left', nudge_y=-0.14)
     lb = lumi_textbox(lumi,
