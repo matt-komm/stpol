@@ -18,60 +18,8 @@ import cPickle as pickle
 qcd_yield_variations = (2.0, 0.5)
 skipped_systs = ["wjets_matching", "wjets_scale", "sig_gen", "sig_anom"]
 
-#def load_file(fnames, pats):
-#    res = {}
-#    ret = {}
-#    for patn, pat in pats.items():
-#        res[patn] = re.compile(pat)
-#        ret[patn] = PatternDict()
-#
-#    n = 0
-#    for fn in fnames:
-#        fi = File(fn)
-#        ROOT.gROOT.cd()
-#        logger.debug("Processing file %s" % fn)
-#        for root, dirs, items in fi.walk():
-#            for it in items:
-#                # if n%10==0:
-#                #     sys.stdout.write(".")
-#                #     sys.stdout.flush()
-#                if n%25000 == 0:
-#                    logger.info("%d, %s, %s" % (
-#                            n,
-#                            str([(k, len(ret[k].keys())) for k in ret.keys()]),
-#                            fi.GetPath()
-#                        )
-#                    )
-#                    #logger.debug(root)
-#                for patn, pat in res.items():
-#                    if pat.match(root):
-#                        ret[patn][root] = fi.Get(
-#                            "/".join(
-#                                [root, it]
-#                            )
-#                        ).Clone()
-#                n += 1
-#        fi.Close()
-#    logger.info("Matched %s histograms" % (str([(k, len(ret[k].keys())) for k in ret.keys()])))
-#    return ret
-#
-#def _load_pickle(x):
-#    import gzip
-#    ret = []
-#    fn, patterns = x
-#    rpat = map(re.compile, patterns)
-#    fi = gzip.GzipFile(fn, 'rb')
-#    while True:
-#        try:
-#            item = pickle.load(fi)
-#            for pat in rpat:
-#                if pat.match(item.GetName()):
-#                    ret.append(item)
-#                    break
-#        except EOFError:
-#            break
-#    fi.close()
-#    return ret
+from SingleTopPolarization.Analysis import sample_types
+
 
 def _load_rootfiles(args):
     fn, patterns = args
@@ -132,26 +80,8 @@ def make_hist(item):
     item.__class__ = Hist
     item._post_init()
 
-#def load_pickle(fnames, patterns):
-#    ret = PatternDict()
-#
-#    from multiprocessing import Pool
-#    p = Pool(30)
-#
-#    logger.info("Loading pickles")
-#    args = [(fn, patterns) for fn in fnames]
-#    rets = p.map(_load_pickle, args)
-#    logger.info("Combining")
-#    n = 0
-#    for r in rets:
-#        for item in r:
-#            #if isinstance(item, ROOT.TH1F):
-#            ret[item.GetName()] = item
-#        n += 1
-#    logger.info("Done loading templates from pickles: %d" % len(ret))
-#    return ret
 
-from SingleTopPolarization.Analysis import sample_types
+
 def get_syst_from_sample_name(sn):
     """
     Gets the sample base name (process name), systematic

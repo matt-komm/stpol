@@ -332,6 +332,15 @@ def SingleTopStep2():
             ]
       )
     )
+
+    process.isoMuonsNTP = process.goodSignalMuonsNTupleProducer.clone(
+        src=cms.InputTag("muonsWithID")
+    )
+
+    process.allMuonsNTP = process.goodSignalMuonsNTupleProducer.clone(
+        src=cms.InputTag("muonsWithIDAll")
+    )
+
     process.goodSignalElectronsNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag("goodSignalElectrons"),
@@ -355,6 +364,15 @@ def SingleTopStep2():
                 ]
       )
     )
+
+    process.isoElectronsNTP = process.goodSignalElectronsNTupleProducer.clone(
+        src=cms.InputTag("electronsWithID")
+    )
+
+    process.allElectronsNTP = process.goodSignalElectronsNTupleProducer.clone(
+        src=cms.InputTag("electronsWithIDAll")
+    )
+
     process.goodJetsNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag("goodJets"),
@@ -410,7 +428,11 @@ def SingleTopStep2():
         process.lowestBTagJetNTupleProducer *
         process.highestBTagJetNTupleProducer *
         process.goodSignalMuonsNTupleProducer *
-        process.goodSignalElectronsNTupleProducer
+        process.goodSignalElectronsNTupleProducer *
+        process.isoMuonsNTP *
+        process.allMuonsNTP *
+        process.isoElectronsNTP *
+        process.allElectronsNTP
     )
     #-----------------------------------------------
     # Flavour analyzer
@@ -494,26 +516,11 @@ def SingleTopStep2():
             'keep *_genParticles__*', #hack for powheg PDF sets
             'keep edmTriggerResults_TriggerResults__*',
             'keep *_flavourAnalyzer_*_STPOLSEL2',
-            'keep floats_patMETNTupleProducer_*_STPOLSEL2',
-            'keep floats_recoTopNTupleProducer_*_STPOLSEL2',
-            'keep floats_recoNuNTupleProducer_*_STPOLSEL2',
-            'keep floats_trueTopNTupleProducer_*_STPOLSEL2',
-            'keep floats_trueNuNTupleProducer_*_STPOLSEL2',
-            'keep floats_trueLeptonNTupleProducer_*_STPOLSEL2',
-            'keep floats_goodSignalMuonsNTupleProducer_*_STPOLSEL2',
-            'keep floats_goodSignalElectronsNTupleProducer_*_STPOLSEL2',
-            'keep floats_goodJetsNTupleProducer_*_STPOLSEL2',
-            'keep floats_lowestBTagJetNTupleProducer_*_STPOLSEL2',
-            'keep floats_highestBTagJetNTupleProducer_*_STPOLSEL2',
+            'keep floats_*_*_STPOLSEL2',
             'keep double_*__STPOLSEL2',
             'keep float_*__STPOLSEL2',
             'keep double_*_*_STPOLSEL2',
             'keep float_*_*_STPOLSEL2',
-            'keep double_cosTheta_*_STPOLSEL2',
-            'keep double_cosThetaProducerTrueAll_*_STPOLSEL2',
-            'keep double_cosThetaProducerTrueTop_*_STPOLSEL2',
-            'keep double_cosThetaProducerTrueLepton_*_STPOLSEL2',
-            'keep double_cosThetaProducerTrueJet_*_STPOLSEL2',
             'keep *_bTagWeightProducerNJMT_*_STPOLSEL2',
             'keep int_*__STPOLSEL2',
             'keep int_*_*_STPOLSEL2',
