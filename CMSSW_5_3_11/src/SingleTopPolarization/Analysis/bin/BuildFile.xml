@@ -20,6 +20,14 @@
 </library>
 -->
 
-<bin name="eventloop_example" file="deps/ROOT.jl/src/CMSSW/src/FWTools/ROOTjl/bin/fwlite.cc,deps/ROOT.jl/src/CMSSW/src/FWTools/ROOTjl/bin/fwlevents_c.cc,example/eventloop_example.cc,">
+<!-- A simple example event loop, which links the required libraries and headers -->
+<bin
+    name="eventloop_example"
+    file="
+    deps/ROOT.jl/src/CMSSW/src/FWTools/ROOTjl/bin/fwlite.cc,
+    deps/ROOT.jl/src/CMSSW/src/FWTools/ROOTjl/bin/fwlevents_c.cc,
+    example/eventloop_example.cc
+    "
+>
     <Flags CXXFLAGS="-O3 -I$(STPOL_DIR)/deps -I$(STPOL_DIR)/"/>
 </bin>
