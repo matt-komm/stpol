@@ -1,0 +1,3 @@
+[submodule "deps/ROOT.jl"]
+	path = deps/ROOT.jl
+	url = https://github.com/jpata/ROOT.jl
