@@ -3,6 +3,8 @@
 for f in *.cfg
 do
 	crab -cfg $f -create
+    WD=`cat $f | egrep -o "ui_working_dir = .*" | cut -f 3 -d' '`
+    crab -c $WD -submit 500
 done
 
 for f in WD_*
