@@ -28,7 +28,6 @@ class Config(C):
     #Either running over MC or Data
     isMC = True
 
-    #Either running over MC or Data
     doSkim = True
 
     #Enable debugging modules
