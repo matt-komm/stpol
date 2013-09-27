@@ -15,8 +15,11 @@
     <use name="lhapdffull"/>
     <Flags CXXFLAGS="-O3"/>
 </bin>
+<library name="fwlevents_c" file="fwlevents_c.cc">
+        <Flags CXXFLAGS="-O2 -shared -fPIC -I$(CMSSW_BASE)/../"/>
+</library>
 -->
 
-<bin name="eventloop_example" file="example/eventloop_example.cc">
-    <Flags CXXFLAGS="-O3 -I$(STPOL_DIR)"/>
+<bin name="eventloop_example" file="deps/ROOT.jl/src/CMSSW/src/FWTools/ROOTjl/bin/fwlite.cc,deps/ROOT.jl/src/CMSSW/src/FWTools/ROOTjl/bin/fwlevents_c.cc,example/eventloop_example.cc,">
+    <Flags CXXFLAGS="-O3 -I$(STPOL_DIR)/deps -I$(STPOL_DIR)/"/>
 </bin>
