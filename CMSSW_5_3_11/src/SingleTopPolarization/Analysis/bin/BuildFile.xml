@@ -11,13 +11,12 @@
 <use name="PhysicsTools/SelectorUtils"/>
 
 <!--
-Compile a C interface
-<library name="FWTree" file="libFWTree.cpp">
-    <Flags CXXFLAGS="-O3 -shared -fPIC"/>
-</library>
--->
-
 <bin name="Step3_EventLoop" file="Step3_EventLoop.cc,cuts_base.cpp,hlt_cuts.cpp,b_efficiency_calc.cc,event_shape.cc,pdf_weights.cc">
     <use name="lhapdffull"/>
     <Flags CXXFLAGS="-O3"/>
+</bin>
+-->
+
+<bin name="eventloop_example" file="example/eventloop_example.cc">
+    <Flags CXXFLAGS="-O3 -I$(STPOL_DIR)"/>
 </bin>
