@@ -1,70 +1,57 @@
-#addprocs(4)
+addprocs(3)
+
+@everywhere using ROOT
+@everywhere using DataFrames
+
+require("stpol.jl")
+@everywhere using SingleTop
 
 @everywhere begin
-
-    using ROOT
-    using DataFrames
-
-    include("stpol.jl")
-    using SingleTop
-
     files = {
-        :aiso => "/Users/joosep/Documents/stpol/data/qcd_aiso.txt",
-        :iso => "/Users/joosep/Documents/stpol/data/qcd_iso.txt"
+        :tchan => "tchan.txt"
+        #:aiso => "/Users/joosep/Documents/stpol/data/qcd_aiso.txt",
+        #:iso => "/Users/joosep/Documents/stpol/data/qcd_iso.txt"
     }
 
-    el = @elapsed ev = Events(
-        convert(
-            Vector{ASCIIString},
-            [
-                split(open(readall, fname)) for (key, fname) in files
-            ]
-        )
-    )
+    flist = Any[]
+    for (k, fname) in collect(files)
+        append!(flist, split(open(readall, fname)))
+    end
 
-    println("Opened $(length(files)) files in $el seconds.")
+    el = @elapsed ev = Events(convert(Vector{ASCIIString}, flist))
+
+    println("Opened $(length(flist)) files in $el seconds.")
     maxev = length(ev)
 
-    muon = DataFrame(
-        {Float64,Float64},
-        ["mu_pt", "mu_iso"],
-        maxev
-    )
-
-    event_ids = DataFrame(
-        {Int64, Int64, Int64, Int64, Int64},
-        ["event_index", "file_index", "run", "lumi", "event"], maxev
-    )
-
-    frames = [muon, event_ids]
+    dataframes = {
+        :signal_muon => similar(SingleTopData.to_df(SingleTopData.Lepton[]), maxev),
+        :events => DataFrame(
+            {Int32, Int32, Int32, Int32, Int32},
+            ["event_index", "file_index", "run", "lumi", "event"], maxev
+        )
+    }
 
     n_processed = 0
-
-    function get(events::Events, obj)
-        rets = Dict{Symbol, Any}()
-        for name in names(obj)
-            x = events[getfield(obj, name)]
-            x = length(x)==1 ? x[1] : NA
-            rets[name] = x
-        end
-        return rets
-    end 
 
     function loopfn(i::Integer, events::Events)
 
         global n_processed::Int64
         n_processed += 1
 
-        event_ids[n_processed, "event_index"] = i
+        dataframes[:events][n_processed, "event_index"] = i
 
         to!(events, i)
 
-        mu = get(events, SingleTop.signal_mu)
-        muon[n_processed, "mu_pt"] = mu[:pt]
-        muon[n_processed, "mu_iso"] = mu[:iso]
+        dataframes[:events][n_processed, "file_index"] = where_file(events)
+        dataframes[:events][n_processed, "run"], dataframes[:events][n_processed, "lumi"], dataframes[:events][n_processed, "event"] = where(events)
 
-        event_ids[n_processed, "file_index"] = where_file(events)
-        event_ids[n_processed, "run"], event_ids[n_processed, "lumi"], event_ids[n_processed, "event"] = where(events)
+        muons = SingleTop.get_particles(events, :signal_muon)
+        if length(muons)==1
+            dataframes[:signal_muon][n_processed, :] = SingleTopData.to_df(muons[1])
+        else
+            return false
+        end
+
         return true
     end
 end #everywhere
@@ -79,16 +66,12 @@ end
 dfs = DataFrame[]
 for w in workers()
     push!(dfs, @fetchfrom w eval(:(
-        head(hcat(muon, event_ids), n_processed)
+        head(hcat([df[2] for df in dataframes]...), n_processed)
     )))
 end
 df = vcat(dfs...)
-#println(dfs)
-#dfs = {:iso => df[:(evn .<=15), :], :uniso => df[:(evn .>15), :]}
-
-using Stats
-
-describe(df["mu_pt"])
-
+save("output.jld", df)
+writetable("output.csv", df)
 speed = n/elps
 println("Processed $speed events/second")
+show(df)

@@ -1,53 +1,59 @@
+include("data.jl")
+
 module SingleTop
 
 using ROOT
+using SingleTopData
+using DataFrames
 
-const process = :STPOLSEL2
+function make_backend(t::Type, s::Symbol)
+    sources = Dict{Symbol, Source}()
 
-module Sources
-const mu = :goodSignalMuonsNTupleProducer
-const jets = :goodJets
-end
-#using .Sources
+    for name in names(t)
+        sources[name] = Source(s, name, PROCESS)
+    end
 
-immutable SingleTopEvent
-end
-
-abstract Particle
-
-type Lepton <: Particle
-    pt::Source
-    eta::Source
-    phi::Source
-    iso::Source
+    return sources
 end
 
-function Lepton(s::Symbol)
-    p = Lepton(
-        Source(s, :Pt, process),
-        Source(s, :Eta, process),
-        Source(s, :Phi, process),
-        Source(s, :relIso, process)
-    )
-    return p
-end
+const backends = {
+    :signal_muon => make_backend(Lepton, :goodSignalMuonsNTupleProducer),
+    :jets => make_backend(Jet, :goodJetsNTupleProducer)
+}
 
-type Jet <: Particle
-    pt::Source
-    eta::Source
-    phi::Source
-end
+const particle_types = {
+    :signal_muon => Lepton,
+    :jets => Jet
+}
 
-function Jet(s::Symbol)
-    return Jet(
-        Source(s, :Pt, process),
-        Source(s, :Eta, process),
-        Source(s, :Phi, process),
-    )
-end
+function get_particles(events::Events, particle::Symbol)    
+    sources::Dict{Symbol, Source} = backends[particle]
 
-signal_mu = SingleTop.Lepton(SingleTop.Sources.mu)
-jets = SingleTop.Jet(SingleTop.Sources.jets)
+    particles = particle_types[particle][]
+
+
+    datas = Dict{Symbol, DataArray}()
+    for (name, s) in sources
+        datas[name] = DataArray(events[s])
+        if length(datas[name])==0
+            return particles
+        end
+    end
+
+    assert(length(datas)>0)
+    l = length(collect(values(datas))[1])
+
+    for (k, d) in datas
+        assert(length(d)==l, "Data array length should be $l but is $(length(d)): $datas")
+    end
+
+    for i=1:l
+        pars = [datas[name][i] for name in names(particle_types[particle])]
+        part = particle_types[particle](pars...)
+        push!(particles, part)
+    end
+    return particles
+end
 
 end #module SingleTop
 
