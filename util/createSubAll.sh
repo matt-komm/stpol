@@ -1,17 +1,18 @@
 #!/bin/bash
 
-for f in *.cfg
+ORIGDIR=`pwd`
+for f in `find . -name "crab_*.cfg"`
 do
-	crab -cfg $f -create
-    WD=`cat $f | egrep -o "ui_working_dir = .*" | cut -f 3 -d' '`
-    crab -c $WD -submit 500
-done
-
-for f in WD_*
-do
-    for i in {1..3}
-    do
-        crab -c $f -submit 500
-        if [ $? -ne 0 ]; then break; fi
-    done
+    DIR=$(dirname ${f})
+    CFG=$(basename ${f})
+    cd $DIR
+    WD=`cat $CFG | egrep -o "ui_working_dir = .*" | cut -f 3 -d' '`
+    if [ ! -d "$WD" ]; then
+        echo "Creating $DIR/$CFG"
+        crab -cfg $CFG -create >> create.log 2>&1
+        crab -c $WD -submit 500 >> create.log 2>&1
+    else
+        echo "Skipping config $DIR/$CFG, directory $DIR/$WD exists"
+    fi
+    cd $ORIGDIR
 done
