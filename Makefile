@@ -6,7 +6,10 @@ BOOSTLIBS=-I/cvmfs/cms.cern.ch/slc5_amd64_gcc462/external/boost/1.47.0/include -
 
 SRC_DIR=$(STPOL_DIR)/CMSSW_5_3_11/src/SingleTopPolarization/Analysis/bin
 
-all: wjets_rew
+all: example
+
+example:
+	cd CMSSW*/src/SingleTopPolarization/Analysis/bin; touch BuildFile.xml; scram b -j 2
 
 wjets_rew:
 	mkdir -p $(STPOL_DIR)/bin
