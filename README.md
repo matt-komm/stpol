@@ -11,7 +11,7 @@ Oct2: Access code for *step2* edm-ntuples is in ``src/ntuples``. To install it, 
 
 > $ git pull; git submodule init; git submodule update --remote --recursive
 
-> $ cd src/ntuples; make setup; make
+> $ cd src/ntuple; make setup; make
 
 #SETUP
 
