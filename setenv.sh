@@ -43,7 +43,7 @@ then
     echo ${SCRIPT_DIR}/$CMSSW_VERSION 
     cd ${SCRIPT_DIR}/$CMSSW_VERSION
     source /cvmfs/cms.cern.ch/cmsset_default.sh
-    eval `scramv1 runtime -sh`
+    scramv1 runtime -sh && eval `scramv1 runtime -sh` || echo "ERROR: CMSSW was not properly set up in "pwd", try running ./setup.sh and reading README.md. Some things may nevertheless work."
 else
     echo "Detected that we're not on hep.kbfi.ee, environment may be broken!"
     PYTHONPATH=$STPOL_DIR/$CMSSW_VERSION/python/:$PYTHONPATH
