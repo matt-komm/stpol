@@ -1,3 +1,3 @@
-[submodule "deps/ROOT.jl"]
-	path = deps/ROOT.jl
-	url = https://github.com/jpata/ROOT.jl
+[submodule "src/ntuple"]
+	path = src/ntuple
+	url = git@github.com:jpata/ntuple.git

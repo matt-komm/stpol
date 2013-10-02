@@ -1,4 +1,4 @@
-addprocs(3)
+addprocs(20)
 
 @everywhere using ROOT
 @everywhere using DataFrames
