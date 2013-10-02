@@ -1,6 +1,18 @@
 Single top polarization analysis
 =====
 
+##Recent updates
+
+Oct2: Access code for *step2* edm-ntuples is in ``src/ntuples``. To install it, do
+
+> $ cd stpol
+
+> $ source setenv.sh
+
+> $ git pull; git submodule init; git submodule update --remote --recursive
+
+> $ cd src/ntuples; make setup; make
+
 #SETUP
 
 ### Cloning the repository
