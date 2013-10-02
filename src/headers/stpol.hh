@@ -1,10 +1,10 @@
-//We need to have a missing value identifier. NaN is a good candidate but not ideal.
-#include "ROOT.jl/src/fwlite.hh" //In $STPOL_DIR/deps
+#include "SingleTopPolarization/FWTools/interface/fwlite.hh" //In $STPOL_DIR/deps
 
 namespace stpol {
 
 //A private interface that may change    
 namespace unstable {
+//We need to have a missing value identifier. NaN is a good candidate but not ideal.
 static const double NA = nan("");
 
 static const char *PROCESS = "STPOLSEL2";
