@@ -3,7 +3,7 @@ Single top polarization analysis
 
 #SETUP
 
-### Clone the repo
+### Cloning the repository
 
 For read-only access you can use
 > git clone git://github.com/HEP-KBFI/stpol.git
@@ -11,7 +11,7 @@ For read-only access you can use
 If you also wish to commit, you'll have to have a github account and be added to the group, then you can use
 > git clone git@github.com:HEP-KBFI/stpol.git
 
-### Make sure you have sourced cmsset
+### Setting up the environment
 
 > source /cvmfs/cms.cern.ch/cmsset_default.sh
 
@@ -30,7 +30,24 @@ If you only need to install the python dependencies without CMSSW, you can execu
 Run the following to create the CMSSW directory, link the SingleTopPolarization source code folder to it and compile everything
 > source setup.sh
 
-# Anything below needs to be updated
+### Explanation of various subdirectories
+
+* ``src`` contains various submodules of this analysis that represent different analysis tasks.
+* ``CMSSW_5_3_11`` contains the base framework setup that is used to run the PFBRECO steps and the C++-based analysis.
+* ``crabs`` contains the files related to submitting grid jobs for PFBRECO.
+* ``datasets`` contains the metadata for the input datasets for this analysis.
+
+
+
+
+
+
+
+
+
+
+
+### Anything below needs to be updated
 ---
 Note, your showtags output after the setup should be the following:          
 ``` bash
