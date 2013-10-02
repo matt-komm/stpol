@@ -33,6 +33,7 @@ Run the following to create the CMSSW directory, link the SingleTopPolarization 
 ### Explanation of various subdirectories
 
 * ``src`` contains various submodules of this analysis that represent different analysis tasks.
+* ``src/ntuples`` contains the libraries related to reading the *EDM*-ntuple format that is the primary persistent format of this analysis.
 * ``CMSSW_5_3_11`` contains the base framework setup that is used to run the PFBRECO steps and the C++-based analysis.
 * ``crabs`` contains the files related to submitting grid jobs for PFBRECO.
 * ``datasets`` contains the metadata for the input datasets for this analysis.
@@ -46,7 +47,7 @@ Run the following to create the CMSSW directory, link the SingleTopPolarization 
 
 
 
-
+---
 ### Anything below needs to be updated
 ---
 Note, your showtags output after the setup should be the following:          
