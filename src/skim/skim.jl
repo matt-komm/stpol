@@ -37,7 +37,7 @@ for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId]
 end
 
 #jets
-for s in [:Pt, :Eta, :Phi, :partonFlavour, :bDiscriminatorCSVMVA, :bDiscriminatorTCHP]
+for s in [:Pt, :Eta, :Phi, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP]
     sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
 end
@@ -106,14 +106,14 @@ timeelapsed = @elapsed for i=1:maxev
     #df[i, :bjet_phi] = events[sources[:bjet_Phi]]
     df[i, :bjet_id] = events[sources[:bjet_partonFlavour]] |> ifpresent
     df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
-    df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSVMVA]] |> ifpresent
+    df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
 
     df[i, :ljet_pt] = events[sources[:ljet_Pt]] |> ifpresent
     df[i, :ljet_eta] = events[sources[:ljet_Eta]] |> ifpresent
     #df[i, :ljet_phi] = events[sources[:ljet_Phi]]
     df[i, :ljet_id] = events[sources[:ljet_partonFlavour]] |> ifpresent
     df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
-    df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSVMVA]] |> ifpresent
+    df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
 
     df[i, :passes] = true
 end
