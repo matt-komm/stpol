@@ -270,6 +270,7 @@ def lumi_textbox(lumi, **kwargs):
 
     nudge_x = kwargs.get("nudge_x", 0.0)
     nudge_y = kwargs.get("nudge_y", 0.0)
+    do_lumi = kwargs.get("do_lumi", True)
     coords[0] += nudge_x
     coords[2] += nudge_x
     coords[1] += nudge_y
@@ -279,9 +280,14 @@ def lumi_textbox(lumi, **kwargs):
         coords[1]-=0.05
 
     text = ROOT.TPaveText(coords[0], coords[1], coords[2], coords[3], "NDC")
-    text.AddText("CMS %s #sqrt{s} = 8 TeV, L = %.0f fb^{-1}" % (state, float(lumi)/1000.0))
+    contents = "CMS %s #sqrt{s} = 8 TeV" % state
+    if do_lumi:
+        contents += ", L = %.0f fb^{-1}" % (float(lumi)/1000.0)
+    text.AddText(contents)
+
     if line2:
         text.AddText(line2)
+
     text.SetShadowColor(ROOT.kWhite)
     text.SetLineColor(ROOT.kWhite)
     text.SetFillColor(ROOT.kWhite)

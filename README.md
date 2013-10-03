@@ -1,9 +1,27 @@
 Single top polarization analysis
 =====
 
+##Recent updates
+
+**Oct2**: Access code for *step2 edm-ntuples* is in ``src/ntuples``. To install it, do
+
+> $ cd stpol
+
+> $ source setenv.sh
+
+You may get an error that you didn't do ``./setup.sh`` in case you are running from a fresh working directory.
+
+> $ git pull; git submodule init; git submodule update --remote --recursive
+
+This will get the new code, which is stored in a separate repo.
+
+> $ cd src/ntuple; make setup; make
+
+This will compile and run the new code. Have a look at the corresponding ``Makefile`` for details.
+
 #SETUP
 
-### Clone the repo
+### Cloning the repository
 
 For read-only access you can use
 > git clone git://github.com/HEP-KBFI/stpol.git
@@ -11,7 +29,7 @@ For read-only access you can use
 If you also wish to commit, you'll have to have a github account and be added to the group, then you can use
 > git clone git@github.com:HEP-KBFI/stpol.git
 
-### Make sure you have sourced cmsset
+### Setting up the environment
 
 > source /cvmfs/cms.cern.ch/cmsset_default.sh
 
@@ -30,7 +48,25 @@ If you only need to install the python dependencies without CMSSW, you can execu
 Run the following to create the CMSSW directory, link the SingleTopPolarization source code folder to it and compile everything
 > source setup.sh
 
-# Anything below needs to be updated
+### Explanation of various subdirectories
+
+* ``src`` contains various submodules of this analysis that represent different analysis tasks.
+* ``src/ntuples`` contains the libraries related to reading the *EDM*-ntuple format that is the primary persistent format of this analysis.
+* ``CMSSW_5_3_11`` contains the base framework setup that is used to run the PFBRECO steps and the C++-based analysis.
+* ``crabs`` contains the files related to submitting grid jobs for PFBRECO.
+* ``datasets`` contains the metadata for the input datasets for this analysis.
+
+
+
+
+
+
+
+
+
+
+---
+### Anything below needs to be updated
 ---
 Note, your showtags output after the setup should be the following:          
 ``` bash

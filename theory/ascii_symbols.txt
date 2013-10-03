@@ -7,3 +7,10 @@ phi φ
 muon μ
 sigma σ
 rho ρ
+tau τ
+gamma γ
+integral ∫
+alpha α
+delta Δ
+beta β
+rho ρ

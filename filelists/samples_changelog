@@ -1,3 +1,8 @@
+Sample: filelists/Sep27_nogenprt_nopdf_e073fcd_e073fc
+step2: step2
+parent: datasets/step2/data/Jul15, Aug1, datasets/step2/mc*/Jul15
+Explanation: Removed gen particles, changed b-tagger to CSV
+------
 Sample: /hdfs/local/stpol/step3/Sep6_760158_powheg_genparticles
 step: step3
 parent: filelists/Sep6_760158_powheg_genparticles 
