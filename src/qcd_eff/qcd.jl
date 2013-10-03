@@ -1,5 +1,3 @@
-addprocs(20)
-
 @everywhere using ROOT
 @everywhere using DataFrames
 
@@ -26,8 +24,8 @@ require("stpol.jl")
     dataframes = {
         :signal_muon => similar(SingleTopData.to_df(SingleTopData.Lepton[]), maxev),
         :events => DataFrame(
-            {Int32, Int32, Int32, Int32, Int32},
-            ["event_index", "file_index", "run", "lumi", "event"], maxev
+            {Int32, Int32, Int32, Int32, Int32, Bool},
+            ["event_index", "file_index", "run", "lumi", "event", "passes"], maxev
         )
     }
 
@@ -49,9 +47,11 @@ require("stpol.jl")
         if length(muons)==1
             dataframes[:signal_muon][n_processed, :] = SingleTopData.to_df(muons[1])
         else
+            dataframes[:events][n_processed, "passes"] = false
             return false
         end
 
+        dataframes[:events][n_processed, "passes"] = true
         return true
     end
 end #everywhere
@@ -62,16 +62,22 @@ n, refs = process_parallel(loopfn, :ev, workers())
 elps = @elapsed for r in refs
     wait(r)
 end
-
-dfs = DataFrame[]
+println("Processed $(maxev/elps) events/second")
+dfs = Any[]
 for w in workers()
     push!(dfs, @fetchfrom w eval(:(
-        head(hcat([df[2] for df in dataframes]...), n_processed)
+        {s => head(df, n_processed) for (s, df) in dataframes}
     )))
 end
-df = vcat(dfs...)
-save("output.jld", df)
-writetable("output.csv", df)
-speed = n/elps
-println("Processed $speed events/second")
-show(df)
+
+using HDF5
+using JLD
+
+file = jldopen("output.jld", "w")
+df = {s => vcat([df[s] for df in dfs]...) for (s) in keys(dfs[1])} 
+for (k, v) in df
+    #write(file, string(k), v)
+    writetable("output_$(k).csv", v)
+end
+close(file)
+#show(df)
