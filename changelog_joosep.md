@@ -1,3 +1,7 @@
+Oct3
+----
+Discovered that the CSV_MVA tagger was somehow not filled, switching to CSV. Need to reprocess step2.
+
 Sep19
 -----
 
