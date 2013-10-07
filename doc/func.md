@@ -6,6 +6,12 @@ These methods take an abstract Event as input and return the corresponding value
 
 ## `stpol.stable.tchan.signallepton`
 
+A namespace that can decide if the event is related to a muon or electron.
+
+* `name (string)`: either muon/electron/NA depending on the event content
+* `ismu (bool)`: is the event a muon event
+* `isele (bool)`: is the event an electron event
+
 ## `stpol.stable.tchan.muon`
 
 * `pt, eta, phi, reliso (float)`
@@ -19,7 +25,7 @@ These methods take an abstract Event as input and return the corresponding value
 * `id (int)`: the gen-level particle id (Pythia scheme)
 * `mvaid`
 
-## `stpol.stable.tchan.wtbjet`
+## `stpol.stable.tchan.bjet`
 
 The (b-tagged) jet associated with the decay t -> W b
 
@@ -28,7 +34,7 @@ The (b-tagged) jet associated with the decay t -> W b
 
 ## `stpol.stable.tchan.specjet1`
 
-The jet taken to be from the recoling light quark. Used for the spin basis.
+The jet taken to be from the recoiling light quark. Used for the spin basis.
 
 * `pt, eta, phi, mass (float)`
 * `mvaid (float)`
