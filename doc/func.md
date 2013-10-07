@@ -31,6 +31,8 @@ The return types are specified using `pt -> rettype`.
 
 ### Generic for leptons
 
+(as above)
+
 ### Specific for electrons
 
 * `mvaid`
@@ -69,7 +71,7 @@ Overall event-level parameters.
 * `met`: the missing transverse energy
 * `c`: centrality
 * `njets`: the number of good jets passing the jet ID
-* `ntags`: the number of good jets passing the jet ID
+* `ntags`: the number of good jets passing the jet ID *** and *** the default b-tagging working point used in the analysis.
 * `ismu -> bool`: is the event a muon event
 * `isele -> bool`: is the event an electron event
 
