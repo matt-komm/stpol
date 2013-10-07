@@ -3,7 +3,7 @@ include("util.jl")
 indir = ARGS[1]
 ofname = ARGS[2]
 
-infiles = readall(`find $indir -name "*.csv.gz"`) |> split
+infiles = readall(`find $indir -name "*.gz"`) |> split
 
 el1 = @elapsed df = open_multi(infiles)
 println("opened data frame: $(size(df)) in $el1 seconds")
