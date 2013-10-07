@@ -71,10 +71,9 @@ Overall event-level parameters.
 * `met`: the missing transverse energy
 * `c`: centrality
 * `njets`: the number of good jets passing the jet ID
-* `ntags`: the number of good jets passing the jet ID ** and ** the default b-tagging working point used in the analysis.
+* `ntags`: the number of good jets passing the jet ID ***and*** the default b-tagging working point used in the analysis.
 * `ismu -> bool`: is the event a muon event (single (anti)isolated lepton is muon)?
 * `isele -> bool`: is the event an electron event?
-* `isiso -> bool`: is the single lepton isolated (true) or anti-
 
 ## `stpol.stable.event.costheta`
 
