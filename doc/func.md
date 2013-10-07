@@ -3,6 +3,16 @@ Functional specification
 
 # Event-level methods
 
+All of these methods adhere to the following pattern (in pseudocode to show types)
+
+    float pt(const event)
+        ... //Gets the value of pt
+        return x
+    end
+
+The underlying event is accessed to calculate/retrieve the variable of interest.
+The return types are specified using `pt -> rettype`. 
+
 ## `stpol.stable.tchan.muon`
 
 ### Generic for leptons
@@ -36,7 +46,7 @@ Functional specification
 The (b-tagged) jet associated with the decay t -> W b
 
 * `pt, eta, phi, reliso -> float`
-* `id -> int`: the gen-level particle id (Pythia scheme). Associated via the APT mechanisms for parton flavour.
+* `id -> int`: the gen-level particle id (Pythia scheme). In general assigned via the PAT mechanisms for parton flavour.
 * `dr -> float`: the ΔR with respect to the isolated lepton in the event
 * `pu_mvaid -> float`: the pile-up MVA id
 * `bd_csv -> float`: the CSV b-discriminator
