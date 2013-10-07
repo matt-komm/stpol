@@ -36,8 +36,18 @@ function open_multi(files)
     return df
 end
 
-infiles = readall(`find tchan -name "*.jld.gz"`) |> split
-#infiles = filter(x -> endswith(x, ".gz"), ARGS)
-df = open_multi(infiles)
-println("Opened data frame: $(size(df))")
+function save_df(fn::ASCIIString, df::AbstractDataFrame)
+    fi = jldopen(fn, "w")
+    write(fi, "data", df)
+    close(fi)
+    run(`gzip -9 $fn`)
+end
+
+# infiles = readall(`find /Users/joosep/Documents/stpol/data/tchan -name "*.csv.gz"`) |> split
+# #infiles = filter(x -> endswith(x, ".gz"), ARGS)
+# el1 = @elapsed df = open_multi(infiles)
+# println("opened data frame: $(size(df)) in $el1 seconds")
+
+# el2 = @elapsed save_df("tchan.jld", df)
+# println("saved DataFrame in $el2 seconds")
 
