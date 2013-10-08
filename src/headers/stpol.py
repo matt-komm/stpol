@@ -69,8 +69,11 @@ class Getter(object):
         if is_na(x):
             return NA
 
-        if (dt == "vfloat" or dt== "vdouble") and len(x)==n+1:
-            return x[n]
+        if (dt == "vfloat" or dt== "vdouble"):
+            if len(x)==n+1:
+                return x[n]
+            else:
+                return NA
         elif dt == "int" or dt=="float" or dt=="double":
             return self.bufconv(x, dt)
         else:
@@ -80,14 +83,14 @@ class Getter(object):
         if dt=="int":
             return numpy.frombuffer(x, "int32", 1)
         elif dt=="float":
-            return numpy.frombuffer(x, "float32", 1)
+            return numpy.frombuffer(x, "float32", 1)[0]
         elif dt=="double":
-            return numpy.frombuffer(x, "float64", 1)
+            return numpy.frombuffer(x, "float64", 1)[0]
         else:
             raise TypeError("unhandled type: %s" % dt)
 
 
-class CosTheta:
+class CosTheta(Getter):
     def __init__(self, src):
         self._costheta_lj = SimpleHandle("double", src, "cosThetaLightJet", PROCESS)
         self._costheta_bl = SimpleHandle("double", src, "cosThetaEtaBeamline", PROCESS)
@@ -103,7 +106,7 @@ class Event(Getter):
     def __init__(self):
         self._met = SimpleHandle("vfloat", "patMETNTupleProducer", "Pt", PROCESS)
         #FIXME: replace circularity with centrality in ntuples (simply incorrect naming)
-        self._centrality = SimpleHandle("vfloat", "eventShapeVars", "circularity", PROCESS)
+        self._centrality = SimpleHandle("double", "eventShapeVars", "circularity", PROCESS)
 
         self._njets = SimpleHandle("int", "goodJetCount", "", PROCESS)
         self._nmuons = SimpleHandle("int", "muonCount", "", PROCESS)
@@ -191,37 +194,37 @@ class Lepton(Getter):
         """
         return self._getval(events, "_mtw")
 
-class Jet:
+class Jet(Getter):
     def __init__(self, label):
         for x in ["Pt", "Eta", "Phi", "partonFlavour", "Mass", "deltaR", "puMva", "bdiscriminatorCSV", "bdiscriminatorTCHP"]:
             h = SimpleHandle("vfloat", label, x, "STPOLSEL2")
             setattr(self, "_"+x, h)
 
-    def pt(self, event):
+    def pt(self, events):
         return self._getval(events, "_Pt")
 
-    def eta(self, event):
+    def eta(self, events):
         return self._getval(events, "_Eta")
 
-    def phi(self, event):
+    def phi(self, events):
         return self._getval(events, "_Phi")
 
-    def mass(self, event):
+    def mass(self, events):
         return self._getval(events, "_Mass")
 
-    def id(self, event):
+    def id(self, events):
         return _int(self._getval(events, "_partonFlavour"))
 
-    def dr(self, event):
+    def dr(self, events):
         return self._getval(events, "_deltaR")
 
-    def pu_mvaid(self, event):
+    def pu_mvaid(self, events):
         return self._getval(events, "_puMva")
 
-    def bd_csv(self, event):
+    def bd_csv(self, events):
         return self._getval(events, "_bdiscriminatorCSV")
 
-    def bd_tchp(self, event):
+    def bd_tchp(self, events):
         return self._getval(events, "_bdiscriminatorTCHP")
 
 class Muon(Lepton):
