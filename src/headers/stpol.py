@@ -47,7 +47,6 @@ class SimpleHandle:
         """
 
         exc = None
-        self.make_handle(self.dtype)
         try:
             events.getByLabel((self.label, self.instance, self.process), self.handle)
         except Exception as e:
@@ -154,7 +153,7 @@ class Event(Getter):
 class Lepton(Getter):
     def __init__(self, label, mtwlabel):
         for x in ["Pt", "Eta", "relIso", "Phi", "pdgId"]:
-            h = SimpleHandle("vfloat", label, x, "STPOLSEL2")
+            h = SimpleHandle("vfloat", label, x, PROCESS)
             setattr(self, "_"+x, h)
         self._mtw = SimpleHandle("double", mtwlabel, "", PROCESS)
 
@@ -197,7 +196,7 @@ class Lepton(Getter):
 class Jet(Getter):
     def __init__(self, label):
         for x in ["Pt", "Eta", "Phi", "partonFlavour", "Mass", "deltaR", "puMva", "bdiscriminatorCSV", "bdiscriminatorTCHP"]:
-            h = SimpleHandle("vfloat", label, x, "STPOLSEL2")
+            h = SimpleHandle("vfloat", label, x, PROCESS)
             setattr(self, "_"+x, h)
 
     def pt(self, events):
