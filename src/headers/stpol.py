@@ -1,46 +1,91 @@
 from DataFormats.FWLite import Events, Handle, Lumis
+import numpy
 PROCESS = "STPOLSEL2"
 
 #A placeholder for a missing value. NaN is good but not ideal.
 NA = float("nan")
 
 def is_na(x):
+    if not isinstance(x, float) or isinstance(x, int):
+        return False
     return x!=x
+
+def _int(x):
+    if is_na(x):
+        return NA
+    else:
+        return int(x)
+
 
 class SimpleHandle:
     """
     A simple interface tying fwlite::Handle<T> and a 3-tuple for a label.
     """
-    def __init__(self, dtype, label, instance, process):
+
+    def make_handle(self, dtype):
         if dtype=="vfloat":
             self.handle = Handle("std::vector<float>")
         elif dtype=="float":
             self.handle = Handle("float")
         elif dtype=="double":
             self.handle = Handle("double")
+        elif dtype=="int":
+            self.handle = Handle("int")
         else:
             raise ValueError("Undefined type: %s" % dtype)
+
+    def __init__(self, dtype, label, instance, process):
+        self.dtype = dtype
         self.label = label
         self.instance = instance
         self.process = process
+        self.make_handle(self.dtype)
 
     def get(self, events):
         """
         Returns the product of a handle if valid, ValueError if invalid.
         """
-        events.getByLabel((self.label, self.instance, self.process), self.handle)
-        if self.handle.isValid():
+
+        exc = None
+        self.make_handle(self.dtype)
+        try:
+            events.getByLabel((self.label, self.instance, self.process), self.handle)
+        except Exception as e:
+            exc = w
+            self.make_handle(self.dtype)
+
+        if not exc and self.handle.isValid():
             return self.handle.product()
         else:
-            raise ValueError("Could not get product: %s:%s:%s" % (self.label, self.instance, self.process))
+            return NA
+            #import pdb; pdb.set_trace()
+            #raise ValueError("Could not get product: %s:%s:%s to handle %s" % (self.label, self.instance, self.process, self.handle))
 
 class Getter(object):
     def _getval(self, events, name, n=0):
         x = getattr(self, name).get(events)
-        if len(x)==n+1:
-            return x[n]
-        else:
+        dt = getattr(self, name).dtype
+
+        if is_na(x):
             return NA
+
+        if (dt == "vfloat" or dt== "vdouble") and len(x)==n+1:
+            return x[n]
+        elif dt == "int" or dt=="float" or dt=="double":
+            return self.bufconv(x, dt)
+        else:
+            raise TypeError("unhandled type: %s" % dt)
+
+    def bufconv(self, x, dt):
+        if dt=="int":
+            return numpy.frombuffer(x, "int32", 1)
+        elif dt=="float":
+            return numpy.frombuffer(x, "float32", 1)
+        elif dt=="double":
+            return numpy.frombuffer(x, "float64", 1)
+        else:
+            raise TypeError("unhandled type: %s" % dt)
+
 
 class CosTheta:
     def __init__(self, src):
@@ -61,6 +106,8 @@ class Event(Getter):
         self._centrality = SimpleHandle("vfloat", "eventShapeVars", "circularity", PROCESS)
 
         self._njets = SimpleHandle("int", "goodJetCount", "", PROCESS)
+        self._nmuons = SimpleHandle("int", "muonCount", "", PROCESS)
+        self._nelectrons = SimpleHandle("int", "electronCount", "", PROCESS)
         self._ntags = SimpleHandle("int", "bJetCount", "", PROCESS)
 
         #Reco
@@ -89,16 +136,16 @@ class Event(Getter):
         return self._getval(events, "_centrality")
 
     def njets(self, events):
-        """
-        The centrality of the event.
-        """
-        return int(self._getval(events, "_njets"))
+        return _int(self._getval(events, "_njets"))
 
     def ntags(self, events):
-        """
-        The centrality of the event.
-        """
-        return int(self._getval(events, "_ntags"))
+        return _int(self._getval(events, "_ntags"))
+
+    def nmuons(self, events):
+        return _int(self._getval(events, "_nmuons"))
+
+    def nelectrons(self, events):
+        return _int(self._getval(events, "_nelectrons"))
 
 
 class Lepton(Getter):
@@ -163,7 +210,7 @@ class Jet:
         return self._getval(events, "_Mass")
 
     def id(self, event):
-        return int(self._getval(events, "_partonFlavour"))
+        return _int(self._getval(events, "_partonFlavour"))
 
     def dr(self, event):
         return self._getval(events, "_deltaR")
@@ -203,4 +250,4 @@ def list_methods(obj):
     for fname, x in inspect.getmembers(obj, predicate=inspect.ismethod):
         if fname.startswith("_"):
             continue
-        print fname, getattr(stpol.stable.signal.muon, fname).__doc__
+        print fname, getattr(obj, fname).__doc__
