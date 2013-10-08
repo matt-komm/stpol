@@ -20,35 +20,17 @@ echo 'done '\$?
     close(fi)
     println("Temp file is $fn")
     ofile = "slurm.out.$i" 
-    @async begin
-        run(`sbatch -p phys,prio -J julia_job_test.$i -o $ofile $fn`)
-        while true
-            sleep(1.0)
-            if !isfile(ofile)
-                continue
-            end
-            s = open(readall, ofile)
-            m = match(r".*done ([0-9]*).*", s)
-            if m!=nothing
-                return int(m.captures[1])
-            end
-        end
-    end
+    run(`sbatch -p phys,prio -J julia_job_test.$i -o $ofile $fn`)
 end
 
-rets = Any[]
-el = @elapsed @sync begin
-    maxn = length(flist)
-    perjob = min(50, ceil(maxn/10))
-    N = ceil(maxn/perjob)
-    for n=1:N
-        r = (1+(n-1)*perjob):(n*perjob)
-        if r.start+r.len > maxn
-            r = r.start:maxn-r.start
-        end
-        println(n, " ", r.start)
-        ret = submit(flist[r], "output_$n", n)
+maxn = length(flist)
+perjob = min(50, ceil(maxn/10))
+N = ceil(maxn/perjob)
+for n=1:N
+    r = (1+(n-1)*perjob):(n*perjob)
+    if r.start+r.len > maxn
+        r = r.start:maxn-r.start
     end
+    println(n, " ", r.start)
+    submit(flist[r], "output_$n", n)
 end
-println("Return codes: ", join(rets, ", "))
-println("Time elapsed: $el")
