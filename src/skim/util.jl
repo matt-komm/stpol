@@ -2,12 +2,13 @@ using DataFrames
 using HDF5
 using JLD
 
-function readjld(fi)
+function readjld(fi, dname="stpol_events")
     tmp = tempname()
     run(`gzip -cd $fi` |> open(tmp, "w")) 
     f = jldopen(tmp, "r")
-    d = read(f, "data")
+    d = read(f, dname)
     close(f)
+    run(`rm -f $tmp`)
     assert(typeof(d)==DataFrame) 
     return d
 end
@@ -36,8 +37,9 @@ function open_multi(files)
     return df
 end
 
-infiles = readall(`find tchan -name "*.jld.gz"`) |> split
-#infiles = filter(x -> endswith(x, ".gz"), ARGS)
-df = open_multi(infiles)
-println("Opened data frame: $(size(df))")
-
+function save_df(fn::ASCIIString, df::AbstractDataFrame)
+    fi = jldopen(fn, "w")
+    write(fi, "data", df)
+    close(fi)
+    run(`gzip -9 $fn`)
+end

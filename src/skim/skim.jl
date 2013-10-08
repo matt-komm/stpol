@@ -1,5 +1,7 @@
 using ROOT
 using DataFrames
+using HDF5
+using JLD
 
 output_file = ARGS[1]
 
@@ -17,7 +19,8 @@ df = similar(
             lepton_pt=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[],
             bjet_pt=Float32[], bjet_eta=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
             ljet_pt=Float32[], ljet_eta=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[],
-            run=Int64[], lumi=Int64[], event=Int64[], fileindex=Int64[],
+#            run=Int64[], lumi=Int64[], event=Int64[],
+            fileindex=Int64[],
             passes=Bool[],
             fname=ASCIIString[]
         ),
@@ -61,7 +64,7 @@ function either(a, b, n::Integer=1)
     end
 end
 
-
+println("Beginning event loop")
 nproc = 0
 tic()
 timeelapsed = @elapsed for i=1:maxev
@@ -76,7 +79,7 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :passes] = false
 
-    df[i, :run], df[i, :lumi], df[i, :event] = where(events)
+#    df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     df[i, :fileindex] = where_file(events)
     
     df[i, :fname] = flist[df[i, :fileindex]]
@@ -121,14 +124,20 @@ end
 println("processed $(nproc/timeelapsed) events/second")
 
 #Select only the events that have a lepton
-df = df[with(df, :(passes)), :]
+mydf = df[with(df, :(passes)), :]
 
-
-function writezipped(fn, t)
-    writetable(fn, t)
-
-    run(`gzip -f9 $fn`)
+function writezipped_jld(fn, obj::DataFrame)
+    fi = jldopen("$fn.jld", "w")
+    write(fi, "stpol_events", obj)
+    write(fi, "processed_files", flist)
+    close(fi)
+    run(`gzip -f9 $fn.jld`)
+    println("Saved dataframe $obj as JLD")
 end
 
-writezipped("$(output_file)", df)
-#writezipped("processed.csv", processed_files)
+function writezipped_csv(fn, obj::DataFrame)
+    writetable("$fn.csv", obj)
+    run(`gzip -f9 $fn.csv`)
+    println("Saved dataframe $obj as CSV")
+end
+writezipped_jld("$(output_file)", mydf)
