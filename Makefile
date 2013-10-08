@@ -1,4 +1,5 @@
 all: update step2_ntuple
+.PHONY: setup
 
 setup:
 	./setup.sh
