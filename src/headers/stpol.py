@@ -3,14 +3,25 @@ import numpy
 PROCESS = "STPOLSEL2"
 
 #A placeholder for a missing value. NaN is good but not ideal.
+#In particular, it's only applicable for ints and some algorithms/libraries start behaving subtly wrong on NaN.
 NA = float("nan")
 
 def is_na(x):
-    if not isinstance(x, float) or isinstance(x, int):
+    """
+    Checks if a value was NA.
+    """
+
+    #check for non-primitive type
+    if not (isinstance(x, float) or isinstance(x, int)):
         return False
+
+    #check for NaN
     return x!=x
 
 def _int(x):
+    """
+    Convert value to int or NA
+    """
     if is_na(x):
         return NA
     else:
