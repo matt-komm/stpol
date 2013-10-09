@@ -82,6 +82,10 @@ Angular variables associated with the Wtb vertex.
 * `lj`: the angle between the charged lepton and the b-jet in the spectator jet basis
 * `bl`: the angle in the eta-beamline basis
 
+## `stpol.stable.event.costheta_gen`
+
+As above, but with gen-level particles.
+
 ## Description of backends
 
 These methods take an abstract Event as input and return the corresponding value for the Event. The Event type depends on the backend and can be for example ``fwlite::(Chain)Event``, a tuple of ``run``, ``lumi``, ``event`` id-s etc.
