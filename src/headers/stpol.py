@@ -61,7 +61,7 @@ class SimpleHandle:
         try:
             events.getByLabel((self.label, self.instance, self.process), self.handle)
         except Exception as e:
-            exc = w
+            exc = e
             self.make_handle(self.dtype)
 
         if not exc and self.handle.isValid():
