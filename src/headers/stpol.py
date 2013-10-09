@@ -206,7 +206,7 @@ class Lepton(Getter):
 
 class Jet(Getter):
     def __init__(self, label):
-        for x in ["Pt", "Eta", "Phi", "partonFlavour", "Mass", "deltaR", "puMva", "bdiscriminatorCSV", "bdiscriminatorTCHP"]:
+        for x in ["Pt", "Eta", "Phi", "partonFlavour", "Mass", "deltaR", "puMva", "bDiscriminatorCSV", "bDiscriminatorTCHP"]:
             h = SimpleHandle("vfloat", label, x, PROCESS)
             setattr(self, "_"+x, h)
 
@@ -232,10 +232,10 @@ class Jet(Getter):
         return self._getval(events, "_puMva")
 
     def bd_csv(self, events):
-        return self._getval(events, "_bdiscriminatorCSV")
+        return self._getval(events, "_bDiscriminatorCSV")
 
     def bd_tchp(self, events):
-        return self._getval(events, "_bdiscriminatorTCHP")
+        return self._getval(events, "_bDiscriminatorTCHP")
 
 class Muon(Lepton):
     def __init__(self):
