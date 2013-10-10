@@ -53,19 +53,46 @@ type MultiFileDataStream <: AbstractDataStream
     index::Int64 
 end
 
+function MultiFileDataStream(arr::Vector{String})
+    return MultiFileDataStream(convert(Vector{ASCIIString}, arr), 1)
+end
+
 function Base.start(s::MultiFileDataStream)
     s.index = 1
     return DataFrame()
 end
 
 function Base.next(s::MultiFileDataStream, df::DataFrame)
-    df2 = readjld(s.flist[s.index])
+    fn = s.flist[s.index]
+    df2 = None
+    try
+        if endswith(fn, ".jld.gz")
+            df2 = readjld(fn)
+        elseif endswith(fn, ".csv.gz")
+            df2 = readtable(fn)
+        end
+    catch e
+        error("failed to open file $fn: $e")
+        rethrow(e)
+    end
     s.index += 1
     return df2, df
 end
 
 function Base.done(s::MultiFileDataStream, df::DataFrame)
     return s.index > length(s.flist)
+end
+
+function Base.length(s::MultiFileDataStream)
+    return length(s.flist)
+end
+
+function Base.getindex(s::MultiFileDataStream, i::Int64)
+    return MultiFileDataStream(s.flist[i:i], 1)
+end
+
+function Base.getindex(s::MultiFileDataStream, r::Range1{Int64})
+    return MultiFileDataStream(s.flist[r], 1)
 end
 
 end #module
