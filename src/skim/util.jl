@@ -1,4 +1,7 @@
+module SkimUtil
+
 using DataFrames
+import DataFrames.AbstractDataStream
 using HDF5
 using JLD
 
@@ -43,3 +46,26 @@ function save_df(fn::ASCIIString, df::AbstractDataFrame)
     close(fi)
     run(`gzip -9 $fn`)
 end
+
+
+type MultiFileDataStream <: AbstractDataStream
+    flist::Vector{ASCIIString}
+    index::Int64 
+end
+
+function Base.start(s::MultiFileDataStream)
+    s.index = 1
+    return DataFrame()
+end
+
+function Base.next(s::MultiFileDataStream, df::DataFrame)
+    df2 = readjld(s.flist[s.index])
+    s.index += 1
+    return df2, df
+end
+
+function Base.done(s::MultiFileDataStream, df::DataFrame)
+    return s.index > length(s.flist)
+end
+
+end #module
