@@ -10,15 +10,17 @@ append!(flist, ARGS[2:])
 
 events = Events(convert(Vector{ASCIIString}, flist))
 
+list_branches(events)
+
 maxev = length(events)
-#maxev = 100000
 
 processed_files = DataFrame(files=flist)
 df = similar(
         DataFrame(
-            lepton_pt=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[],
+            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[],
             bjet_pt=Float32[], bjet_eta=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
             ljet_pt=Float32[], ljet_eta=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[],
+            cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
 #            run=Int64[], lumi=Int64[], event=Int64[],
             fileindex=Int64[],
             passes=Bool[],
@@ -44,6 +46,13 @@ for s in [:Pt, :Eta, :Phi, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTC
     sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
 end
+
+sources[:cos_theta] = Source(:cosTheta, :cosThetaLightJet, :STPOLSEL2, Float64)
+sources[:met] = Source(:patMETNTupleProducer, :Pt, :STPOLSEL2)
+sources[part(:muon, :mtw)] = Source(:muMTW, symbol(""), :STPOLSEL2, Float64)
+sources[part(:electron, :mtw)] = Source(:eleMTW, symbol(""), :STPOLSEL2, Float64)
+sources[:njets] = Source(:goodJetCount, symbol(""), :STPOLSEL2, Int32)
+sources[:ntags] = Source(:bJetCount, symbol(""), :STPOLSEL2, Int32)
 
 
 function ifpresent(arr, n::Integer=1)
@@ -102,7 +111,18 @@ timeelapsed = @elapsed for i=1:maxev
     end
 
     df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]][1]
+    df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]][1]
+    df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]][1]
+    df[i, :mtw] = events[sources[part(lepton_type, :mtw)]]
+    df[i, :met] = ifpresent(events[sources[:met]])
 
+    df[i, :njets] = events[sources[:njets]]
+    df[i, :ntags] = events[sources[:ntags]]
+    
+    if !(df[i, :njets] >= 2 && df[i, :ntags] >= 0)
+        df[i, :passes] = false
+        continue
+    end
 
     df[i, :bjet_pt] = events[sources[:bjet_Pt]] |> ifpresent
     df[i, :bjet_eta] = events[sources[:bjet_Eta]] |> ifpresent
@@ -117,6 +137,8 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_id] = events[sources[:ljet_partonFlavour]] |> ifpresent
     df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
+    
+    df[i, :cos_theta] = events[sources[:cos_theta]]
 
     df[i, :passes] = true
 end
@@ -132,12 +154,12 @@ function writezipped_jld(fn, obj::DataFrame)
     write(fi, "processed_files", flist)
     close(fi)
     run(`gzip -f9 $fn.jld`)
-    println("Saved dataframe $obj as JLD")
 end
 
 function writezipped_csv(fn, obj::DataFrame)
     writetable("$fn.csv", obj)
     run(`gzip -f9 $fn.csv`)
-    println("Saved dataframe $obj as CSV")
 end
 writezipped_jld("$(output_file)", mydf)
+writezipped_csv("$(output_file)", mydf)
+describe(mydf)
