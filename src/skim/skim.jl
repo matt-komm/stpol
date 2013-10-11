@@ -20,11 +20,13 @@ df = similar(
             lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[],
             bjet_pt=Float32[], bjet_eta=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
             ljet_pt=Float32[], ljet_eta=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[],
+            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
+            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
             cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
 #            run=Int64[], lumi=Int64[], event=Int64[],
             fileindex=Int64[],
             passes=Bool[],
-            fname=ASCIIString[]
+            #fname=ASCIIString[]
         ),
         maxev
 )
@@ -45,6 +47,7 @@ end
 for s in [:Pt, :Eta, :Phi, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP]
     sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
+    sources[part(:jets, s)] = Source(:goodJetsNTupleProducer, s, :STPOLSEL2)
 end
 
 sources[:cos_theta] = Source(:cosTheta, :cosThetaLightJet, :STPOLSEL2, Float64)
@@ -91,7 +94,7 @@ timeelapsed = @elapsed for i=1:maxev
 #    df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     df[i, :fileindex] = where_file(events)
     
-    df[i, :fname] = flist[df[i, :fileindex]]
+#    df[i, :fname] = flist[df[i, :fileindex]]
     
 
     df[i, :lepton_pt], which_lepton = either(events[sources[:muon_Pt]], events[sources[:electron_Pt]])
@@ -140,6 +143,45 @@ timeelapsed = @elapsed for i=1:maxev
     
     df[i, :cos_theta] = events[sources[:cos_theta]]
 
+
+    jet_pts = events[sources[part(:jets, :Pt)]]
+    jet_etas = events[sources[part(:jets, :Eta)]]
+    jet_ids  = events[sources[part(:jets, :partonFlavour)]]
+    jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
+
+    #get the indices of the b-tagged jet and the light jet
+    indb = find(x -> abs(x-df[i, :bjet_pt])<eps(x), jet_pts)[1]
+    indl = find(x -> abs(x-df[i, :ljet_pt])<eps(x), jet_pts)[1]
+
+    #get the indices of the other jets
+    specinds = Int64[]
+    for k=1:length(jet_pts)
+        if k!=indb && k!=indl
+            push!(specinds, k)
+        end
+    end
+
+
+    j = 1
+    for (pt, eta, id, bd, ind) in sort(
+        [z for z in zip(jet_pts, jet_etas, jet_ids, jet_bds, [1:length(jet_pts)])],
+        rev=true
+    )
+        if (ind in specinds)
+            df[i, symbol("sjet$(j)_pt")] = pt
+            df[i, symbol("sjet$(j)_eta")] = eta
+            df[i, symbol("sjet$(j)_id")] = id
+            df[i, symbol("sjet$(j)_bd")] = bd
+            
+            if j==2
+                break
+            else
+                j += 1
+            end
+        end
+    end
+
+    #println(join(pts, ","), "|", df[i, :bjet_pt], "|", df[i, :ljet_pt], ":",indb, ":", indl)
     df[i, :passes] = true
 end
 
@@ -160,6 +202,10 @@ function writezipped_csv(fn, obj::DataFrame)
     writetable("$fn.csv", obj)
     run(`gzip -f9 $fn.csv`)
 end
-writezipped_jld("$(output_file)", mydf)
-writezipped_csv("$(output_file)", mydf)
-describe(mydf)
+#writezipped_jld("$(output_file)", mydf)
+#writezipped_csv("$(output_file)", mydf)
+
+prfiles = DataFrame(files=flist)
+writetable("$(output_file).csv", mydf)
+writetable("$(output_file)_processed.csv", prfiles)
+ROOT.writetree("tree.root", mydf)
