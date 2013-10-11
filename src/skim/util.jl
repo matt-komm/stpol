@@ -5,13 +5,21 @@ import DataFrames.AbstractDataStream
 using HDF5
 using JLD
 
+unzname(fi) = "$fi.temp"
 function readjld(fi, dname="stpol_events")
-    tmp = tempname()
-    run(`gzip -cd $fi` |> open(tmp, "w")) 
-    f = jldopen(tmp, "r")
+    #tmp = tempname()
+    if endswith(fi, ".jld.gz")
+        tmp = unzname(fi)
+        println("unzipping to $tmp")
+        run(`gzip -cd $fi` |> open(tmp, "w"))
+    else
+        println("opening $fi directly")
+        tmp = fi
+    end
+    f = jldopen(tmp, "r", mmaparrays=true)
     d = read(f, dname)
-    close(f)
-    run(`rm -f $tmp`)
+    #close(f)
+    #run(`rm -f $tmp`)
     assert(typeof(d)==DataFrame) 
     return d
 end
@@ -53,8 +61,8 @@ type MultiFileDataStream <: AbstractDataStream
     index::Int64 
 end
 
-function MultiFileDataStream(arr::Vector{String})
-    return MultiFileDataStream(convert(Vector{ASCIIString}, arr), 1)
+function MultiFileDataStream(arr)
+    return MultiFileDataStream([ascii(string(a)) for a in arr], 1)
 end
 
 function Base.start(s::MultiFileDataStream)
@@ -63,10 +71,11 @@ function Base.start(s::MultiFileDataStream)
 end
 
 function Base.next(s::MultiFileDataStream, df::DataFrame)
+
     fn = s.flist[s.index]
     df2 = None
     try
-        if endswith(fn, ".jld.gz")
+        if contains(fn, ".jld.gz")
             df2 = readjld(fn)
         elseif endswith(fn, ".csv.gz")
             df2 = readtable(fn)
@@ -76,7 +85,8 @@ function Base.next(s::MultiFileDataStream, df::DataFrame)
         rethrow(e)
     end
     s.index += 1
-    return df2, df
+
+    return df2, similar(df2, 0)
 end
 
 function Base.done(s::MultiFileDataStream, df::DataFrame)
@@ -93,6 +103,42 @@ end
 
 function Base.getindex(s::MultiFileDataStream, r::Range1{Int64})
     return MultiFileDataStream(s.flist[r], 1)
+end
+
+function classify(fname)
+    identifiers = Symbol[]
+    if contains(fname, "/iso/")
+        push!(identifiers, :iso)
+    end
+    if contains(fname, "/antiiso/")
+        push!(identifiers, :aiso)
+    end
+    if contains(fname, "/nominal/")
+        push!(identifiers, :nominal)
+    end
+    if match(r".*/QCD.*/.*", fname)!=nothing
+        push!(identifiers, :qcd)
+    end    
+    if match(r".*/T_t_ToLeptons/.*", fname)!=nothing
+        push!(identifiers, :tchan)
+        push!(identifiers, :top)
+    end
+    if match(r".*/Tbar_t_ToLeptons/.*", fname)!=nothing 
+        push!(identifiers, :tchan)
+        push!(identifiers, :atop)
+    end
+    if match(r".*/TTJets_FullLept/.*", fname)!=nothing 
+        push!(identifiers, :ttbar)
+        push!(identifiers, :flept)
+    end
+    if match(r".*/TTJets_SemiLept/.*", fname)!=nothing 
+        push!(identifiers, :ttbar)
+        push!(identifiers, :slept)
+    end
+    if match(r".*/W[1-4]Jets_exclusive/.*", fname)!=nothing
+        push!(identifiers, :wjets)
+    end
+    return identifiers
 end
 
 end #module
