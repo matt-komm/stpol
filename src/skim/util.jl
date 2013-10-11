@@ -31,7 +31,7 @@ function open_multi(files)
             table = Void
             if endswith(fi, ".csv.gz")
                 table = readtable(fi)
-            elseif endswith(fi, ".jld.gz")
+            elseif contains(fi, ".jld")
                 table = readjld(fi)
             else
                 error("unknown file format: $fi")
@@ -74,19 +74,16 @@ function Base.next(s::MultiFileDataStream, df::DataFrame)
 
     fn = s.flist[s.index]
     df2 = None
-    try
-        if contains(fn, ".jld.gz")
-            df2 = readjld(fn)
-        elseif endswith(fn, ".csv.gz")
-            df2 = readtable(fn)
-        end
-    catch e
-        error("failed to open file $fn: $e")
-        rethrow(e)
+    if contains(fn, ".jld")
+        df2 = readjld(fn)
+    elseif contains(fn, ".csv")
+        df2 = readtable(fn)
+    else
+        error("unknown format: $fn")
     end
     s.index += 1
 
-    return df2, similar(df2, 0)
+    return df2, df
 end
 
 function Base.done(s::MultiFileDataStream, df::DataFrame)
