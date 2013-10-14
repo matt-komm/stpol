@@ -65,12 +65,11 @@ class File:
                 raise Exception("counter not found")
         return tot
 
-    def sample_type(self, fn):
+    def sample_type(self, fn, prefix="file:/hdfs/cms/store/user/"):
         """
         Returns the sample dictionary corresponding to a filename.
         """
-        prefix = "file:/hdfs/cms/store/user/"
-        m = re.match(fn, prefix+"(.*)/(.*)/(.*)/(.*)/(.*)/output_(.*).root")
+        m = re.match(fn, prefix+"(.*)/(.*)/(.*)/(.*)/(.*)/([^/]*.root)")
 
         tag = m.captures[1]
         iso = m.captures[2]
@@ -152,7 +151,7 @@ class stpol:
         event = Event()
         file = File()
 
-        class tchan:
+        class signal:
             muon = Muon()
             electron = Electron()
 
