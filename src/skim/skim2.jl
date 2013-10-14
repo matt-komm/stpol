@@ -3,7 +3,7 @@ require(joinpath(ENV["HOME"], ".juliarc.jl"))
 require("util.jl")
 findex = readtable("findex.csv")
 
-symb = :wjets
+symb = symbol(ARGS[1])
 flist = findex[:($symb .== true), :fname]
 
 mf = SkimUtil.MultiFileDataStream(flist)
@@ -14,7 +14,7 @@ ntot = 0
 dfs = Dict()
 
 dfs[symb] = similar(DataFrame(
-    bjet_id=Int32[], met=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32, cos_theta=Float32[]
+    bjet_id=Int32[], met=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[], cos_theta=Float32[]
     ), 50000000
 )
 
