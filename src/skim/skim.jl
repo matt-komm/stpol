@@ -59,12 +59,17 @@ sources[:ntags] = Source(:bJetCount, symbol(""), :STPOLSEL2, Int32)
 
 
 function ifpresent(arr, n::Integer=1)
+    if all(isna(arr)) 
+        return NA
+    end
     if length(arr)==n
         return arr[n]
     else
         return NA
     end
 end
+
+ispresent(x) = (typeof(x) != NAtype && !any(isna(x)))
 
 function either(a, b, n::Integer=1)
     if length(a)==n && length(b)==0
@@ -143,11 +148,14 @@ timeelapsed = @elapsed for i=1:maxev
     
     df[i, :cos_theta] = events[sources[:cos_theta]]
 
-
     jet_pts = events[sources[part(:jets, :Pt)]]
+    ispresent(jet_pts) || continue
     jet_etas = events[sources[part(:jets, :Eta)]]
+    ispresent(jet_etas) || continue
     jet_ids  = events[sources[part(:jets, :partonFlavour)]]
+    ispresent(jet_ids) || continue
     jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
+    ispresent(jet_bds) || continue
 
     #get the indices of the b-tagged jet and the light jet
     indb = find(x -> abs(x-df[i, :bjet_pt])<eps(x), jet_pts)[1]
@@ -188,7 +196,8 @@ end
 println("processed $(nproc/timeelapsed) events/second")
 
 #Select only the events that have a lepton
-mydf = df[with(df, :(passes)), :]
+#mydf = df[with(df, :(passes)), :]
+mydf = df
 
 function writezipped_jld(fn, obj::DataFrame)
     fi = jldopen("$fn.jld", "w")
@@ -202,10 +211,16 @@ function writezipped_csv(fn, obj::DataFrame)
     writetable("$fn.csv", obj)
     run(`gzip -f9 $fn.csv`)
 end
-#writezipped_jld("$(output_file)", mydf)
-#writezipped_csv("$(output_file)", mydf)
 
-prfiles = DataFrame(files=flist)
+prfiles = DataFrame(files=ASCIIString[], total_processed=[])
+i = 1
+for fi in flist
+    x = ROOT.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
+    prfiles[i, :files] = fi
+    prfiles[i, :total_processed] = x
+    i += 1
+end
+
 writetable("$(output_file).csv", mydf)
 writetable("$(output_file)_processed.csv", prfiles)
 ROOT.writetree("tree.root", mydf)
