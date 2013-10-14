@@ -1,3 +1,5 @@
+using DataFrames
+
 function sample_type(fn, prefix="file:/hdfs/cms/store/user")
     r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/(.*)/output_(.*).root")
     m = match(r, fn)
@@ -20,6 +22,9 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
     end
 end
 
-ENV["PYTHONPATH"] = string(joinpath(ENV["STPOL_DIR"]), ":", ENV["PYTHONPATH"])
-using PyCall
-cross_sections = pyimport("plots.common.cross_sections")[:xs]
+df = readtable("cross_sections.txt", allowcomments=true)
+cross_sections = Dict{String, Float64}()
+for i=1:nrow(df)
+    cross_sections[df[i, 1]] = df[i, 2]
+end
+#cross_sections = pyimport("plots.common.cross_sections")[:xs]
