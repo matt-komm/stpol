@@ -1,5 +1,7 @@
 from DataFormats.FWLite import Events, Handle, Lumis
 import numpy
+import re
+
 PROCESS = "STPOLSEL2"
 
 #A placeholder for a missing value. NaN is good but not ideal.
@@ -70,6 +72,43 @@ class SimpleHandle:
             return NA
             #import pdb; pdb.set_trace()
             #raise ValueError("Could not get product: %s:%s:%s to handle %s" % (self.label, self.instance, self.process, self.handle))
+
+class File:
+    def __init__(self):
+        pass
+
+    def total_processed(self, fn):
+        """
+        Returns the total (unskimmed/filtered) count of events processed per this file.
+        Only correct when lumi-blocks are never split.
+        Loops over the lumi blocks in the file, so is not particularly fast.
+        """
+        lumis = Lumis(fn)
+        tot = 0
+        handle = Handle("edm::MergeableCounter")
+        for lumi in lumis:
+            lumi.getByLabel("singleTopPathStep1MuPreCount", handle)
+            if handle.isValid():
+                tot += handle.product().value
+            else:
+                raise Exception("counter not found")
+        return tot
+
+    def sample_type(self, fn, prefix="file:/hdfs/cms/store/user/"):
+        """
+        Returns the sample dictionary corresponding to a filename.
+        file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/QCD_Pt_80_170_BCtoE/output_1_1_KCj.root
+        """
+        m = re.match(prefix+"(.*)/(.*)/(.*)/(.*)/(.*)/(output_.*)\.root", fn)
+        if m:
+            caps = m.groups()
+            tag = caps[1]
+            iso = caps[2]
+            syst = caps[3]
+            samp = caps[4]
+        else:
+            raise Exception("Could not match %s to pattern" % fn)
+        return {"tag": tag, "isolation": iso, "systematic": syst, "sample": samp}
 
 class Getter(object):
     def _getval(self, events, name, n=0):
@@ -248,6 +287,8 @@ class Electron(Lepton):
 class stpol:
     class stable:
         event = Event()
+        file = File()
+
         class tchan:
             muon = Muon()
             electron = Electron()

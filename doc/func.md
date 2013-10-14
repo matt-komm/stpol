@@ -13,6 +13,18 @@ All of these methods adhere to the following pattern (in pseudocode to show type
 The underlying event is accessed to calculate/retrieve the variable of interest.
 The return types are specified using `pt -> rettype`. 
 
+## `stpol.stable.file`
+
+Contains methods that give information about an EDM-file. All methods take the filename string as a single argument.
+
+* `total_processed => int`: the total count of events processed before any filtering
+* `sample_type => map(string => string)`: returns the sample type from the filename encoded in a map(dictionary) with the following keys
+
+    `isolation`: "iso", "antiiso"
+    `systematic`: "nominal", "jes_up", "jer_down", ...
+    `sample`: "T_t_ToLeptons", "TTJets_FullLept", "SingleMu", ...
+    `tag`: "Oct3_123456..."
+
 ## `stpol.stable.tchan.muon`
 
 ### Generic for leptons
@@ -81,6 +93,10 @@ Angular variables associated with the Wtb vertex.
 
 * `lj`: the angle between the charged lepton and the b-jet in the spectator jet basis
 * `bl`: the angle in the eta-beamline basis
+
+## `stpol.stable.event.costheta_gen`
+
+As above, but with gen-level particles.
 
 ## Description of backends
 

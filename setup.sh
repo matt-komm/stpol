@@ -9,7 +9,7 @@ then
     select yn in "Yes" "No"; do
     	case $yn in
     		Yes ) break;;
-    		No ) return;;
+    		No ) exit 1;;
     	esac
     done
 fi
