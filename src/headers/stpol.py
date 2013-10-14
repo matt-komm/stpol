@@ -89,7 +89,7 @@ class File:
         for lumi in lumis:
             lumi.getByLabel("singleTopPathStep1MuPreCount", handle)
             if handle.isValid():
-                tot += handle.product().value()
+                tot += handle.product().value
             else:
                 raise Exception("counter not found")
         return tot
@@ -97,14 +97,17 @@ class File:
     def sample_type(self, fn, prefix="file:/hdfs/cms/store/user/"):
         """
         Returns the sample dictionary corresponding to a filename.
+        file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/QCD_Pt_80_170_BCtoE/output_1_1_KCj.root
         """
-        m = re.match(fn, prefix+"(.*)/(.*)/(.*)/(.*)/(.*)/([^/]*.root)")
-
-        tag = m.captures[1]
-        iso = m.captures[2]
-        syst = m.captures[3]
-        samp = m.captures[4]
-
+        m = re.match(prefix+"(.*)/(.*)/(.*)/(.*)/(.*)/(output_.*)\.root", fn)
+        if m:
+            caps = m.groups()
+            tag = caps[1]
+            iso = caps[2]
+            syst = caps[3]
+            samp = caps[4]
+        else:
+            raise Exception("Could not match %s to pattern" % fn)
         return {"tag": tag, "isolation": iso, "systematic": syst, "sample": samp}
 
 class Getter(object):
