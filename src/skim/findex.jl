@@ -5,7 +5,7 @@ using DataFrames
 using HDF5
 using JLD
 
-flist = readall("done1") |> split
+flist = readall("done") |> split
 
 findex = similar(
     DataFrame(qcd=Bool[], tchan=Bool[], wjets=Bool[], ttbar=Bool[], fname=ASCIIString[]),
