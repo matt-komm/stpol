@@ -1,4 +1,6 @@
 from DataFormats.FWLite import Events, Handle, Lumis
+import numpy
+import re
 PROCESS = "STPOLSEL2"
 
 #A placeholder for a missing value. NaN is good but not ideal.
@@ -41,6 +43,41 @@ class Getter(object):
             return x[0]
         else:
             return NA
+
+class File:
+    def __init__(self):
+        pass
+
+    def total_processed(self, fn):
+        """
+        Returns the total (unskimmed/filtered) count of events processed per this file.
+        Only correct when lumi-blocks are never split.
+        Loops over the lumi blocks in the file, so is not particularly fast.
+        """
+        lumis = Lumis(fn)
+        tot = 0
+        handle = Handle("edm::MergeableCounter")
+        for lumi in lumis:
+            lumi.getByLabel("singleTopPathStep1MuPreCount", handle)
+            if handle.isValid():
+                tot += handle.product().value()
+            else:
+                raise Exception("counter not found")
+        return tot
+
+    def sample_type(self, fn):
+        """
+        Returns the sample dictionary corresponding to a filename.
+        """
+        prefix = "file:/hdfs/cms/store/user/"
+        m = re.match(fn, prefix+"(.*)/(.*)/(.*)/(.*)/(.*)/output_(.*).root")
+
+        tag = m.captures[1]
+        iso = m.captures[2]
+        syst = m.captures[3]
+        samp = m.captures[4]
+
+        return {"tag": tag, "isolation": iso, "systematic": syst, "sample": samp}
 
 class Event(Getter):
     def __init__(self):
@@ -113,7 +150,9 @@ class Electron(Lepton):
 class stpol:
     class stable:
         event = Event()
-        class signal:
+        file = File()
+
+        class tchan:
             muon = Muon()
             electron = Electron()
 
