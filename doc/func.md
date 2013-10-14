@@ -83,10 +83,9 @@ Overall event-level parameters.
 * `met`: the missing transverse energy
 * `c`: centrality
 * `njets`: the number of good jets passing the jet ID
-* `ntags`: the number of good jets passing the jet ID ** and ** the default b-tagging working point used in the analysis.
+* `ntags`: the number of good jets passing the jet ID ***and*** the default b-tagging working point used in the analysis.
 * `ismu -> bool`: is the event a muon event (single (anti)isolated lepton is muon)?
 * `isele -> bool`: is the event an electron event?
-* `isiso -> bool`: is the single lepton isolated (true) or anti-
 
 ## `stpol.stable.event.costheta`
 
@@ -94,6 +93,10 @@ Angular variables associated with the Wtb vertex.
 
 * `lj`: the angle between the charged lepton and the b-jet in the spectator jet basis
 * `bl`: the angle in the eta-beamline basis
+
+## `stpol.stable.event.costheta_gen`
+
+As above, but with gen-level particles.
 
 ## Description of backends
 
