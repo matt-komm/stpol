@@ -1,7 +1,0 @@
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t/output_1_1_mCK.root
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t/output_2_1_gtH.root
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t/output_3_1_xWI.root
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t/output_4_1_4ED.root
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t/output_5_1_CaE.root
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t/output_6_1_Ept.root
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t/output_7_1_ZHr.root
