@@ -20,12 +20,12 @@ Contains methods that give information about an EDM-file. All methods take the f
 * `total_processed => int`: the total count of events processed before any filtering.
 * `sample_type => map(string => string)`: returns the sample type from the filename encoded in a map(dictionary) with the following keys:
 
-
-    `isolation`: "iso", "antiiso"
-    `systematic`: "nominal", "jes_up", "jer_down", ...
-    `sample`: "T_t_ToLeptons", "TTJets_FullLept", "SingleMu", ...
-    `tag`: "Oct3_123456..."
-
+~~~
+isolation: "iso", "antiiso"
+systematic: "nominal", "jes_up", "jer_down", ...
+sample: "T_t_ToLeptons", "TTJets_FullLept", "SingleMu", ...
+tag: "Oct3_123456..."
+~~~
 
 ## `stpol.stable.tchan.muon`
 
