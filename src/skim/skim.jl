@@ -3,6 +3,8 @@ using DataFrames
 using HDF5
 using JLD
 
+include("xs.jl")
+
 output_file = ARGS[1]
 
 flist = Any[]
@@ -23,9 +25,10 @@ df = similar(
             sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
             sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
             cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
-#            run=Int64[], lumi=Int64[], event=Int64[],
+            run=Int64[], lumi=Int64[], event=Int64[],
             fileindex=Int64[],
             passes=Bool[],
+            xsweight=Float32[],
             #fname=ASCIIString[]
         ),
         maxev
@@ -81,6 +84,26 @@ function either(a, b, n::Integer=1)
     end
 end
 
+#Loop over the lumi sections, get the total processed event count
+prfiles = similar(
+    DataFrame(
+        files=ASCIIString[],
+        total_processed=Int64[],
+        cls=Any[]
+    ),
+    length(flist)
+)
+
+i = 1
+for fi in flist
+    x = ROOT.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
+    prfiles[i, :files] = fi
+    prfiles[i, :total_processed] = x
+    prfiles[i, :cls] = sample_type(fi)
+    i += 1
+end
+
+#Loop over the events
 println("Beginning event loop")
 nproc = 0
 tic()
@@ -96,12 +119,15 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :passes] = false
 
-#    df[i, :run], df[i, :lumi], df[i, :event] = where(events)
+    df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     df[i, :fileindex] = where_file(events)
-    
+   
+    #number of events processed per this file
+    ntot = prfiles[df[i, :fileindex], :total_processed]
+
+
 #    df[i, :fname] = flist[df[i, :fileindex]]
     
-
     df[i, :lepton_pt], which_lepton = either(events[sources[:muon_Pt]], events[sources[:electron_Pt]])
 
     lepton_type = :neither
@@ -169,7 +195,6 @@ timeelapsed = @elapsed for i=1:maxev
         end
     end
 
-
     j = 1
     for (pt, eta, id, bd, ind) in sort(
         [z for z in zip(jet_pts, jet_etas, jet_ids, jet_bds, [1:length(jet_pts)])],
@@ -196,8 +221,8 @@ end
 println("processed $(nproc/timeelapsed) events/second")
 
 #Select only the events that have a lepton
-#mydf = df[with(df, :(passes)), :]
-mydf = df
+mydf = df[with(df, :(passes)), :]
+#mydf = df
 
 function writezipped_jld(fn, obj::DataFrame)
     fi = jldopen("$fn.jld", "w")
@@ -212,15 +237,6 @@ function writezipped_csv(fn, obj::DataFrame)
     run(`gzip -f9 $fn.csv`)
 end
 
-prfiles = DataFrame(files=ASCIIString[], total_processed=[])
-i = 1
-for fi in flist
-    x = ROOT.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
-    prfiles[i, :files] = fi
-    prfiles[i, :total_processed] = x
-    i += 1
-end
-
-writetable("$(output_file).csv", mydf)
+#writetable("$(output_file).csv", mydf)
 writetable("$(output_file)_processed.csv", prfiles)
 ROOT.writetree("$(output_file).root", mydf)
