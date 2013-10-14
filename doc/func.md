@@ -17,13 +17,15 @@ The return types are specified using `pt -> rettype`.
 
 Contains methods that give information about an EDM-file. All methods take the filename string as a single argument.
 
-* `total_processed => int`: the total count of events processed before any filtering
-* `sample_type => map(string => string)`: returns the sample type from the filename encoded in a map(dictionary) with the following keys
+* `total_processed => int`: the total count of events processed before any filtering.
+* `sample_type => map(string => string)`: returns the sample type from the filename encoded in a map(dictionary) with the following keys:
+
 
     `isolation`: "iso", "antiiso"
     `systematic`: "nominal", "jes_up", "jer_down", ...
     `sample`: "T_t_ToLeptons", "TTJets_FullLept", "SingleMu", ...
     `tag`: "Oct3_123456..."
+
 
 ## `stpol.stable.tchan.muon`
 
@@ -59,7 +61,7 @@ Contains methods that give information about an EDM-file. All methods take the f
 
 The (b-tagged) jet associated with the decay t -> W b
 
-* `pt, eta, phi, reliso -> float`
+* `pt, eta, phi, mass -> float`
 * `id -> int`: the gen-level particle id (Pythia scheme). In general assigned via the PAT mechanisms for parton flavour.
 * `dr -> float`: the ΔR with respect to the isolated lepton in the event
 * `pu_mvaid -> float`: the pile-up MVA id
@@ -75,6 +77,12 @@ See `stpol.stable.tchan.bjet` for the interface.
 
 Other spectator jets not associated with any leg in the t-channel diagram. Ordered by pt descending.
 See `stpol.stable.tchan.bjet` for the interface.
+
+## `stpol.stable.tchan.top`
+
+The reconstructed top quark associated with the t-channel diagram.
+
+* `pt, eta, phi, mass -> float`
 
 ## `stpol.stable.event`
 
