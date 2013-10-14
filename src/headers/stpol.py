@@ -5,14 +5,25 @@ import re
 PROCESS = "STPOLSEL2"
 
 #A placeholder for a missing value. NaN is good but not ideal.
+#In particular, it's only applicable for ints and some algorithms/libraries start behaving subtly wrong on NaN.
 NA = float("nan")
 
 def is_na(x):
-    if not isinstance(x, float) or isinstance(x, int):
+    """
+    Checks if a value was NA.
+    """
+
+    #check for non-primitive type
+    if not (isinstance(x, float) or isinstance(x, int)):
         return False
+
+    #check for NaN
     return x!=x
 
 def _int(x):
+    """
+    Convert value to int or NA
+    """
     if is_na(x):
         return NA
     else:
@@ -52,7 +63,7 @@ class SimpleHandle:
         try:
             events.getByLabel((self.label, self.instance, self.process), self.handle)
         except Exception as e:
-            exc = w
+            exc = e
             self.make_handle(self.dtype)
 
         if not exc and self.handle.isValid():
@@ -231,7 +242,7 @@ class Lepton(Getter):
 
 class Jet(Getter):
     def __init__(self, label):
-        for x in ["Pt", "Eta", "Phi", "partonFlavour", "Mass", "deltaR", "puMva", "bdiscriminatorCSV", "bdiscriminatorTCHP"]:
+        for x in ["Pt", "Eta", "Phi", "partonFlavour", "Mass", "deltaR", "puMva", "bDiscriminatorCSV", "bDiscriminatorTCHP"]:
             h = SimpleHandle("vfloat", label, x, PROCESS)
             setattr(self, "_"+x, h)
 
@@ -257,10 +268,10 @@ class Jet(Getter):
         return self._getval(events, "_puMva")
 
     def bd_csv(self, events):
-        return self._getval(events, "_bdiscriminatorCSV")
+        return self._getval(events, "_bDiscriminatorCSV")
 
     def bd_tchp(self, events):
-        return self._getval(events, "_bdiscriminatorTCHP")
+        return self._getval(events, "_bDiscriminatorTCHP")
 
 class Muon(Lepton):
     def __init__(self):
@@ -275,7 +286,7 @@ class stpol:
         event = Event()
         file = File()
 
-        class signal:
+        class tchan:
             muon = Muon()
             electron = Electron()
             bjet = Jet("highestBTagJetNTupleProducer")
