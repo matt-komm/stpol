@@ -25,7 +25,7 @@ echo 'done '\$?
     close(fi)
     println("Temp file is $fn")
     ofile = "$ofdir/slurm.out.$i" 
-    run(`sbatch -p phys,prio -J julia_job_test.$i -o $ofile $fn`)
+    run(`sbatch -p phys,prio,main -J julia_job_test.$i -o $ofile $fn`)
 end
 
 maxn = length(flist)
