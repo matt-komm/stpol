@@ -223,4 +223,4 @@ end
 
 writetable("$(output_file).csv", mydf)
 writetable("$(output_file)_processed.csv", prfiles)
-ROOT.writetree("tree.root", mydf)
+ROOT.writetree("$(output_file).root", mydf)
