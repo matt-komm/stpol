@@ -1,9 +1,11 @@
-
-flist = Any[]
+#run as julia sub.jl ofdir infile1.txt infile2.txt ...
 
 #output directory
 ofdir = ARGS[1]
 isdir(ofdir) || mkdir(ofdir)
+
+#input files
+flist = Any[]
 
 #input files
 for a in ARGS[2:]
