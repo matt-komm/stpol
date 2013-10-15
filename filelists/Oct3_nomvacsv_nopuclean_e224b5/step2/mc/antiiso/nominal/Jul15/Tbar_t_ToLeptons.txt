@@ -1,0 +1,11 @@
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_1_1_VlO.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_2_1_t9C.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_3_1_JmW.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_4_1_48t.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_5_1_LbQ.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_6_1_dun.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_7_1_CGs.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_8_1_n5z.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_9_1_O8G.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_10_1_949.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/antiiso/nominal/Tbar_t_ToLeptons/output_11_1_iiK.root

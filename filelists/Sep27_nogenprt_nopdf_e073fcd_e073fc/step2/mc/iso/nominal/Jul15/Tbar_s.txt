@@ -1,1 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/iso/nominal/Tbar_s/output_1_1_wzp.root

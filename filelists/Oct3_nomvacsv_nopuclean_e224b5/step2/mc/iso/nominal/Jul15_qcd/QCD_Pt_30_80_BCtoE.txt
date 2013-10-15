@@ -1,0 +1,8 @@
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/iso/nominal/QCD_Pt_30_80_BCtoE/output_1_1_KEW.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/iso/nominal/QCD_Pt_30_80_BCtoE/output_2_1_2o4.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/iso/nominal/QCD_Pt_30_80_BCtoE/output_3_1_NL3.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/iso/nominal/QCD_Pt_30_80_BCtoE/output_4_1_B8B.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/iso/nominal/QCD_Pt_30_80_BCtoE/output_5_1_x3b.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/iso/nominal/QCD_Pt_30_80_BCtoE/output_6_1_aIi.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/iso/nominal/QCD_Pt_30_80_BCtoE/output_7_1_2IB.root
+file:/hdfs/cms/store/user/joosep/Oct3_nomvacsv_nopuclean_e224b5/iso/nominal/QCD_Pt_30_80_BCtoE/output_8_1_7Zv.root

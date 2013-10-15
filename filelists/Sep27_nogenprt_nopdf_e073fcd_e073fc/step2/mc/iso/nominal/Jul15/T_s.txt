@@ -1,2 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/iso/nominal/T_s/output_1_1_frT.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/iso/nominal/T_s/output_2_1_1qs.root

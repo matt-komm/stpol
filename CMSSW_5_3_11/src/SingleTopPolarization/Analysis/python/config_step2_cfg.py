@@ -62,7 +62,7 @@ class Config(C):
         doLightJetRMSClean = False
 
         #Must be switched OFF for the sync!
-        doPUClean = True
+        doPUClean = False
 
         #source = "patJetsWithOwnRefNotOverlappingWithLeptonsForMEtUncertainty"
         source = "patJetsWithOwnRef"
@@ -70,7 +70,8 @@ class Config(C):
 
         class BTagDiscriminant:
             TCHP = "trackCountingHighPurBJetTags"
-            CSV_MVA = "combinedSecondaryVertexMVABJetTags"
+            CSV_MVA = "combinedSecondaryVertexMVABJetTags" #somehow now working any more (gives -1000)
+            CSV = "combinedSecondaryVertexBJetTags"
         class BTagWorkingPoint:
             TCHPT = "TCHPT"
             CSVT = "CSVT"
@@ -78,7 +79,7 @@ class Config(C):
 
             WP = {"TCHPT":3.41, "CSVT":0.898, "CSVM":0.679}
 
-        bTagDiscriminant = BTagDiscriminant.CSV_MVA
+        bTagDiscriminant = BTagDiscriminant.CSV
         bTagWorkingPoint = BTagWorkingPoint.CSVM
 
         @classmethod

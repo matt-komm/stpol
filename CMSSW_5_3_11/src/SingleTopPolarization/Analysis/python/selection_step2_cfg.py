@@ -395,7 +395,7 @@ def SingleTopStep2():
                     ["Mass", "mass"],
                     #["bDiscriminator", "bDiscriminator('%s')" % Config.Jets.bTagDiscriminant],
                     ["bDiscriminatorTCHP", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.TCHP],
-                    ["bDiscriminatorCSVMVA", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV_MVA],
+                    ["bDiscriminatorCSV", "bDiscriminator('%s')" % Config.Jets.BTagDiscriminant.CSV],
                     ["rms", userfloat('rms')],
                     ["partonFlavour", "partonFlavour()"],
                     ["area", "jetArea()"],

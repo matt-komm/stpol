@@ -1,4 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/iso/nominal/Tbar_tW/output_1_1_5Fw.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/iso/nominal/Tbar_tW/output_2_1_71o.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/iso/nominal/Tbar_tW/output_3_1_qTL.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/iso/nominal/Tbar_tW/output_4_1_6X5.root

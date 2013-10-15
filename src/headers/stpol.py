@@ -1,7 +1,5 @@
 from DataFormats.FWLite import Events, Handle, Lumis
 import numpy
-import re
-
 PROCESS = "STPOLSEL2"
 
 #A placeholder for a missing value. NaN is good but not ideal.
@@ -73,6 +71,34 @@ class SimpleHandle:
             #import pdb; pdb.set_trace()
             #raise ValueError("Could not get product: %s:%s:%s to handle %s" % (self.label, self.instance, self.process, self.handle))
 
+class Getter(object):
+    def _getval(self, events, name, n=0):
+        x = getattr(self, name).get(events)
+        dt = getattr(self, name).dtype
+
+        if is_na(x):
+            return NA
+
+        if (dt == "vfloat" or dt== "vdouble"):
+            if len(x)==n+1:
+                return x[n]
+            else:
+                return NA
+        elif dt == "int" or dt=="float" or dt=="double":
+            return self.bufconv(x, dt)
+        else:
+            raise TypeError("unhandled type: %s" % dt)
+
+    def bufconv(self, x, dt):
+        if dt=="int":
+            return numpy.frombuffer(x, "int32", 1)
+        elif dt=="float":
+            return numpy.frombuffer(x, "float32", 1)[0]
+        elif dt=="double":
+            return numpy.frombuffer(x, "float64", 1)[0]
+        else:
+            raise TypeError("unhandled type: %s" % dt)
+
 class File:
     def __init__(self):
         pass
@@ -110,33 +136,6 @@ class File:
             raise Exception("Could not match %s to pattern" % fn)
         return {"tag": tag, "isolation": iso, "systematic": syst, "sample": samp}
 
-class Getter(object):
-    def _getval(self, events, name, n=0):
-        x = getattr(self, name).get(events)
-        dt = getattr(self, name).dtype
-
-        if is_na(x):
-            return NA
-
-        if (dt == "vfloat" or dt== "vdouble"):
-            if len(x)==n+1:
-                return x[n]
-            else:
-                return NA
-        elif dt == "int" or dt=="float" or dt=="double":
-            return self.bufconv(x, dt)
-        else:
-            raise TypeError("unhandled type: %s" % dt)
-
-    def bufconv(self, x, dt):
-        if dt=="int":
-            return numpy.frombuffer(x, "int32", 1)
-        elif dt=="float":
-            return numpy.frombuffer(x, "float32", 1)[0]
-        elif dt=="double":
-            return numpy.frombuffer(x, "float64", 1)[0]
-        else:
-            raise TypeError("unhandled type: %s" % dt)
 
 
 class CosTheta(Getter):
@@ -199,13 +198,11 @@ class Event(Getter):
     def nelectrons(self, events):
         return _int(self._getval(events, "_nelectrons"))
 
-
-class Lepton(Getter):
-    def __init__(self, label, mtwlabel):
-        for x in ["Pt", "Eta", "relIso", "Phi", "pdgId"]:
+class Particle(Getter):
+    def __init__(self, label):
+        for x in ["Pt", "Eta", "Phi", "Mass"]:
             h = SimpleHandle("vfloat", label, x, PROCESS)
             setattr(self, "_"+x, h)
-        self._mtw = SimpleHandle("double", mtwlabel, "", PROCESS)
 
     def pt(self, events):
         """
@@ -225,6 +222,21 @@ class Lepton(Getter):
         """
         return self._getval(events, "_Phi")
 
+    def mass(self, events):
+        """
+        The mass of the particle.
+        """
+        return self._getval(events, "_Mass")
+
+
+class Lepton(Particle):
+    def __init__(self, label, mtwlabel):
+        Particle.__init__(self, label)
+        for x in ["relIso", "pdgId"]:
+            h = SimpleHandle("vfloat", label, x, PROCESS)
+            setattr(self, "_"+x, h)
+        self._mtw = SimpleHandle("double", mtwlabel, "", PROCESS)
+
     def iso(self, events):
         """
         The relative isolation of the lepton.
@@ -243,9 +255,10 @@ class Lepton(Getter):
         """
         return self._getval(events, "_mtw")
 
-class Jet(Getter):
+class Jet(Particle):
     def __init__(self, label):
-        for x in ["Pt", "Eta", "Phi", "partonFlavour", "Mass", "deltaR", "puMva", "bDiscriminatorCSV", "bDiscriminatorTCHP"]:
+        Particle.__init__(self, label)
+        for x in ["partonFlavour", "deltaR", "puMva", "bDiscriminatorCSV", "bDiscriminatorTCHP"]:
             h = SimpleHandle("vfloat", label, x, PROCESS)
             setattr(self, "_"+x, h)
 
@@ -278,22 +291,22 @@ class Jet(Getter):
 
 class Muon(Lepton):
     def __init__(self):
-        Lepton.__init__(self, "goodSignalMuonsNTupleProducer", "muAndMETMtW")
+        Lepton.__init__(self, "goodSignalMuonsNTupleProducer", "muMTW")
 
 class Electron(Lepton):
     def __init__(self):
-        Lepton.__init__(self, "goodSignalElectronsNTupleProducer", "eleAndMETMtW")
+        Lepton.__init__(self, "goodSignalElectronsNTupleProducer", "eleMTW")
 
 class stpol:
     class stable:
         event = Event()
         file = File()
-
         class tchan:
             muon = Muon()
             electron = Electron()
             bjet = Jet("highestBTagJetNTupleProducer")
             specjet1 = Jet("lowestBTagJetNTupleProducer")
+            top = Particle("recoTopNTupleProducer")
 
 def list_methods(obj):
     """

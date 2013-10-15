@@ -1,7 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/QCD_Pt_20_30_BCtoE/output_1_1_WIw.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/QCD_Pt_20_30_BCtoE/output_2_1_Oj9.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/QCD_Pt_20_30_BCtoE/output_3_1_peM.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/QCD_Pt_20_30_BCtoE/output_4_1_g8J.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/QCD_Pt_20_30_BCtoE/output_5_1_V0Z.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/QCD_Pt_20_30_BCtoE/output_6_1_YZb.root
-file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/QCD_Pt_20_30_BCtoE/output_7_1_fmq.root
