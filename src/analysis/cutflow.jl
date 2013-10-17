@@ -19,9 +19,10 @@ new_results() = DataFrame(
     jet=Int32[0], rms=Int32[0], tag=Int32[0]
 )
 
-res = Dict()
 
 function process_file(fi)
+    res = Dict()
+
     md = readtable(metadata(fi))
 
     for i=1:nrow(md)
@@ -81,6 +82,8 @@ end #everywhere
 
 results = pmap(process_file, flist)
 
+println(results)
+
 total_results = Dict()
 for resd in results
     for (sample, resdf) in resd
@@ -96,7 +99,7 @@ for (sample, res) in total_results
     println(sample)
     xsweight = cross_sections[string(sample)] * lumi / res[1, :generated]
     res["xsweight"] = [xsweight]
-    res["samp"] = DataVector[symbol(sample)]
+    res["samp"] = DataVector[string(sample)]
 end
 
 results = rbind([v for (k,v) in total_results])
