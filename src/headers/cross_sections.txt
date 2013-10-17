@@ -24,7 +24,7 @@ sample, xs
 "W4Jets_exclusive", 264.04361842105266
 
 #http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa
-"WJets_sherpa", 1.1169030415917688e-11
+"WJets_sherpa", 104592.84641774505
 
 #http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=*GJets_HT-*_8TeV-madgraph*
 #200To400

@@ -1,3 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/Tbar_t_ToLeptons_mass166_5/output_1_1_xO8.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/Tbar_t_ToLeptons_mass166_5/output_2_1_KnT.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/Tbar_t_ToLeptons_mass166_5/output_3_1_kqR.root

@@ -1,2 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBTauNu_anomWtb-unphys_t-channel/output_1_1_BJP.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBTauNu_anomWtb-unphys_t-channel/output_2_1_2hB.root

@@ -1,2 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnUp/T_tW/output_1_1_qKg.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnUp/T_tW/output_2_1_R7v.root

@@ -1,2 +1,0 @@
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/T_tW/output_1_1_eTs.root
-file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnDown/T_tW/output_2_1_B43.root

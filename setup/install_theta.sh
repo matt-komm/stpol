@@ -1,7 +1,8 @@
 #!/bin/bash
 
 echo "Setting up theta"
-cd $STPOL_DIR
+mkdir -p $STPOL_DIR/local
+cd $STPOL_DIR/local
 svn co https://ekptrac.physik.uni-karlsruhe.de/public/theta/tags/testing theta
 cd theta
 make -j16
