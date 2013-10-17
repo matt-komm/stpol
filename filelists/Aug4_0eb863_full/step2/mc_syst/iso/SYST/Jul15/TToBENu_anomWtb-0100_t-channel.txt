@@ -1,2 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_1_1_wJY.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_2_1_xba.root

@@ -1,4 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_250_350_BCtoE/output_1_1_dw1.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_250_350_BCtoE/output_2_1_ANn.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_250_350_BCtoE/output_3_1_oUC.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_250_350_BCtoE/output_4_1_sKr.root

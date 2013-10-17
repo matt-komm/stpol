@@ -1,2 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_c6a4b11/iso/nominal/Tbar_tW/output_1_1_kZm.root
-file:/hdfs/cms/store/user/joosep/Aug4_c6a4b11/iso/nominal/Tbar_tW/output_2_1_6kd.root

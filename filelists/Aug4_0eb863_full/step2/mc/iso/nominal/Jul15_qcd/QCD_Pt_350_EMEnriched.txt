@@ -1,7 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_350_EMEnriched/output_1_1_rRG.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_350_EMEnriched/output_2_1_C0d.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_350_EMEnriched/output_3_1_LYQ.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_350_EMEnriched/output_4_1_2rp.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_350_EMEnriched/output_5_1_XAn.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_350_EMEnriched/output_6_1_N8I.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/nominal/QCD_Pt_350_EMEnriched/output_7_1_heQ.root

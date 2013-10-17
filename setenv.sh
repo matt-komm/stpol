@@ -23,9 +23,9 @@ export local_dbs_url=https://cmsdbsprod.cern.ch:8443/cms_dbs_ph_analysis_02_writ
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/mvatools:$STPOL_DIR/local/lib/python2.6/site-packages/:$STPOL_DIR/local/lib/python2.7/site-packages/
 
 #Add QCD estimation stuff
-#FIXME: this is probably not really necessary
+#FIXME: this is probably not really necessary, and should actually be considered harmful
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/qcd_estimation/
-PYTHONPATH=$PYTHONPATH:$STPOL_DIR/theta/utils2/
+PYTHONPATH=$PYTHONPATH:$STPOL_DIR/local/theta/utils2/
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/final_fit/
 PYTHONPATH=$PYTHONPATH:$STPOL_DIR/src/
 
