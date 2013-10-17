@@ -20,9 +20,15 @@ processed_files = DataFrame(files=flist)
 df = similar(
         DataFrame(
             lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[],
+
             bjet_pt=Float32[], bjet_eta=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
-            ljet_pt=Float32[], ljet_eta=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[],
+            
+            ljet_pt=Float32[], ljet_eta=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[],
+            
+            hlt=Bool[],
+            
             sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
+            
             sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
             cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
             run=Int64[], lumi=Int64[], event=Int64[],
@@ -47,7 +53,7 @@ for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId]
 end
 
 #jets
-for s in [:Pt, :Eta, :Phi, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP]
+for s in [:Pt, :Eta, :Phi, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms]
     sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:jets, s)] = Source(:goodJetsNTupleProducer, s, :STPOLSEL2)
@@ -60,6 +66,19 @@ sources[part(:electron, :mtw)] = Source(:eleMTW, symbol(""), :STPOLSEL2, Float64
 sources[:njets] = Source(:goodJetCount, symbol(""), :STPOLSEL2, Int32)
 sources[:ntags] = Source(:bJetCount, symbol(""), :STPOLSEL2, Int32)
 
+const hlts = ASCIIString[
+    "HLT_IsoMu24_eta2p1_v11",
+    "HLT_IsoMu24_eta2p1_v12",
+    "HLT_IsoMu24_eta2p1_v13",
+    "HLT_IsoMu24_eta2p1_v14",
+    "HLT_IsoMu24_eta2p1_v15",
+    "HLT_IsoMu24_eta2p1_v17",
+    "HLT_IsoMu24_eta2p1_v16",
+    "HLT_Ele27_WP80_v8",
+    "HLT_Ele27_WP80_v9",
+    "HLT_Ele27_WP80_v10",
+    "HLT_Ele27_WP80_v11",
+]
 
 function ifpresent(arr, n::Integer=1)
     if all(isna(arr)) 
@@ -118,6 +137,8 @@ timeelapsed = @elapsed for i=1:maxev
     to!(events, i)
 
     df[i, :passes] = false
+    
+    df[i, :hlt] = passes_hlt(events, hlts) 
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     df[i, :fileindex] = where_file(events)
@@ -174,6 +195,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_id] = events[sources[:ljet_partonFlavour]] |> ifpresent
     df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
+    df[i, :ljet_rms] = events[sources[:ljet_rms]] |> ifpresent
     
     df[i, :cos_theta] = events[sources[:cos_theta]]
 
