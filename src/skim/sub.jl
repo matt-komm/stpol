@@ -1,4 +1,6 @@
 #run as julia sub.jl ofdir infile1.txt infile2.txt ...
+println("running sub.jl")
+Base.versioninfo()
 
 #output directory
 ofdir = ARGS[1]
@@ -39,8 +41,15 @@ echo 'done '\$?
     
     #run sbatch
     #println("Temp file is $fn")
-    ofile = "$ofdir/slurm.out.$i" 
-    run(`sbatch -p phys,prio,main -J julia_job_test.$i -o $ofile $fn`)
+    ofile = "$ofdir/slurm.out.$i"
+    while true
+        try
+            run(`sbatch -p phys,prio,main -J julia_job_test.$i -o $ofile $fn`)
+            break
+        catch e
+            println(e)
+        end
+    end
 end
 
 #split a job(file list) into either 10 pieces or 50-file pieces, whichever is smaller
@@ -59,4 +68,5 @@ for n=1:N
     #submit
     println(n, " ", r.start)
     submit(flist[r], "output_$n", n)
+    sleep(0.5)
 end
