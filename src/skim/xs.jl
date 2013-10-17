@@ -18,6 +18,7 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
     else
         tag = m.captures[2]
         iso = m.captures[3]
+
         syst = m.captures[4]
         samp = m.captures[5]
     end
