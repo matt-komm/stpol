@@ -44,4 +44,3 @@ cross_sections = Dict{String, Float64}()
 for i=1:nrow(df)
     cross_sections[df[i, 1]] = df[i, 2]
 end
-#cross_sections = pyimport("plots.common.cross_sections")[:xs]
