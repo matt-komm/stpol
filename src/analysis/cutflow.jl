@@ -103,8 +103,9 @@ for (sample, res) in total_results
 end
 
 results = rbind([v for (k,v) in total_results])
-#writetable("results.txt", results)
 show(results)
+writetable("results_$sym.txt", results, separator=',')
+
 
 
 #println("cross-section normalizations for lumi $lumi/pb")
