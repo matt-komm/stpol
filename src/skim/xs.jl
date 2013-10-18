@@ -22,7 +22,7 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
         syst = m.captures[4]
         samp = m.captures[5]
     end
-    return {:tag => tag, :iso => iso, :systematic => syst, :sample => samp}
+    return {:tag => string(tag), :iso => string(iso), :systematic => string(syst), :sample => string(samp)}
 end
 
 function data_cls(fn)
