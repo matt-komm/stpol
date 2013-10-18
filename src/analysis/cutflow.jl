@@ -39,6 +39,11 @@ function process_file(fi)
         findex = df[i, :fileindex]
         cls = sample_type(md[findex, :files])
         sample = cls[:sample] 
+
+        if !(string(cls[:iso]) == "iso")
+
+            continue
+        end
         
         res[sample][1, :all] += 1
         
