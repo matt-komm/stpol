@@ -26,13 +26,13 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
 end
 
 function data_cls(fn)
-    if contains(fn, "iso/SingleMu")
+    if contains(fn, "/iso/SingleMu")
         return (:iso, :SingleMu)
-    elseif contains(fn, "antiiso/SingleMu")
+    elseif contains(fn, "/antiiso/SingleMu")
         return (:antiiso, :SingleMu)
-    elseif contains(fn, "iso/SingleEle")
+    elseif contains(fn, "/iso/SingleEle")
         return (:iso, :SingleEle)
-    elseif contains(fn, "antiiso/SingleEle")
+    elseif contains(fn, "/antiiso/SingleEle")
         return (:antiiso, :SingleMu)
     end 
     return nothing
