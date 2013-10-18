@@ -1,3 +1,6 @@
+#julia skim.jl ofdir infiles.txt
+
+print("hostname $(gethostname())")
 using ROOT
 using DataFrames
 using HDF5
@@ -10,13 +13,25 @@ output_file = ARGS[1]
 flist = Any[]
 append!(flist, ARGS[2:])
 
-events = Events(convert(Vector{ASCIIString}, flist))
+events = nothing
+while true
+    try
+        events = Events(convert(Vector{ASCIIString}, flist))
+        break
+    catch e
+        warn(e)
+    end
+end
 
-list_branches(events)
+#list_branches(events) 
 
-maxev = length(events)
+maxev = length(events) 
+println("running over $maxev events")
 
+#metadata
 processed_files = DataFrame(files=flist)
+
+#events
 df = similar(
         DataFrame(
             lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[], lepton_charge=Int32[],
