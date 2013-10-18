@@ -12,7 +12,7 @@ def cmsrun(*args):
 
 class TestStep2(TestCase):
     andir = os.path.join(stpol_dir, "CMSSW_5_3_11/src/SingleTopPolarization/Analysis/python")
-    ofdir = os.path.join(stpol_dir, "out/testing")
+    ofdir = os.path.join(stpol_dir, "results/tests")
 
     def setUp(self):
         pass

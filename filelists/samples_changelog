@@ -1,4 +1,4 @@
-Sample: filelists/Oct3_nomvacsv_nopuclean_e224b5
+Sample: filelists/Oct3_nomvacsv_nopuclean_e224b5, filelists/Oct3.txt
 step2: step2
 parent: datasets/step2/data/Jul15, Aug1, datasets/step2/mc*/Jul15
 Explanation: Removed gen particles, changed b-tagger to CSV

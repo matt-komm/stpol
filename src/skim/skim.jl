@@ -28,7 +28,7 @@ df = similar(
             run=Int64[], lumi=Int64[], event=Int64[],
             fileindex=Int64[],
             passes=Bool[],
-            xsweight=Float32[],
+            xs=Float32[], nproc=Int64[],
             #fname=ASCIIString[]
         ),
         maxev
@@ -121,10 +121,13 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     df[i, :fileindex] = where_file(events)
-   
-    #number of events processed per this file
-    ntot = prfiles[df[i, :fileindex], :total_processed]
+    findex = df[i, :fileindex]
+    
+    sample = prfiles[findex, :cls][:sample]
 
+    #fill the file-level metadata
+    df[i, :xs] = haskey(cross_sections, sample) ? cross_sections[sample] : NA
+    df[i, :nproc] = prfiles[findex, :total_processed]
 
 #    df[i, :fname] = flist[df[i, :fileindex]]
     

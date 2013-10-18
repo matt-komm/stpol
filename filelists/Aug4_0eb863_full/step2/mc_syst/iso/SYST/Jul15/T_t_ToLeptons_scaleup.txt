@@ -1,7 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/T_t_ToLeptons_scaleup/output_1_1_80x.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/T_t_ToLeptons_scaleup/output_2_1_7G6.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/T_t_ToLeptons_scaleup/output_3_1_vYP.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/T_t_ToLeptons_scaleup/output_4_1_W7f.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/T_t_ToLeptons_scaleup/output_5_1_CUs.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/T_t_ToLeptons_scaleup/output_6_1_JFO.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/T_t_ToLeptons_scaleup/output_7_1_LDP.root

@@ -1,2 +1,0 @@
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_tW/output_1_1_E3b.root
-file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/EnDown/Tbar_tW/output_2_1_h4d.root
