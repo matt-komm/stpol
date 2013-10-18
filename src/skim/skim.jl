@@ -19,7 +19,7 @@ maxev = length(events)
 processed_files = DataFrame(files=flist)
 df = similar(
         DataFrame(
-            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[],
+            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[], lepton_charge=Int32[],
 
             bjet_pt=Float32[], bjet_eta=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
             
@@ -46,8 +46,9 @@ function part(x, y)
     return symbol(string(x, "_", y))
 end
 
+#see selection_step2_cfg.py for possible inputs
 #leptons
-for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId]
+for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId, :Charge]
     sources[part(:muon, s)] = Source(:goodSignalMuonsNTupleProducer, s, :STPOLSEL2)
     sources[part(:electron, s)] = Source(:goodSignalElectronsNTupleProducer, s, :STPOLSEL2)
 end
@@ -125,12 +126,19 @@ end
 #Loop over the events
 println("Beginning event loop")
 nproc = 0
+
+fails = {
+    :lepton => 0,
+    :met => 0,
+    :jet => 0,
+}
+
 tic()
 timeelapsed = @elapsed for i=1:maxev
     nproc += 1
 
-    if nproc%(floor(maxev/20)) == 0
-        println("$nproc ($(floor(nproc/maxev*100.0))%) events processed")
+    if nproc%(ceil(maxev/20)) == 0
+        println("$nproc ($(ceil(nproc/maxev*100.0))%) events processed")
         toc()
         tic()
     end
@@ -164,34 +172,43 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :lepton_type] = string(lepton_type)
 
     if which_lepton == :neither
-        df[i, :passes] = false
+        fails[:lepton] += 1
         continue
     end
 
-    df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]][1]
-    df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]][1]
-    df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]][1]
+    df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
+    df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
+    df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]] |> ifpresent
+    df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
     df[i, :mtw] = events[sources[part(lepton_type, :mtw)]]
-    df[i, :met] = ifpresent(events[sources[:met]])
+    df[i, :met] = events[sources[:met]] |> ifpresent
+   
+    if (isna(df[i, :met]) || isna(df[i, :mtw]))
+        fails[:met] += 1
+        continue
+    end
+    if  (lepton_type == :muon && df[i, :mtw] < 40.0) ||
+        (lepton_type == :electron && df[i, :met] < 40.0)
+        fails[:met] += 1
+        continue
+    end
 
     df[i, :njets] = events[sources[:njets]]
     df[i, :ntags] = events[sources[:ntags]]
     
-    if !(df[i, :njets] >= 2 && df[i, :ntags] >= 0)
-        df[i, :passes] = false
+    if !(df[i, :njets] == 2)
+        fails[:jet] += 1
         continue
     end
 
     df[i, :bjet_pt] = events[sources[:bjet_Pt]] |> ifpresent
     df[i, :bjet_eta] = events[sources[:bjet_Eta]] |> ifpresent
-    #df[i, :bjet_phi] = events[sources[:bjet_Phi]]
     df[i, :bjet_id] = events[sources[:bjet_partonFlavour]] |> ifpresent
     df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
 
     df[i, :ljet_pt] = events[sources[:ljet_Pt]] |> ifpresent
     df[i, :ljet_eta] = events[sources[:ljet_Eta]] |> ifpresent
-    #df[i, :ljet_phi] = events[sources[:ljet_Phi]]
     df[i, :ljet_id] = events[sources[:ljet_partonFlavour]] |> ifpresent
     df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
@@ -200,68 +217,55 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :cos_theta] = events[sources[:cos_theta]]
 
     jet_pts = events[sources[part(:jets, :Pt)]]
-    ispresent(jet_pts) || continue
     jet_etas = events[sources[part(:jets, :Eta)]]
-    ispresent(jet_etas) || continue
     jet_ids  = events[sources[part(:jets, :partonFlavour)]]
-    ispresent(jet_ids) || continue
     jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
-    ispresent(jet_bds) || continue
+    
+    if all(map(ispresent, Any[jet_pts, jet_etas, jet_ids, jet_bds]))
+        #get the indices of the b-tagged jet and the light jet
+        indb = find(x -> abs(x-df[i, :bjet_pt])<eps(x), jet_pts)[1]
+        indl = find(x -> abs(x-df[i, :ljet_pt])<eps(x), jet_pts)[1]
 
-    #get the indices of the b-tagged jet and the light jet
-    indb = find(x -> abs(x-df[i, :bjet_pt])<eps(x), jet_pts)[1]
-    indl = find(x -> abs(x-df[i, :ljet_pt])<eps(x), jet_pts)[1]
-
-    #get the indices of the other jets
-    specinds = Int64[]
-    for k=1:length(jet_pts)
-        if k!=indb && k!=indl
-            push!(specinds, k)
+        #get the indices of the other jets
+        specinds = Int64[]
+        for k=1:length(jet_pts)
+            if k!=indb && k!=indl
+                push!(specinds, k)
+            end
         end
-    end
 
-    j = 1
-    for (pt, eta, id, bd, ind) in sort(
-        [z for z in zip(jet_pts, jet_etas, jet_ids, jet_bds, [1:length(jet_pts)])],
-        rev=true
-    )
-        if (ind in specinds)
-            df[i, symbol("sjet$(j)_pt")] = pt
-            df[i, symbol("sjet$(j)_eta")] = eta
-            df[i, symbol("sjet$(j)_id")] = id
-            df[i, symbol("sjet$(j)_bd")] = bd
-            
-            if j==2
-                break
-            else
-                j += 1
+        #get all the other jets
+        #order by pt-descending
+        j = 1
+        for (pt, eta, id, bd, ind) in sort(
+            [z for z in zip(jet_pts, jet_etas, jet_ids, jet_bds, [1:length(jet_pts)])],
+            rev=true
+        )
+            #is a 'spectator jet'
+            if (ind in specinds)
+                df[i, symbol("sjet$(j)_pt")] = pt
+                df[i, symbol("sjet$(j)_eta")] = eta
+                df[i, symbol("sjet$(j)_id")] = id
+                df[i, symbol("sjet$(j)_bd")] = bd
+                
+                #up to two
+                if j==2
+                    break
+                else
+                    j += 1
+                end
             end
         end
     end
-
-    #println(join(pts, ","), "|", df[i, :bjet_pt], "|", df[i, :ljet_pt], ":",indb, ":", indl)
     df[i, :passes] = true
 end
 
 println("processed $(nproc/timeelapsed) events/second")
 
-#Select only the events that have a lepton
+#Select only the events that actually pass
 mydf = df[with(df, :(passes)), :]
-#mydf = df
+println("total rows = $(nrow(mydf))")
+println("failure reasons: $fails")
 
-function writezipped_jld(fn, obj::DataFrame)
-    fi = jldopen("$fn.jld", "w")
-    write(fi, "stpol_events", obj)
-    write(fi, "processed_files", flist)
-    close(fi)
-    run(`gzip -f9 $fn.jld`)
-end
-
-function writezipped_csv(fn, obj::DataFrame)
-    writetable("$fn.csv", obj)
-    run(`gzip -f9 $fn.csv`)
-end
-
-#writetable("$(output_file).csv", mydf)
 writetable("$(output_file)_processed.csv", prfiles)
-ROOT.writetree("$(output_file).root", mydf)
+writetree("$(output_file).root", mydf)
