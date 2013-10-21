@@ -1,6 +1,6 @@
 #julia skim.jl ofdir infiles.txt
 
-print("hostname $(gethostname())")
+println("hostname $(gethostname())")
 using ROOT
 using DataFrames
 using HDF5
@@ -9,6 +9,7 @@ using JLD
 include("xs.jl")
 
 output_file = ARGS[1]
+#iswritable(output_file) || error("output file $output_file is not writeable")
 
 flist = Any[]
 append!(flist, ARGS[2:])
@@ -186,6 +187,7 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :lepton_type] = string(lepton_type)
 
+    #event had no lepton
     if which_lepton == :neither
         fails[:lepton] += 1
         continue
@@ -197,20 +199,25 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
     df[i, :mtw] = events[sources[part(lepton_type, :mtw)]]
     df[i, :met] = events[sources[:met]] |> ifpresent
-   
+  
+    #event had no MET
     if (isna(df[i, :met]) || isna(df[i, :mtw]))
         fails[:met] += 1
         continue
     end
+
+    #check for muon/electron and mtw/met
     if  (lepton_type == :muon && df[i, :mtw] < 40.0) ||
         (lepton_type == :electron && df[i, :met] < 40.0)
         fails[:met] += 1
         continue
     end
-
+    
+    #get jet, tag
     df[i, :njets] = events[sources[:njets]]
     df[i, :ntags] = events[sources[:ntags]]
     
+    #check for 2 jets
     if !(df[i, :njets] == 2)
         fails[:jet] += 1
         continue
@@ -231,7 +238,11 @@ timeelapsed = @elapsed for i=1:maxev
     
     df[i, :cos_theta] = events[sources[:cos_theta]]
 
+    #get all jets
     jet_pts = events[sources[part(:jets, :Pt)]]
+    if !ispresent(jet_pts) || length(jet_pts)==0
+        continue
+    end
     jet_etas = events[sources[part(:jets, :Eta)]]
     jet_ids  = events[sources[part(:jets, :partonFlavour)]]
     jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
