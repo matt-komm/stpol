@@ -85,9 +85,9 @@ end
 
 end #everywhere
 
-results = pmap(process_file, flist)
-
-println(results)
+el = @elapsed results = pmap(process_file, flist)
+speed = length(flist)/el
+println("Processed $(length(flist)) files, $speed per sec")
 
 total_results = Dict()
 for resd in results
@@ -101,7 +101,6 @@ end
 
 lumi=19600
 for (sample, res) in total_results
-    println(sample)
     xsweight = cross_sections[string(sample)] * lumi / res[1, :generated]
     res["xsweight"] = [xsweight]
     res["samp"] = DataVector[string(sample)]
@@ -110,41 +109,3 @@ end
 results = rbind([v for (k,v) in total_results])
 show(results)
 writetable("results_$sym.txt", results, separator=',')
-
-
-
-#println("cross-section normalizations for lumi $lumi/pb")
-#xsnorm = Dict()
-#for (sampn, res) in total_results
-#    xsnorm[sampn] = cross_sections[string(sampn)] * lumi / res.total_processed
-#    println("   $sampn: $(xsnorm[sampn])")
-#end
-#
-#merged_results = Dict()
-#procs = {
-#    :tchan => [:T_t_ToLeptons, :Tbar_t_ToLeptons],
-#    :wjets => [:W1Jets_exclusive, :W2Jets_exclusive, :W3Jets_exclusive, :W4Jets_exclusive],
-#}
-#
-#for (procname, subprocs) in procs
-#    merged_results 
-#    for subp in subprocs
-#        total_results[subp]
-#    end
-#end
-
-
-
-
-#println("cutflow")
-#samples = keys(cutflow[:nproc])
-#for x in [:nproc, :all, :hlt, :muon, :met, :jet, :rms, :tag]
-#    tot = 0
-#    for subpr in procs[sym]
-#        tot += cutflow[x][string(subpr)]*xsnorm[string(subpr)]
-#    end
-#    println("   $x $proc $tot")
-#end
-#
-#
-#
