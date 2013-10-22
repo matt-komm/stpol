@@ -1,4 +1,6 @@
-#julia skim.jl ofdir infiles.txt
+#julia skim.jl ofile infiles.txt
+#runs a skim/event loop on EDM files on a single core
+tstart = time()
 
 println("hostname $(gethostname())")
 using ROOT
@@ -35,23 +37,29 @@ processed_files = DataFrame(files=flist)
 #events
 df = similar(
         DataFrame(
-            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[], lepton_charge=Int32[],
-
-            bjet_pt=Float32[], bjet_eta=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
-            
-            ljet_pt=Float32[], ljet_eta=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[],
-            
             hlt=Bool[],
             
+            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[], lepton_charge=Int32[],
+
+#jets associated with t-channel
+            bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
+            ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[],
+
+#spectator jets
             sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
-            
             sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
-            cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
+
+#event-level characteristics
+            cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[], centrality=Float32[],
+            top_mass=Float32[],
+
+#file-level metadata
             run=Int64[], lumi=Int64[], event=Int64[],
             fileindex=Int64[],
             passes=Bool[],
-            xs=Float32[], nproc=Int64[],
-            #fname=ASCIIString[]
+
+#            xs=Float32[], nproc=Int64[],
+#            fname=ASCIIString[]
         ),
         maxev
 )
@@ -70,7 +78,7 @@ for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId, :Charge]
 end
 
 #jets
-for s in [:Pt, :Eta, :Phi, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms]
+for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms]
     sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:jets, s)] = Source(:goodJetsNTupleProducer, s, :STPOLSEL2)
@@ -82,6 +90,11 @@ sources[part(:muon, :mtw)] = Source(:muMTW, symbol(""), :STPOLSEL2, Float64)
 sources[part(:electron, :mtw)] = Source(:eleMTW, symbol(""), :STPOLSEL2, Float64)
 sources[:njets] = Source(:goodJetCount, symbol(""), :STPOLSEL2, Int32)
 sources[:ntags] = Source(:bJetCount, symbol(""), :STPOLSEL2, Int32)
+
+sources[part(:top, :mass)] = Source(:recoTopNTupleProducer, :Mass, :STPOLSEL2)
+
+#FIXME: circularity -> centrality
+sources[:centrality] = Source(:eventShapeVars, :circularity, :STPOLSEL2, Float64)
 
 const hlts = ASCIIString[
     "HLT_IsoMu24_eta2p1_v11",
@@ -170,9 +183,9 @@ timeelapsed = @elapsed for i=1:maxev
     
     sample = prfiles[findex, :cls][:sample]
 
-    #fill the file-level metadata
-    df[i, :xs] = haskey(cross_sections, sample) ? cross_sections[sample] : NA
-    df[i, :nproc] = prfiles[findex, :total_processed]
+#    #fill the file-level metadata
+#    df[i, :xs] = haskey(cross_sections, sample) ? cross_sections[sample] : NA
+#    df[i, :nproc] = prfiles[findex, :total_processed]
 
 #    df[i, :fname] = flist[df[i, :fileindex]]
     
@@ -225,12 +238,14 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :bjet_pt] = events[sources[:bjet_Pt]] |> ifpresent
     df[i, :bjet_eta] = events[sources[:bjet_Eta]] |> ifpresent
+    df[i, :bjet_mass] = events[sources[:bjet_Mass]] |> ifpresent
     df[i, :bjet_id] = events[sources[:bjet_partonFlavour]] |> ifpresent
     df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
 
     df[i, :ljet_pt] = events[sources[:ljet_Pt]] |> ifpresent
     df[i, :ljet_eta] = events[sources[:ljet_Eta]] |> ifpresent
+    df[i, :ljet_mass] = events[sources[:ljet_Mass]] |> ifpresent
     df[i, :ljet_id] = events[sources[:ljet_partonFlavour]] |> ifpresent
     df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
@@ -283,15 +298,26 @@ timeelapsed = @elapsed for i=1:maxev
             end
         end
     end
+
+    df[i, :centrality] = events[sources[:centrality]]
+    df[i, :top_mass] = events[sources[part(:top, :mass)]] |> ifpresent
+
     df[i, :passes] = true
 end
 
 println("processed $(nproc/timeelapsed) events/second")
 
+
 #Select only the events that actually pass
 mydf = df[with(df, :(passes)), :]
+describe(mydf)
 println("total rows = $(nrow(mydf))")
 println("failure reasons: $fails")
 
+#save output
 writetable("$(output_file)_processed.csv", prfiles)
 writetree("$(output_file).root", mydf)
+
+tend = time()
+ttot = tend-tstart
+println("total script time $ttot seconds")
