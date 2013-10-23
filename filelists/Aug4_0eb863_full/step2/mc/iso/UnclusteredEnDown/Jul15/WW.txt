@@ -1,0 +1,17 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_1_1_lXs.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_2_2_9iA.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_3_2_Bdx.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_4_1_lqN.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_5_1_PI7.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_6_1_G8p.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_7_2_8qc.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_8_2_4vD.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_9_1_q14.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_10_1_1D1.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_11_2_uNE.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_12_2_fil.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_13_1_aBx.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_14_2_veY.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_15_2_oQc.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_16_2_yIF.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/UnclusteredEnDown/WW/output_17_2_Ezi.root

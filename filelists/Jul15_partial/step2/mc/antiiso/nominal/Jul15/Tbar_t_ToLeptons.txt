@@ -1,0 +1,6 @@
+file:/hdfs/cms/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t_ToLeptons/output_1_1_2Zj.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t_ToLeptons/output_2_1_dlm.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t_ToLeptons/output_3_1_bbv.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t_ToLeptons/output_4_2_OcB.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t_ToLeptons/output_5_1_nYT.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/antiiso/nominal/Tbar_t_ToLeptons/output_6_3_DCh.root

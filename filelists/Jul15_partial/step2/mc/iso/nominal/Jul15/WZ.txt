@@ -1,0 +1,17 @@
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_1_1_hAk.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_2_1_qMF.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_3_1_mWm.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_4_1_jsa.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_5_1_yqm.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_6_2_HpM.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_7_1_bAX.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_8_1_YST.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_9_1_nA9.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_10_2_J27.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_11_1_wjH.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_12_1_Oxo.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_13_1_ryw.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_14_1_Nln.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_15_1_Oqk.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_16_2_twI.root
+file:/hdfs/cms/store/user/joosep/Jul15_partial/iso/nominal/WZ/output_17_1_CxM.root

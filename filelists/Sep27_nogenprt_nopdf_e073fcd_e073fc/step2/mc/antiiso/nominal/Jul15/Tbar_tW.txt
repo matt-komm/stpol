@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/Tbar_tW/output_1_1_nYB.root
+file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/Tbar_tW/output_2_1_f7f.root
+file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/Tbar_tW/output_3_1_Irw.root
+file:/hdfs/cms/store/user/joosep/Sep27_nogenprt_nopdf_e073fcd_e073fc/antiiso/nominal/Tbar_tW/output_4_1_TYm.root

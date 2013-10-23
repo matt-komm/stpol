@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/Tbar_t_scaledown/output_1_1_Q7l.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/Tbar_t_scaledown/output_2_1_yuE.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/Tbar_t_scaledown/output_3_3_FEq.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/SYST/Tbar_t_scaledown/output_4_1_5eW.root

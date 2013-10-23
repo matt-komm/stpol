@@ -1,0 +1,6 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t_ToLeptons/output_1_1_UeN.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t_ToLeptons/output_2_2_mJZ.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t_ToLeptons/output_3_1_7Ei.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t_ToLeptons/output_4_1_hzD.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t_ToLeptons/output_5_1_lqz.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/ResUp/Tbar_t_ToLeptons/output_6_1_ERV.root

@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBENu_t-channel/output_1_1_2I2.root
+file:/hdfs/cms/store/user/joosep/Aug4_0eb863_full/iso/SYST/TToBENu_t-channel/output_2_1_SvT.root
