@@ -21,6 +21,7 @@ using Hist
 include("../skim/xs.jl")
 
 metadata(fn) = replace(fn, ".root", "_processed.csv")
+mva1(fn) = replace(fn, ".root", "_mva1.csv")
 
 emptyres() = Dict()
 
@@ -70,7 +71,9 @@ function process_file(fi)
             res["$(sample)/cos_theta"] = Histogram(60, -1, 1)
             res["$(sample)/abs_eta_lj"] = Histogram(60, 0, 5)
             res["$(sample)/eta_lj"] = Histogram(60, -5, 5)
+            res["$(sample)/generated"] = 0
         end
+        res["$(sample)/generated"] = md[i, :total_processed]
     end
 
     #loop over events
@@ -102,12 +105,28 @@ end
 
 end #everywhere
 
+#map processing over files, reduce via addition
 results = reduce(+, emptyres(), pmap(process_file, flist))
 
+#save histograms
+hmetadata = Dict()
 for (k, v) in results
-    p = "hists/$k.txt"
+    p = "hists/$k.csv"
     mkpath(dirname(p))
-    writetable(p, todf(v), separator=',')
+    println("saving $k:$(typeof(v))")
+    if typeof(v) <: Histogram
+        writetable(p, todf(v), separator=',')
+    else
+        hmetadata[k] = v
+    end
 end
 
-#writetable("hist.txt", todf(results), separator=',')
+#save histogram metadata
+hmetadata_df = similar(DataFrame(key=String[], value=Any[]), length(hmetadata))
+i = 1
+for (k, v) in hmetadata
+    hmetadata_df[i, :key] = k
+    hmetadata_df[i, :value] = v
+    i += 1
+end
+writetable("hists/metadata.csv", hmetadata_df, separator=',')
