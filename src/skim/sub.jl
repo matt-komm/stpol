@@ -3,7 +3,7 @@ println("running sub.jl")
 
 #output directory
 ofdir = ARGS[1]
-isdir(ofdir) || mkdir(ofdir)
+isdir(ofdir) || mkpath(ofdir)
 
 #input files
 flist = Any[]
@@ -28,7 +28,7 @@ function submit(infiles, outfile, i::Integer)
 
     #the submit script (indents matter)
     cmd="#!/bin/bash
-~/.julia/ROOT.jl/julia skim.jl $ofdir/$outfile $infilelist
+~/.julia/ROOT.jl/julia \$STPOL_DIR/src/skim/skim.jl $ofdir/$outfile $infilelist
 echo 'done '\$?
 "
 
