@@ -44,3 +44,25 @@ cross_sections = Dict{String, Float64}()
 for i=1:nrow(df)
     cross_sections[df[i, 1]] = df[i, 2]
 end
+
+function xsweight(flist)
+    out = Dict()
+    for fi in flist
+        df = readtable(fi)
+        for n=1:nrow(df)
+            cls = sample_type(df[n, :files])
+            generated = df[n, :total_processed]
+            if !haskey(out, cls)
+                out[cls] = 0
+            end
+            out[cls] += generated
+        end
+    end
+
+    ret = Dict()
+    for (k, v) in out
+        x = cross_sections[k[:sample]]/v
+        ret[k[:sample]] = x
+    end
+    return ret
+end
