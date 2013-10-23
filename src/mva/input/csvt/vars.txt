@@ -8,5 +8,3 @@ ljet_pt
 ljet_mass
 bjet_mass
 top_mass
-ljet_bd_b
-bjet_bd_b

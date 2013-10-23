@@ -15,7 +15,7 @@ jobname = sys.argv[2]
 varlist = map(lambda x: x.strip(), open("%s/vars.txt" % inpdir).readlines())
 print varlist
 
-xsweights = json.load(open("skims/summary.txt"))
+xsweights = json.load(open("%s/input_summary.txt" % inpdir))
 bgfiles = open("%s/bg.txt" % inpdir).readlines()
 sigfiles = open("%s/sig.txt" % inpdir).readlines()
 
