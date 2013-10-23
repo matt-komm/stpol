@@ -1,0 +1,17 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_1_1_IPb.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_2_1_HsL.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_3_1_onJ.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_4_1_QCS.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_5_1_SPY.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_6_1_WOG.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_7_1_Z4m.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_8_1_Nzs.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_9_1_ZMb.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_10_1_1sm.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_11_1_ZjV.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_12_1_GmD.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_13_1_NID.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_14_1_Yn8.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_15_1_ygu.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_16_1_U8l.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/iso/EnUp/WW/output_17_1_jEJ.root

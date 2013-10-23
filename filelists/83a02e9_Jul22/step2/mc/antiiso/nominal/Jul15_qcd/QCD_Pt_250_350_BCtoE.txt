@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/QCD_Pt_250_350_BCtoE/output_1_1_WrB.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/QCD_Pt_250_350_BCtoE/output_2_1_QpU.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/QCD_Pt_250_350_BCtoE/output_3_1_TLo.root
+file:/hdfs/cms/store/user/mario/83a02e9_Jul22/antiiso/nominal/QCD_Pt_250_350_BCtoE/output_4_1_BE6.root

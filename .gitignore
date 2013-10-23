@@ -1,3 +1,5 @@
+results
+
 #CVS crud
 *CVS*
 /notes
@@ -86,6 +88,9 @@ exempi-2.2.1
 *.yield
 
 *.txt
+
+*.csv
+*.root
 
 #misc
 
