@@ -47,7 +47,7 @@ factory.SetWeightExpression("1.0")
 cut="1"
 factory.PrepareTrainingAndTestTree(
     TCut(cut), TCut(cut),
-    "SplitMode=Block:NormMode=None::V"
+    "SplitMode=Random:NormMode=None:VerboseLevel=Debug"
 )
 
 # Book the MVA method
@@ -83,6 +83,14 @@ lepton_cat.AddMethod(
     ":".join(varlist),
     TMVA.Types.kBDT,
     "BDT_ele",
+    mva_args
+)
+
+lepton_cat.AddMethod(
+    TCut("abs(lepton_id)!=11 && abs(lepton_id)!=13"),
+    ":".join(varlist),
+    TMVA.Types.kBDT,
+    "BDT_others",
     mva_args
 )
 
