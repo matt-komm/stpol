@@ -219,19 +219,19 @@ timeelapsed = @elapsed for i=1:maxev
         continue
     end
 
-    #check for muon/electron and mtw/met
-    if  (lepton_type == :muon && df[i, :mtw] < 40.0) ||
-        (lepton_type == :electron && df[i, :met] < 40.0)
-        fails[:met] += 1
-        continue
-    end
+#    #check for muon/electron and mtw/met
+#    if  (lepton_type == :muon && df[i, :mtw] < 10.0) ||
+#        (lepton_type == :electron && df[i, :met] < 10.0)
+#        fails[:met] += 1
+#        continue
+#    end
     
     #get jet, tag
     df[i, :njets] = events[sources[:njets]]
     df[i, :ntags] = events[sources[:ntags]]
     
     #check for 2 jets
-    if !(df[i, :njets] == 2)
+    if !(df[i, :njets] == 2 && df[i, :ntags] == 1)
         fails[:jet] += 1
         continue
     end
