@@ -1,6 +1,7 @@
 
-all: train_csvm train_csvt
+all: train
 
+train: train_csvm train_csvt
 train_csvm:
 	python train.py input/csvm stpol_csvm
 
