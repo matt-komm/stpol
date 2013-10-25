@@ -1,7 +1,8 @@
 
 all: train
 
-train: train_csvm train_csvt
+train: train_csvm train_csvt train_csvm_wjets_only train_csvt_wjets_only
+
 train_csvm:
 	python train.py input/csvm stpol_csvm &> input/csvm/log
 
