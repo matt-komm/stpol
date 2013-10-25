@@ -7,38 +7,81 @@ from ROOT import TMVA
 import numpy as np
 import time
 
+from xml.dom import minidom
+
 #TODO: read from file
-mvaname = "BDTxx"
+mvaname = "bdt"
 
-#col1: mva name in TMVA.Reader
-#col2: name in ROOT TTree
-mvavars = [
-    ("top_mass", "top_mass"),
-    ("eta_lj", "ljet_eta"),
-    ("C", "centrality"),
-    ("met", "met"),
-    ("mt_mu", "mtw"),
-    ("mass_bj", "bjet_mass"),
-    ("mass_lj", "ljet_mass"),
-    ("mu_pt", "lepton_pt"),
-    ("pt_bj", "bjet_pt")
-]
+def main():
+    
+    tstart = time.time()
 
-def setup_mva(mvaname, weightfile, mvavars):
+    outfile = sys.argv[1]
+    weightfile = sys.argv[2]
+    infiles = sys.argv[3:]
+
+    mvareader, varbuffers = setup_mva(mvaname, weightfile)
+
+    counters = {"evaluated":0}
+
+    inf = setup_infiles(infiles)
+
+    ofile = open(outfile, "w")
+    ofile.write('"%s"\n' % mvaname)
+
+    for event in inf:
+
+        zero_buffers(varbuffers)
+
+        #read variables
+        isna = False
+        for var in varbuffers.keys():
+            v, isna = rv(event, var)
+            if isna:
+                if not var in counters.keys():
+                    counters[var] = 0
+                counters[var] += 1
+                break
+            varbuffers[var][0] = v
+
+        if isna:
+            x = "NA"
+        else:
+            #print [(x, y[0]) for x,y in varbuffers.items()]
+            x = mvareader.EvaluateMVA(mvaname)
+            #print x
+            counters["evaluated"] += 1
+
+        ofile.write(str(x) + "\n")
+
+    ofile.close()
+    print counters
+
+    tend = time.time()
+    print "total elapsed time", tend-tstart, " sec, processed events",inf.GetEntries()
+
+def setup_mva(mvaname, weightfile):
     """
     mvaname: name of the MVA (can be anything)
     weightfile: path to .xml weight file with trained MVA
-    mvavars: list of (mvaname, treename) of variables.
         Must contain all of them from weightffile.
     """
     mvareader = TMVA.Reader()
 
-    varlist = [x[0] for x in mvavars]
+    dom = minidom.parse(weightfile)
+
+    #read mva variables and spectators from weights.xml
+    _mvavars = [str(x.attributes["Label"].value) for x in dom.getElementsByTagName("Variables")[0].childNodes if x.nodeType == 1]
+    _specvars = [str(x.attributes["Label"].value) for x in dom.getElementsByTagName("Spectators")[0].childNodes if x.nodeType == 1]
 
     varbuffers = {}
-    for v in varlist:
+    for v in _mvavars:
         varbuffers[v] = np.array([0], 'f')
         mvareader.AddVariable(v, varbuffers[v])
+
+    for v in _specvars:
+        varbuffers[v] = np.array([0], 'f')
+        mvareader.AddSpectator(v, varbuffers[v])
 
     mvareader.BookMVA(mvaname, weightfile)
 
@@ -46,7 +89,7 @@ def setup_mva(mvaname, weightfile, mvavars):
 
 def setup_infiles(infiles):
     chain = ROOT.TChain("dataframe")
-   
+
     for inf in infiles:
         if not inf.endswith(".root"):
             print "unknown input file format", inf
@@ -60,7 +103,7 @@ def setup_infiles(infiles):
 def rv(event, varname):
     """
     Reads a variable from a TTree, handling the case when data is NA.
-    
+
     event: a TTree that supports event.varname => value access
     varname: a variable name that is present in the TTree.
 
@@ -83,50 +126,4 @@ def zero_buffers(varbuffers):
         v[0] = 0.0
 
 if __name__=="__main__":
-
-    tstart = time.time()
-
-    outfile = sys.argv[1]
-    weightfile = sys.argv[2]
-    infiles = sys.argv[3:]
-
-    mvareader, varbuffers = setup_mva(mvaname, weightfile, mvavars)
-
-    counters = {"evaluated":0}
-
-    inf = setup_infiles(infiles)
-
-    ofile = open(outfile, "w")
-    ofile.write('"%s"\n' % mvaname)
-
-    for event in inf:
-
-        zero_buffers(varbuffers)
-
-        #read variables
-        isna = False
-        for var_mva, var_tree in mvavars:
-            v, isna = rv(event, var_tree)
-            if isna:
-                if not var_tree in counters.keys():
-                    counters[var_tree] = 0
-                counters[var_tree] += 1
-                break
-            varbuffers[var_mva][0] = v
-
-        if isna:
-            x = -float("inf")
-        else:
-            x = mvareader.EvaluateMVA(mvaname)
-            counters["evaluated"] += 1
-
-        ofile.write(str(x) + "\n")
-        #print x
-
-    ofile.close()
-    print counters
-
-    tend = time.time()
-    print "total elapsed time", tend-tstart, " sec, processed events",inf.GetEntries()
-
-
+    main()
