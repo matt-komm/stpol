@@ -26,7 +26,8 @@ while true
     end
 end
 
-#list_branches(events) 
+#save information on spectator jets
+const do_specjets = false
 
 maxev = length(events) 
 println("running over $maxev events")
@@ -39,15 +40,17 @@ df = similar(
         DataFrame(
             hlt=Bool[],
             
-            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_type=ASCIIString[], lepton_id=Int32[], lepton_charge=Int32[],
+            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[],
+#            lepton_type=ASCIIString[],
+            lepton_id=Int32[], lepton_charge=Int32[],
 
 #jets associated with t-channel
             bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
             ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[],
-
-#spectator jets
-            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
-            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
+#
+##spectator jets
+#            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
+#            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
 
 #event-level characteristics
             cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[], centrality=Float32[],
@@ -198,7 +201,7 @@ timeelapsed = @elapsed for i=1:maxev
         lepton_type = :electron
     end
 
-    df[i, :lepton_type] = string(lepton_type)
+#    df[i, :lepton_type] = string(lepton_type)
 
     #event had no lepton
     if which_lepton == :neither
@@ -253,47 +256,51 @@ timeelapsed = @elapsed for i=1:maxev
     
     df[i, :cos_theta] = events[sources[:cos_theta]]
 
-    #get all jets
-    jet_pts = events[sources[part(:jets, :Pt)]]
-    if !ispresent(jet_pts) || length(jet_pts)==0
-        continue
-    end
-    jet_etas = events[sources[part(:jets, :Eta)]]
-    jet_ids  = events[sources[part(:jets, :partonFlavour)]]
-    jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
-    
-    if all(map(ispresent, Any[jet_pts, jet_etas, jet_ids, jet_bds]))
-        #get the indices of the b-tagged jet and the light jet
-        indb = find(x -> abs(x-df[i, :bjet_pt])<eps(x), jet_pts)[1]
-        indl = find(x -> abs(x-df[i, :ljet_pt])<eps(x), jet_pts)[1]
-
-        #get the indices of the other jets
-        specinds = Int64[]
-        for k=1:length(jet_pts)
-            if k!=indb && k!=indl
-                push!(specinds, k)
-            end
+   
+    if do_specjets
+        
+        #get all jets
+        jet_pts = events[sources[part(:jets, :Pt)]]
+        if !ispresent(jet_pts) || length(jet_pts)==0
+            continue
         end
+        jet_etas = events[sources[part(:jets, :Eta)]]
+        jet_ids  = events[sources[part(:jets, :partonFlavour)]]
+        jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
+        
+        if all(map(ispresent, Any[jet_pts, jet_etas, jet_ids, jet_bds]))
+            #get the indices of the b-tagged jet and the light jet
+            indb = find(x -> abs(x-df[i, :bjet_pt])<eps(x), jet_pts)[1]
+            indl = find(x -> abs(x-df[i, :ljet_pt])<eps(x), jet_pts)[1]
 
-        #get all the other jets
-        #order by pt-descending
-        j = 1
-        for (pt, eta, id, bd, ind) in sort(
-            [z for z in zip(jet_pts, jet_etas, jet_ids, jet_bds, [1:length(jet_pts)])],
-            rev=true
-        )
-            #is a 'spectator jet'
-            if (ind in specinds)
-                df[i, symbol("sjet$(j)_pt")] = pt
-                df[i, symbol("sjet$(j)_eta")] = eta
-                df[i, symbol("sjet$(j)_id")] = id
-                df[i, symbol("sjet$(j)_bd")] = bd
-                
-                #up to two
-                if j==2
-                    break
-                else
-                    j += 1
+            #get the indices of the other jets
+            specinds = Int64[]
+            for k=1:length(jet_pts)
+                if k!=indb && k!=indl
+                    push!(specinds, k)
+                end
+            end
+
+            #get all the other jets
+            #order by pt-descending
+            j = 1
+            for (pt, eta, id, bd, ind) in sort(
+                [z for z in zip(jet_pts, jet_etas, jet_ids, jet_bds, [1:length(jet_pts)])],
+                rev=true
+            )
+                #is a 'spectator jet'
+                if (ind in specinds)
+                    df[i, symbol("sjet$(j)_pt")] = pt
+                    df[i, symbol("sjet$(j)_eta")] = eta
+                    df[i, symbol("sjet$(j)_id")] = id
+                    df[i, symbol("sjet$(j)_bd")] = bd
+                    
+                    #up to two
+                    if j==2
+                        break
+                    else
+                        j += 1
+                    end
                 end
             end
         end
