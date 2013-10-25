@@ -22,7 +22,9 @@ sigfiles = open("%s/sig.txt" % inpdir).readlines()
 # Which file do we use to write our TMVA trainings
 out = TFile('%s/TMVA.root' % inpdir, 'RECREATE')
 
-factory = TMVA.Factory(jobname, out, 'Transformations=I;N;D')
+factory = TMVA.Factory(jobname, out,
+        'Transformations=I;N;D:V:DrawProgressBar=False'
+)
 
 # define variables that we'll use for training
 for v in varlist:
@@ -37,6 +39,8 @@ for fn in bgfiles+sigfiles:
     flist.append(tf)
     xsweight = xsweights[sample_name(fn)]
 
+    print sample_name(fn), xsweight
+
     if fn in bgfiles:
         factory.AddBackgroundTree(tree, xsweight)
     elif fn in sigfiles:
@@ -47,22 +51,22 @@ factory.SetWeightExpression("1.0")
 cut="1"
 factory.PrepareTrainingAndTestTree(
     TCut(cut), TCut(cut),
-    "SplitMode=Random:NormMode=None:VerboseLevel=Debug"
+    "SplitMode=Random:NormMode=None"
 )
 
 # Book the MVA method
-mva_args = "!H:!V:"\
-    "NTrees=2000:"\
-    "BoostType=Grad:"\
-    "Shrinkage=0.1:"\
-    "!UseBaggedGrad:"\
-    "nCuts=2000:"\
-    "nEventsMin=100:"\
-    "NNodesMax=5:"\
-    "UseNvars=4:"\
-    "PruneStrength=5:"\
-    "PruneMethod=CostComplexity:"\
-    "MaxDepth=6"
+#mva_args = "!H:!V:"\
+#    "NTrees=2000:"\
+#    "BoostType=Grad:"\
+#    "Shrinkage=0.1:"\
+#    "!UseBaggedGrad:"\
+#    "nCuts=2000:"\
+#    "NNodesMax=5:"\
+#    "UseNvars=4:"\
+#    "PruneStrength=5:"\
+#    "PruneMethod=CostComplexity:"\
+#    "MaxDepth=6"
+mva_args = ""
 
 lepton_cat = factory.BookMethod(
     TMVA.Types.kCategory,
