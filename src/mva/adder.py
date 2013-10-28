@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-#run as python adder.py out.csv weights.xml infile1.root infile2.root ...
+#run as python adder.py mva_name weights.xml infile1.root infile2.root ...
+#output will be infile1_mva_mva_name.csv ...
 
 import sys
 import ROOT
@@ -9,56 +10,61 @@ import time
 
 from xml.dom import minidom
 
-#TODO: read from file
-mvaname = "bdt"
-
 def main():
-    
     tstart = time.time()
 
-    outfile = sys.argv[1]
+    mvaname = sys.argv[1]
     weightfile = sys.argv[2]
     infiles = sys.argv[3:]
+    print sys.argv
 
     mvareader, varbuffers = setup_mva(mvaname, weightfile)
 
-    counters = {"evaluated":0}
+    counters = {"evaluated":0, "processed":0}
 
-    inf = setup_infiles(infiles)
+    for infn in infiles:
+        inf = ROOT.TFile(infn)
+        tree = inf.Get("dataframe")
 
-    ofile = open(outfile, "w")
-    ofile.write('"%s"\n' % mvaname)
+        if not tree:
+            raise Exception("Could not open TTree 'dataframe' in %s" % infn)
 
-    for event in inf:
+        ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
+        print ofn
 
-        zero_buffers(varbuffers)
+        ofile = open(ofn, "w")
+        ofile.write('"%s"\n' % mvaname)
 
-        #read variables
-        isna = False
-        for var in varbuffers.keys():
-            v, isna = rv(event, var)
+        for event in tree:
+            counters["processed"] += 1
+
+            zero_buffers(varbuffers)
+
+            #read variables
+            isna = False
+            for var in varbuffers.keys():
+                v, isna = rv(event, var)
+                if isna:
+                    if not var in counters.keys():
+                        counters[var] = 0
+                    counters[var] += 1
+                    break
+                varbuffers[var][0] = v
+
             if isna:
-                if not var in counters.keys():
-                    counters[var] = 0
-                counters[var] += 1
-                break
-            varbuffers[var][0] = v
+                x = "NA"
+            else:
+                #print [(x, y[0]) for x,y in varbuffers.items()]
+                x = mvareader.EvaluateMVA(mvaname)
+                counters["evaluated"] += 1
 
-        if isna:
-            x = "NA"
-        else:
-            #print [(x, y[0]) for x,y in varbuffers.items()]
-            x = mvareader.EvaluateMVA(mvaname)
-            #print x
-            counters["evaluated"] += 1
-
-        ofile.write(str(x) + "\n")
-
-    ofile.close()
+            ofile.write(str(x) + "\n")
+        inf.Close()
+        ofile.close()
     print counters
 
     tend = time.time()
-    print "total elapsed time", tend-tstart, " sec, processed events",inf.GetEntries()
+    print "total elapsed time", tend-tstart, " sec, processed events",counters["processed"]
 
 def setup_mva(mvaname, weightfile):
     """
