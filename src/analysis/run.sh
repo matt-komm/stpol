@@ -1,3 +1,3 @@
 #!/bin/bash
 
-~/.julia/ROOT.jl/julia -p 20 runhistos.jl input.txt
+~/.julia/ROOT.jl/julia -p 5 runhisto.jl input.txt
