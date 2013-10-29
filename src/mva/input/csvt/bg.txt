@@ -1,5 +1,6 @@
 skims/csvt/ttjets/TTJets_FullLept/output_4.root
 skims/csvt/ttjets/TTJets_FullLept/output_1.root
+skims/csvt/ttjets/TTJets_FullLept/output_2.root
 skims/csvt/ttjets/TTJets_FullLept/output_7.root
 skims/csvt/ttjets/TTJets_FullLept/output_8.root
 skims/csvt/ttjets/TTJets_FullLept/output_5.root
@@ -69,6 +70,7 @@ skims/csvt/wjets/W4Jets_exclusive/output_29.root
 skims/csvt/wjets/W4Jets_exclusive/output_39.root
 skims/csvt/wjets/W4Jets_exclusive/output_19.root
 skims/csvt/wjets/W4Jets_exclusive/output_17.root
+skims/csvt/wjets/W4Jets_exclusive/output_11.root
 skims/csvt/wjets/W4Jets_exclusive/output_22.root
 skims/csvt/wjets/W4Jets_exclusive/output_33.root
 skims/csvt/wjets/W4Jets_exclusive/output_7.root
