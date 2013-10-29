@@ -1,6 +1,9 @@
 using DataFrames
 
+#returns a dict with :tag, :iso, :systematic, :sample classifying the sample based on the file path
 function sample_type(fn, prefix="file:/hdfs/cms/store/user")
+
+    #MC match
     r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/(.*)/output_(.*).root")
     m = match(r, fn)
    
@@ -9,7 +12,8 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
         syst = :unknown
         samp = :unknown
         iso = :unknown
-        
+       
+        #MC did not match, try data
         cls = data_cls(fn)
         if cls != nothing
             samp = cls[2]
