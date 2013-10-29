@@ -16,13 +16,15 @@ def main():
     mvaname = sys.argv[1]
     weightfile = sys.argv[2]
     infiles = sys.argv[3:]
-    print sys.argv
 
     mvareader, varbuffers = setup_mva(mvaname, weightfile)
 
     counters = {"evaluated":0, "processed":0}
 
+    #loop over input file names
     for infn in infiles:
+
+        #get the events tree
         inf = ROOT.TFile(infn)
         tree = inf.Get("dataframe")
 
@@ -30,7 +32,6 @@ def main():
             raise Exception("Could not open TTree 'dataframe' in %s" % infn)
 
         ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
-        print ofn
 
         ofile = open(ofn, "w")
         ofile.write('"%s"\n' % mvaname)
@@ -38,21 +39,23 @@ def main():
         for event in tree:
             counters["processed"] += 1
 
+            #make sure the TBranch buffers have a 0 values
             zero_buffers(varbuffers)
 
-            #read variables
+            #was any of the variables NA?
             isna = False
+
             for var in varbuffers.keys():
                 v, isna = rv(event, var)
                 if isna:
                     if not var in counters.keys():
                         counters[var] = 0
                     counters[var] += 1
-                    break
+                    break #one variable was NA, lets stop
                 varbuffers[var][0] = v
 
             if isna:
-                x = "NA"
+                x = "NA" #MVA(..., NA, ...) -> NA
             else:
                 #print [(x, y[0]) for x,y in varbuffers.items()]
                 x = mvareader.EvaluateMVA(mvaname)
