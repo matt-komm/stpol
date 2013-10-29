@@ -73,6 +73,7 @@ $STPOL_DIR/setup/install_tunfold.sh
 $STPOL_DIR/setup/install_theta.sh
 #$STPOL_DIR/setup/install_exempi.sh
 $STPOL_DIR/setup/install_pylibs.sh
+$STPOL_DIR/setup/install_hdf5.sh
 
 #Compile
 cd $CMSSW_BASE/src
