@@ -1,10 +1,18 @@
 
 all: train
 
-train: train_csvm train_csvt train_csvm_wjets_only train_csvt_wjets_only
+train: train_csvm train_csvt train_csvm_no_bdisc train_tchpt
+
+#train_csvm_wjets_only train_csvt_wjets_only
 
 train_csvm:
 	python train.py input/csvm stpol_csvm &> input/csvm/log
+
+train_tchpt:
+	python train.py input/tchpt stpol_tchpt &> input/tchpt/log
+
+train_csvm_no_bdisc:
+	python train.py input/csvm_no_bdisc stpol_csvm_no_bdisc &> input/csvm_no_bdisc/log
 
 train_csvt:
 	python train.py input/csvt stpol_csvt &> input/csvt/log
@@ -18,10 +26,16 @@ train_csvt_wjets_only:
 addvars: add_csvm add_csvt
 
 add_csvm:
-	find skims/ -name "*.root" | ~/parallel -j10 python adder.py {.}_mva_csvm.csv weights/stpol_csvm_lepton_flavour.weights.xml {} 
+	find skims/csvm* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py csvm weights/stpol_csvm_lepton_flavour.weights.xml {} 
+
+add_csvm_no_bdisc:
+	find skims/csvm* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py csvm_no_bdisc weights/stpol_csvm_no_bdisc_lepton_flavour.weights.xml {} 
 
 add_csvt:
-	find skims/ -name "*.root" | ~/parallel -j10 python adder.py {.}_mva_csvt.csv weights/stpol_csvt_lepton_flavour.weights.xml {} 
+	find skims/csvt* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py csvt weights/stpol_csvt_lepton_flavour.weights.xml {} 
+
+add_tchpt:
+	find skims/tchpt* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py tchpt weights/stpol_tchpt_lepton_flavour.weights.xml {} 
 
 effcurves: eff_csvm eff_csvt
 
