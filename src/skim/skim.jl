@@ -53,8 +53,11 @@ df = similar(
 #            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
 
 #event-level characteristics
-            cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[], centrality=Float32[],
+            cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
+            C=Float32[], D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
             top_mass=Float32[],
+            wjets_cls=Int32[],
+            jet_cls=Int32[],
 
 #file-level metadata
             run=Int64[], lumi=Int64[], event=Int64[],
@@ -72,6 +75,8 @@ const sources = Dict{Symbol, Source}()
 function part(x, y)
     return symbol(string(x, "_", y))
 end
+
+include("jet_cls.jl")
 
 #see selection_step2_cfg.py for possible inputs
 #leptons
@@ -99,8 +104,11 @@ sources[:nsignalele] = Source(:electronCount, symbol(""), :STPOLSEL2, Int32)
 
 sources[part(:top, :mass)] = Source(:recoTopNTupleProducer, :Mass, :STPOLSEL2)
 
-#FIXME: circularity -> centrality
-sources[:centrality] = Source(:eventShapeVars, :circularity, :STPOLSEL2, Float64)
+for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
+    sources[v] = Source(:eventShapeVars, v, :STPOLSEL2, Float64)
+end
+
+sources[:wjets_cls] = Source(:flavourAnalyzer, :simpleClass, :STPOLSEL2, Uint32)
 
 const hlts = ASCIIString[
     "HLT_IsoMu24_eta2p1_v11",
@@ -264,6 +272,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
     df[i, :ljet_rms] = events[sources[:ljet_rms]] |> ifpresent
     
+    df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :ljet_id])) 
     df[i, :cos_theta] = events[sources[:cos_theta]]
 
    
@@ -316,7 +325,11 @@ timeelapsed = @elapsed for i=1:maxev
         end
     end
 
-    df[i, :centrality] = events[sources[:centrality]]
+    for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
+        df[i, v] = events[sources[v]]
+    end
+
+    df[i, :wjets_cls] = events[sources[:wjets_cls]] |> ifpresent
     df[i, :top_mass] = events[sources[part(:top, :mass)]] |> ifpresent
 
     df[i, :passes] = true
