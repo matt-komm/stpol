@@ -25,8 +25,6 @@ mvaname = get(config, "mva", "name")
 @everywhere begin
 ###
     #name of the .csv file with the mva
-
-    import Base.+
     
     using DataFrames
     using ROOT
@@ -35,62 +33,25 @@ mvaname = get(config, "mva", "name")
     using Hist
     
     include("../skim/xs.jl")
-    
-    metadata(fn) = replace(fn, ".root", "_processed.csv")
-    function accompanying(fn)
-        files = readdir(dirname(fn))
-        bn = split(basename(fn), ".")[1]
-        
-        out = Dict()
-        for fi in files
-            reg = Regex(".*$(bn)_(.*).csv")
-            m = match(reg, fi)
-            m == nothing && continue
-            out[m.captures[1]] = joinpath(dirname(fn), fi)
-        end
-        return out
-    end
+    include("util.jl") 
     
     emptyres() = Dict()
     
     #add two dicts elementwise, with
     #common elements being added and missing elements taken from either
     #argument
-    function +(d1::Dict{Any, Any}, d2::Dict{Any, Any})
-    
-        k1 = Set([x for x in keys(d1)]...)
-        k2 = Set([x for x in keys(d2)]...)
-    
-        common = intersect(k1, k2)
-    
-        ret = Dict()
-        for k in common
-            ret[k] = d1[k] + d2[k]
-        end
-    
-        #in d1
-        for k in [x for x in setdiff(k1, k2)]
-            if !haskey(d2, k)
-                ret[k] = d1[k]
-            end
-        end
-    
-        #in d2
-        for k in [x for x in setdiff(k2, k1)]
-            if !haskey(d1, k)
-                ret[k] = d2[k]
-            end
-        end
-    
-        return ret
-    end
-    
+
+    mva_wps = [
+        0.051, #CSVT W+jets 800
+        0.041, #CSVM+bd W+jets 800
+        0.0265, #TCHPT W+jets 800
+        0.0,
+    ]
     
     function process_file(fi)
     
         #create empty results dict
         res = emptyres()
-    
     
         #get accompanying files for the .root file
         acc = accompanying(fi)
@@ -99,18 +60,10 @@ mvaname = get(config, "mva", "name")
         
         #get the MVA tables
         mva_df = None
-        if mvaname != "" 
-            mva_df = readtable(acc[mvaname])
-        else
-            if "mva_csvt" in keys(acc)
-                mva_df = readtable(acc["mva_csvt"])
-            elseif "mva_csvm" in keys(acc)
-                mva_df = readtable(acc["mva_csvm"])
-            elseif "mva_tchpt" in keys(acc)
-                mva_df = readtable(acc["mva_tchpt"])
-            end
-        end
-    
+        mva_df = readtable(acc[mvaname])
+        
+        myid()==1 && println("starting to loop over $(nrow(md)) metadata rows")
+        
         #loop over metadata
         for i=1:nrow(md)
             f = md[i, :files]
@@ -119,18 +72,21 @@ mvaname = get(config, "mva", "name")
             if !haskey(res, k)
                 res["$(sample)"] = 1
 
-                res["$(sample)/bdt"] = Histogram(60, -1, 1)
+                res["$(sample)/bdt"] = Histogram(600, -1, 1)
                 res["$(sample)/cos_theta"] = Histogram(60, -1, 1)
                 res["$(sample)/abs_eta_lj"] = Histogram(60, 0, 5)
                 res["$(sample)/eta_lj"] = Histogram(60, -5, 5)
                 res["$(sample)/generated"] = 0
     
                 res["$(sample)/counters/processed"] = 0
-                res["$(sample)/counters/isomu"] = 0
+                res["$(sample)/counters/isolep"] = 0
                 res["$(sample)/counters/njets"] = 0
                 res["$(sample)/counters/mtw"] = 0
                 res["$(sample)/counters/ntags"] = 0
-                res["$(sample)/counters/mva"] = 0
+
+                for j=1:length(mva_wps)
+                    res["$(sample)/counters/mva_$j"] = 0
+                end
             end
             res["$(sample)/generated"] += md[i, :total_processed]
         end
@@ -139,6 +95,7 @@ mvaname = get(config, "mva", "name")
         df = TreeDataFrame(fi)
     
         mvacol = colnames(mva_df)[1]
+        myid()==1 && println("starting to loop over $(nrow(df)) events")
         for i=1:nrow(df)
     
             findex = df[i, :fileindex]
@@ -154,27 +111,32 @@ mvaname = get(config, "mva", "name")
     
             !(string(cls[:iso]) == "iso") && continue
             !(df[i, :hlt]) && continue
-            lepid = df[i, :lepton_id]
-            !(!isna(lepid) && abs(lepid) == 13) && continue
-            res["$(sample)/counters/isomu"] += 1
+            #lepid = df[i, :lepton_id]
+            #!(!isna(lepid) && abs(lepid) == 13) && continue
+            res["$(sample)/counters/isolep"] += 1
     
             !(df[i, :njets] == 2) && continue
             res["$(sample)/counters/njets"] += 1
+            
             mtw = df[i, :mtw]
-    
             !(!isna(mtw) && mtw >= 40) && continue
             res["$(sample)/counters/mtw"] += 1
             
             !(df[i, :ntags] == 1) && continue
             res["$(sample)/counters/ntags"] += 1
     
-            #check if event passes a pre-defined BDT WP
             mva = mva_df[i, mvacol]
             hfill!(hbdt, mva)
-            !(!isna(mva) && mva > 0.0) && continue
-            res["$(sample)/counters/mva"] += 1
-        
-            #fill all "final" histograms
+            
+            #check if event passes a pre-defined BDT WP
+            isna(mva) && continue
+            for j=1:length(mva_wps)
+                if mva > mva_wps[j]
+                    res["$(sample)/counters/mva_$j"] += 1
+                end
+            end
+
+            #fill all final histograms
             hfill!(hcos, df[i, :cos_theta])
             hfill!(habsetalj, abs(df[i, :ljet_eta]))
             hfill!(hetalj, df[i, :ljet_eta])
@@ -196,7 +158,7 @@ for (k, v) in results
     m == nothing && continue
 
     sample = m.captures[1]
-    results["$(sample)/xsweight"] = cross_sections[sample]/v
+    results["$(sample)/xsweight"] = 20000 * cross_sections[sample]/v
 end
 
 #save output

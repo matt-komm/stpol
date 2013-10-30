@@ -41,7 +41,7 @@ df = similar(
             hlt=Bool[],
             
             lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[],
-#            lepton_type=ASCIIString[],
+            lepton_type=Int32[],
             lepton_id=Int32[], lepton_charge=Int32[],
 
 #jets associated with t-channel
@@ -93,6 +93,9 @@ sources[part(:muon, :mtw)] = Source(:muMTW, symbol(""), :STPOLSEL2, Float64)
 sources[part(:electron, :mtw)] = Source(:eleMTW, symbol(""), :STPOLSEL2, Float64)
 sources[:njets] = Source(:goodJetCount, symbol(""), :STPOLSEL2, Int32)
 sources[:ntags] = Source(:bJetCount, symbol(""), :STPOLSEL2, Int32)
+
+sources[:nsignalmu] = Source(:muonCount, symbol(""), :STPOLSEL2, Int32)
+sources[:nsignalele] = Source(:electronCount, symbol(""), :STPOLSEL2, Int32)
 
 sources[part(:top, :mass)] = Source(:recoTopNTupleProducer, :Mass, :STPOLSEL2)
 
@@ -191,17 +194,23 @@ timeelapsed = @elapsed for i=1:maxev
 #    df[i, :nproc] = prfiles[findex, :total_processed]
 
 #    df[i, :fname] = flist[df[i, :fileindex]]
-    
+   
+    nmu = events[sources[:nsignalmu]]
+    nele = events[sources[:nsignalele]]
     df[i, :lepton_pt], which_lepton = either(events[sources[:muon_Pt]], events[sources[:electron_Pt]])
-
-    lepton_type = :neither
-    if which_lepton == :first
-        lepton_type = :muon
-    elseif which_lepton == :second
-        lepton_type = :electron
+    
+    if isna(nmu) || isna(nele)
+        fails[:lepton] += 1
+        continue
     end
-
-#    df[i, :lepton_type] = string(lepton_type)
+    lepton_type = :neither
+    if nmu==1 && nele==0
+        lepton_type = :muon
+        df[i, :lepton_type] = 13
+    elseif nele==1 && nmu==0
+        lepton_type = :electron
+        df[i, :lepton_type] = 11
+    end
 
     #event had no lepton
     if which_lepton == :neither
@@ -215,6 +224,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
     df[i, :mtw] = events[sources[part(lepton_type, :mtw)]]
     df[i, :met] = events[sources[:met]] |> ifpresent
+    
   
     #event had no MET
     if (isna(df[i, :met]) || isna(df[i, :mtw]))

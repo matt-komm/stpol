@@ -70,3 +70,9 @@ function xsweight(flist)
     end
     return ret
 end
+
+merges = {
+    "tchan"=>["T_t_ToLeptons", "Tbar_t_ToLeptons"],
+    "wjets"=>["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"],
+    "ttjets"=>["TTJets_FullLept", "TTJets_SemiLept"]
+}
