@@ -28,8 +28,13 @@ for jf in jobfiles
     i += 1
 end
 
+done = df[:(ecode .== 0), :]
+println("done jobs: $(nrow(done))")
+
 failed = df[:(ecode .!= 0), :]
-println("failed commands: $(nrow(failed))")
+println("failed jobs: $(nrow(failed))")
 for i=1:nrow(failed)
     println(failed[i, :subcmd])
 end
+
+
