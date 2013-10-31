@@ -272,7 +272,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
     df[i, :ljet_rms] = events[sources[:ljet_rms]] |> ifpresent
     
-    df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :ljet_id])) 
+    df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
     df[i, :cos_theta] = events[sources[:cos_theta]]
 
    
