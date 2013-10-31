@@ -34,7 +34,7 @@ def main():
         ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
 
         ofile = open(ofn, "w")
-        ofile.write('"%s"\n' % mvaname)
+        ofile.write("bdt\n")
 
         for event in tree:
             counters["processed"] += 1
