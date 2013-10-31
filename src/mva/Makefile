@@ -1,7 +1,7 @@
 
 all: train
 
-train: train_csvm train_csvt train_csvm_no_bdisc train_tchpt
+train: train_csvt train_tchpt
 
 #train_csvm_wjets_only train_csvt_wjets_only
 
@@ -23,7 +23,7 @@ train_csvm_wjets_only:
 train_csvt_wjets_only:
 	python train.py input/csvt_wjets_only stpol_csvt_wjets_only &> input/csvt_wjets_only/log
 
-addvars: add_csvm add_csvt
+addvars: add_tchpt add_csvt
 
 add_csvm:
 	find skims/csvm* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py csvm weights/stpol_csvm_lepton_flavour.weights.xml {} 
