@@ -2,10 +2,14 @@
 import Base.+
     
 function accompanying(fn)
+    #get all the files in the directory containing this file
     files = readdir(dirname(fn))
+    
+    #get the name without the extension
     bn = split(basename(fn), ".")[1]
     
     out = Dict()
+    out["df"] = fn
     for fi in files
         reg = Regex(".*$(bn)_(.*).csv")
         m = match(reg, fi)
@@ -42,4 +46,14 @@ function +(d1::Dict{Any, Any}, d2::Dict{Any, Any})
     end
 
     return ret
+end
+
+function issame(arr::Vector{Any})
+    f = first(arr)
+    for x in arr
+        if x!= f
+            return false
+        end
+    end
+    return true
 end
