@@ -1,48 +1,60 @@
-#extracts the data points necessasry to calculate the ROC curve
-#julia datadir mvaname ofname
-
 using DataFrames
+using ROOT
 
-dir = ARGS[1]
-mvaname = ARGS[2]
-ofname = ARGS[3]
+include("../analysis/util.jl")
+include("../skim/xs.jl")
+include("../skim/jet_cls.jl")
 
-samples = Dict()
+fname = ARGS[1]
+ofile = ARGS[2]
 
-for samp in [:wjets, :ttjets, :tchan]
-    samples[samp] = split(readall(`find $dir/$samp -name "*$mvaname.csv"`))
-end
+flist = split(readall(fname))
 
-dfs = Dict()
-for (samp, files) in samples
-    dfs[samp] = rbind(map(readtable, files))
-    println("$samp: $(nrow(dfs[samp]))")
-end
+cols = [:jet_cls, :mtw, :lepton_id, :lepton_type]
 
-function eff(df, x)
-    col = symbol(colnames(df)[1])
-    ex = :($col .> $x)
-    s = df[ex, :]
-    return nrow(s)/nrow(df)
-end
-
-
-n = 1000
-effs = similar(
-    DataFrame(
-        x=Float32[], tchan=Float32[], ttjets=Float32[], wjets=Float32[]
-    ), n 
-)
-
-i = 1
-for x in linspace(-0.6, 0.2, n)
-    effs[i, :x] = x
-    for samp in [:wjets, :ttjets, :tchan]
-        effs[i, samp] = eff(dfs[samp], x)
+tot_res = Dict()
+for fi in flist
+    res = Dict()
+    acc = accompanying(fi)
+    md = readtable(acc["processed"])
+    for i=1:nrow(md)
+        f = md[i, :files]
+        sample = sample_type(f)[:sample]
+        k = "$(sample)"
+        if !haskey(res, k)
+            res["$(sample)"] = 1
+            res["$(sample)/counters/generated"] = 0
+        end 
+        res["$(sample)/counters/generated"] += md[i, :total_processed]
     end
-    i += 1
-    print(".")
+    tot_res += res
 end
-print("\n")
 
-writetable(ofname, effs, separator=',')
+dfs = Any[]
+for fi in flist
+    acc = accompanying(fi)
+    mvaname = first(filter(x -> beginswith(x, "mva_"), keys(acc)))
+    
+    df = readtable(acc[mvaname])
+    md = readtable(acc["processed"])
+    
+    sample_types = [sample_type(x)[:sample] for x in md[:, :files]]
+    issame(sample_types) || error("multiple processes in one file, xs undefined") 
+    sample = sample_type(md[1, :files])[:sample]
+
+    edf = TreeDataFrame(acc["df"])
+    subdf = edf[:, cols]
+    subdf["jet_cls"] = [jet_cls_from_number(x) for x in subdf["jet_cls"]]
+    
+    xs = 20000 * cross_sections[sample] / tot_res["$(sample)/counters/generated"]
+    df["xsweight"] = xs
+    df["sample"] = sample
+    df = hcat(df, subdf)
+
+    println("$fi $(nrow(df))")
+    df = df[:(mtw .> 40), :]
+    push!(dfs, df)
+end
+df = rbind(dfs)
+println("writing $(nrow(df)) events to $ofile")
+writetable(ofile, df)
