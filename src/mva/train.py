@@ -75,7 +75,7 @@ lepton_cat = factory.BookMethod(
 )
 
 lepton_cat.AddMethod(
-    TCut("abs(lepton_id)==13"),
+    TCut("abs(lepton_type)==13"),
     ":".join(varlist),
     TMVA.Types.kBDT,
     "BDT_mu",
@@ -83,20 +83,20 @@ lepton_cat.AddMethod(
 )
 
 lepton_cat.AddMethod(
-    TCut("abs(lepton_id)==11"),
+    TCut("abs(lepton_type)==11"),
     ":".join(varlist),
     TMVA.Types.kBDT,
     "BDT_ele",
     mva_args
 )
 
-lepton_cat.AddMethod(
-    TCut("abs(lepton_id)!=11 && abs(lepton_id)!=13"),
-    ":".join(varlist),
-    TMVA.Types.kBDT,
-    "BDT_others",
-    mva_args
-)
+#lepton_cat.AddMethod(
+#    TCut("abs(lepton_id)!=11 && abs(lepton_id)!=13"),
+#    ":".join(varlist),
+#    TMVA.Types.kBDT,
+#    "BDT_others",
+#    mva_args
+#)
 
 # Train, test and evaluate them all
 factory.TrainAllMethods()
