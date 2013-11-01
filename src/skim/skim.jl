@@ -58,6 +58,8 @@ df = similar(
             top_mass=Float32[],
             wjets_cls=Int32[],
             jet_cls=Int32[],
+            
+            nu_soltype=Int32[],
 
 #file-level metadata
             run=Int64[], lumi=Int64[], event=Int64[],
@@ -109,6 +111,9 @@ for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
 end
 
 sources[:wjets_cls] = Source(:flavourAnalyzer, :simpleClass, :STPOLSEL2, Uint32)
+
+sources[part(:electron, :nu_soltype)] = Source(:recoNuProducerEle, :solType, :STPOLSEL2, Int32)
+sources[part(:muon, :nu_soltype)] = Source(:recoNuProducerMu, :solType, :STPOLSEL2, Int32)
 
 const hlts = ASCIIString[
     "HLT_IsoMu24_eta2p1_v11",
@@ -335,6 +340,8 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :wjets_cls] = events[sources[:wjets_cls]] |> ifpresent
     df[i, :top_mass] = events[sources[part(:top, :mass)]] |> ifpresent
+    
+    df[i, :nu_soltype] = events[sources[part(lepton_type, :nu_soltype)]] |> ifpresent
 
     df[i, :passes] = true
 end
