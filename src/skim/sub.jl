@@ -39,7 +39,7 @@ RET=\$?
 if [ \$RET -ne 0 ]; then
     echo '/hdfs was not available'
 else
-    ~/.julia/ROOT.jl/julia \$STPOL_DIR/src/skim/skim.jl $ofdir/$outfile $infilelist
+    ~/.julia/ROOT/julia-basic \$STPOL_DIR/src/skim/skim.jl $ofdir/$outfile $infilelist
     RET=\$?
 fi
 echo 'done '\$RET && exit \$RET
