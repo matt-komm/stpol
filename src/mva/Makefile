@@ -17,6 +17,9 @@ train_csvm_no_bdisc:
 train_csvt:
 	python train.py input/csvt stpol_csvt &> input/csvt/log
 
+train_csvt_dphi:
+	python train.py input/csvt_dphi stpol_csvt_dphi &> input/csvt_dphi/log
+
 train_csvm_wjets_only:
 	python train.py input/csvm_wjets_only stpol_csvm_wjets_only &> input/csvm_wjets_only/log
 
