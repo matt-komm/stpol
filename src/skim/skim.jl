@@ -40,13 +40,13 @@ df = similar(
         DataFrame(
             hlt=Bool[],
             
-            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[],
+            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_phi=Float32[],
             lepton_type=Int32[],
             lepton_id=Int32[], lepton_charge=Int32[],
 
 #jets associated with t-channel
-            bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[],
-            ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[],
+            bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[], bjet_phi=Float32[],
+            ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[], ljet_phi=Float32[],
 #
 ##spectator jets
 #            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
@@ -54,7 +54,7 @@ df = similar(
 
 #event-level characteristics
             cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
-            C=Float32[], D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
+            C=Float32[],# D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
             top_mass=Float32[],
             wjets_cls=Int32[],
             jet_cls=Int32[],
@@ -230,6 +230,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
     df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]] |> ifpresent
     df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
+    df[i, :lepton_phi] = events[sources[part(lepton_type, :Phi)]] |> ifpresent
     df[i, :mtw] = events[sources[part(lepton_type, :mtw)]]
     df[i, :met] = events[sources[:met]] |> ifpresent
     
@@ -263,6 +264,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :bjet_id] = events[sources[:bjet_partonFlavour]] |> ifpresent
     df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
+    df[i, :bjet_phi] = events[sources[:bjet_Phi]] |> ifpresent
 
     df[i, :ljet_pt] = events[sources[:ljet_Pt]] |> ifpresent
     df[i, :ljet_eta] = events[sources[:ljet_Eta]] |> ifpresent
@@ -271,6 +273,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
     df[i, :ljet_rms] = events[sources[:ljet_rms]] |> ifpresent
+    df[i, :ljet_phi] = events[sources[:ljet_Phi]] |> ifpresent
     
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
     df[i, :cos_theta] = events[sources[:cos_theta]]
@@ -325,7 +328,8 @@ timeelapsed = @elapsed for i=1:maxev
         end
     end
 
-    for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
+    #for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
+    for v in [:C]
         df[i, v] = events[sources[v]]
     end
 
