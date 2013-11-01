@@ -45,8 +45,8 @@ df = similar(
             lepton_id=Int32[], lepton_charge=Int32[],
 
 #jets associated with t-channel
-            bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[], bjet_phi=Float32[],
-            ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[], ljet_phi=Float32[],
+            bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[], bjet_phi=Float32[], bjet_dr=Float32[],
+            ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[], ljet_phi=Float32[], ljet_dr=Float32[],
 #
 ##spectator jets
 #            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
@@ -55,7 +55,7 @@ df = similar(
 #event-level characteristics
             cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
             C=Float32[],# D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
-            top_mass=Float32[],
+            top_mass=Float32[], top_eta=Float32[], top_phi=Float32[],
             wjets_cls=Int32[],
             jet_cls=Int32[],
             
@@ -88,7 +88,7 @@ for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId, :Charge]
 end
 
 #jets
-for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms]
+for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms, :deltaR]
     sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:jets, s)] = Source(:goodJetsNTupleProducer, s, :STPOLSEL2)
@@ -105,6 +105,8 @@ sources[:nsignalmu] = Source(:muonCount, symbol(""), :STPOLSEL2, Int32)
 sources[:nsignalele] = Source(:electronCount, symbol(""), :STPOLSEL2, Int32)
 
 sources[part(:top, :mass)] = Source(:recoTopNTupleProducer, :Mass, :STPOLSEL2)
+sources[part(:top, :eta)] = Source(:recoTopNTupleProducer, :Eta, :STPOLSEL2)
+sources[part(:top, :phi)] = Source(:recoTopNTupleProducer, :Phi, :STPOLSEL2)
 
 for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
     sources[v] = Source(:eventShapeVars, v, :STPOLSEL2, Float64)
@@ -270,6 +272,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
     df[i, :bjet_phi] = events[sources[:bjet_Phi]] |> ifpresent
+    df[i, :bjet_dr] = events[sources[:bjet_deltaR]] |> ifpresent
 
     df[i, :ljet_pt] = events[sources[:ljet_Pt]] |> ifpresent
     df[i, :ljet_eta] = events[sources[:ljet_Eta]] |> ifpresent
@@ -279,6 +282,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
     df[i, :ljet_rms] = events[sources[:ljet_rms]] |> ifpresent
     df[i, :ljet_phi] = events[sources[:ljet_Phi]] |> ifpresent
+    df[i, :ljet_dr] = events[sources[:ljet_deltaR]] |> ifpresent
     
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
     df[i, :cos_theta] = events[sources[:cos_theta]]
@@ -340,6 +344,8 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :wjets_cls] = events[sources[:wjets_cls]] |> ifpresent
     df[i, :top_mass] = events[sources[part(:top, :mass)]] |> ifpresent
+    df[i, :top_eta] = events[sources[part(:top, :eta)]] |> ifpresent
+    df[i, :top_phi] = events[sources[part(:top, :phi)]] |> ifpresent
     
     df[i, :nu_soltype] = events[sources[part(lepton_type, :nu_soltype)]] |> ifpresent
 
