@@ -10,8 +10,8 @@ ofile = ARGS[2]
 
 flist = split(readall(fname))
 
-cols = [:jet_cls, :mtw, :lepton_id, :lepton_type]
-
+cols = [:cos_theta, :mtw, :lepton_id, :lepton_type]
+outcols = [:cos_theta, :bdt, :lepton_id, :lepton_type]
 tot_res = Dict()
 for fi in flist
     res = Dict()
@@ -32,27 +32,29 @@ end
 
 dfs = Any[]
 for fi in flist
+    println(fi)
     acc = accompanying(fi)
     mvaname = first(filter(x -> beginswith(x, "mva_"), keys(acc)))
     
     df = readtable(acc[mvaname])
     md = readtable(acc["processed"])
+    nrow(md) > 0 || error("metadata was empty")
     
     sample_types = [sample_type(x)[:sample] for x in md[:, :files]]
     issame(sample_types) || error("multiple processes in one file, xs undefined") 
-    sample = sample_type(md[1, :files])[:sample]
-
+    sample = sample_types[1]
+    
     edf = TreeDataFrame(acc["df"])
     subdf = edf[:, cols]
     subdf["jet_cls"] = [jet_cls_from_number(x) for x in subdf["jet_cls"]]
     
     xs = 20000 * cross_sections[sample] / tot_res["$(sample)/counters/generated"]
     df["xsweight"] = xs
-    df["sample"] = sample
+    df["sample"] = get_process(sample)
     df = hcat(df, subdf)
 
     println("$fi $(nrow(df))")
-    df = df[:(mtw .> 40), :]
+    df = df[:(mtw .> 40), :][:, outcols]
     push!(dfs, df)
 end
 df = rbind(dfs)
