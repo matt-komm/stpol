@@ -2,7 +2,6 @@ using DataFrames
 
 #returns a dict with :tag, :iso, :systematic, :sample classifying the sample based on the file path
 function sample_type(fn, prefix="file:/hdfs/cms/store/user")
-
     #MC match
     r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/(.*)/output_(.*).root")
     m = match(r, fn)
@@ -71,8 +70,16 @@ function xsweight(flist)
     return ret
 end
 
+#process ->[sample1, sample2, ...]
 merges = {
     "tchan"=>["T_t_ToLeptons", "Tbar_t_ToLeptons"],
     "wjets"=>["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"],
     "ttjets"=>["TTJets_FullLept", "TTJets_SemiLept"]
 }
+
+function get_process(sample)
+    for (proc, samps) in merges
+        sample in samps && return symbol(proc)
+    end
+    return :unknown
+end
