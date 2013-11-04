@@ -4,19 +4,22 @@ def PartonStudySetup(process, untaggedSrc="fwdMostLightJet"):
     process.cosThetaProducerTrueTop = cms.EDProducer('CosThetaProducer',
         topSrc=cms.InputTag("genParticleSelector", "trueTop"),
         jetSrc=cms.InputTag(untaggedSrc),
-        leptonSrc=cms.InputTag("goodSignalLeptons")
+        leptonSrc=cms.InputTag("goodSignalLeptons"),
+        Ecm=cms.double(8000)
     )
 
     process.cosThetaProducerTrueLepton = cms.EDProducer('CosThetaProducer',
         topSrc=cms.InputTag("recoTop"),
         jetSrc=cms.InputTag(untaggedSrc),
-        leptonSrc=cms.InputTag("genParticleSelector", "trueLepton")
+        leptonSrc=cms.InputTag("genParticleSelector", "trueLepton"),
+        Ecm=cms.double(8000)
     )
 
     process.cosThetaProducerTrueJet = cms.EDProducer('CosThetaProducer',
         topSrc=cms.InputTag("recoTop"),
         jetSrc=cms.InputTag("genParticleSelector", "trueLightJet"),
-        leptonSrc=cms.InputTag("goodSignalLeptons")
+        leptonSrc=cms.InputTag("goodSignalLeptons"),
+        Ecm=cms.double(8000)
     )
 
     #Select the generated leptons associated with a t-quark
@@ -47,7 +50,8 @@ def PartonStudySetup(process, untaggedSrc="fwdMostLightJet"):
     process.cosThetaProducerTrueAll = cms.EDProducer('CosThetaProducer',
         topSrc=cms.InputTag("genParticleSelector", "trueTop"),
         jetSrc=cms.InputTag("genParticleSelector", "trueLightJet"),
-        leptonSrc=cms.InputTag("genParticleSelector", "trueLepton")
+        leptonSrc=cms.InputTag("genParticleSelector", "trueLepton"),
+        Ecm=cms.double(8000)
     )
 
     process.matrixCreator = cms.EDAnalyzer('TransferMatrixCreator',
