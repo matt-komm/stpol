@@ -74,10 +74,7 @@ df = similar(
 
 const sources = Dict{Symbol, Source}()
 
-function part(x, y)
-    return symbol(string(x, "_", y))
-end
-
+include("util.jl")
 include("jet_cls.jl")
 
 #see selection_step2_cfg.py for possible inputs
