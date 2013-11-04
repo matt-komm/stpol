@@ -7,9 +7,13 @@ bjet_pt
 bjet_eta
 bjet_phi
 bjet_mass
+bjet_dr
 ljet_pt
 ljet_eta
+ljet_dr
 ljet_phi-bjet_phi
 ljet_phi-lepton_phi
+ljet_phi-top_phi
 ljet_mass
 top_mass
+top_eta
