@@ -33,7 +33,8 @@ def TopRecoSetup(process, conf, leptonSource="goodSignalLeptons", bTagSource="hi
     process.cosTheta = cms.EDProducer('CosThetaProducer',
         topSrc=cms.InputTag("recoTop"),
         jetSrc=cms.InputTag(untaggedJetSource),
-        leptonSrc=cms.InputTag("goodSignalLeptons")
+        leptonSrc=cms.InputTag("goodSignalLeptons"),
+        Ecm=cms.double(8000)
     )
 
     process.topRecoSequenceMu = cms.Sequence(
