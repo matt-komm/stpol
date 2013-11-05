@@ -70,7 +70,7 @@ factory.PrepareTrainingAndTestTree(
 )
 
 # Book the MVA method
-mva_args = "BoostType=Grad"
+mva_args = "BoostType=Grad:VerbosityLevel=Debug:H"
 
 #categorize by lepton flavour
 lepton_cat = factory.BookMethod(
