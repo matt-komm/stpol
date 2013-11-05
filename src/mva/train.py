@@ -14,24 +14,32 @@ import sys
 def sample_name(fn):
     return fn.split("/")[-2]
 
-#input directory
+#inputs
 inpdir = sys.argv[1]
 jobname = sys.argv[2]
 varlist = map(lambda x: x.strip(), open("%s/vars.txt" % inpdir).readlines())
 specs = ["lepton_type"]
-
 xsweights = json.load(open("%s/input_summary.txt" % inpdir))
 bgfiles = open("%s/bg.txt" % inpdir).readlines()
 sigfiles = open("%s/sig.txt" % inpdir).readlines()
+trainfiles = open("%s/train.txt" % inpdir).readlines()
 
-# Which file do we use to write our TMVA trainings
+def file_type(fn):
+    if fn in trainfiles:
+        return TMVA.Types.kTraining
+    else:
+        return TMVA.Types.kTesting
+
+#TMVA output file
 out = TFile('%s/TMVA.root' % inpdir, 'RECREATE')
 
-factory = TMVA.Factory(jobname, out,
-        'Transformations=I;N;D:DrawProgressBar=False:V'
+factory = TMVA.Factory(
+    jobname, out,
+    'Transformations=I;N;D:DrawProgressBar=False:V'
 )
 
-# define variables that we'll use for training
+#define variables that we'll use for training
+#currently all must be float (TMVA limitation)
 for v in varlist:
     factory.AddVariable(v, "F")
 for s in specs:
@@ -48,9 +56,9 @@ for fn in bgfiles+sigfiles:
     print sample_name(fn), xsweight
 
     if fn in bgfiles:
-        factory.AddBackgroundTree(tree, xsweight)
+        factory.AddBackgroundTree(tree, xsweight, file_type(fn))
     elif fn in sigfiles:
-        factory.AddSignalTree(tree, xsweight)
+        factory.AddSignalTree(tree, xsweight, file_type(fn))
 
 # Set the per event weights string
 factory.SetWeightExpression("1.0")
@@ -58,18 +66,20 @@ factory.SetWeightExpression("1.0")
 cut="1.0"
 factory.PrepareTrainingAndTestTree(
     TCut(cut), TCut(cut),
-    "SplitMode=Random:NormMode=None"
+    "SplitMode=Block:NormMode=None"
 )
 
 # Book the MVA method
 mva_args = "BoostType=Grad"
 
+#categorize by lepton flavour
 lepton_cat = factory.BookMethod(
     TMVA.Types.kCategory,
     "lepton_flavour",
     ""
 )
 
+#muon events
 lepton_cat.AddMethod(
     TCut("abs(lepton_type)==13.0"),
     ":".join(varlist),
@@ -78,6 +88,7 @@ lepton_cat.AddMethod(
     mva_args
 )
 
+#electron events
 lepton_cat.AddMethod(
     TCut("abs(lepton_type)==11.0"),
     ":".join(varlist),
