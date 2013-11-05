@@ -44,15 +44,6 @@ for fi in flist
 
     edf = TreeDataFrame(acc["df"])
     subdf = edf[:, cols]
-    #subdf["jet_cls"] = [jet_cls_from_number(x) for x in subdf["jet_cls"]]
-    #println("loaded from .root TTree with $(nrow(subdf)) entries") 
-    try
-        mvaname = first(filter(x -> beginswith(x, "mva_"), keys(acc)))
-        df = readtable(acc[mvaname])
-    catch e
-        #println("file with MVA results was not available")
-        df = DataFrame()
-    end
     
     xsweights = DataArray(Float32, nrow(subdf))
     processes = DataArray(Symbol, nrow(subdf))
@@ -62,15 +53,25 @@ for fi in flist
         proc = get_process(sample)
         processes[i] = proc != :unknown ? proc : symbol(sample)
     end
-    df["xsweight"] = xsweights
-    df["sample"] = processes
-    df = hcat(df, subdf)
-
-    df = df[:(mtw .> 50), :]
-    df = df[:(abs(ljet_eta) .> 2.5), :]
-    df = df[:(top_mass .> 130), :]
-    df = df[:(top_mass .< 220), :]
-    df = df[:, outcols]
+    subdf["xsweight"] = xsweights
+    subdf["sample"] = processes
+    
+    local_outcols = outcols
+    for k in keys(acc)
+        m = match(r"mva_(.*)", string(k))
+        m == nothing && continue
+        mvaname = m.captures[1]
+        subdf[string(mvaname)] = readtable(acc[k])
+        push!(local_outcols, symbol(mvaname)) 
+    end
+    
+    df = subdf
+    #df = df[:(mtw .> 50), :]
+    #df = df[:(abs(ljet_eta) .> 2.5), :]
+    #df = df[:(top_mass .> 130), :]
+    #df = df[:(top_mass .< 220), :]
+    
+    df = df[:, local_outcols]
     push!(dfs, df)
 end
 df = rbind(dfs)
