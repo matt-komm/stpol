@@ -1,5 +1,16 @@
 using DataFrames
 
+function elem_count(arr)
+    outd = Dict()
+    for k in arr
+        if !haskey(outd, k)
+            outd[k] = 0
+        end
+        outd[k] += 1
+    end
+    return outd
+end
+
 dir = ARGS[1]
 jobfiles = split(readall(`find $dir -name "job*"`))
 println("total jobs: $(length(jobfiles))")
@@ -32,9 +43,15 @@ done = df[:(ecode .== 0), :]
 println("done jobs: $(nrow(done))")
 
 failed = df[:(ecode .!= 0), :]
-println("failed jobs: $(nrow(failed))")
-for i=1:nrow(failed)
-    println(failed[i, :subcmd])
+failed_counts = elem_count(failed[:ecode])
+
+for excode in keys(failed_counts)
+    failed = df[:(ecode .== $excode), :]
+    println("failed jobs with exit code $excode $(nrow(failed))")
+    for i=1:nrow(failed)
+        println(failed[i, :subcmd])
+    end
+    println()
 end
 
 
