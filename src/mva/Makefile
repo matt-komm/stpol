@@ -44,13 +44,13 @@ add_csvt:
 	find skims/csvt* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py csvt weights/stpol_csvt_lepton_flavour.weights.xml {} 
 
 add_bdt_wjets:
-	find skims/csvt* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py csvt weights/stpol_bdt_wjets_lepton_flavour.weights.xml {} 
+	find skims/csvt* -name "*.root" | sort | ~/parallel -j4 -n5 python adder.py bdt_wjets weights/stpol_bdt_wjets_lepton_flavour.weights.xml {} 
 
 add_bdt_ttjets:
-	find skims/csvt* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py csvt weights/stpol_bdt_ttjets_lepton_flavour.weights.xml {} 
+	find skims/csvt* -name "*.root" | sort | ~/parallel -j4 -n5 python adder.py bdt_ttjets weights/stpol_bdt_ttjets_lepton_flavour.weights.xml {} 
 
 add_tchpt:
-	find skims/tchpt* -name "*.root" | sort -R | ~/parallel -j10 -n5 python adder.py tchpt weights/stpol_tchpt_lepton_flavour.weights.xml {} 
+	find skims/tchpt* -name "*.root" | sort | ~/parallel -j10 -n5 python adder.py tchpt weights/stpol_tchpt_lepton_flavour.weights.xml {} 
 
 effcurves: eff_csvm eff_csvt
 
