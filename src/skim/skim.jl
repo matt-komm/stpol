@@ -41,7 +41,7 @@ df = similar(
             hlt=Bool[],
             
             lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_phi=Float32[],
-            lepton_type=Int32[],
+            lepton_type=Float32[],
             lepton_id=Int32[], lepton_charge=Int32[],
 
 #jets associated with t-channel
