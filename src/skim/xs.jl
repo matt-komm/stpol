@@ -74,10 +74,13 @@ end
 merges = {
     "tchan"=>["T_t_ToLeptons", "Tbar_t_ToLeptons"],
     "wjets"=>["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"],
-    "ttjets"=>["TTJets_FullLept", "TTJets_SemiLept"]
+    "ttjets"=>["TTJets_FullLept", "TTJets_SemiLept"],
+    "data_mu"=>["SingleMu", "SingleMu1", "SingleMu2", "SingleMu3"],
+    "data_ele"=>["SingleEle", "SingleEle1", "SingleEle2", "SingleEle3"],
 }
 
 function get_process(sample)
+    sample = string(sample)
     for (proc, samps) in merges
         sample in samps && return symbol(proc)
     end
