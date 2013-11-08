@@ -1,36 +1,18 @@
 
 all: train
 
-train: train_csvt train_tchpt
+train: train_bdt_sig_wjets train_bdt_sig_ttjets train_bdt_wjets_ttjets 
 
 #train_csvm_wjets_only train_csvt_wjets_only
 
-train_csvm:
-	python train.py input/csvm stpol_csvm &> input/csvm/log
+train_bdt_sig_wjets:
+	python train.py input/bdt_sig_bg1 stpol_bdt_sig_wjets &> input/bdt_sig_bg1/log
 
-train_tchpt:
-	python train.py input/tchpt stpol_tchpt &> input/tchpt/log
+train_bdt_sig_ttjets:
+	python train.py input/bdt_sig_bg2 stpol_bdt_sig_ttjets &> input/bdt_sig_bg2/log
 
-train_csvm_no_bdisc:
-	python train.py input/csvm_no_bdisc stpol_csvm_no_bdisc &> input/csvm_no_bdisc/log
-
-train_csvt:
-	python train.py input/csvt stpol_csvt &> input/csvt/log
-
-train_wjets:
-	python train.py input/bdt_wjets stpol_bdt_wjets &> input/bdt_wjets/log
-
-train_ttjets:
-	python train.py input/bdt_ttjets stpol_bdt_ttjets &> input/bdt_ttjets/log
-
-train_csvt_dphi:
-	python train.py input/csvt_dphi stpol_csvt_dphi &> input/csvt_dphi/log
-
-train_csvm_wjets_only:
-	python train.py input/csvm_wjets_only stpol_csvm_wjets_only &> input/csvm_wjets_only/log
-
-train_csvt_wjets_only:
-	python train.py input/csvt_wjets_only stpol_csvt_wjets_only &> input/csvt_wjets_only/log
+train_bdt_wjets_ttjets:
+	python train.py input/bdt_bg1_bg2 stpol_bdt_wjets_ttjets &> input/bdt_bg1_bg2/log
 
 addvars: add_tchpt add_csvt
 
