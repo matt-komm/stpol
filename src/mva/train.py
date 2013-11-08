@@ -35,7 +35,7 @@ out = TFile('%s/TMVA.root' % inpdir, 'RECREATE')
 
 factory = TMVA.Factory(
     jobname, out,
-    'Transformations=I;N;D:DrawProgressBar=False:V'
+    'Transformations=I;N;D:DrawProgressBar=True'
 )
 
 #define variables that we'll use for training
@@ -66,11 +66,23 @@ factory.SetWeightExpression("1.0")
 cut="1.0"
 factory.PrepareTrainingAndTestTree(
     TCut(cut), TCut(cut),
-    "SplitMode=Block:NormMode=None"
+    "SplitMode=Block:NormMode=None:VerboseLevel=Debug"
 )
 
 # Book the MVA method
-mva_args = "BoostType=Grad:VerbosityLevel=Debug:H"
+mva_args = ""\
+    "H:VerbosityLevel=Debug:"\
+    "NTrees=1000:"\
+    "BoostType=Grad:"\
+    "Shrinkage=0.1:"\
+    "!UseBaggedGrad:"\
+    "nCuts=2000:"\
+    "nEventsMin=100:"\
+    "NNodesMax=5:"\
+    "UseNvars=4:"\
+    "PruneStrength=5:"\
+    "PruneMethod=CostComplexity:"\
+    "MaxDepth=6"
 
 #categorize by lepton flavour
 lepton_cat = factory.BookMethod(
