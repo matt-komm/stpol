@@ -1,21 +1,22 @@
 #julia skim.jl ofile infiles.txt
 #runs a skim/event loop on EDM files on a single core
 tstart = time()
-
 println("hostname $(gethostname())")
+
 using ROOT
 using DataFrames
 using HDF5
 using JLD
+using HEP
 
 include("xs.jl")
 
 output_file = ARGS[1]
-#iswritable(output_file) || error("output file $output_file is not writeable")
 
 flist = Any[]
 append!(flist, ARGS[2:])
 
+#try to load the Events 
 events = nothing
 while true
     try
@@ -40,13 +41,24 @@ df = similar(
         DataFrame(
             hlt=Bool[],
             
-            lepton_pt=Float32[], lepton_eta=Float32[], lepton_iso=Float32[], lepton_phi=Float32[],
+            lepton_pt=Float32[], lepton_eta=Float32[],
+            #lepton_iso=Float32[], lepton_phi=Float32[],
             lepton_type=Float32[],
             lepton_id=Int32[], lepton_charge=Int32[],
 
 #jets associated with t-channel
-            bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[], bjet_bd_a=Float32[], bjet_bd_b=Float32[], bjet_phi=Float32[], bjet_dr=Float32[],
-            ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[], ljet_bd_a=Float32[], ljet_bd_b=Float32[], ljet_rms=Float32[], ljet_phi=Float32[], ljet_dr=Float32[],
+            bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[],
+            #bjet_bd_a=Float32[],
+            bjet_bd_b=Float32[],
+            bjet_phi=Float32[],
+            bjet_dr=Float32[],
+
+            ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[],
+            #ljet_bd_a=Float32[],
+            ljet_bd_b=Float32[],
+            ljet_rms=Float32[],
+            ljet_phi=Float32[],
+            ljet_dr=Float32[],
 #
 ##spectator jets
 #            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
@@ -55,9 +67,10 @@ df = similar(
 #event-level characteristics
             cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
             C=Float32[],# D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
-            top_mass=Float32[], top_eta=Float32[], top_phi=Float32[],
-            wjets_cls=Int32[],
+            top_mass=Float32[], top_eta=Float32[], top_phi=Float32[], top_pt=Float32[],
+            #wjets_cls=Int32[],
             jet_cls=Int32[],
+            ht=Float32[], shat=Float32[],
             
             nu_soltype=Int32[],
 
@@ -66,8 +79,6 @@ df = similar(
             fileindex=Int64[],
             passes=Bool[],
 
-#            xs=Float32[], nproc=Int64[],
-#            fname=ASCIIString[]
         ),
         maxev
 )
@@ -101,9 +112,9 @@ sources[:ntags] = Source(:bJetCount, symbol(""), :STPOLSEL2, Int32)
 sources[:nsignalmu] = Source(:muonCount, symbol(""), :STPOLSEL2, Int32)
 sources[:nsignalele] = Source(:electronCount, symbol(""), :STPOLSEL2, Int32)
 
-sources[part(:top, :mass)] = Source(:recoTopNTupleProducer, :Mass, :STPOLSEL2)
-sources[part(:top, :eta)] = Source(:recoTopNTupleProducer, :Eta, :STPOLSEL2)
-sources[part(:top, :phi)] = Source(:recoTopNTupleProducer, :Phi, :STPOLSEL2)
+for s in [:Pt, :Eta, :Phi, :Mass]
+    sources[part(:top, s)] = Source(:recoTopNTupleProducer, s, :STPOLSEL2)
+end
 
 for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
     sources[v] = Source(:eventShapeVars, v, :STPOLSEL2, Float64)
@@ -232,9 +243,9 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
     df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
-    df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]] |> ifpresent
+    #df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]] |> ifpresent
     df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
-    df[i, :lepton_phi] = events[sources[part(lepton_type, :Phi)]] |> ifpresent
+    #df[i, :lepton_phi] = events[sources[part(lepton_type, :Phi)]] |> ifpresent
     df[i, :mtw] = events[sources[part(lepton_type, :mtw)]]
     df[i, :met] = events[sources[:met]] |> ifpresent
     
@@ -266,7 +277,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :bjet_eta] = events[sources[:bjet_Eta]] |> ifpresent
     df[i, :bjet_mass] = events[sources[:bjet_Mass]] |> ifpresent
     df[i, :bjet_id] = events[sources[:bjet_partonFlavour]] |> ifpresent
-    df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
+    #df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
     df[i, :bjet_phi] = events[sources[:bjet_Phi]] |> ifpresent
     df[i, :bjet_dr] = events[sources[:bjet_deltaR]] |> ifpresent
@@ -275,7 +286,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_eta] = events[sources[:ljet_Eta]] |> ifpresent
     df[i, :ljet_mass] = events[sources[:ljet_Mass]] |> ifpresent
     df[i, :ljet_id] = events[sources[:ljet_partonFlavour]] |> ifpresent
-    df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
+    #df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
     df[i, :ljet_rms] = events[sources[:ljet_rms]] |> ifpresent
     df[i, :ljet_phi] = events[sources[:ljet_Phi]] |> ifpresent
@@ -339,12 +350,29 @@ timeelapsed = @elapsed for i=1:maxev
         df[i, v] = events[sources[v]]
     end
 
-    df[i, :wjets_cls] = events[sources[:wjets_cls]] |> ifpresent
-    df[i, :top_mass] = events[sources[part(:top, :mass)]] |> ifpresent
-    df[i, :top_eta] = events[sources[part(:top, :eta)]] |> ifpresent
-    df[i, :top_phi] = events[sources[part(:top, :phi)]] |> ifpresent
-    
+    #df[i, :wjets_cls] = events[sources[:wjets_cls]] |> ifpresent
+    for k in [:Pt, :Eta, :Phi, :Mass]
+        p = part(:top, k)
+        df[i, lowercase(string(p))] = events[sources[p]] |> ifpresent
+    end
+
     df[i, :nu_soltype] = events[sources[part(lepton_type, :nu_soltype)]] |> ifpresent
+   
+    #calculate the invariant mass of the system
+    totvec = FourVectorSph(0.0, 0.0, 0.0, 0.0)
+    for particle in [:top, :ljet]
+        vec = Float64[]
+        #this should be in the order of FourVectorSph
+        for k in [:pt, :eta, :phi, :mass]
+            v = convert(Float64, df[i, part(particle, k)])
+            push!(vec, v)
+        end
+        v = FourVectorSph(vec...)
+        totvec += v
+    end
+
+    df[i, :shat] = l(totvec)
+    df[i, :ht] = df[i, :bjet_pt] + df[i, :ljet_pt]
 
     df[i, :passes] = true
 end
