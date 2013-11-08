@@ -56,15 +56,15 @@ for fi in flist
     subdf["xsweight"] = xsweights
     subdf["sample"] = processes
     
-    local_outcols = outcols
+    local_outcols = deepcopy(outcols)
     for k in keys(acc)
         m = match(r"mva_(.*)", string(k))
         m == nothing && continue
         mvaname = m.captures[1]
-        subdf[string(mvaname)] = readtable(acc[k])
+        println("adding mva from $k:$(acc[k]):$(mvaname)")
+        subdf[string(mvaname)] = readtable(acc[k])[1]
         push!(local_outcols, symbol(mvaname)) 
     end
-    
     df = subdf
     #df = df[:(mtw .> 50), :]
     #df = df[:(abs(ljet_eta) .> 2.5), :]
@@ -72,6 +72,7 @@ for fi in flist
     #df = df[:(top_mass .< 220), :]
     
     df = df[:, local_outcols]
+    println(colnames(df)) 
     push!(dfs, df)
 end
 df = rbind(dfs)
