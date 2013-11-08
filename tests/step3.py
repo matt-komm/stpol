@@ -21,13 +21,18 @@ for fi in file_list:
 
 #Very temporary short names for convenience
 e = stpol.stable.event
-w = stpol.stable.event
+w = stpol.stable.weights
 sigmu = stpol.stable.tchan.muon
 sigele = stpol.stable.tchan.electron
 #Loop over the events
 
-sum_nveto_mu = 0
-sum_nveto_ele = 0
+nveto_mu = []
+nveto_ele = []
+
+puweights = []
+def notna(arr):
+    return sum([not is_na(c) for c in arr])
+
 cos_thetas = []
 for event in events:
     #print e.id(event)
@@ -35,10 +40,14 @@ for event in events:
     ele_pt = sigele.pt(event)
 
     cos_thetas += [e.costheta.lj(event)]
+    nveto_mu += [e.vetolepton.nmuons(event)]
+    nveto_ele += [e.vetolepton.nelectrons(event)]
+    puweights += [w.pileup.nominal(event)]
+    #w.toppt.nominal(event)
 
-    sum_nveto_mu += e.VetoLepton.nmuons()
-    sum_nveto_ele += e.VetoLepton.nelectrons()
+assert(notna(cos_thetas) == 16)
+assert(notna(nveto_mu) == 39)
+assert(notna(nveto_ele) == 39)
+assert(notna(puweights) == 16)
 
-assert(sum([not is_na(c) for c in cos_thetas]) == 16)
-print sum_nveto_mu, sum_nveto_ele
 print "step3 tests ran successfully"
