@@ -99,6 +99,19 @@ class Getter(object):
         else:
             raise TypeError("unhandled type: %s" % dt)
 
+class Weights(Getter):
+    _top_pt = SimpleHandle("double", "ttbarTopWeight", "weight", PROCESS)
+    def __init__(self):
+        pass
+
+    class Pileup(Getter):
+        _nominal = SimpleHandle("double", "puWeightProducer", "PUWeightNtrue", PROCESS)
+        def nominal(self, event):
+            return self._getval(event, "_nominal")
+
+    def top_pt(self, event):
+        return self._getval(event, "_top_pt")
+
 class File:
     def __init__(self):
         pass
@@ -153,13 +166,15 @@ class Event(Getter):
 
     def __init__(self):
         self._met = SimpleHandle("vfloat", "patMETNTupleProducer", "Pt", PROCESS)
-        #FIXME: replace circularity with centrality in ntuples (simply incorrect naming)
-        self._centrality = SimpleHandle("double", "eventShapeVars", "circularity", PROCESS)
+        self._centrality = SimpleHandle("double", "eventShapeVars", "C", PROCESS)
+        self._circularity = SimpleHandle("double", "eventShapeVars", "circularity", PROCESS)
 
         self._njets = SimpleHandle("int", "goodJetCount", "", PROCESS)
+        self._ntags = SimpleHandle("int", "bJetCount", "", PROCESS)
+
         self._nmuons = SimpleHandle("int", "muonCount", "", PROCESS)
         self._nelectrons = SimpleHandle("int", "electronCount", "", PROCESS)
-        self._ntags = SimpleHandle("int", "bJetCount", "", PROCESS)
+
 
         #Reco
         self.costheta = CosTheta("cosTheta")
@@ -197,6 +212,15 @@ class Event(Getter):
 
     def nelectrons(self, events):
         return _int(self._getval(events, "_nelectrons"))
+
+    class VetoLepton(Getter):
+        self._nmuons = SimpleHandle("int", "looseVetoMuCount", "", PROCESS)
+        self._nelectrons = SimpleHandle("int", "looseVetoEleCount", "", PROCESS)
+        def nmuons(self, events):
+            return _int(self._getval(events, "_nmuons"))
+
+        def nelectrons(self, events):
+            return _int(self._getval(events, "_nelectrons"))
 
 class Particle(Getter):
     def __init__(self, label):
@@ -300,6 +324,7 @@ class Electron(Lepton):
 class stpol:
     class stable:
         event = Event()
+        weights = Weights()
         file = File()
         class tchan:
             muon = Muon()

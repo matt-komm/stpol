@@ -21,10 +21,13 @@ for fi in file_list:
 
 #Very temporary short names for convenience
 e = stpol.stable.event
+w = stpol.stable.event
 sigmu = stpol.stable.tchan.muon
 sigele = stpol.stable.tchan.electron
 #Loop over the events
 
+sum_nveto_mu = 0
+sum_nveto_ele = 0
 cos_thetas = []
 for event in events:
     #print e.id(event)
@@ -33,18 +36,9 @@ for event in events:
 
     cos_thetas += [e.costheta.lj(event)]
 
-    #print "met=", e.met(event), "mu_pt=",mu_pt, "ele_pt=",ele_pt
-    #print "mu_iso=", sigmu.iso(event), "ele_iso=", sigele.iso(event)
-    #print "njets=", e.njets(event), "ntags=", e.ntags(event)
-    #print "nmuons=", e.nmuons(event)
-    #print "nelectrons=", e.nelectrons(event)
-    #print "bjet_pt=", stpol.stable.tchan.bjet.pt(event)
-    #print "ljet_pt=", stpol.stable.tchan.specjet1.pt(event)
-    #print "c=", e.c(event)
-    #print "costheta=", e.costheta.lj(event)
-    #print "csv=", stpol.stable.tchan.bjet.bd_csv(event)
-    #print "tchp=", stpol.stable.tchan.bjet.bd_tchp(event)
+    sum_nveto_mu += e.VetoLepton.nmuons()
+    sum_nveto_ele += e.VetoLepton.nelectrons()
 
 assert(sum([not is_na(c) for c in cos_thetas]) == 16)
-
+print sum_nveto_mu, sum_nveto_ele
 print "step3 tests ran successfully"
