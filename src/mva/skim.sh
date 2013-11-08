@@ -1,7 +1,7 @@
 #!/bin/bash
 
 JULIA=~/local-sl6/julia/julia
-OFDIR=skims2
+OFDIR=skims3
 FLDIR=../../filelists/Oct18_csvt_af8ee7
 MCDIR=step2/mc/iso/nominal/Jul15
 
