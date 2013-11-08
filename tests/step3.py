@@ -21,9 +21,17 @@ for fi in file_list:
 
 #Very temporary short names for convenience
 e = stpol.stable.event
+w = stpol.stable.weights
 sigmu = stpol.stable.tchan.muon
 sigele = stpol.stable.tchan.electron
 #Loop over the events
+
+nveto_mu = []
+nveto_ele = []
+
+puweights = []
+def notna(arr):
+    return sum([not is_na(c) for c in arr])
 
 cos_thetas = []
 for event in events:
@@ -32,19 +40,14 @@ for event in events:
     ele_pt = sigele.pt(event)
 
     cos_thetas += [e.costheta.lj(event)]
+    nveto_mu += [e.vetolepton.nmuons(event)]
+    nveto_ele += [e.vetolepton.nelectrons(event)]
+    puweights += [w.pileup.nominal(event)]
+    #w.toppt.nominal(event)
 
-    #print "met=", e.met(event), "mu_pt=",mu_pt, "ele_pt=",ele_pt
-    #print "mu_iso=", sigmu.iso(event), "ele_iso=", sigele.iso(event)
-    #print "njets=", e.njets(event), "ntags=", e.ntags(event)
-    #print "nmuons=", e.nmuons(event)
-    #print "nelectrons=", e.nelectrons(event)
-    #print "bjet_pt=", stpol.stable.tchan.bjet.pt(event)
-    #print "ljet_pt=", stpol.stable.tchan.specjet1.pt(event)
-    #print "c=", e.c(event)
-    #print "costheta=", e.costheta.lj(event)
-    #print "csv=", stpol.stable.tchan.bjet.bd_csv(event)
-    #print "tchp=", stpol.stable.tchan.bjet.bd_tchp(event)
-
-assert(sum([not is_na(c) for c in cos_thetas]) == 16)
+assert(notna(cos_thetas) == 16)
+assert(notna(nveto_mu) == 39)
+assert(notna(nveto_ele) == 39)
+assert(notna(puweights) == 16)
 
 print "step3 tests ran successfully"
