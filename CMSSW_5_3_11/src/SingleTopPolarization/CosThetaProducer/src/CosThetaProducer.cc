@@ -8,10 +8,10 @@
  Description: This class calculates the cosine of the angle between the supplied jet and the lepton in the reference frame of the top quark.
 
  Implementation:
-     [Notes on implementation]
+     See http://arxiv.org/pdf/hep-ph/9912458v1.pdf for a summary on the spin bases.
 */
 //
-// Original Author:
+// Original Author: Joosep Pata
 //         Created:  Wed Oct  3 14:29:22 EEST 2012
 // $Id$
 //
@@ -37,10 +37,6 @@
 #include "Math/GenVector/VectorUtil.h"
 #include <TMath.h>
 
-//
-// class declaration
-//
-
 class CosThetaProducer : public edm::EDProducer
 {
 public:
@@ -63,15 +59,17 @@ private:
     const edm::InputTag topSrc;
     const edm::InputTag jetSrc;
 
-    // ----------member data ---------------------------
+    const ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > beamline_pos;
+    const ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > beamline_neg;
 };
 
 CosThetaProducer::CosThetaProducer(const edm::ParameterSet &iConfig)
     : leptonSrc(iConfig.getParameter<edm::InputTag>("leptonSrc"))
     , topSrc(iConfig.getParameter<edm::InputTag>("topSrc"))
     , jetSrc(iConfig.getParameter<edm::InputTag>("jetSrc"))
+    , beamline_pos(0, 0, iConfig.getParameter<double>("Ecm"), iConfig.getParameter<double>("Ecm"))
+    , beamline_neg(0, 0, -iConfig.getParameter<double>("Ecm"), iConfig.getParameter<double>("Ecm"))
 {
-
     produces<double>("cosThetaLightJet");
     produces<double>("cosThetaEtaBeamline");
 }
@@ -99,7 +97,10 @@ CosThetaProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
     {
         if (tops->size() > 1 || jets->size() > 1 || leptons->size() > 1)
         {
-            LogError("produce()") << "Number of items in input collections is ambigous: tops " << tops->size() << " jets " << jets->size() << " leptons " << leptons->size();
+            LogError("produce()") << "Number of items in input collections is ambigous: tops "
+                << tops->size() << " jets "
+                << jets->size() << " leptons "
+                << leptons->size() << ", first elements will be used";
         }
         const reco::Candidate &top = tops->at(0);
         const reco::Candidate &jet = jets->at(0);
@@ -108,10 +109,14 @@ CosThetaProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
         LogDebug("costheta_input") << "jet: " << jet.pt() << ":" << jet.eta() << ":" << jet.phi();
         LogDebug("costheta_input") << "lepton: " << lepton.pt() << ":" << lepton.eta() << ":" << lepton.phi();
 
-        ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > boostedLeptonVec = ROOT::Math::VectorUtil::boost(lepton.p4(), top.p4().BoostToCM());
-        ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > boostedJetVec = ROOT::Math::VectorUtil::boost(jet.p4(), top.p4().BoostToCM());
+        const ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > boostedLeptonVec = ROOT::Math::VectorUtil::boost(lepton.p4(), top.p4().BoostToCM());
+        const ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > boostedJetVec = ROOT::Math::VectorUtil::boost(jet.p4(), top.p4().BoostToCM());
+        
+        const ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> >& beamline = jet.eta()> 0 ? beamline_pos : beamline_neg;
+        const ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > boostedBeamline = ROOT::Math::VectorUtil::boost(beamline, top.p4().BoostToCM());
 
         cosThetaLightJet = ROOT::Math::VectorUtil::CosTheta(boostedJetVec.Vect(), boostedLeptonVec.Vect());
+        cosThetaEtaBeamline = ROOT::Math::VectorUtil::CosTheta(boostedBeamline.Vect(), boostedLeptonVec.Vect());
 
         LogDebug("produce()") << "cosThetaLightJet: " << cosThetaLightJet;
         LogDebug("produce()") << "cosThetaEtaBeamline: " << cosThetaEtaBeamline;
@@ -125,75 +130,44 @@ CosThetaProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
     iEvent.put(pCosThetaLJ, "cosThetaLightJet");
     std::auto_ptr<double> pCosThetaEtaBL(new double(cosThetaEtaBeamline));
     iEvent.put(pCosThetaEtaBL, "cosThetaEtaBeamline");
-
-    // math::PtEtaPhiELorentzVector boostedJet = ROOT::Math::VectorUtil::boost(jet, top.BoostToCM());
-
-    // return  ROOT::Math::VectorUtil::CosTheta(boostedJet.Vect(), boostedLepton.Vect());
-    /* This is an event example
-       //Read 'ExampleData' from the Event
-       Handle<ExampleData> pIn;
-       iEvent.getByLabel("example",pIn);
-
-       //Use the ExampleData to create an ExampleData2 which
-       // is put into the Event
-       std::auto_ptr<ExampleData2> pOut(new ExampleData2(*pIn));
-       iEvent.put(pOut);
-    */
-
-    /* this is an EventSetup example
-       //Read SetupData from the SetupRecord in the EventSetup
-       ESHandle<SetupData> pSetup;
-       iSetup.get<SetupRecord>().get(pSetup);
-    */
-
 }
 
-// ------------ method called once each job just before starting event loop  ------------
 void
 CosThetaProducer::beginJob()
 {
 }
 
-// ------------ method called once each job just after ending the event loop  ------------
 void
 CosThetaProducer::endJob()
 {
 }
 
-// ------------ method called when starting to processes a run  ------------
 void
 CosThetaProducer::beginRun(edm::Run &, edm::EventSetup const &)
 {
 }
 
-// ------------ method called when ending the processing of a run  ------------
 void
 CosThetaProducer::endRun(edm::Run &, edm::EventSetup const &)
 {
 }
 
-// ------------ method called when starting to processes a luminosity block  ------------
 void
 CosThetaProducer::beginLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup const &)
 {
 }
 
-// ------------ method called when ending the processing of a luminosity block  ------------
 void
 CosThetaProducer::endLuminosityBlock(edm::LuminosityBlock &, edm::EventSetup const &)
 {
 }
 
-// ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
 CosThetaProducer::fillDescriptions(edm::ConfigurationDescriptions &descriptions)
 {
-    //The following says we do not know what parameters are allowed so do no validation
-    // Please change this to state exactly what you do use, even if it is no parameters
     edm::ParameterSetDescription desc;
     desc.setUnknown();
     descriptions.addDefault(desc);
 }
 
-//define this as a plug-in
 DEFINE_FWK_MODULE(CosThetaProducer);

@@ -94,6 +94,13 @@ Overall event-level parameters.
 * `ntags`: the number of good jets passing the jet ID ***and*** the default b-tagging working point used in the analysis.
 * `ismu -> bool`: is the event a muon event (single (anti)isolated lepton is muon)?
 * `isele -> bool`: is the event an electron event?
+* `vetolepton.nmuons`, `vetolepton.nelectrons`: the count of additional non-signal veto muons/electrons.
+
+## `stpol.stable.weights`
+The weights interface is subject to change based on the most optimal implementation of the weights and systematics.
+
+* `pileup.nominal`: the MC-to-data PU reweighting based on Ntrue.
+* `toppt.nominal`: the top-pt reweighting, only defined for ttbar samples
 
 ## `stpol.stable.event.costheta`
 
