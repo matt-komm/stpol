@@ -12,15 +12,6 @@ skims/csvt/tchan/T_t/output_7.root
 skims/csvt/tchan/T_t/output_5.root
 skims/csvt/tchan/T_t/output_3.root
 skims/csvt/tchan/T_t/output_6.root
-skims/csvt/wjets/WJets_inclusive/output_4.root
-skims/csvt/wjets/WJets_inclusive/output_1.root
-skims/csvt/wjets/WJets_inclusive/output_2.root
-skims/csvt/wjets/WJets_inclusive/output_7.root
-skims/csvt/wjets/WJets_inclusive/output_8.root
-skims/csvt/wjets/WJets_inclusive/output_5.root
-skims/csvt/wjets/WJets_inclusive/output_3.root
-skims/csvt/wjets/WJets_inclusive/output_6.root
-skims/csvt/wjets/WJets_inclusive/output_9.root
 skims/csvt/ttjets/TTJets_MassiveBinDECAY/output_4.root
 skims/csvt/ttjets/TTJets_MassiveBinDECAY/output_1.root
 skims/csvt/ttjets/TTJets_MassiveBinDECAY/output_2.root
