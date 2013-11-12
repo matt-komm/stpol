@@ -35,7 +35,7 @@ out = TFile('%s/TMVA.root' % inpdir, 'RECREATE')
 
 factory = TMVA.Factory(
     jobname, out,
-    'Transformations=I;N;D:DrawProgressBar=True'
+    'Transformations=I;N:DrawProgressBar=False'
 )
 
 #define variables that we'll use for training
