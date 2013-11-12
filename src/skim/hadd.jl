@@ -1,3 +1,4 @@
+#!/home/joosep/.julia/ROOT/julia
 using DataFrames
 using ROOT
 
@@ -16,7 +17,7 @@ tot_res = Dict()
 for fi in flist
     res = Dict()
     acc = accompanying(fi)
-    md = readtable(acc["processed"])
+    md = readtable(acc["processed"], allowcomments=true)
     for i=1:nrow(md)
         f = md[i, :files]
         sample = sample_type(f)[:sample]
@@ -34,27 +35,29 @@ dfs = Any[]
 for fi in flist
     println(fi)
     acc = accompanying(fi)
-    md = readtable(acc["processed"])
+    md = readtable(acc["processed"], allowcomments=true)
     nrow(md) > 0 || error("metadata was empty")
     
-    sample_types = [sample_type(x)[:sample] for x in md[:, :files]]
-    #issame(sample_types) || error("multiple processes in one file, xs undefined") 
-    #sample = first(sample_types)
-    
+    sample_types = [sample_type(x) for x in md[:, :files]]
 
     edf = TreeDataFrame(acc["df"])
     subdf = edf[:, cols]
     
     xsweights = DataArray(Float32, nrow(subdf))
     processes = DataArray(Symbol, nrow(subdf))
+    isos = DataArray(ASCIIString, nrow(subdf))
     for i=1:nrow(subdf)
-        sample = string(sample_types[subdf[i, :fileindex]])
+        sample = string(sample_types[subdf[i, :fileindex]][:sample])
+        iso = string(sample_types[subdf[i, :fileindex]][:iso])
+
         xsweights[i] = 20000 * cross_sections[sample] / tot_res["$(sample)/counters/generated"]
         proc = get_process(sample)
         processes[i] = proc != :unknown ? proc : symbol(sample)
+        isos[i] = iso == :iso ? "I" : "A"
     end
     subdf["xsweight"] = xsweights
     subdf["sample"] = processes
+#    subdf["isolation"] = isos
     
     local_outcols = deepcopy(outcols)
     for k in keys(acc)
@@ -62,7 +65,9 @@ for fi in flist
         m == nothing && continue
         mvaname = m.captures[1]
         println("adding mva from $k:$(acc[k]):$(mvaname)")
-        subdf[string(mvaname)] = readtable(acc[k])[1]
+        mvatable = readtable(acc[k], allowcomments=true)[1]
+        @assert length(mvatable)==nrow(subdf) "number of rows in mva table $k is wrong"
+        subdf[string(mvaname)] = mvatable
         push!(local_outcols, symbol(mvaname)) 
     end
     df = subdf
