@@ -23,7 +23,7 @@ def main():
 
     #loop over input file names
     for infn in infiles:
-
+        print "Processing file",infn
         #get the events tree
         inf = ROOT.TFile(infn)
         tree = inf.Get("dataframe")
@@ -34,8 +34,10 @@ def main():
         ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
 
         ofile = open(ofn, "w")
+        ofile.write("# filename=%s\n" % infn)
         ofile.write("bdt\n")
 
+        nproc = 0
         for event in tree:
             counters["processed"] += 1
 
@@ -62,8 +64,12 @@ def main():
                 counters["evaluated"] += 1
 
             ofile.write(str(x) + "\n")
+            nproc += 1
+
+        ofile.write("# ntree=%d nproc=%d\n" % (tree.GetEntries(), nproc))
         inf.Close()
         ofile.close()
+
     print counters
 
     tend = time.time()
@@ -75,7 +81,7 @@ def setup_mva(mvaname, weightfile):
     weightfile: path to .xml weight file with trained MVA
         Must contain all of them from weightffile.
     """
-    mvareader = TMVA.Reader()
+    mvareader = TMVA.Reader("S")
 
     dom = minidom.parse(weightfile)
 
