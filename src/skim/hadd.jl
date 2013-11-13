@@ -10,9 +10,10 @@ fname = ARGS[1]
 ofile = ARGS[2]
 
 flist = split(readall(fname))
+println("Running over $(length(flist)) files")
 
 cols = [:cos_theta, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex]
-outcols = [:top_mass, :ljet_eta, :cos_theta, :lepton_type, :xsweight, :sample]
+outcols = [:top_mass, :ljet_eta, :cos_theta, :lepton_type, :xsweight, :sample, :isolation]
 tot_res = Dict()
 for fi in flist
     res = Dict()
@@ -57,7 +58,7 @@ for fi in flist
     end
     subdf["xsweight"] = xsweights
     subdf["sample"] = processes
-#    subdf["isolation"] = isos
+    subdf["isolation"] = isos
     
     local_outcols = deepcopy(outcols)
     for k in keys(acc)
@@ -80,6 +81,9 @@ for fi in flist
     println(colnames(df)) 
     push!(dfs, df)
 end
+
+@assert length(dfs)>0 "no DataFrames were produced"
+
 df = rbind(dfs)
 println("writing $(nrow(df)) events to $ofile")
 writetable(ofile, df, separator=',')
