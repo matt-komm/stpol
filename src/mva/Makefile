@@ -1,3 +1,4 @@
+include ../analysis/Makefile.options
 
 all: train
 
@@ -20,17 +21,17 @@ train_bdt_wjets_ttjets:
 addvars: add_bdt_sig_bg1 add_bdt_sig_bg2 add_bdt_bg1_bg2 add_bdt_sig_bg
 
 add_bdt_sig_bg1:
-	find skims/csvt* -name "*.root" | sort | ~/parallel -j4 -n5 python adder.py bdt_sig_bg1 weights/stpol_bdt_sig_wjets_lepton_flavour.weights.xml {} 
-
+	find skims/csvt* -name "*.root" | sort | ~/parallel -t --verbose --resume --joblog=`mktemp` -j1 -n5 python adder.py bdt_sig_bg1 weights/stpol_bdt_sig_wjets_lepton_flavour.weights.xml {} 
+ 
 add_bdt_sig_bg:
-	find skims/csvt* -name "*.root" | sort | ~/parallel -j4 -n5 python adder.py bdt_sig_bg weights/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} 
+	find skims/csvt* -name "*.root" | sort | ~/parallel -t --verbose --resume --joblog=`mktemp` -j1 -n5 python adder.py bdt_sig_bg weights/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} 
 
 add_bdt_sig_bg2:
-	find skims/csvt* -name "*.root" | sort | ~/parallel -j4 -n5 python adder.py bdt_sig_bg2 weights/stpol_bdt_sig_ttjets_lepton_flavour.weights.xml {}
+	find skims/csvt* -name "*.root" | sort | ~/parallel -t --verbose --resume --joblog=`mktemp` -j1 -n5 python adder.py bdt_sig_bg2 weights/stpol_bdt_sig_ttjets_lepton_flavour.weights.xml {}
 
 add_bdt_bg1_bg2:
-	find skims/csvt* -name "*.root" | sort | ~/parallel -j4 -n5 python adder.py bdt_bg1_bg2 weights/stpol_bdt_wjets_ttjets_lepton_flavour.weights.xml {} 
-
+	find skims/csvt* -name "*.root" | sort | ~/parallel -t --verbose --resume --joblog=`mktemp` -j1 -n5 python adder.py bdt_bg1_bg2 weights/stpol_bdt_wjets_ttjets_lepton_flavour.weights.xml {} 
+ 
 hadd:
 	find -L skims -name "*.root" > files.txt
 	../skim/hadd.jl files.txt skims.csv

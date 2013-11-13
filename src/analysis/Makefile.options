@@ -1,0 +1,1 @@
+PAROPTS=--max-load 8.0 --run-mem -t --verbose --resume --joblog=`mktemp` -j5 -n5
