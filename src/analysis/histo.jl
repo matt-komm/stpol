@@ -1,6 +1,9 @@
 module Hist
 
 using DataFrames
+using PyCall
+
+@pyimport numpy
 
 import Base.+, Base.*, Base./
 immutable Histogram
@@ -69,7 +72,11 @@ end
 todf(h::Histogram) = DataFrame(bin_edges=h.bin_edges, bin_contents=h.bin_contents, bin_entries=h.bin_entries)
 fromdf(df::DataFrame) = Histogram(df[:, :bin_entries].data, df[:, :bin_contents].data, df[:, :bin_edges].data)
 
+histogramdd(args...;kwargs...) = numpy.histogramdd(args..., kwargs...);
+flatten(h) = reshape(h, prod(size(h)))
+
 export Histogram, hfill!, hplot, integral, norm!
 export +, *, /
 export todf, fromdf
+export histogramdd, flatten
 end #module
