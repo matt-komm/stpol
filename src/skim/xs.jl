@@ -73,8 +73,17 @@ end
 #process ->[sample1, sample2, ...]
 merges = {
     "tchan"=>["T_t_ToLeptons", "Tbar_t_ToLeptons"],
+    "tchan_inc"=>["T_t", "Tbar_t"],
     "wjets"=>["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"],
+    "wjets_inc"=>["WJets_inclusive"],
+    "wjets_sherpa"=>["WJets_sherpa"],
     "ttjets"=>["TTJets_FullLept", "TTJets_SemiLept"],
+    "ttjets_inc"=>["TTJets_MassiveBinDECAY"],
+    "twchan"=>["T_tW", "Tbar_tW"],
+    "schan"=>["T_s", "Tbar_s"],
+    "diboson"=>["WW", "WZ", "ZZ"],
+    "dyjets"=>["DYJets"],
+    "gjets"=>["GJets1", "GJets2"],
     "data_mu"=>["SingleMu", "SingleMu1", "SingleMu2", "SingleMu3"],
     "data_ele"=>["SingleEle", "SingleEle1", "SingleEle2", "SingleEle3"],
 }
