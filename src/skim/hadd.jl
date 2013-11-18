@@ -12,8 +12,9 @@ ofile = ARGS[2]
 flist = split(readall(fname))
 println("Running over $(length(flist)) files")
 
-cols = [:cos_theta, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex]
-outcols = [:top_mass, :ljet_eta, :cos_theta, :lepton_type, :xsweight, :sample, :isolation]
+cols = [:C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex]
+outcols = [:C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta, :lepton_type, :xsweight, :sample, :isolation]
+
 tot_res = Dict()
 for fi in flist
     res = Dict()
@@ -45,7 +46,7 @@ for fi in flist
     subdf = edf[:, cols]
     
     xsweights = DataArray(Float32, nrow(subdf))
-    processes = DataArray(Symbol, nrow(subdf))
+    processes = DataArray(ASCIIString, nrow(subdf))
     isos = DataArray(ASCIIString, nrow(subdf))
     for i=1:nrow(subdf)
         sample = string(sample_types[subdf[i, :fileindex]][:sample])
@@ -53,8 +54,8 @@ for fi in flist
 
         xsweights[i] = 20000 * cross_sections[sample] / tot_res["$(sample)/counters/generated"]
         proc = get_process(sample)
-        processes[i] = proc != :unknown ? proc : symbol(sample)
-        isos[i] = iso == :iso ? "I" : "A"
+        processes[i] = proc != :unknown ? string(proc) : string(sample)
+        isos[i] = string(iso)
     end
     subdf["xsweight"] = xsweights
     subdf["sample"] = processes
@@ -72,10 +73,6 @@ for fi in flist
         push!(local_outcols, symbol(mvaname)) 
     end
     df = subdf
-    #df = df[:(mtw .> 50), :]
-    #df = df[:(abs(ljet_eta) .> 2.5), :]
-    #df = df[:(top_mass .> 130), :]
-    #df = df[:(top_mass .< 220), :]
     
     df = df[:, local_outcols]
     println(colnames(df)) 
@@ -87,3 +84,4 @@ end
 df = rbind(dfs)
 println("writing $(nrow(df)) events to $ofile")
 writetable(ofile, df, separator=',')
+#writetree("test.root", df)
