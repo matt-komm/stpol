@@ -99,6 +99,22 @@ class Getter(object):
         else:
             raise TypeError("unhandled type: %s" % dt)
 
+class Weights(Getter):
+
+    class Pileup(Getter):
+        _nominal = SimpleHandle("double", "puWeightProducer", "PUWeightNtrue", PROCESS)
+        def nominal(self, event):
+            return self._getval(event, "_nominal")
+
+    class TopPt(Getter):
+        _nominal = SimpleHandle("double", "ttbarTopWeight", "weight", PROCESS)
+        def nominal(self, event):
+            return self._getval(event, "_nominal")
+
+    def __init__(self):
+        self.pileup = self.Pileup()
+        self.toppt = self.TopPt()
+
 class File:
     def __init__(self):
         pass
@@ -151,21 +167,35 @@ class CosTheta(Getter):
 
 class Event(Getter):
 
+    class VetoLepton(Getter):
+        _nmuons = SimpleHandle("int", "looseVetoMuCount", "", PROCESS)
+        _nelectrons = SimpleHandle("int", "looseVetoEleCount", "", PROCESS)
+
+        def nmuons(self, events):
+            return _int(self._getval(events, "_nmuons"))
+
+        def nelectrons(self, events):
+            return _int(self._getval(events, "_nelectrons"))
+
     def __init__(self):
         self._met = SimpleHandle("vfloat", "patMETNTupleProducer", "Pt", PROCESS)
-        #FIXME: replace circularity with centrality in ntuples (simply incorrect naming)
-        self._centrality = SimpleHandle("double", "eventShapeVars", "circularity", PROCESS)
+        self._centrality = SimpleHandle("double", "eventShapeVars", "C", PROCESS)
+        self._circularity = SimpleHandle("double", "eventShapeVars", "circularity", PROCESS)
 
         self._njets = SimpleHandle("int", "goodJetCount", "", PROCESS)
+        self._ntags = SimpleHandle("int", "bJetCount", "", PROCESS)
+
         self._nmuons = SimpleHandle("int", "muonCount", "", PROCESS)
         self._nelectrons = SimpleHandle("int", "electronCount", "", PROCESS)
-        self._ntags = SimpleHandle("int", "bJetCount", "", PROCESS)
+
 
         #Reco
         self.costheta = CosTheta("cosTheta")
 
         #Gen
         self.costheta_gen = CosTheta("cosThetaTrueAll")
+
+        self.vetolepton = self.VetoLepton()
 
     def met(self, events):
         """
@@ -197,6 +227,7 @@ class Event(Getter):
 
     def nelectrons(self, events):
         return _int(self._getval(events, "_nelectrons"))
+
 
 class Particle(Getter):
     def __init__(self, label):
@@ -300,6 +331,7 @@ class Electron(Lepton):
 class stpol:
     class stable:
         event = Event()
+        weights = Weights()
         file = File()
         class tchan:
             muon = Muon()
