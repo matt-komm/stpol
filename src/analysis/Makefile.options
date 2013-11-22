@@ -1,1 +1,2 @@
-PAROPTS=--max-load 8.0 --run-mem -t --verbose --resume --joblog=`mktemp` -j5 -n5
+PAROPTS= -t --verbose --resume --joblog=`mktemp` -j20 -n5
+ROOTWRAP=source ~/local-sl6/root/bin/thisroot.sh
