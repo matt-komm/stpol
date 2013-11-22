@@ -1,3 +1,4 @@
+#!/usr/bin/env julia
 inf = split(readall(`head -n5 input/iso_csvt.txt`))
 flist = join(inf, " ")
 exe=joinpath(ENV["HOME"], ".julia/ROOT/julia")
