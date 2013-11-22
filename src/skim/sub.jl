@@ -1,3 +1,4 @@
+#!/usr/bin/env julia
 #run as julia sub.jl ofdir infile1.txt infile2.txt ...
 println("running sub.jl")
 
