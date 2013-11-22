@@ -36,7 +36,7 @@ function data_cls(fn)
     elseif contains(fn, "/iso/SingleEle")
         return (:iso, :SingleEle)
     elseif contains(fn, "/antiiso/SingleEle")
-        return (:antiiso, :SingleMu)
+        return (:antiiso, :SingleEle)
     end 
     return nothing
 end
@@ -84,8 +84,8 @@ merges = {
     "diboson"=>["WW", "WZ", "ZZ"],
     "dyjets"=>["DYJets"],
     "gjets"=>["GJets1", "GJets2"],
-    "data_mu"=>["SingleMu", "SingleMu1", "SingleMu2", "SingleMu3"],
-    "data_ele"=>["SingleEle", "SingleEle1", "SingleEle2", "SingleEle3"],
+    "data_mu"=>["SingleMu", "SingleMu1", "SingleMu2", "SingleMu3", "SingleMu_miss"],
+    "data_ele"=>["SingleEle", "SingleEle1", "SingleEle2", "SingleEle3", "SingleEle_miss"],
 }
 
 function get_process(sample)
