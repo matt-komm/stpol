@@ -73,6 +73,11 @@ df = similar(
             ht=Float32[], shat=Float32[],
             
             nu_soltype=Int32[],
+            n_signal_mu=Int32[], n_signal_ele=Int32[],
+            n_veto_mu=Int32[], n_veto_ele=Int32[],
+
+#weights
+            pu_weight=Float32[],
 
 #file-level metadata
             run=Int64[], lumi=Int64[], event=Int64[],
@@ -124,6 +129,13 @@ sources[:wjets_cls] = Source(:flavourAnalyzer, :simpleClass, :STPOLSEL2, Uint32)
 
 sources[part(:electron, :nu_soltype)] = Source(:recoNuProducerEle, :solType, :STPOLSEL2, Int32)
 sources[part(:muon, :nu_soltype)] = Source(:recoNuProducerMu, :solType, :STPOLSEL2, Int32)
+
+weight(s) = symbol("weight_$s")
+sources[weight(:pu)] = Source(:puWeightProducer, :PUWeightNtrue, :STPOLSEL2, Float64)
+
+vetolepton(s) = symbol("n_veto_lepton_$s")
+sources[vetolepton(:mu)] = Source(:looseVetoMuCount, symbol(""), :STPOLSEL2, Int32)
+sources[vetolepton(:ele)] = Source(:looseVetoEleCount, symbol(""), :STPOLSEL2, Int32)
 
 const hlts = ASCIIString[
     "HLT_IsoMu24_eta2p1_v11",
@@ -221,7 +233,9 @@ timeelapsed = @elapsed for i=1:maxev
     nmu = events[sources[:nsignalmu]]
     nele = events[sources[:nsignalele]]
     df[i, :lepton_pt], which_lepton = either(events[sources[:muon_Pt]], events[sources[:electron_Pt]])
-    
+    df[i, :n_signal_mu] = nmu 
+    df[i, :n_signal_ele] = nele
+
     if isna(nmu) || isna(nele)
         fails[:lepton] += 1
         continue
@@ -240,6 +254,16 @@ timeelapsed = @elapsed for i=1:maxev
         fails[:lepton] += 1
         continue
     end
+   
+    nveto_mu = events[sources[vetolepton(:mu)]] |> ifpresent
+    nveto_ele = events[sources[vetolepton(:ele)]] |> ifpresent
+    df[i, :n_veto_mu] = nveto_mu
+    df[i, :n_veto_ele] = nveto_ele
+
+    if nveto_mu != 0 || nveto_ele != 0
+        fails[:lepton] += 1
+        continue
+    end
 
     df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
     df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
@@ -251,7 +275,7 @@ timeelapsed = @elapsed for i=1:maxev
     
   
     #event had no MET
-    if (isna(df[i, :met]) || isna(df[i, :mtw]))
+    if (isna(df[i, :met]) || isna(df[i, :mtw]) || df[i, :mtw] < 30)
         fails[:met] += 1
         continue
     end
@@ -373,6 +397,8 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :shat] = l(totvec)
     df[i, :ht] = df[i, :bjet_pt] + df[i, :ljet_pt]
+
+    df[i, :pu_weight] = events[sources[weight(:pu)]] |> ifpresent
 
     df[i, :passes] = true
 end
