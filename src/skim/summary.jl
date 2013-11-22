@@ -1,4 +1,7 @@
+#!/usr/bin/env julia
 using DataFrames
+
+do_print_failed = "--list" in ARGS
 
 function elem_count(arr)
     outd = Dict()
@@ -42,6 +45,11 @@ end
 done = df[:(ecode .== 0), :]
 println("done jobs: $(nrow(done))")
 
+if nrow(done) == length(jobfiles)
+    println("all jobs are done")
+    exit(0)
+end
+
 failed = df[:(ecode .!= 0), :]
 failed_counts = elem_count(failed[:ecode])
 
@@ -49,9 +57,12 @@ for excode in keys(failed_counts)
     failed = df[:(ecode .== $excode), :]
     println("failed jobs with exit code $excode $(nrow(failed))")
     for i=1:nrow(failed)
-        println(failed[i, :subcmd])
+        if do_print_failed
+            println(failed[i, :subcmd])
+        end
     end
     println()
 end
 
-
+println("jobs are not done")
+exit(1)
