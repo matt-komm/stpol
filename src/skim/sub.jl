@@ -67,7 +67,7 @@ end
 
 #split a job(file list) into either 10 pieces or 25-file pieces, whichever is smaller
 maxn = length(flist)
-perjob = min(100, ceil(maxn/10))
+perjob = min(50, ceil(maxn/10))
 N = ceil(maxn/perjob)-1
 
 for n=1:N
