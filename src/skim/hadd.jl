@@ -1,6 +1,13 @@
 #!/home/joosep/.julia/ROOT/julia
+include("$(homedir())/.juliarc.jl")
 using DataFrames
+using HDF5
+using JLD
 using ROOT
+
+println("...")
+println(ENV)
+println("...")
 
 include("../analysis/util.jl")
 include("../skim/xs.jl")
@@ -10,10 +17,12 @@ fname = ARGS[1]
 ofile = ARGS[2]
 
 flist = split(readall(fname))
+@assert length(flist)>0 "no files specified"
+
 println("Running over $(length(flist)) files")
 
-cols = [:C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex]
-outcols = [:C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta, :lepton_type, :xsweight, :sample, :isolation]
+cols = [:event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex]
+outcols = [:event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta, :lepton_type, :xsweight, :sample, :isolation]
 
 tot_res = Dict()
 for fi in flist
@@ -52,7 +61,8 @@ for fi in flist
         sample = string(sample_types[subdf[i, :fileindex]][:sample])
         iso = string(sample_types[subdf[i, :fileindex]][:iso])
 
-        xsweights[i] = 20000 * cross_sections[sample] / tot_res["$(sample)/counters/generated"]
+        xsweights[i] = sample in keys(cross_sections) ? 1.0 * cross_sections[sample] / tot_res["$(sample)/counters/generated"] : NA
+
         proc = get_process(sample)
         processes[i] = proc != :unknown ? string(proc) : string(sample)
         isos[i] = string(iso)
@@ -82,6 +92,16 @@ end
 @assert length(dfs)>0 "no DataFrames were produced"
 
 df = rbind(dfs)
-println("writing $(nrow(df)) events to $ofile")
-writetable(ofile, df, separator=',')
-#writetree("test.root", df)
+describe(df)
+
+#write output as JLD
+println("writing $(nrow(df)) events to $ofile as JLD")
+fi = jldopen(string(ofile, ".jld"), "w")
+tic(); write(fi, "df", df); toc()
+close(fi)
+
+##write output as CSV
+#tic();writetable(string(ofile, ".csv"), df, separator=',');toc()
+
+##write output as ROOT
+#tic();writetree(string(ofile, ".root"), df);toc()

@@ -1,3 +1,4 @@
+#!/home/joosep/.julia/ROOT/julia
 #julia skim.jl ofile infiles.txt
 #runs a skim/event loop on EDM files on a single core
 tstart = time()
@@ -10,6 +11,11 @@ using JLD
 using HEP
 
 include("xs.jl")
+
+NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
+if NOSKIM
+    println("***skimming DEACTIVATED")
+end
 
 output_file = ARGS[1]
 
@@ -40,6 +46,7 @@ processed_files = DataFrame(files=flist)
 df = similar(
         DataFrame(
             hlt=Bool[],
+            hlt_mu=Bool[], hlt_ele=Bool[],
             
             lepton_pt=Float32[], lepton_eta=Float32[],
             #lepton_iso=Float32[], lepton_phi=Float32[],
@@ -88,91 +95,7 @@ df = similar(
         maxev
 )
 
-const sources = Dict{Symbol, Source}()
-
-include("util.jl")
-include("jet_cls.jl")
-
-#see selection_step2_cfg.py for possible inputs
-#leptons
-for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId, :Charge]
-    sources[part(:muon, s)] = Source(:goodSignalMuonsNTupleProducer, s, :STPOLSEL2)
-    sources[part(:electron, s)] = Source(:goodSignalElectronsNTupleProducer, s, :STPOLSEL2)
-end
-
-#jets
-for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms, :deltaR]
-    sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
-    sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
-    sources[part(:jets, s)] = Source(:goodJetsNTupleProducer, s, :STPOLSEL2)
-end
-
-sources[:cos_theta] = Source(:cosTheta, :cosThetaLightJet, :STPOLSEL2, Float64)
-sources[:met] = Source(:patMETNTupleProducer, :Pt, :STPOLSEL2)
-sources[part(:muon, :mtw)] = Source(:muMTW, symbol(""), :STPOLSEL2, Float64)
-sources[part(:electron, :mtw)] = Source(:eleMTW, symbol(""), :STPOLSEL2, Float64)
-sources[:njets] = Source(:goodJetCount, symbol(""), :STPOLSEL2, Int32)
-sources[:ntags] = Source(:bJetCount, symbol(""), :STPOLSEL2, Int32)
-
-sources[:nsignalmu] = Source(:muonCount, symbol(""), :STPOLSEL2, Int32)
-sources[:nsignalele] = Source(:electronCount, symbol(""), :STPOLSEL2, Int32)
-
-for s in [:Pt, :Eta, :Phi, :Mass]
-    sources[part(:top, s)] = Source(:recoTopNTupleProducer, s, :STPOLSEL2)
-end
-
-for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
-    sources[v] = Source(:eventShapeVars, v, :STPOLSEL2, Float64)
-end
-
-sources[:wjets_cls] = Source(:flavourAnalyzer, :simpleClass, :STPOLSEL2, Uint32)
-
-sources[part(:electron, :nu_soltype)] = Source(:recoNuProducerEle, :solType, :STPOLSEL2, Int32)
-sources[part(:muon, :nu_soltype)] = Source(:recoNuProducerMu, :solType, :STPOLSEL2, Int32)
-
-weight(s) = symbol("weight_$s")
-sources[weight(:pu)] = Source(:puWeightProducer, :PUWeightNtrue, :STPOLSEL2, Float64)
-
-vetolepton(s) = symbol("n_veto_lepton_$s")
-sources[vetolepton(:mu)] = Source(:looseVetoMuCount, symbol(""), :STPOLSEL2, Int32)
-sources[vetolepton(:ele)] = Source(:looseVetoEleCount, symbol(""), :STPOLSEL2, Int32)
-
-const hlts = ASCIIString[
-    "HLT_IsoMu24_eta2p1_v11",
-    "HLT_IsoMu24_eta2p1_v12",
-    "HLT_IsoMu24_eta2p1_v13",
-    "HLT_IsoMu24_eta2p1_v14",
-    "HLT_IsoMu24_eta2p1_v15",
-    "HLT_IsoMu24_eta2p1_v17",
-    "HLT_IsoMu24_eta2p1_v16",
-    "HLT_Ele27_WP80_v8",
-    "HLT_Ele27_WP80_v9",
-    "HLT_Ele27_WP80_v10",
-    "HLT_Ele27_WP80_v11",
-]
-
-function ifpresent(arr, n::Integer=1)
-    if all(isna(arr)) 
-        return NA
-    end
-    if length(arr)==n
-        return arr[n]
-    else
-        return NA
-    end
-end
-
-ispresent(x) = (typeof(x) != NAtype && !any(isna(x)))
-
-function either(a, b, n::Integer=1)
-    if length(a)==n && length(b)==0
-        return (a[n], :first)
-    elseif length(b)==n && length(a)==0
-        return (b[n], :second)
-    else
-        return (NA, :neither)
-    end
-end
+include("stpol.jl")
 
 #Loop over the lumi sections, get the total processed event count
 prfiles = similar(
@@ -217,6 +140,8 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :passes] = false
     
     df[i, :hlt] = passes_hlt(events, hlts) 
+    df[i, :hlt_mu] = passes_hlt(events, HLTS[:mu]) 
+    df[i, :hlt_ele] = passes_hlt(events, HLTS[:ele]) 
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     df[i, :fileindex] = where_file(events)
@@ -232,7 +157,7 @@ timeelapsed = @elapsed for i=1:maxev
    
     nmu = events[sources[:nsignalmu]]
     nele = events[sources[:nsignalele]]
-    df[i, :lepton_pt], which_lepton = either(events[sources[:muon_Pt]], events[sources[:electron_Pt]])
+    df[i, :lepton_pt], lepton_type = either(events[sources[:muon_Pt]], events[sources[:electron_Pt]])
     df[i, :n_signal_mu] = nmu 
     df[i, :n_signal_ele] = nele
 
@@ -240,17 +165,15 @@ timeelapsed = @elapsed for i=1:maxev
         fails[:lepton] += 1
         continue
     end
-    lepton_type = :neither
+    
+    lepton_type = nothing
     if nmu==1 && nele==0
         lepton_type = :muon
         df[i, :lepton_type] = 13
     elseif nele==1 && nmu==0
         lepton_type = :electron
         df[i, :lepton_type] = 11
-    end
-
-    #event had no lepton
-    if which_lepton == :neither
+    else
         fails[:lepton] += 1
         continue
     end
@@ -275,7 +198,7 @@ timeelapsed = @elapsed for i=1:maxev
     
   
     #event had no MET
-    if (isna(df[i, :met]) || isna(df[i, :mtw]) || df[i, :mtw] < 30)
+    if (isna(df[i, :met]) || isna(df[i, :mtw]) || df[i, :met] < 20)
         fails[:met] += 1
         continue
     end
@@ -288,11 +211,11 @@ timeelapsed = @elapsed for i=1:maxev
 #    end
     
     #get jet, tag
-    df[i, :njets] = events[sources[:njets]]
-    df[i, :ntags] = events[sources[:ntags]]
+    df[i, :njets] = events[sources[:njets]] |> ifpresent
+    df[i, :ntags] = events[sources[:ntags]] |> ifpresent
     
     #check for 2 jets
-    if !(df[i, :njets] == 2 && df[i, :ntags] == 1)
+    if !(df[i, :njets] >= 2 && df[i, :ntags] > 0)
         fails[:jet] += 1
         continue
     end
@@ -407,7 +330,7 @@ println("processed $(nproc/timeelapsed) events/second")
 
 
 #Select only the events that actually pass
-mydf = df[with(df, :(passes)), :]
+mydf = NOSKIM ? df : df[with(df, :(passes)), :]
 describe(mydf)
 println("total rows = $(nrow(mydf))")
 println("failure reasons: $fails")
