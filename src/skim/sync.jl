@@ -18,10 +18,10 @@ include("stpol.jl")
 
 tots = Dict()
 tots[:hlt] = 0
+tots[:nomuele] = 0
+tots[:muele] = 0
 tots[:mu] = 0
 tots[:ele] = 0
-tots[:muele] = 0
-tots[:nomuele] = 0
 
 tic()
 timeelapsed = @elapsed for i=1:maxev
@@ -34,8 +34,10 @@ timeelapsed = @elapsed for i=1:maxev
     nele = events[sources[:nsignalele]]
     njets = events[sources[:njets]]
     ntags = events[sources[:ntags]]
-    println("hlt=$hlt nmu=$nmu nele=$nele nj=$njets nt=$ntags")
+    run, lumi, event = where(events)
     
+    println("$run:$event:$lumi hlt=$hlt nmu=$nmu nele=$nele nj=$njets nt=$ntags")
+
     if (isna(nmu) || isna(nele))
         tots[:nomuele] += 1
         continue
