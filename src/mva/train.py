@@ -63,7 +63,7 @@ for fn in bgfiles+sigfiles:
 # Set the per event weights string
 factory.SetWeightExpression("1.0")
 #cut="met>40 && ljet_pt>90"
-cut="1.0"
+cut="(njets==2) && (ntags==1)"
 factory.PrepareTrainingAndTestTree(
     TCut(cut), TCut(cut),
     "SplitMode=Block:NormMode=None:VerboseLevel=Debug"
