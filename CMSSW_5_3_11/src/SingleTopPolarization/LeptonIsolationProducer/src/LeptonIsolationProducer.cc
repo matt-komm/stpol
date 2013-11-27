@@ -8,10 +8,10 @@
  Description: Adds the delta beta corrected and rho corrected relative isolations to the leptons
  
  Implementation:
- [Notes on implementation]
+ Implemented based on the information in https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideMuonId#Accessing_PF_Isolation_from_reco.
  */
 //
-// Original Author:
+// Original Author: Joosep Pata
 //         Created:  Tue Sep 25 09:10:09 EEST 2012
 // $Id$
 //
