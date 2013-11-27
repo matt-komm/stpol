@@ -20,6 +20,9 @@ train_bdt_sig_wjets:
 train_bdt_sig_bg:
 	$(ROOTWRAP) && python train.py input/bdt_sig_bg stpol_bdt_sig_bg &> input/bdt_sig_bg/log
 
+train_bdt_sig_bg_antiw:
+	$(ROOTWRAP) && python train.py input/bdt_sig_bg_antiw stpol_bdt_sig_bg_antiw &> input/bdt_sig_bg_antiw/log
+
 train_bdt_sig_ttjets:
 	$(ROOTWRAP) && python train.py input/bdt_sig_bg2 stpol_bdt_sig_ttjets &> input/bdt_sig_bg2/log
 
