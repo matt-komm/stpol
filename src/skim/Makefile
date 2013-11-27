@@ -19,6 +19,11 @@ hadd:
 	find $(DIR) -name "*.root" > files.txt
 	./hadd.jl files.txt $(DIR)
 
+parhadd:
+	find $(DIR) -name "*.root" > files.txt
+	split -a5 -l10 files.txt files.split.
+	find . -name "files.split.*" | $(PARCMD) ./hadd.jl {} $(DIR).{#}
+
 gjets:
 	mkdir -p output/gjets
 	~/.julia/ROOT/julia skim.jl output/gjets/gjets `cat input/gjets.txt`
