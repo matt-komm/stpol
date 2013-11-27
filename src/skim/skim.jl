@@ -331,7 +331,7 @@ println("processed $(nproc/timeelapsed) events/second")
 
 #Select only the events that actually pass
 mydf = NOSKIM ? df : df[with(df, :(passes)), :]
-describe(mydf)
+#describe(mydf)
 println("total rows = $(nrow(mydf))")
 println("failure reasons: $fails")
 
