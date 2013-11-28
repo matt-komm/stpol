@@ -63,6 +63,7 @@ private:
     virtual void endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
     
     double effectiveArea(const reco::Candidate& lepton);
+    void debugPrintout(T lepton);
     void addPtEtaCorr(reco::Candidate& lepton);
     
     const edm::InputTag leptonSource;
@@ -165,6 +166,16 @@ LeptonIsolationProducer<pat::Muon>::addPtEtaCorr(reco::Candidate& lepton) {
     mu.addUserFloat("etaCorr", mu.eta());
 }
 
+template <>
+void LeptonIsolationProducer<pat::Muon>::debugPrintout(pat::Muon lepton) {
+        LogDebug("debugPrintout pfIsolationR04") << " chHad=" << lepton.pfIsolationR04().sumChargedHadronPt << " nHad=" << lepton.pfIsolationR04().sumNeutralHadronEt << " ph=" <<  lepton.pfIsolationR04().sumPhotonEt << " puChHad=" <<  lepton.pfIsolationR04().sumPUPt;
+}
+
+template <>
+void LeptonIsolationProducer<pat::Electron>::debugPrintout(pat::Electron lepton) {
+}
+
+
 template <typename T>
 void
 LeptonIsolationProducer<T>::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -181,19 +192,20 @@ LeptonIsolationProducer<T>::produce(edm::Event& iEvent, const edm::EventSetup& i
 
     std::auto_ptr<std::vector<T> > outLeptons(new std::vector<T>());
     for (auto& lepton : *leptons) {
-
         //We assume the lepton is of type T and make a copy
         const T* elem = static_cast<const T*>(&lepton);
         outLeptons->push_back(T(*elem));
     }
     
     for (auto& lepton : *outLeptons) {
+        debugPrintout(lepton);
         //Set the correted pt and eta
         addPtEtaCorr(lepton);
         
         //Calculate the delta-beta corrected relative isolation
         float dbc_iso = (lepton.chargedHadronIso() + std::max(0., lepton.neutralHadronIso() + lepton.photonIso() - 0.5*lepton.puChargedHadronIso()))/lepton.userFloat("ptCorr");
         LogDebug("delta beta corrected iso produce") << "dbcIso=" << dbc_iso << " chHad=" << lepton.chargedHadronIso() << " nHad=" << lepton.neutralHadronIso() << " ph=" << lepton.photonIso() << " puChHad=" << lepton.puChargedHadronIso() << " pt=" << lepton.userFloat("ptCorr");
+
         //Calculate the rho-corrected relative isolation
         double ea = effectiveArea(lepton);
         float rc_iso = (lepton.chargedHadronIso() + std::max(0., lepton.neutralHadronIso() + lepton.photonIso() - ea*(*rho)))/lepton.userFloat("ptCorr");
