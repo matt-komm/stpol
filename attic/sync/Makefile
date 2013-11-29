@@ -23,7 +23,7 @@ step1_exclusive:
 CFG2=$(CMSSW_BASE)/src/SingleTopPolarization/Analysis/python/runconfs/step2/step2.py
 OPTS2=doDebug=True subChannel=T_t
 
-step2: step2_inclusive step2_exclusive
+step2: step2_inclusive
 
 step2_inclusive:
 	cmsRun $(CFG2) inputFiles=file:$(SYNC_DIR)/inclusive/step1_noSkim.root $(OPTS2) outputFile=$(SYNC_DIR)/inclusive/step2.root &> $(SYNC_DIR)/inclusive/log_step2.txt
