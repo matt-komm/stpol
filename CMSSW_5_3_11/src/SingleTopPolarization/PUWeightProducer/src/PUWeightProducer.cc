@@ -36,6 +36,7 @@
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 #include "TMath.h"
+#include <cmath>
 
 class PUWeightProducer : public edm::EDProducer
 {
@@ -146,6 +147,14 @@ PUWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
             nm1 = PVI->getPU_NumInteractions();
         }
     }
+    LogDebug("produce()") << "nPUs=" << nPUs;
+
+    if (std::isnan(ntrue)) {
+        LogInfo("NAN") << "Ntrue=" << ntrue; 
+    }
+    if (std::isnan(n0)) {
+        LogInfo("NAN") << "N0=" << n0; 
+    }
 
     double puWeight_n0 = TMath::QuietNaN();
     double puWeight_ntrue = TMath::QuietNaN();
@@ -161,7 +170,14 @@ PUWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
         puWeight_ntrue_up = reweighter_up->weight(ntrue);
         puWeight_ntrue_down = reweighter_down->weight(ntrue);
     }
-    LogDebug("produce()") << "calculated PU weight nominal=" << puWeight_n0 << " up=" << puWeight_ntrue_up << " down=" << puWeight_ntrue_down;
+    if (std::isnan(puWeight_ntrue)) {
+        LogDebug("NAN") << "puWeight_ntrue=" << puWeight_ntrue;
+    }
+    if (std::isnan(puWeight_n0)) {
+        LogDebug("NAN") << "puWeight_n0=" << puWeight_n0;
+    }
+
+    LogDebug("produce()") << "calculated PU weight nominal_n0=" << puWeight_n0 << " nominal_ntrue=" << puWeight_ntrue << " up=" << puWeight_ntrue_up << " down=" << puWeight_ntrue_down;
     iEvent.put(std::auto_ptr<double>(new double(n0)), "nVertices0");
     iEvent.put(std::auto_ptr<double>(new double(np1)), "nVerticesBXPlus1");
     iEvent.put(std::auto_ptr<double>(new double(nm1)), "nVerticesBXMinus1");
