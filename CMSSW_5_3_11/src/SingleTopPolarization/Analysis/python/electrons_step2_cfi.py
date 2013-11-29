@@ -125,7 +125,7 @@ def ElectronSetup(process, conf):
     # Scale factors #
     process.electronWeightsProducer = cms.EDProducer("ElectronEfficiencyProducer",
         src = cms.InputTag("singleIsoEle"),
-                                                     
+
         SFError=cms.double(0.02),
         applyConservativeSyst=cms.bool(True)
     )
@@ -193,8 +193,9 @@ def ElectronPath(process, conf):
             process.decayTreeProducerEle
         )
 
+    #this will filter the events
     if conf.isMC and sample_types.is_signal(conf.subChannel):
-        #Put the parton level study after the top reco sequence.
+        logging.warning("Using signal-only sequence 'process.partonStudyTrueSequence' on subChannel=%s" % conf.subChannel)
         process.elePath.insert(
             process.elePath.index(process.topRecoSequenceEle)+1,
             process.partonStudyCompareSequence

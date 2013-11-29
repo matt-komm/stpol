@@ -133,6 +133,7 @@ def MuonPath(process, conf):
 
     #Only do the parton identification in the signal channel
     if conf.isMC and sample_types.is_signal(conf.subChannel):
+        logging.warning("Using signal-only sequence 'process.partonStudyTrueSequence' on subChannel=%s" % conf.subChannel)
         process.muPath.insert(
             process.muPath.index(process.topRecoSequenceMu)+1,
             process.partonStudyCompareSequence

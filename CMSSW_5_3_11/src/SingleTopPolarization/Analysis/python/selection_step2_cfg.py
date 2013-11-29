@@ -470,16 +470,6 @@ def SingleTopStep2():
         from SingleTopPolarization.Analysis.debugAnalyzers_step2_cfi import DebugAnalyzerSetup
         DebugAnalyzerSetup(process)
 
-    if Config.isMC and options.doGenParticlePath:
-        if Config.isCompHep:
-            from SingleTopPolarization.Analysis.partonStudy_comphep_step2_cfi import PartonStudySetup
-        else:
-            from SingleTopPolarization.Analysis.partonStudy_step2_cfi import PartonStudySetup
-        PartonStudySetup(process)
-        process.partonPath = cms.Path()
-        if sample_types.is_signal(Config.subChannel):
-            process.partonPath += process.partonStudyTrueSequence
-
     if Config.isMC:
         WeightSetup(process, Config)
 
@@ -492,8 +482,19 @@ def SingleTopStep2():
         process.muPath += process.weightSequence
         process.elePath += process.weightSequence
 
-    #process.eventIDProducer = cms.EDProducer('EventIDProducer'
-    #)
+    if Config.isMC and options.doGenParticlePath:
+        if Config.isCompHep:
+            from SingleTopPolarization.Analysis.partonStudy_comphep_step2_cfi import PartonStudySetup
+        else:
+            from SingleTopPolarization.Analysis.partonStudy_step2_cfi import PartonStudySetup
+        PartonStudySetup(process)
+        process.partonPath = cms.Path()
+
+        #NOTE: this path will REJECT events not having a true t-channel lepton
+        if sample_types.is_signal(Config.subChannel):
+            logging.warning("Using signal-only sequence 'process.partonStudyTrueSequence' on subChannel=%s" % Config.subChannel)
+            process.partonPath += process.partonStudyTrueSequence
+
     process.treePath = cms.Path(
         process.treeSequenceNew
     )
