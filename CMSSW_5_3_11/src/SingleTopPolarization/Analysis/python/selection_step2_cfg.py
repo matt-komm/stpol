@@ -501,6 +501,12 @@ def SingleTopStep2():
     process.eventVarsPath = cms.Path(
         process.eventShapeSequence
     )
+
+    #enable embedding the gen-level weight, which is relevant for the Sherpa sample
+    if Config.isMC:
+        process.genWeightProducer = cms.EDProducer("GenWeightProducer")
+        process.eventVarsPath += process.genWeightProducer
+
     if Config.doWJetsFlavour:
         process.treePath += process.flavourAnalyzer
 
