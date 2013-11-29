@@ -49,6 +49,12 @@ def SingleTopStep1(
     "FastSim-specific processing"
   )
 
+  options.register ('doSync', False,
+    VarParsing.multiplicity.singleton,
+    VarParsing.varType.bool,
+    "Synchronization exercise"
+  )
+
 #Tag from https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideFrontierConditions?redirectedfrom=CMS.SWGuideFrontierConditions#2012_MC_production
 # Latest for "53Y Releases (MC)"
   options.register ('globalTag', Config.globalTagMC,
@@ -259,7 +265,7 @@ def SingleTopStep1(
        tauCollection="", # "" means emtpy, None means cleanPatTaus
        jetCollection=cms.InputTag("patJetsWithOwnRef"),
        jetCorrLabel="L3Absolute" if options.isMC else "L2L3Residual",
-       doSmearJets=options.isMC, #Note: switch this to False for the sync!
+       doSmearJets=options.isMC and not options.doSync, #Note: switch this to False for the sync!
        jetCorrPayloadName="AK5PFchs",
        addToPatDefaultSequence=False
   )
@@ -340,7 +346,7 @@ def SingleTopStep1(
 
   process.out.SelectEvents = cms.untracked.PSet(
     SelectEvents = cms.vstring(
-      ["singleTopPathStep1Mu", "singleTopPathStep1Ele"]
+      ["singleTopPathStep1Mu", "singleTopPathStep1Ele"] if options.doSkimming else ["*"]
     )
   )
 
