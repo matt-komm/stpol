@@ -19,13 +19,16 @@ TTJets_matchingdown /TTJets_matchingdown_TuneZ2star_8TeV-madgraph-tauola/Summer1
 TTJets_scaleup /TTJets_scaleup_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 TTJets_scaledown /TTJets_scaledown_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 
+#bugged samples replaced https://hypernews.cern.ch/HyperNews/CMS/get/singletop/731.html
 TToBMuNu_comphep /TToBMuNu_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 TToBENu_comphep /TToBENu_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 TToBTauNu_comphep /TToBTauNu_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 TToBENu_anomWtb-unphys /TToBENu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
-TToBMuNu_anomWtb-unphys /TToBMuNu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
+#TToBMuNu_anomWtb-unphys /TToBMuNu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
+TToBMuNu_anomWtb-unphys /TToBMuNu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v2/AODSIM 
 TToBTauNu_anomWtb-unphys /TToBTauNu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
-TToBENu_anomWtb-0100 /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
+#TToBENu_anomWtb-0100 /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
+TToBENu_anomWtb-0100 /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM 
 TToBMuNu_anomWtb-0100 /TToBMuNu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 TToBTauNu_anomWtb-0100 /TToBTauNu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 
@@ -38,6 +41,6 @@ TTJets_mass169_5 /TTJets_mass169_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53
 TTJets_mass175_5 /TTJets_mass175_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 
 #Is really muon, but has a wrong dataset name
-TToBMuNu_anomWtb-unphys_t-channel_FSIM /TToBENu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
+#TToBMuNu_anomWtb-unphys_t-channel_FSIM /TToBENu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
 
-TToBENu_anomWtb-0100_t-channel_FSIM /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
+#TToBENu_anomWtb-0100_t-channel_FSIM /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
