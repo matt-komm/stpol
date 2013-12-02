@@ -72,7 +72,9 @@ df = similar(
 #            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
 
 #event-level characteristics
-            cos_theta=Float32[], met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
+            cos_theta_lj=Float32[], 
+            cos_theta_bl=Float32[], 
+            met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
             C=Float32[],# D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
             top_mass=Float32[], top_eta=Float32[], top_phi=Float32[], top_pt=Float32[],
             #wjets_cls=Int32[],
@@ -145,6 +147,9 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     df[i, :fileindex] = where_file(events)
+
+    df[i, :pu_weight] = events[sources[weight(:pu)]] |> ifpresent
+
     findex = df[i, :fileindex]
     
     sample = prfiles[findex, :cls][:sample]
@@ -198,7 +203,7 @@ timeelapsed = @elapsed for i=1:maxev
     
   
     #event had no MET
-    if (isna(df[i, :met]) || isna(df[i, :mtw]) || df[i, :met] < 20)
+    if (isna(df[i, :met]) || isna(df[i, :mtw]) || df[i, :met] < 00)
         fails[:met] += 1
         continue
     end
@@ -215,7 +220,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ntags] = events[sources[:ntags]] |> ifpresent
     
     #check for 2 jets
-    if !(df[i, :njets] >= 2 && df[i, :ntags] > 0)
+    if !(df[i, :njets] >= 2 && df[i, :ntags] >= 0)
         fails[:jet] += 1
         continue
     end
@@ -240,7 +245,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_dr] = events[sources[:ljet_deltaR]] |> ifpresent
     
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
-    df[i, :cos_theta] = events[sources[:cos_theta]]
+    df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]]
 
    
     if do_specjets
@@ -320,8 +325,6 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :shat] = l(totvec)
     df[i, :ht] = df[i, :bjet_pt] + df[i, :ljet_pt]
-
-    df[i, :pu_weight] = events[sources[weight(:pu)]] |> ifpresent
 
     df[i, :passes] = true
 end
