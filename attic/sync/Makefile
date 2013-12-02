@@ -21,7 +21,7 @@ step1_exclusive:
 #########
 
 CFG2=$(CMSSW_BASE)/src/SingleTopPolarization/Analysis/python/runconfs/step2/step2.py
-OPTS2=doDebug=True subChannel=T_t
+OPTS2=doDebug=True subChannel=T_t doSync=true
 
 step2: step2_inclusive
 
@@ -32,10 +32,12 @@ step2_inclusive:
 # STEP3 #
 #########
 STEP3CMD_SKIM=STPOL_NOSKIM=1 /home/joosep/singletop/stpol2/src/skim/skim.jl
+STEP3CMD_MHADD=/home/joosep/singletop/stpol2/src/skim/metahadd.jl
 STEP3CMD_HADD=/home/joosep/singletop/stpol2/src/skim/hadd.jl
 step3: step3_inclusive
 
 step3_inclusive:
 	$(STEP3CMD_SKIM) inclusive/step3 inclusive/step2.root
 	find inclusive -name step3.root > inclusive/step3.txt
-	$(STEP3CMD_HADD) inclusive/step3.txt inclusive/step3 
+	$(STEP3CMD_MHADD) inclusive/step3.txt inclusive/step3.md.txt 
+	$(STEP3CMD_HADD) inclusive/step3.txt inclusive/step3.md.txt inclusive/step3 

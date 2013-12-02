@@ -378,9 +378,9 @@ def SingleTopStep1(
 
   process.singleTopSequence += process.preCalcSequences
   process.singleTopSequence += process.stpolMetUncertaintySequence
+  process.singleTopSequence += process.patTriggerSequence
   process.singleTopSequence += process.muonSequence
   process.singleTopSequence += process.electronSequence
-  process.singleTopSequence += process.patTriggerSequence
 
   if options.isMC:
     #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideBTagJetProbabilityCalibration?redirectedfrom=CMS.SWGuideBTagJetProbabilityCalibration#Calibration_in_53x_Data_and_MC

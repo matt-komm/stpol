@@ -187,10 +187,17 @@ LeptonIsolationProducer<T>::produce(edm::Event& iEvent, const edm::EventSetup& i
     
     iEvent.getByLabel(leptonSource,leptons);
     iEvent.getByLabel(rhoSource,rho);
-    assert(leptons.isValid()); 
-    assert(rho.isValid()); 
+    
 
     std::auto_ptr<std::vector<T> > outLeptons(new std::vector<T>());
+   
+    //in case event was not skimmed away and did not contain necessary collections
+    if (!leptons.isValid() || !rho.isValid()) {
+        edm::LogWarning("produce()") << "Input collections " << leptonSource.encode() << " or " << rhoSource.encode() << " were not valid"; 
+        iEvent.put(outLeptons);
+        return;
+    }
+    
     for (auto& lepton : *leptons) {
         //We assume the lepton is of type T and make a copy
         const T* elem = static_cast<const T*>(&lepton);

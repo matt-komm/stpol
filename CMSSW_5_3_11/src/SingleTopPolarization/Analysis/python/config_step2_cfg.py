@@ -33,6 +33,9 @@ class Config(C):
     #Enable debugging modules
     doDebug = False
 
+    #Synchronization exercise
+    doSync = False
+
     #Do a phi-correction for the MET, as dependent on the number of vertices
     doMETSystShift = False
 

@@ -36,6 +36,7 @@ def JetSetup(process, conf):
     )
 
     if conf.Jets.doLightJetRMSClean:
+        #throw away non-btagged jets based on the RMS value
         process.jetsRMSCleaned = cms.EDFilter("CandViewSelector",
             src=cms.InputTag("deltaRJets"),
             cut=cms.string(bTagCutStr + " || (!(%s) && userFloat('rms')<0.025)" % bTagCutStr)

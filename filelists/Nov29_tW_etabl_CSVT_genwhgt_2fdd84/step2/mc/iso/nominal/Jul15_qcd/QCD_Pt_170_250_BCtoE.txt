@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_170_250_BCtoE/output_1_1_knP.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_170_250_BCtoE/output_2_1_Tbv.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_170_250_BCtoE/output_3_1_yVu.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_170_250_BCtoE/output_4_1_axa.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_170_250_BCtoE/output_5_1_oPl.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_170_250_BCtoE/output_6_1_Y66.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_170_250_BCtoE/output_7_1_DWM.root

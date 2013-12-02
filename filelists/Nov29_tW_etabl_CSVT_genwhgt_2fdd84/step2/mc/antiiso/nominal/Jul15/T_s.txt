@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/T_s/output_1_1_lLX.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/T_s/output_2_1_7H5.root

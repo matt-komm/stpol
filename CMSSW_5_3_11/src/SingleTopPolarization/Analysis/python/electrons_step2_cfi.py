@@ -192,16 +192,3 @@ def ElectronPath(process, conf):
             process.elePath.index(process.oneIsoEle)+1,
             process.decayTreeProducerEle
         )
-
-    #this will filter the events
-    if conf.isMC and sample_types.is_signal(conf.subChannel):
-        logging.warning("Using signal-only sequence 'process.partonStudyTrueSequence' on subChannel=%s" % conf.subChannel)
-        process.elePath.insert(
-            process.elePath.index(process.topRecoSequenceEle)+1,
-            process.partonStudyCompareSequence
-            )
-
-    #eventCounting.countAfter(process, process.elePath,
-    #    [
-    #    ]
-    #)
