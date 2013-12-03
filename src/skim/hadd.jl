@@ -1,46 +1,26 @@
 #!/home/joosep/.julia/ROOT/julia
 include("$(homedir())/.juliarc.jl")
 using DataFrames
-using HDF5
-using JLD
-using ROOT
-
-println("...")
-println(ENV)
-println("...")
+using HDF5, JLD, ROOT
+using JSON
 
 include("../analysis/util.jl")
 include("../skim/xs.jl")
 include("../skim/jet_cls.jl")
 
 fname = ARGS[1]
-ofile = ARGS[2]
+sumfname = ARGS[2]
+ofile = ARGS[3]
 
 flist = split(readall(fname))
 @assert length(flist)>0 "no files specified"
 
 println("Running over $(length(flist)) files")
 
-cols = [:event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex]
-outcols = [:event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta, :lepton_type, :xsweight, :sample, :isolation]
+cols = [:jet_cls, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex]
+outcols = [:jet_cls, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta, :lepton_type, :xsweight, :sample, :isolation]
 
-tot_res = Dict()
-for fi in flist
-    res = Dict()
-    acc = accompanying(fi)
-    md = readtable(acc["processed"], allowcomments=true)
-    for i=1:nrow(md)
-        f = md[i, :files]
-        sample = sample_type(f)[:sample]
-        k = "$(sample)"
-        if !haskey(res, k)
-            res["$(sample)"] = 1
-            res["$(sample)/counters/generated"] = 0
-        end 
-        res["$(sample)/counters/generated"] += md[i, :total_processed]
-    end
-    tot_res += res
-end
+tot_res = JSON.parse(readall(sumfname))
 
 dfs = Any[]
 for fi in flist
@@ -92,7 +72,7 @@ end
 @assert length(dfs)>0 "no DataFrames were produced"
 
 df = rbind(dfs)
-describe(df)
+#describe(df)
 
 #write output as JLD
 println("writing $(nrow(df)) events to $ofile as JLD")
