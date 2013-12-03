@@ -51,3 +51,6 @@ eff_csvm:
 
 eff_csvt:
 	julia roc.jl skims/csvt mva_csvt input/csvt/effs.csv
+
+update_results:
+	rsync -r cms.hep.kbfi.ee:~/singletop/stpol2/src/mva/input ./
