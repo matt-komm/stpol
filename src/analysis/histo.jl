@@ -10,7 +10,7 @@ using PyPlot
 
 import Base.+, Base.-, Base.*, Base./
 immutable Histogram
-    bin_entries::Vector{Int64} #n values
+    bin_entries::Vector{Float64} #n values
     bin_contents::Vector{Float64} #n values
     bin_edges::Vector{Float64} #n+1 values, lower edges of all bins + upper edge of last bin
 
@@ -27,7 +27,7 @@ function Histogram(n::Integer, low::Number, high::Number)
     unshift!(bins, -inf(Float64))
     n_contents = size(bins,1)
     return Histogram(
-        zeros(Int64, (n_contents, )),
+        zeros(Float64, (n_contents, )),
         zeros(Float64, (n_contents, )),
         bins
     )
@@ -36,7 +36,7 @@ end
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
 
 function errors(h::Histogram)
-    return h.bin_contents .* sqrt(h.bin_entries) ./ h.bin_entries
+    return h.bin_contents ./ sqrt(h.bin_entries)
 end
 
 function hfill!(h::Histogram, v::Real, w::Real=1.0)
@@ -77,7 +77,17 @@ end
 function /(h1::Histogram, h2::Histogram)
     #warn("ratio plot errors are currently incorrect")
     @assert(h1.bin_edges == h2.bin_edges, "bin edges must be the same for both histograms")
-    return Histogram(h1.bin_entries, h1.bin_contents ./ h2.bin_contents, h1.bin_edges)
+    div = h1.bin_contents ./ h2.bin_contents
+    #div = Float64[d >= 0.0 ? d : 0.0 for d in div]
+
+    ent = (h1.bin_entries ./ h1.bin_contents) .^ 2 + (h2.bin_entries ./ h2.bin_contents) .^ 2
+    #ent = Float64[x >= 0.0 ? x : 0.0 for x in ent]
+
+    return Histogram(
+        ent,
+        div,
+        h1.bin_edges
+    )
 end
 
 function integral(h::Histogram)
@@ -110,7 +120,52 @@ histogramdd(args...;kwargs...) = numpy.histogramdd(args..., kwargs...);
 flatten(h) = reshape(h, prod(size(h)))
 
 function hplot(figure::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
-    figure[:bar](lowedge(h.bin_edges), h.bin_contents, widths(h.bin_edges), prevhist.bin_contents; kwargs...)
+    kwargsd = {k=>v for (k, v) in kwargs}
+
+    nbins = length(kwargs)
+    #in case of log scale, low bins must be \eps; otherwise 0,0,0,...,0 or lower
+    if (:log in keys(kwargsd) && kwargsd[:log])
+        prevbins = [x > 0 ? x : 1 for x in prevhist.bin_contents]
+    else
+        prevbins = prevhist.bin_contents
+    end
+
+    figure[:bar](lowedge(h.bin_edges), h.bin_contents, widths(h.bin_edges), prevbins; kwargs...)
+end
+
+function hplot{T <: Number}(figure::PyObject, h::Histogram, prevval::T;kwargs...)
+    prevh = Histogram(
+        Float64[1 for i=1:length(h.bin_entries)],
+        Float64[convert(Float64, prevval) for i=1:length(h.bin_entries)],
+        h.bin_edges
+    )
+    hplot(figure, h, prevh; kwargs...)
+end
+
+function hplot(figure::PyObject, h::Histogram; kwargs...)
+    return hplot(figure, h, 0.0*h; kwargs...)
+end
+
+function hplot(figure::PyObject, hists::Vector{Histogram}, args=Dict[]; common_args=Dict(), kwargs...)
+    ret = Any[]
+    kwd = {k=>v for (k,v) in kwargs}
+    for i=1:length(hists)
+
+        h = hists[i]
+        
+        arg = i <= length(args) ? args[i] : Dict()
+        argd = {k=>v for (k, v) in merge(arg, common_args, kwd)}
+
+        if !haskey(argd, :color)
+            argd[:color] = figure[:_get_lines][:color_cycle][:next]()
+        end
+
+        prevh = i>1 ? sum(hists[1:i-1]) : 0.0
+        r = hplot(figure, h, prevh; argd...)
+        
+        push!(ret, r)
+    end
+    return ret
 end
 
 function eplot(figure::PyObject, h::Histogram;kwargs...)
@@ -125,41 +180,6 @@ function eplot(figure::PyObject, hs::Vector{Histogram};kwargs...)
    end
 end
 
-function hplot{T <: Number}(figure::PyObject, h::Histogram, prevval::T;kwargs...)
-    prevh = Histogram(
-        Int64[1 for i=1:length(h.bin_entries)],
-        Float64[convert(Float64, prevval) for i=1:length(h.bin_entries)],
-        h.bin_edges
-    )
-    hplot(figure, h, prevh; kwargs...)
-end
-
-function hplot(figure::PyObject, h::Histogram; kwargs...)
-    return hplot(figure, h, 0.0*h; kwargs...)
-end
-
-function hplot(figure::PyObject, hists::Vector{Histogram}, args=Dict[]; common_args=Dict())
-    ret = Any[]
-    for i=1:length(hists)
-
-        h = hists[i]
-        
-        arg = i <= length(args) ? args[i] : Dict()
-        argd = {k=>v for (k, v) in merge(arg, common_args)}
-
-        if !haskey(argd, :color)
-            argd[:color] = figure[:_get_lines][:color_cycle][:next]()
-        end
-
-        prevh = i>1 ? sum(hists[1:i-1]) : 0.0
-
-        r = hplot(figure, h, prevh; argd...)
-        
-        push!(ret, r)
-    end
-    return ret
-end
-
 export Histogram, hfill!, hplot, integral, normed, errors
 export +, -, *, /
 export todf, fromdf
@@ -168,3 +188,13 @@ export histogramdd, flatten
 export hplot, eplot
 
 end #module
+
+if "--test" in ARGS
+    using Hist
+    h = Histogram([1,2], [2.0,3.0], [0,1,2])
+    d = h / h
+    m = h - h
+    println(d)
+    println(m)
+    m / d
+end
