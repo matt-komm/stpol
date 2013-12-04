@@ -70,6 +70,13 @@ def SingleTopStep2():
               VarParsing.varType.string,
               "A string Run{A,B,C,D} to specify the data period")
 
+    options.register(
+        'doSync', False,
+        VarParsing.multiplicity.singleton,
+        VarParsing.varType.bool,
+        "Synchronization exercise"
+    )
+
     options.parseArguments()
 
 
@@ -84,12 +91,11 @@ def SingleTopStep2():
     Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
     Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
     Config.systematic = options.systematic
-    Config.doDebug = Config.doDebug
-
+    Config.doSync = options.doSync
 
     print "Systematic: ",Config.systematic
 
-    if Config.isMC:
+    if Config.isMC and not Config.doSync:
         logging.info("Changing jet source from %s to smearedPatJetsWithOwnRef" % Config.Jets.source)
         Config.Jets.source = "smearedPatJetsWithOwnRef"
 
@@ -470,6 +476,10 @@ def SingleTopStep2():
         from SingleTopPolarization.Analysis.debugAnalyzers_step2_cfi import DebugAnalyzerSetup
         DebugAnalyzerSetup(process)
 
+    if Config.isMC:
+        WeightSetup(process, Config)
+
+
     if Config.isMC and options.doGenParticlePath:
         if Config.isCompHep:
             from SingleTopPolarization.Analysis.partonStudy_comphep_step2_cfi import PartonStudySetup
@@ -477,23 +487,26 @@ def SingleTopStep2():
             from SingleTopPolarization.Analysis.partonStudy_step2_cfi import PartonStudySetup
         PartonStudySetup(process)
         process.partonPath = cms.Path()
-        if sample_types.is_signal(Config.subChannel):
-            process.partonPath += process.partonStudyTrueSequence
 
-    if Config.isMC:
-        WeightSetup(process, Config)
+        #NOTE: this path will REJECT events not having a true t-channel lepton
+        if sample_types.is_signal(Config.subChannel):
+            logging.warning("Using signal-only sequence 'process.partonStudyTrueSequence' on subChannel=%s" % Config.subChannel)
+            process.partonPath += process.partonStudyTrueSequence
 
     from SingleTopPolarization.Analysis.muons_step2_cfi import MuonPath
     MuonPath(process, Config)
 
     from SingleTopPolarization.Analysis.electrons_step2_cfi import ElectronPath
     ElectronPath(process, Config)
+
     if Config.isMC:
         process.muPath += process.weightSequence
         process.elePath += process.weightSequence
 
-    #process.eventIDProducer = cms.EDProducer('EventIDProducer'
-    #)
+    if Config.isMC and sample_types.is_signal(Config.subChannel):
+        process.muPath += process.partonStudyCompareSequence
+        process.elePath += process.partonStudyCompareSequence
+
     process.treePath = cms.Path(
         process.treeSequenceNew
     )
@@ -501,6 +514,12 @@ def SingleTopStep2():
     process.eventVarsPath = cms.Path(
         process.eventShapeSequence
     )
+
+    #enable embedding the gen-level weight, which is relevant for the Sherpa sample
+    if Config.isMC:
+        process.genWeightProducer = cms.EDProducer("GenWeightProducer")
+        process.eventVarsPath += process.genWeightProducer
+
     if Config.doWJetsFlavour:
         process.treePath += process.flavourAnalyzer
 

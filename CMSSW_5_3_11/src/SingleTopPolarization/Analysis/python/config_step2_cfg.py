@@ -33,6 +33,9 @@ class Config(C):
     #Enable debugging modules
     doDebug = False
 
+    #Synchronization exercise
+    doSync = False
+
     #Do a phi-correction for the MET, as dependent on the number of vertices
     doMETSystShift = False
 
@@ -80,7 +83,7 @@ class Config(C):
             WP = {"TCHPT":3.41, "CSVT":0.898, "CSVM":0.679}
 
         bTagDiscriminant = BTagDiscriminant.CSV
-        bTagWorkingPoint = BTagWorkingPoint.CSVM
+        bTagWorkingPoint = BTagWorkingPoint.CSVT
 
         @classmethod
         def BTagWorkingPointVal(c):

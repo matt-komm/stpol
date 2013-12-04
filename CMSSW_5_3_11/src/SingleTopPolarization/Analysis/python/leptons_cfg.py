@@ -15,11 +15,13 @@ def LeptonSetup(process, conf):
       rhoSrc = cms.InputTag("kt6PFJets", "rho"),
       dR = cms.double(0.4)
     )
+
     process.muonBeforeSelectionSequence += process.muonsWithIso
 
     if conf.Electrons.reverseIsoCut:
         logger.info("Using reversed isolation definition for electrons, changing electron source from %s to 'electronsWithIDAll'")
         conf.Electrons.source = "electronsWithIDAll"
+
 
     process.electronBeforeSelectionSequence = cms.Sequence()
     process.electronsWithIso = cms.EDProducer(
@@ -28,6 +30,7 @@ def LeptonSetup(process, conf):
       rhoSrc = cms.InputTag("kt6PFJets", "rho"),
       dR = cms.double(0.3)
     )
+
     process.electronBeforeSelectionSequence += process.electronsWithIso
     process.electronsWithCorrectedEcalIso = cms.EDProducer(
         'CorrectedEcalIsoElectronProducer',
@@ -60,8 +63,8 @@ def LeptonSetup(process, conf):
 
     process.muonTriggerMatchHLTMuons = cms.EDProducer("PATTriggerMatcherDRLessByR" # matching in DeltaR, sorting by best DeltaR
                                                       # matcher input collections
-                                                      , src     = cms.InputTag( 'muonsWithIso' )
-                                                      , matched = cms.InputTag( 'patTrigger' )
+                                                      , src     = cms.InputTag('muonsWithIso')
+                                                      , matched = cms.InputTag('patTrigger')
                                                       # selections of trigger objects
                                                       , matchedCuts = cms.string('type("TriggerMuon") && path("%s")' % conf.Muons.triggerPath)
                                                       # selection of matches
@@ -105,6 +108,21 @@ def LeptonSetup(process, conf):
     process.singleIsoMu = cms.EDFilter("CandViewSelector", src=cms.InputTag("goodSignalMuons"), cut=cms.string(""))
 
     #Combine the found electron/muon to a single collection
+    process.inLeptons = cms.EDProducer(
+         'CandRefCombiner',
+         sources=cms.vstring([conf.Muons.source, conf.Electrons.source]),
+         maxOut=cms.uint32(9999),
+         minOut=cms.uint32(1),
+         logErrors=cms.bool(False)
+    )
+    process.hasLepton = cms.EDFilter(
+        "PATCandViewCountFilter",
+        src=cms.InputTag("inLeptons"),
+        minNumber=cms.uint32(1),
+        maxNumber=cms.uint32(9999),
+    )
+
+    #Combine the found electron/muon to a single collection
     process.goodSignalLeptons = cms.EDProducer(
          'CandRefCombiner',
          sources=cms.vstring(["singleIsoMu", "singleIsoEle"]),
@@ -113,10 +131,13 @@ def LeptonSetup(process, conf):
          logErrors=cms.bool(False)
     )
 
+
     process.leptonSequence = cms.Sequence(
         process.HLTprefilter *
-        process.muonBeforeSelectionSequence *
-        process.electronBeforeSelectionSequence *
+        process.inLeptons * #combine input lepton collections
+        process.hasLepton * #check for at least 1 lepton (to see if PFBRECO was run)
+        process.muonBeforeSelectionSequence * #muon iso, HLT matching
+        process.electronBeforeSelectionSequence * #electron iso, HLT matching
         process.goodSignalMuons *
         process.muonCount *
         process.goodSignalElectrons *

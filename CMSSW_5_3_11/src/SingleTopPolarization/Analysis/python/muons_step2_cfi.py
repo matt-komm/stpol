@@ -131,12 +131,6 @@ def MuonPath(process, conf):
         process.topRecoSequenceMu
     )
 
-    #Only do the parton identification in the signal channel
-    if conf.isMC and sample_types.is_signal(conf.subChannel):
-        process.muPath.insert(
-            process.muPath.index(process.topRecoSequenceMu)+1,
-            process.partonStudyCompareSequence
-        )
     if conf.doDebug:
         process.goodSignalMuAnalyzer = cms.EDAnalyzer("SimpleMuonAnalyzer", interestingCollections=cms.untracked.VInputTag("muonsWithIso", "goodSignalMuons", "looseVetoMuons"))
         process.vetoEleAnalyzer = cms.EDAnalyzer("SimpleElectronAnalyzer", interestingCollections=cms.untracked.VInputTag("looseVetoElectrons"))

@@ -313,7 +313,8 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
         }
         else
         {
-            throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
+            //throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
+            edm::LogInfo("scaleFactor") << "algo " << algo << " not implemented";
         }
     }
     //for c use the b SF but increase unc. by a factor of 2
@@ -340,7 +341,8 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
         }
         else
         {
-            throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
+            //throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
+            edm::LogInfo("scaleFactor") << "algo " << algo << " not implemented";
         }
     }
     else if ( flavour == BTagSystematicsWeightProducer::l)
@@ -350,7 +352,8 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
         else if (algo == BTagSystematicsWeightProducer::TCHPT)
             sf = sfL_TCHPT();
         else
-            throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
+            //throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
+            edm::LogInfo("scaleFactor") << "algo " << algo << " not implemented";
     }
     else
     {
@@ -379,7 +382,8 @@ BTagSystematicsWeightProducer::BTagSystematicsWeightProducer(const edm::Paramete
     }
     else
     {
-        throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
+        //throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
+        edm::LogInfo("scaleFactor") << "algo " << algo << " not implemented";
     }
 
     edm::LogInfo("constructor") << "Using efficency files: b=" << effFileB.fullPath()
