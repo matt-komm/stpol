@@ -3,7 +3,7 @@ include ../analysis/Makefile.options
 
 #INF=input/Aug22_csvt.txt
 INF=input/nov29.txt
-DIR=skim_nov29_1
+DIR=skim_nov29_2
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
 
