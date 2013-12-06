@@ -31,7 +31,8 @@ for fi in flist
     end
     tot_res += res
 end
-
+println(tot_res)
 of = open(ofile, "w")
 write(of, json(tot_res))
 close(of)
+println(json(tot_res))
