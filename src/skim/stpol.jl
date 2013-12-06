@@ -25,6 +25,7 @@ sources[part(:muon, :mtw)] = Source(:muMTW, symbol(""), :STPOLSEL2, Float64)
 sources[part(:electron, :mtw)] = Source(:eleMTW, symbol(""), :STPOLSEL2, Float64)
 sources[:njets] = Source(:goodJetCount, symbol(""), :STPOLSEL2, Int32)
 sources[:ntags] = Source(:bJetCount, symbol(""), :STPOLSEL2, Int32)
+sources[:n_good_vertices] = Source(:goodOfflinePVCount, symbol(""), symbol(""), Int32)
 
 sources[:nsignalmu] = Source(:muonCount, symbol(""), :STPOLSEL2, Int32)
 sources[:nsignalele] = Source(:electronCount, symbol(""), :STPOLSEL2, Int32)

@@ -33,9 +33,9 @@ step2_inclusive:
 #########
 # STEP3 #
 #########
-STEP3CMD_SKIM=STPOL_NOSKIM=1 /home/joosep/singletop/stpol2/src/skim/skim.jl
-STEP3CMD_MHADD=/home/joosep/singletop/stpol2/src/skim/metahadd.jl
-STEP3CMD_HADD=/home/joosep/singletop/stpol2/src/skim/hadd.jl
+STEP3CMD_SKIM=STPOL_NOSKIM=1 $(BASEDIR)/src/skim/skim.jl
+STEP3CMD_MHADD=$(BASEDIR)/src/skim/metahadd.jl
+STEP3CMD_HADD=$(BASEDIR)/src/skim/hadd.jl
 step3: step3_inclusive
 
 step3_inclusive:

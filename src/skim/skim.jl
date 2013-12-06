@@ -12,10 +12,11 @@ using HEP
 
 include("xs.jl")
 
-NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
+const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
 if NOSKIM
     println("***skimming DEACTIVATED")
 end
+const DEBUG=true
 
 output_file = ARGS[1]
 
@@ -49,7 +50,7 @@ df = similar(
             hlt_mu=Bool[], hlt_ele=Bool[],
             
             lepton_pt=Float32[], lepton_eta=Float32[],
-            #lepton_iso=Float32[], lepton_phi=Float32[],
+            lepton_iso=Float32[], lepton_phi=Float32[],
             lepton_type=Float32[],
             lepton_id=Int32[], lepton_charge=Int32[],
 
@@ -84,7 +85,7 @@ df = similar(
             nu_soltype=Int32[],
             n_signal_mu=Int32[], n_signal_ele=Int32[],
             n_veto_mu=Int32[], n_veto_ele=Int32[],
-
+            n_good_vertices=Int32[],
 #weights
             pu_weight=Float32[],
 
@@ -138,6 +139,14 @@ timeelapsed = @elapsed for i=1:maxev
         tic()
     end
     to!(events, i)
+    
+    if DEBUG
+        println(where(events))
+    end
+
+    for cn in colnames(df)
+        df[i, cn] = NA
+    end
 
     df[i, :passes] = false
     
@@ -185,28 +194,28 @@ timeelapsed = @elapsed for i=1:maxev
    
     nveto_mu = events[sources[vetolepton(:mu)]] |> ifpresent
     nveto_ele = events[sources[vetolepton(:ele)]] |> ifpresent
-    df[i, :n_veto_mu] = nveto_mu
-    df[i, :n_veto_ele] = nveto_ele
+    df[i, :n_veto_mu] = nveto_mu |> ifpresent
+    df[i, :n_veto_ele] = nveto_ele |> ifpresent
 
-    if nveto_mu != 0 || nveto_ele != 0
-        fails[:lepton] += 1
-        continue
-    end
+    #if nveto_mu != 0 || nveto_ele != 0
+    #    fails[:lepton] += 1
+    #    continue
+    #end
 
     df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
     df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
     #df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]] |> ifpresent
     df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
     #df[i, :lepton_phi] = events[sources[part(lepton_type, :Phi)]] |> ifpresent
-    df[i, :mtw] = events[sources[part(lepton_type, :mtw)]]
+    df[i, :mtw] = events[sources[part(lepton_type, :mtw)]] |> ifpresent
     df[i, :met] = events[sources[:met]] |> ifpresent
     
   
-    #event had no MET
-    if (isna(df[i, :met]) || isna(df[i, :mtw]) || df[i, :met] < 00)
-        fails[:met] += 1
-        continue
-    end
+    ##event had no MET
+    #if (isna(df[i, :met]) || isna(df[i, :mtw]) || df[i, :met] < 00)
+    #    fails[:met] += 1
+    #    continue
+    #end
 
 #    #check for muon/electron and mtw/met
 #    if  (lepton_type == :muon && df[i, :mtw] < 10.0) ||
@@ -245,7 +254,10 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_dr] = events[sources[:ljet_deltaR]] |> ifpresent
     
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
-    df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]]
+    df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]] |> ifpresent
+    df[i, :cos_theta_bl] = events[sources[:cos_theta_bl]] |> ifpresent
+    
+    df[i, :n_good_vertices] = events[sources[:n_good_vertices]] |> ifpresent
 
    
     if do_specjets
@@ -316,11 +328,17 @@ timeelapsed = @elapsed for i=1:maxev
         vec = Float64[]
         #this should be in the order of FourVectorSph
         for k in [:pt, :eta, :phi, :mass]
-            v = convert(Float64, df[i, part(particle, k)])
+            x = df[i, part(particle, k)]
+            if isna(x)
+                break
+            end
+            v = convert(Float64, x)
             push!(vec, v)
         end
-        v = FourVectorSph(vec...)
-        totvec += v
+        if length(vec)==4
+            v = FourVectorSph(vec...)
+            totvec += v
+        end
     end
 
     df[i, :shat] = l(totvec)

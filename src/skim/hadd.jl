@@ -17,9 +17,9 @@ flist = split(readall(fname))
 
 println("Running over $(length(flist)) files")
 
-cols = [:jet_cls, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex]
-outcols = [:jet_cls, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta_lj, :cos_theta_bl, :lepton_type, :xsweight, :sample, :isolation]
-
+cols = [:jet_cls, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices]
+#outcols = [:hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta_lj, :cos_theta_bl, :lepton_type, :xsweight, :sample, :isolation, :jet_cls, :n_good_vertices]
+outcols = vcat(cols, [:sample, :isolation, :xsweight])
 tot_res = JSON.parse(readall(sumfname))
 println(tot_res)
 dfs = Any[]
@@ -41,14 +41,18 @@ for fi in flist
     for i=1:nrow(subdf)
 
         sample = string(sample_types[subdf[i, :fileindex]][:sample])
-        @assert (typeof(cross_sections[sample]) <: Number && cross_sections[sample] > 0.0) "illegal cross section"
-        @assert (typeof(tot_res["$(sample)/counters/generated"]) <: Number && tot_res["$(sample)/counters/generated"] > 0) "illegal ngen"
-        iso = string(sample_types[subdf[i, :fileindex]][:iso])
-
-        xsweights[i] = sample in keys(cross_sections) ? 1.0 * cross_sections[sample] / tot_res["$(sample)/counters/generated"] : NA
+        
+        if sample in keys(cross_sections)
+            @assert (typeof(cross_sections[sample]) <: Number && cross_sections[sample] > 0.0) "illegal cross section"
+            @assert (typeof(tot_res["$(sample)/counters/generated"]) <: Number && tot_res["$(sample)/counters/generated"] > 0) "illegal ngen"
+        
+            xsweights[i] = sample in keys(cross_sections) ? 1.0 * cross_sections[sample] / tot_res["$(sample)/counters/generated"] : NA
+        end
 
         proc = get_process(sample)
         processes[i] = proc != :unknown ? string(proc) : string(sample)
+        
+        iso = string(sample_types[subdf[i, :fileindex]][:iso])
         isos[i] = string(iso)
     end
     subdf["xsweight"] = xsweights
