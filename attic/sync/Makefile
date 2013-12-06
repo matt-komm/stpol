@@ -1,4 +1,6 @@
 
+BASEDIR=/home/joosep/singletop/stpol
+
 #########
 # STEP1 #
 #########
