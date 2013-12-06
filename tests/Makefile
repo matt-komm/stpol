@@ -5,6 +5,9 @@ all: step3py
 testfile:
 	edmFileUtil test_edm.root || curl -k $(TESTFILE) -o test_edm.root && edmFileUtil test_edm.root
 
+step2:
+	python step2.py
+
 step3py: testfile
 	python step3.py test_edm.root
 

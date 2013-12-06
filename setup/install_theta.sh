@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -z "$STPOL_DIR" ]; then
+    STPOL_DIR=`pwd` 
+fi  
+
 echo "Setting up theta"
 mkdir -p $STPOL_DIR/local
 cd $STPOL_DIR/local

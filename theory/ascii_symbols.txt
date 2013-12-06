@@ -14,3 +14,4 @@ alpha α
 delta Δ
 beta β
 rho ρ
+prop ∝
