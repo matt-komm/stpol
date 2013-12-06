@@ -10,3 +10,4 @@ el = @elapsed df = read(fi, "df");
 close(fi)
 println(size(df))
 println("Opening time: $el seconds")
+describe(df)

@@ -1,102 +1,28 @@
 #!/usr/bin/env julia
+#make sure HDF5 libraries are accessibl
+include(joinpath(ENV["HOME"], ".juliarc.jl"))
 
-using DataFrames
-
-#for jldopen, hdf5 storage
-using HDF5
-using JLD
-
+using DataArrays, DataFrames
+using HDF5, JLD
 using Distributions, Stats
-
-#for numpy.histogram
-using PyCall
+using PyCall, PyPlot
 @pyimport numpy
-
-using PyPlot
-
 include("../analysis/histo.jl")
 using Hist
 
-#######
-#Input#
-#######
+using IniFile
+inif = IniFile.Inifile()
+cfg = read(inif, "results.cfg")
+infile = get(cfg, "FILES", "reweighted")
 
-sample_is(x) = :(sample .== $x)
-
-indir = "/Users/joosep/Documents/stpol/results/";
-infile = "$indir/skim_output.jld";
-
-println("opening $infile")
-tic()
+tic();
 fi = jldopen(infile, "r", mmaparrays=false);
 indata = read(fi, "df");
-close(fi);
 toc();
 
-indata["totweight"] = 1.0
-indata["fitweight"] = 1.0
-
-#apply PU weighting
-indata[:(sample .== "data_mu"), :pu_weight] = 1.0
-indata[:(sample .== "data_ele"), :pu_weight] = 1.0
-indata[:totweight] = indata[:pu_weight].*indata[:totweight]
-
-#electron channel QCD weight (ad-hoc)
-indata[:((sample .== "data_ele") .* (isolation .== "antiiso")), :totweight] = 0.00005
-indata[:((sample .== "data_mu") .* (isolation .== "antiiso")), :totweight] = 0.000025
-indata[:((sample .== "data_mu") .* (isolation .== "antiiso") .* (njets .== 3) .* (ntags .== 2)), :totweight] = 0.0000000002;
-indata[:((sample .== "data_mu") .* (isolation .== "antiiso") .* (njets .== 3) .* (ntags .== 1)), :totweight] = 0.000000002;
-indata[:((sample .== "data_ele") .* (isolation .== "antiiso") .* (njets .== 3) .* (ntags .== 2)), :totweight] = 0.000000002;
-indata[:((sample .== "data_ele") .* (isolation .== "antiiso") .* (njets .== 3) .* (ntags .== 1)), :totweight] = 0.0000002;
-
-#Sherpa reweight to madgraph yield
-indata[sample_is("wjets_sherpa"), :xsweight] = 0.04471345 .* indata[sample_is("wjets_sherpa"), :xsweight]
-
-#remove events with incorrect weights
-indata[isna(indata[:totweight]), :totweight] = 1.0
-
-indata[sample_is("data_mu"), :xsweight] = 1.0
-indata[sample_is("data_ele"), :xsweight] = 1.0
-
-const lumis = {:mu => 19764, :ele =>19820}
-
-###########
-#Selection#
-###########
-
 println("performing selection")
-
-selections = {
-    :mu => :(lepton_type .== 13),
-    :ele => :(lepton_type .== 11),
-    :dr => :((ljet_dr .> 0.5) .* (bjet_dr .> 0.5)),
-    :iso => :(isolation .== "iso"),
-    :aiso => :(isolation .== "antiiso")
-}
-
-inds = {
-    :mu =>indata["lepton_type"] .== 13,
-    :ele =>indata["lepton_type"] .== 11,
-    :ljet_rms =>indata["ljet_rms"] .> 0.025,
-    :mtw =>indata["mtw"] .> 50,
-    :met =>indata["met"] .> 45,
-    :dr => (indata["ljet_dr"] .> 0.5) .* (indata["bjet_dr"] .> 0.5),
-    :iso => indata["isolation"] .== "iso",
-    :aiso => indata["isolation"] .== "antiiso",
-    :data_mu => indata["sample"] .== "data_mu",
-    :data_ele => indata["sample"] .== "data_ele",
-    :njets => n -> indata["njets"] .== n,
-    :ntags => n -> indata["ntags"] .== n,
-}
-
-samples = ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan"]
-for s in samples
-    inds[symbol(s)] = indata["sample"] .== s
-end
-
-for c in [:mu, :ele]
-    indata[inds[c], :xsweight] = indata[inds[c], :xsweight] .* lumis[c]
-end
+include("selection.jl")
+tic();inds = perform_selection(indata);toc();
 
 function makehist(df, sample_ex, var_ex, bins, weight_ex)
     subdf = select(sample_ex, df)

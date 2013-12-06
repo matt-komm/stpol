@@ -26,8 +26,11 @@ parhadd:
 	find $(DIR) -name "*.root" > files.txt
 	julia metahadd.jl files.txt $(DIR).md.txt
 	split -a5 -l10 files.txt files.split.
-	find . -name "files.split.*" | $(PARCMD) -j10 ./hadd.jl {} $(DIR).md.txt $(DIR).{#}
+	echo "hadding in parallel"
+	find . -name "files.split.*" | $(PARCMD) -j20 ./hadd.jl {} $(DIR).md.txt $(DIR).{#}
+	echo "hadding all"
 	julia -F hadd2.jl $(DIR).jld $(DIR).*.jld
+	echo "cleaning up"
 	rm -f $(DIR).md.txt
 	rm -f $(DIR).*.jld
 	rm -f files.split.*
