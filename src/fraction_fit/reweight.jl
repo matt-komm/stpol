@@ -6,18 +6,16 @@ using IniFile
 inif = IniFile.Inifile()
 cfg = read(inif, "results.cfg")
 
-#make sure HDF5 libraries are accessibl
+#make sure HDF5 libraries are accessible
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
 
 #for jldopen, hdf5 storage
-using HDF5
-using JLD
+using HDF5, JLD
 
 #######
 #Input#
 #######
 
-#indir = "/Users/joosep/Documents/stpol/results/";
 indir = get(cfg, "FILES", "dir")
 infile = get(cfg, "FILES", "skim")
 ofname = get(cfg, "FILES", "reweighted")
@@ -29,21 +27,21 @@ indata = read(fi, "df");
 close(fi);
 toc();
 
-indata["totweight"] = 1.0
-indata["fitweight"] = 1.0
-
-###########
-#Selection#
-###########
-
-println("performing selection")
+############
+##Selection#
+############
+#
+#println("performing selection")
 include("selection.jl")
-tic();inds = perform_selection(indata);toc()
-println("done performing selection")
+#tic();inds = perform_selection(indata);toc()
+#println("done performing selection")
 
 ###############
 # Reweighting #
 ###############
+
+indata["totweight"] = 1.0
+indata["fitweight"] = 1.0
 
 #apply PU weighting
 indata[:(sample .== "data_mu"), :pu_weight] = 1.0
@@ -75,7 +73,7 @@ println("performing xs reweighting")
 for c in [:mu, :ele]
     tic()
     println("xs reweighting: $c")
-    indata[selections[c], "xsweight"] *= lumis[c]
+    indata[selections[c], :xsweight] *= lumis[c]
     toc()
 end
 
@@ -85,12 +83,29 @@ indata[sample_is("data_ele"), :xsweight] = 1.0
 ##########
 # OUTPUT #
 ##########
+#println("writing output")
+#tic()
+#of = jldopen(ofname, "w")
+#write(of, "df", indata)
+##write(of, "inds", inds)
+#close(of)
+#toc()
 
-
-println("writing output")
-tic()
-of = jldopen(ofname, "w")
-write(of, "df", indata)
-#write(of, "inds", inds)
-close(of)
-toc()
+#########
+# SPLIT #
+#########
+println("splitting")
+for nt in Any[NA, 0,1,2]
+    println("ntags=$nt")
+    tic()
+    if isna(nt)
+        df = select(:(isna(ntags)), indata)
+    else
+        df = select(:(ntags .== $nt), indata)
+    end
+    df = DataFrame(df)
+    of = jldopen("$ofname.$(nt)T", "w")
+    write(of, "df", df)
+    close(of)
+    toc()
+end
