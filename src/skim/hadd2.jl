@@ -23,28 +23,7 @@ function frbind(dfs)
         println("binding $cn")
         tot[cn] = vecbind([df[cn]::DataArray{ct, 1} for df in dfs]...)
     end
-    #for cn in colnames(tot)
-    #    tot[1:nrow(tot), cn] = NA
-    #end
-
-    #for i in [1:length(dfs)]
-    #    tic()
-    #    prevl = sum([nrow(df) for df in dfs[1:i-1]])
-    #    println("binding $i=$prevl:$(nrow(dfs[i]))")
-    #    println("df = $(size(dfs[i]))")
-    #    #describe(dfs[i])
-    #    for cn in colnames(dfs[i])
-    #        println(cn)
-    #        tot[prevl+1:nrow(dfs[i]), cn] = dfs[i][cn]
-    #    #    for j=1:nrow(dfs[i])
-    #    #        tot[prevl+j, cn] = dfs[i][j,cn]
-    #    #    end
-    #    end
-    #    toc()
-    #end
     println("total size of output: $(size(tot))")
-    println(colnames(tot))
-    #describe(tot)
     return tot
 end
 
@@ -68,7 +47,5 @@ toc()
 tic()
 println("writing datasets")
 writedf(of, df)
-#writedf("$of.lowmet", df_lowmet) 
-#writedf("$of.highmet", df_highmet) 
 toc()
 

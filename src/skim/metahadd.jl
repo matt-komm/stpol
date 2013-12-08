@@ -21,13 +21,16 @@ for fi in flist
     md = readtable(acc["processed"], allowcomments=true)
     for i=1:nrow(md)
         f = md[i, :files]
-        sample = sample_type(f)[:sample]
+        
+        st = sample_type(f)
+        sample, iso, systematic = st[:sample], st[:iso], st[:systematic]
+
         k = "$(sample)"
         if !haskey(res, k)
-            res["$(sample)"] = 1
-            res["$(sample)/counters/generated"] = 0
+            res["$(sample)/$(iso)/$(systematic)"] = 1
+            res["$(sample)/$(iso)/$(systematic)/counters/generated"] = 0
         end 
-        res["$(sample)/counters/generated"] += md[i, :total_processed]
+        res["$(sample)/$(iso)/$(systematic)/counters/generated"] += md[i, :total_processed]
     end
     tot_res += res
 end
@@ -35,4 +38,3 @@ println(tot_res)
 of = open(ofile, "w")
 write(of, json(tot_res))
 close(of)
-println(json(tot_res))
