@@ -1,5 +1,5 @@
-#!/usr/bin/env julia
-#make sure HDF5 libraries are accessibl
+include("../analysis/histo.jl")
+
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
 
 using DataArrays, DataFrames
@@ -7,22 +7,11 @@ using HDF5, JLD
 using Distributions, Stats
 using PyCall, PyPlot
 @pyimport numpy
-include("../analysis/histo.jl")
 using Hist
 
-using IniFile
-inif = IniFile.Inifile()
-cfg = read(inif, "results.cfg")
-infile = get(cfg, "FILES", "reweighted")
+#make sure HDF5 libraries are accessible
 
-tic();
-fi = jldopen(infile, "r", mmaparrays=false);
-indata = read(fi, "df");
-toc();
-
-println("performing selection")
-include("selection.jl")
-tic();inds = perform_selection(indata);toc();
+include("../fraction_fit/selection.jl")
 
 function makehist(df, sample_ex, var_ex, bins, weight_ex)
     subdf = select(sample_ex, df)
@@ -391,4 +380,15 @@ function yield_table(a, x, y, yieldsd)
     end
 
     a[:text](x, y, tx, alpha=0.4, color="black", size="x-small");
+end
+
+function yields(indata, cut; kwargs...)
+    h = makehists(indata, cut, {:ljet_eta}, {linspace(-5, 5, 10)}; kwargs...)
+    hc = sort(collect(h), by=x->x[1])
+    yi = DataFrame(
+        ds=ASCIIString[x for (x,y) in hc],
+        uy=Float64[sum(y.bin_entries) for (x,y) in hc],
+        y=Float64[integral(y) for (x,y) in hc],
+    )
+    return yi
 end
