@@ -19,7 +19,7 @@ println("Running over $(length(flist)) files")
 
 cols = [:jet_cls, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices]
 #outcols = [:hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta_lj, :cos_theta_bl, :lepton_type, :xsweight, :sample, :isolation, :jet_cls, :n_good_vertices]
-outcols = vcat(cols, [:sample, :isolation, :systematic, :xsweight])
+outcols = vcat(cols, [:subsample, :xs, :ngen, :sample, :isolation, :systematic, :xsweight])
 tot_res = JSON.parse(readall(sumfname))
 println(tot_res)
 dfs = Any[]
@@ -35,7 +35,10 @@ for fi in flist
     subdf = edf[:, cols]
     
     xsweights = DataArray(Float32, nrow(subdf))
+    ngens = DataArray(Int32, nrow(subdf))
+    xss = DataArray(Float32, nrow(subdf))
     processes = DataArray(ASCIIString, nrow(subdf))
+    samples = DataArray(ASCIIString, nrow(subdf))
     systematics = DataArray(ASCIIString, nrow(subdf))
     isos = DataArray(ASCIIString, nrow(subdf))
 
@@ -48,17 +51,22 @@ for fi in flist
             @assert (typeof(cross_sections[sample]) <: Number && cross_sections[sample] > 0.0) "illegal cross section"
             @assert (typeof(tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"]) <: Number && tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"] > 0) "illegal ngen"
         
+            ngens[i] = tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"]
+            xss[i] = cross_sections[sample]
             xsweights[i] = sample in keys(cross_sections) ? 1.0 * cross_sections[sample] / tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"] : NA
         end
 
         proc = get_process(sample)
         processes[i] = proc != :unknown ? string(proc) : string(sample)
         systematics[i] = string(systematic)
-        
+        samples[i] = sample
         iso = string(sample_types[subdf[i, :fileindex]][:iso])
         isos[i] = string(iso)
     end
     subdf["xsweight"] = xsweights
+    subdf["subsample"] = samples 
+    subdf["xs"] = xss
+    subdf["ngen"] = ngens
     subdf["sample"] = processes
     subdf["systematic"] = systematics
     subdf["isolation"] = isos
@@ -93,6 +101,15 @@ close(fi)
 
 ##write output as CSV
 #tic();writetable(string(ofile, ".csv"), df, separator=',');toc()
+include("../analysis/reweight.jl")
+include("../analysis/split.jl")
 
-##write output as ROOT
-#tic();writetree(string(ofile, ".root"), df);toc()
+println("reweighting")
+tic()
+reweight(df)
+toc()
+
+println("splitting by b-tag")
+tic()
+split_tag(df, ofile)
+toc()

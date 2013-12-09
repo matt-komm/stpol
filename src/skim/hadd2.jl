@@ -39,12 +39,6 @@ function writedf(fn, df)
 end
 
 tic()
-println("splitting datasets")
-df_lowmet = df[:(met .< 30), :]
-df_highmet = df[:(met .>= 30), :]
-toc()
-
-tic()
 println("writing datasets")
 writedf(of, df)
 toc()
