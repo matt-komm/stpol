@@ -39,9 +39,9 @@ end
 #weight_ex - the weight expression used for MC and QCD
 function makehists(
     df, data_expr, vars, bins;
-    weight_ex = :(xsweight .* totweight .* fitweight)
+    weight_ex = :(xsweight .* totweight .* fitweight); mc_sel=selections[:iso]
   )
-    iso = select(selections[:iso], df)
+    iso = select(mc_sel, df)
     aiso = select(selections[:aiso], df)
 
     procs = ["wjets", "ttjets", "tchan", "gjets", "dyjets", "schan", "twchan", "diboson"]
@@ -184,8 +184,8 @@ function data_mc_stackplot(df, data_ex, ax, var, bins; kwargs...)
     yieldsd["total_data"] = tot_data
 
     eplot(ax, hists["DATA"], ls="", marker="o", color="black", label="Data")
-    ylabel("Event yield")
-    return ax, hists, yieldsd
+    #ax[:set_ylabel]("Event yield")
+    return hists
 end
 
 function ratio_hist(hists)
@@ -326,6 +326,29 @@ function ratio_axes(;frac=0.2, w=5, h=5)
     return fig, {a1, a2}
 end
 
+function ratio_axes2(;frac=0.2, w=10, h=5, xpad=0.03)
+    fig = PyPlot.plt.figure(figsize=(w,h))
+
+    a11 = PyPlot.plt.axes((0.0, 0.0, 0.5-xpad, frac))
+    a12 = PyPlot.plt.axes((0.0,frac, 0.5-xpad, 1-frac), sharex=a11)
+
+    a21 = PyPlot.plt.axes((0.5+xpad, 0.0, 0.5-xpad, frac))
+    a22 = PyPlot.plt.axes((0.5+xpad,frac, 0.5-xpad, 1-frac), sharex=a21)
+
+    for a in [a11, a21]
+        a[:set_ylim](-1,1)
+        a[:yaxis][:tick_right]()
+        a[:yaxis][:set_label_position]("right")
+    end
+
+    for a in [a12, a22]
+        PyPlot.plt.setp(a[:get_xticklabels](), visible=false)
+    end
+    PyPlot.plt.setp(a11[:get_yticklabels](), visible=false)
+
+    return fig, {a11, a12, a21, a22}
+end
+
 function subplots(args...;kwargs...)
     fig, axs = convert(PyVector, PyPlot.plt.subplots(args...;kwargs...))
     return fig, convert(PyVector, axs)
@@ -339,7 +362,6 @@ function errorbars(a, h; kwargs...)
     #a[:errorbar](midpoints(hdata.bin_edges), means, errs, ls="", marker="", color="black"; kwargs...)
     a[:axhline](0.0, color="black")
     a[:grid]()
-    a[:set_ylabel]("(Data - MC) / Data")
 end
 
 function reweigh_to_fitres(frd)
@@ -380,6 +402,41 @@ function yield_table(a, x, y, yieldsd)
     end
 
     a[:text](x, y, tx, alpha=0.4, color="black", size="x-small");
+end
+
+function channel_comparison(
+    indata, base_sel, var, bins, varname, sels;
+    )
+
+    (fig, (a11, a12, a21, a22)) = ratio_axes2();
+    hmu = data_mc_stackplot(
+        indata[base_sel .* sels[:mu], :],
+        sample_is("data_mu"), a12,
+        var, bins
+    );
+    hele = data_mc_stackplot(
+        indata[base_sel .* sels[:ele], :],
+        sample_is("data_ele"), a22,
+        var, bins
+    );
+
+    a12[:set_title]("\$ \\mu \$")
+    a22[:set_title]("\$ e \$")
+
+    a12[:grid]();
+    a22[:grid]();
+
+    errorbars(a11, hmu);
+    errorbars(a21, hele);
+
+    rslegend(a22);
+
+    a21[:set_ylabel]("(Data - MC) / Data")
+
+    a11[:set_xlabel](varname)
+    a21[:set_xlabel](varname)
+
+    return fig
 end
 
 function yields(indata, cut; kwargs...)
