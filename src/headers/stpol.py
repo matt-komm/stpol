@@ -111,9 +111,15 @@ class Weights(Getter):
         def nominal(self, event):
             return self._getval(event, "_nominal")
 
+    class Generator(Getter):
+        _nominal = SimpleHandle("double", "genWeightProducer", "w", PROCESS)
+        def nominal(self, event):
+            return self._getval(event, "_nominal")
+
     def __init__(self):
         self.pileup = self.Pileup()
         self.toppt = self.TopPt()
+        self.generator = self.generator()
 
 class File:
     def __init__(self):
