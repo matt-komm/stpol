@@ -28,6 +28,9 @@ TToBMuNu_anomWtb-0100_t-channel /TToBMuNu_anomWtb-0100_t-channel_TuneZ2star_8TeV
 #TToBMuNu_anomWtb-unphys_t-channel /TToBMuNu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/jpata-Jul8_51f69b-e6cee8f160cb239f414a74aa40d88ea9/USER
 TToBMuNu_t-channel /TToBMuNu_t-channel_TuneZ2star_8TeV-comphep/jpata-Jul8_51f69b-e6cee8f160cb239f414a74aa40d88ea9/USER
 
+TToBENu_anomWtb-0100_t-channel /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/joosep-Dec3_anom_2b3b43-2a771fe5d008406ebf97c1e21558b199/USER
+TToBMuNu_anomWtb-unphys_t-channel /TToBMuNu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/joosep-Dec3_anom_2b3b43-2a771fe5d008406ebf97c1e21558b199/USER
+
 TToBTauNu_anomWtb-0100_t-channel /TToBTauNu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/jpata-Jul8_51f69b-e6cee8f160cb239f414a74aa40d88ea9/USER
 TToBTauNu_anomWtb-unphys_t-channel /TToBTauNu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/jpata-Jul8_51f69b-e6cee8f160cb239f414a74aa40d88ea9/USER
 TToBTauNu_t-channel /TToBTauNu_t-channel_TuneZ2star_8TeV-comphep/jpata-Jul8_51f69b-e6cee8f160cb239f414a74aa40d88ea9/USER
@@ -69,3 +72,4 @@ Tbar_t_ToLeptons_mass175_5 /TBarToLeptons_t-channel_mass175_5_8TeV-powheg-tauola
 
 TTJets_mass169_5 /TTJets_mass169_5_TuneZ2star_8TeV-madgraph-tauola/jpata-Sep3_mass3GeV_e4ff13-d1c6e244c12015ac8c182161016516af/USER
 TTJets_mass175_5 /TTJets_mass175_5_TuneZ2star_8TeV-madgraph-tauola/jpata-Sep3_mass3GeV_e4ff13-d1c6e244c12015ac8c182161016516af/USER
+
