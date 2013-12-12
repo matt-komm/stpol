@@ -1,3 +1,4 @@
+import SingleTopPolarization.Analysis.common.global_tags as global_tags
 
 class C(object):
     @classmethod
@@ -23,7 +24,7 @@ class Config(C):
 #    metSource = "patMETs"
     metSource = "patType1CorrectedPFMet"
 
-    globalTagMC = "START53_V20::All"
+    globalTagMC = global_tags.gt_mc
 
     #Either running over MC or Data
     isMC = True
