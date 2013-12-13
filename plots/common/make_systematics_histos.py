@@ -8,6 +8,7 @@ import shutil
 from load_samples import load_samples, load_nominal_mc_samples, create_histogram_for_fit, get_qcd_scale_factor
 from plots.common.cuts import *
 from rootpy.io import File, root_open
+from ROOT import TFile
 import math
 import sys
 
@@ -79,7 +80,7 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                 for sys, sys_types in sub_systs.items():
                     if sys == "nominal" and not main_syst.startswith("wjets"):
                         weight_str = sys_types
-                        hname = "%s__%s" % (var, sn)
+                        hname = "%s_2j1t__%s" % (var, sn)
                         write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
                     elif sn in ["DATA"] and sys != "nominal":
                         #No systematics if data
@@ -87,17 +88,17 @@ def make_histos_for_syst(var, main_syst, sub_systs, cuts, cuts_antiiso, outdir, 
                     elif main_syst in ["Res", "En", "UnclusteredEn"]:
                         if coupling != "powheg": #these systs not available for comphep (currently?)
                             continue
-                        hname = "%s__%s__%s__%s" % (var, sn, main_syst, sys)
+                        hname = "%s_2j1t__%s__%s__%s" % (var, sn, main_syst, sys)
                         write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
                     elif main_syst=="pdf":
                             make_pdf_histos(var, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
                     elif main_syst=="nominal":
                         for st_name, st in sys_types.items():
                             weight_str = st
-                            hname = "%s__%s__%s__%s" % (var, sn, sys, st_name)
+                            hname = "%s_2j1t__%s__%s__%s" % (var, sn, sys, st_name)
                             write_histogram(var, hname, weight_str, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
                     else: #main_syst=="partial"
-                        hname = "%s__%s__%s" % (var, sn, ss_type)
+                        hname = "%s_2j1t__%s__%s" % (var, sn, ss_type)
                         write_histogram(var, hname, Weights.total_weight(channel), samples, sn, sampn, cuts, cuts_antiiso, outdir, channel,  coupling, binning=binning, plot_range=plot_range, asymmetry=asymmetry, mtmetcut=mtmetcut)
 
 
@@ -118,7 +119,7 @@ def make_pdf_histos(var, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir,
     hname_up = "%s__%s__pdf__up" % (var, sn)
     hname_down = "%s__%s__pdf__down" % (var, sn)
     #outfile = File(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
-    outfile = File(outdir + "/%s_%s_pdf.root" % (sampn, var), "RECREATE")
+    outfile = TFile(outdir + "/%s_%s_pdf.root" % (sampn, var), "RECREATE")
     if sn=="DATA":
         weight_str = "1"
     if var == "eta_lj":
@@ -227,7 +228,7 @@ def calculate_PDF_uncertainties(bestfit, pdf_weighted, histo_plus, histo_minus, 
 def write_histogram(var, hname, weight, samples, sn, sampn, cuts, cuts_antiiso, outdir, channel, coupling, binning=None, plot_range=None, asymmetry=None, mtmetcut=None):
     weight_str = weight
     samp = samples[sampn]
-    outfile = File(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
+    outfile = TFile(outdir + "/%s_%s.root" % (sampn,hname), "RECREATE")
     if sn=="DATA":
         weight_str = "1"
     if var == "eta_lj":

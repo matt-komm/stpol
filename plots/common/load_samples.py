@@ -33,6 +33,7 @@ def get_samples(path, channel, systematic):
         #print "samp2", samples2
         #datadir3 = "/".join(("/hdfs/local/stpol/step3/Sep1_wjets_fsim", channel, "mc_syst", "nominal", "wjets_fsim"))
         samples2.update(Sample.fromDirectory(datadir3, out_type="dict"))
+        
         #print "samp3", samples2
     else:
         #datadir = "/".join((path, channel, "mc", "iso", systematic, "Jul15"))
@@ -197,7 +198,7 @@ def group_sample_names(sampnames, components, systematic):
     return names
 
 
-def get_qcd_scale_factor(var, channel, mva=False, mtmetcut=None):
+def get_qcd_scale_factor(var, channel, mva=None, mtmetcut=None):
     datadir = "/".join((os.environ["STPOL_DIR"], "qcd_estimation", "fitted", channel))
     if mtmetcut==None:
         if channel == "mu":
