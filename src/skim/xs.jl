@@ -5,7 +5,7 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
     #MC match
     r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/(.*)/output_(.*).root")
     m = match(r, fn)
-   
+    
     if m==nothing
         tag = :unknown
         syst = :unknown
@@ -25,6 +25,48 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
         syst = m.captures[4]
         samp = m.captures[5]
     end
+    #TToBMuNu_anomWtb-unphys_t-channel
+
+    while true #hack to have 'break' to match only once
+    if syst == "SYST"
+        ss = string(samp)
+        m = match(r".*_(mass.*)", ss)
+        if m != nothing
+            syst = m.captures[1]
+            break
+        end
+        
+        m = match(r".*_(scale.*)", ss)
+        if m != nothing
+            syst = m.captures[1]
+            break
+        end
+        
+        m = match(r".*_(matching.*)", ss)
+        if m != nothing
+            syst = m.captures[1]
+            break
+        end
+
+        m = match(r"TToB.*Nu(.*)_t-channel", ss)
+        if m != nothing
+            if m.captures[1] == ""
+                syst = "signal_comphep_nominal"
+            else
+                syst = string("signal_comphep", m.captures[1])
+            end
+            break
+        end
+        
+        m = match(r"W*JetsToLNu", ss)
+        if m != nothing
+            syst = "wjets_fsim_nominal"
+            break
+        end
+    end
+    break #in case of no match, we also want to break
+    end #while
+
     return {:tag => string(tag), :iso => string(iso), :systematic => string(syst), :sample => string(samp)}
 end
 
@@ -72,12 +114,66 @@ end
 
 #process ->[sample1, sample2, ...]
 merges = {
-    "tchan"=>["T_t_ToLeptons", "Tbar_t_ToLeptons"],
+    "tchan"=>
+        ["T_t_ToLeptons", "Tbar_t_ToLeptons",
+        "TToBENu_anomWtb-unphys_t-channel", "TToBENu_anomWtb-0100_t-channel", "TToBENu_t-channel",
+        "TToBMuNu_anomWtb-unphys_t-channel", "TToBMuNu_anomWtb-0100_t-channel", "TToBMuNu_t-channel",
+        "TToBTauNu_anomWtb-unphys_t-channel", "TToBTauNu_anomWtb-0100_t-channel", "TToBTauNu_t-channel",
+        
+        "T_t_ToLeptons_mass166_5", 
+        "T_t_ToLeptons_mass169_5", 
+        "Tbar_t_ToLeptons_mass166_5", 
+        "Tbar_t_ToLeptons_mass169_5", 
+        
+        "T_t_ToLeptons_mass175_5", 
+        "T_t_ToLeptons_mass178_5", 
+        "Tbar_t_ToLeptons_mass175_5", 
+        "Tbar_t_ToLeptons_mass178_5", 
+        
+        "T_t_ToLeptons_scaleup", 
+        "Tbar_t_ToLeptons_scaledown", 
+    ],
+
     "tchan_inc"=>["T_t", "Tbar_t"],
-    "wjets"=>["W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive"],
+    "wjets"=>[
+        "W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive",
+        "W1JetsToLNu",
+        "W1JetsToLNu_matchingdown",
+        "W1JetsToLNu_matchingup",
+        "W1JetsToLNu_scaleup",
+        "W1JetsToLNu_scaledown",
+        "W2JetsToLNu",
+        "W2JetsToLNu_matchingdown",
+        "W2JetsToLNu_matchingup",
+        "W2JetsToLNu_scaleup",
+        "W2JetsToLNu_scaledown",
+        "W3JetsToLNu",
+        "W3JetsToLNu_matchingdown",
+        "W3JetsToLNu_matchingup",
+        "W3JetsToLNu_scaleup",
+        "W3JetsToLNu_scaledown",
+        "W4JetsToLNu",
+        "W4JetsToLNu_matchingdown",
+        "W4JetsToLNu_matchingup",
+        "W4JetsToLNu_scaleup",
+        "W4JetsToLNu_scaledown",
+    ],
     "wjets_inc"=>["WJets_inclusive"],
     "wjets_sherpa"=>["WJets_sherpa"],
-    "ttjets"=>["TTJets_FullLept", "TTJets_SemiLept"],
+    
+    "ttjets"=>[
+        "TTJets_FullLept", "TTJets_SemiLept",
+        "TTJets_matchingdown",
+        "TTJets_matchingup",
+        "TTJets_scaledown",
+        "TTJets_scaleup",
+
+        "TTJets_mass166_5",
+        "TTJets_mass169_5",
+        "TTJets_mass175_5",
+        "TTJets_mass178_5",
+    ],
+
     "ttjets_inc"=>["TTJets_MassiveBinDECAY"],
     "twchan"=>["T_tW", "Tbar_tW"],
     "schan"=>["T_s", "Tbar_s"],
@@ -109,4 +205,15 @@ function get_process(sample)
         sample in samps && return symbol(proc)
     end
     return :unknown
+end
+
+function test_cls(inf)
+    flist = split(readall(inf))
+    for f in flist
+        st = sample_type(f)
+        samp = string(st[:sample])
+        proc = get_process(samp)
+        xs = samp in keys(cross_sections) ? cross_sections[samp] : -1.0
+        println("$f $st $proc $xs")
+    end
 end
