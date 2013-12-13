@@ -1,17 +1,8 @@
-include("../analysis/histo.jl")
+include("../analysis/base.jl")
 
-include(joinpath(ENV["HOME"], ".juliarc.jl"))
-
-using DataArrays, DataFrames
-using HDF5, JLD
 using Distributions, Stats
 using PyCall, PyPlot
 @pyimport numpy
-using Hist
-
-#make sure HDF5 libraries are accessible
-
-include("../fraction_fit/selection.jl")
 
 function makehist(df, sample_ex, var_ex, bins, weight_ex)
     subdf = select(sample_ex, df)
@@ -39,7 +30,7 @@ end
 #weight_ex - the weight expression used for MC and QCD
 function makehists(
     df, data_expr, vars, bins;
-    weight_ex = :(xsweight .* totweight .* fitweight); mc_sel=selections[:iso]
+    weight_ex = :(xsweight .* totweight .* fitweight), mc_sel=selections[:iso]
   )
     iso = select(mc_sel, df)
     aiso = select(selections[:aiso], df)
@@ -50,8 +41,8 @@ function makehists(
         hists[k] = makehist_multid(iso, sample_is(k), vars, bins, weight_ex);
     end
 
-    hists["qcd"] = (makehist_multid(aiso, data_expr, vars, bins, weight_ex) - 
-        sum([makehist_multid(aiso, sample_is(p), vars, bins, weight_ex) for p in procs]))
+    hists["qcd"] = (makehist_multid(aiso, data_expr, vars, bins, :totweight) - 
+        sum([makehist_multid(aiso, sample_is(p), vars, bins, :(xsweight .* totweight)) for p in procs]))
 
     hists["DATA"] = makehist_multid(iso, data_expr, vars, bins, 1.0);
 
@@ -97,12 +88,22 @@ function makehist_multid(df, sample_ex, vars, bins, weight_ex)
 end
 
 
-function mergehists(hists)
+function mergehists_4comp(hists)
     out = Dict()
     out["wzjets"] = hists["wjets"] + hists["gjets"] + hists["dyjets"] + hists["diboson"]
     out["ttjets"] = hists["ttjets"] + hists["schan"] + hists["twchan"]
 
     out["qcd"] = hists["qcd"]
+
+    out["tchan"] = hists["tchan"] 
+    out["DATA"] = hists["DATA"]
+    return out
+end
+
+function mergehists_3comp(hists)
+    out = Dict()
+    out["wzjets"] = hists["wjets"] + hists["gjets"] + hists["dyjets"] + hists["diboson"]
+    out["ttjets"] = hists["ttjets"] + hists["schan"] + hists["twchan"] + hists["qcd"]
 
     out["tchan"] = hists["tchan"] 
     out["DATA"] = hists["DATA"]
@@ -192,8 +193,8 @@ function ratio_hist(hists)
     mc = sum([v for (k,v) in filter(x -> x[1] != "DATA", collect(hists))])
     data = sum([v for (k,v) in filter(x -> x[1] == "DATA", collect(hists))])
 
-    mcs = [Poisson(x) for x in mc.bin_entries]
-    datas = [Poisson(x) for x in data.bin_entries]
+    mcs = [(!isna(x) && x>0) ? Poisson(x) : Poisson(1) for x in mc.bin_entries]
+    datas = [(!isna(x) && x>0) ? Poisson(x) : Poisson(1) for x in data.bin_entries]
     N = 10000
     
     errs = Array(Float64, (2, length(mcs)))
@@ -202,6 +203,7 @@ function ratio_hist(hists)
         m = rand(mcs[i], N) * mc.bin_contents[i] / mc.bin_entries[i] 
         d = rand(datas[i], N)
         v = (d-m)./d
+        v = Float32[isna(_v) || isnan(_v) ? 0 : _v for _v in v]
         err_up, mean, err_down = quantile(v, 0.99), quantile(v, 0.5), quantile(v, 0.01)
         errs[1,i] = abs(mean-err_up)
         errs[2,i] = abs(mean-err_down)
@@ -211,7 +213,7 @@ function ratio_hist(hists)
     return means, errs
 end
 
-immutable FitResult
+type FitResult
     means::Vector{Float64}
     sigmas::Vector{Float64}
     corr::Array{Float64, 2}
@@ -404,21 +406,26 @@ function yield_table(a, x, y, yieldsd)
     a[:text](x, y, tx, alpha=0.4, color="black", size="x-small");
 end
 
+#plots a comparison of the ele and mu channels, stacked format
 function channel_comparison(
-    indata, base_sel, var, bins, varname, sels;
+    indata, base_sel, var, bins, varname, sels; kwargs...
     )
 
     (fig, (a11, a12, a21, a22)) = ratio_axes2();
     hmu = data_mc_stackplot(
         indata[base_sel .* sels[:mu], :],
         sample_is("data_mu"), a12,
-        var, bins
+        var, bins; kwargs...
     );
     hele = data_mc_stackplot(
         indata[base_sel .* sels[:ele], :],
         sample_is("data_ele"), a22,
-        var, bins
+        var, bins; kwargs...
     );
+    ymu = yields(hmu)
+    yele = yields(hele)
+    yt = hcat(ymu, yele)
+    show(yt)
 
     a12[:set_title]("\$ \\mu \$")
     a22[:set_title]("\$ e \$")
@@ -436,16 +443,41 @@ function channel_comparison(
     a11[:set_xlabel](varname)
     a21[:set_xlabel](varname)
 
-    return fig
+    return {:figure=>fig, :yields=>{:mu=>ymu, :ele=>yele}, :hists=>{:mu=>hmu, :ele=>hele}}
 end
 
-function yields(indata, cut; kwargs...)
-    h = makehists(indata, cut, {:ljet_eta}, {linspace(-5, 5, 10)}; kwargs...)
+function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwargs...)
+
+    #copy the input histogram collection to keep it unmodified
+    h = deepcopy(h)
+
+    #create the total-MC histogram
+    hmc = nothing 
+    for (k, v) in h
+        if k != "DATA"
+            if hmc == nothing
+                hmc = v
+            else
+                hmc += v
+            end
+        end
+    end
+    h["MC"] = hmc
+    
+    #order by name
     hc = sort(collect(h), by=x->x[1])
+
+    #create the total yield table
     yi = DataFrame(
-        ds=ASCIIString[x for (x,y) in hc],
-        uy=Float64[sum(y.bin_entries) for (x,y) in hc],
-        y=Float64[integral(y) for (x,y) in hc],
+        ds=ASCIIString[x for (x,y) in hc], #process name
+        uy=Int64[sum(y.bin_entries) for (x,y) in hc], #unweighted raw events
+        y=Float64[integral(y) for (x,y) in hc], #events after xs weight, other weights
     )
     return yi
+end
+
+#based on a dataset(with cut) and a data cut, draw the yield table
+function yields(indata, data_cut; kwargs...)
+    h = makehists(indata, data_cut, {:ljet_eta}, {linspace(-5, 5, 10)}; kwargs...)
+    return yields(h;kwargs...)
 end

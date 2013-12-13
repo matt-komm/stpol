@@ -26,11 +26,25 @@ function perform_selection(indata)
         :njets => n -> indata["njets"] .== n,
         :ntags => n -> indata["ntags"] .== n,
         :hlt => n -> indata["hlt_$n"] .== true,
+        :sample => (x -> indata["sample"] .== x),
+        :nominal => ((indata["systematic"] .== "nominal") .+ (indata["systematic"] .== "unknown"))
     }
     
     samples = ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan"]
     for s in samples
         inds[symbol(s)] = indata["sample"] .== s
     end
+#
+#    for s in ["gjets", "wjets", "ttjets", "tchan"]
+#        muind = inds[:iso] .* inds[:sample](s) .* inds[:hlt](:mu) .* inds[:mu] .* inds[:njets](2) .* inds[:ntags](1) .* inds[:mtw] .* inds[:ljet_rms]
+#        eleind = inds[:iso] .* inds[:sample](s) .* inds[:hlt](:ele) .* inds[:ele] .* inds[:njets](2) .* inds[:ntags](1) .* inds[:met] .* inds[:ljet_rms]
+#       
+#        mud = indata[muind, :xsweight]
+#        eled = indata[eleind, :xsweight]
+#
+#        println("FY ", s, " mu ", length(mud), " ", sum(mud))
+#        println("FY ", s, " ele ", length(eled), " ", sum(eled))
+#    end
+#
     return inds
 end

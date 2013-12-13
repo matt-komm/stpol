@@ -12,7 +12,7 @@ function split_tag(indata, ofname)
         of = jldopen("$ofname.jld.$(nt)T", "w")
         write(of, "df", df)
         close(of)
-        writetree("$ofname.root.$(nt)T", df)
+#        writetree("$ofname.root.$(nt)T", df)
         toc()
     end
 end
