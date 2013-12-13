@@ -1,0 +1,15 @@
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_1_1_lDc.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_2_1_iaF.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_3_1_fpg.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_4_1_qda.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_5_1_AhA.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_6_1_nwX.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_7_1_dmE.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_8_1_EXi.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_9_1_6YI.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_10_1_C9x.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_11_1_7Rb.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_12_1_PYn.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_13_1_0Zz.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_14_1_QMy.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBENu_anomWtb-0100_t-channel/output_15_1_mOM.root

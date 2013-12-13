@@ -111,9 +111,15 @@ class Weights(Getter):
         def nominal(self, event):
             return self._getval(event, "_nominal")
 
+    class Generator(Getter):
+        _nominal = SimpleHandle("double", "genWeightProducer", "w", PROCESS)
+        def nominal(self, event):
+            return self._getval(event, "_nominal")
+
     def __init__(self):
         self.pileup = self.Pileup()
         self.toppt = self.TopPt()
+        self.generator = self.generator()
 
 class File:
     def __init__(self):
@@ -250,6 +256,14 @@ class Event(Getter):
     def nelectrons(self, events):
         return _int(self._getval(events, "_nelectrons"))
 
+    def file_index(self, events):
+        return events.fileIndex()
+
+    def file_name(self, events):
+        return events._filenames[events.fileIndex()]
+
+    def size(self, events):
+        return events.size()
 
 class Particle(Getter):
     def __init__(self, label):

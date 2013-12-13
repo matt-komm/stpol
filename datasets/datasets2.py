@@ -31,8 +31,9 @@ step2_mc_files_qcd = [
 #Systematic input files for step2 (that don't need to be variated)
 step2_mc_syst_files = [
 #    "/mc_syst/Apr19",
-    "/mc_syst/Jul15",
-    "/mc_syst/Sep4",
+#    "/mc_syst/Jul15",
+#    "/mc_syst/Sep4",
+    "/mc_syst/merged",
 ]
 
 step2_data_files = [

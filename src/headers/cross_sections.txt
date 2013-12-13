@@ -1,4 +1,4 @@
-sample, xs
+"sample", "xs"
 #Cross-sections from AN2012-273-v7, page 4
 "T_t", 56.4
 "T_t_ToLeptons", 18.3864
@@ -57,3 +57,63 @@ sample, xs
 #These are here for convenience (no effect)
 "SingleMu", 1.0
 "SingleEle", 1.0
+
+# (T_t + Tbar_t) / 3 from the inclusive cross sections, equal BR
+"TToBENu_anomWtb-unphys_t-channel", 24.9288
+"TToBMuNu_anomWtb-unphys_t-channel", 24.9288
+"TToBTauNu_anomWtb-unphys_t-channel", 24.9288
+"TToBENu_anomWtb-0100_t-channel", 24.9288
+"TToBMuNu_anomWtb-0100_t-channel", 24.9288
+"TToBTauNu_anomWtb-0100_t-channel", 24.9288
+"TToBENu_t-channel", 24.9288
+"TToBMuNu_t-channel", 24.9288
+"TToBTauNu_t-channel", 24.9288
+
+#exclusive cross sections
+"T_t_ToLeptons_mass166_5", 18.3864 
+"T_t_ToLeptons_mass169_5", 18.3864 
+"Tbar_t_ToLeptons_mass166_5", 10.0082 
+"Tbar_t_ToLeptons_mass169_5", 10.0082 
+
+"T_t_ToLeptons_mass175_5", 18.3864 
+"T_t_ToLeptons_mass178_5", 18.3864 
+"Tbar_t_ToLeptons_mass175_5", 10.0082 
+"Tbar_t_ToLeptons_mass178_5", 10.0082 
+
+"T_t_ToLeptons_scaleup", 18.3864 
+"Tbar_t_ToLeptons_scaleup", 10.0082 
+
+"T_t_ToLeptons_scaledown", 18.3864 
+"Tbar_t_ToLeptons_scaledown", 10.0082 
+
+#inclusive
+"TTJets_matchingdown", 245.8
+"TTJets_matchingup", 245.8
+"TTJets_scaledown", 245.8
+"TTJets_scaleup", 245.8
+"TTJets_mass166_5", 245.8
+"TTJets_mass169_5", 245.8
+"TTJets_mass175_5", 245.8
+"TTJets_mass178_5", 245.8
+
+#exclusive xs-s from above
+"W1JetsToLNu", 6662.7828947368425
+"W1JetsToLNu_matchingdown", 6662.7828947368425
+"W1JetsToLNu_matchingup", 6662.7828947368425
+"W1JetsToLNu_scaleup", 6662.7828947368425
+"W1JetsToLNu_scaledown", 6662.7828947368425
+"W2JetsToLNu", 2159.2351973684213
+"W2JetsToLNu_matchingdown", 2159.2351973684213
+"W2JetsToLNu_matchingup", 2159.2351973684213
+"W2JetsToLNu_scaleup", 2159.2351973684213
+"W2JetsToLNu_scaledown", 2159.2351973684213
+"W3JetsToLNu", 640.3674671052631
+"W3JetsToLNu_matchingdown", 640.3674671052631
+"W3JetsToLNu_matchingup", 640.3674671052631
+"W3JetsToLNu_scaleup", 640.3674671052631
+"W3JetsToLNu_scaledown", 640.3674671052631
+"W4JetsToLNu", 264.04361842105266
+"W4JetsToLNu_matchingdown", 264.04361842105266
+"W4JetsToLNu_matchingup", 264.04361842105266
+"W4JetsToLNu_scaleup", 264.04361842105266
+"W4JetsToLNu_scaledown", 264.04361842105266

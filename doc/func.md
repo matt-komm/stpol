@@ -100,6 +100,7 @@ Overall event-level parameters.
 The weights interface is subject to change based on the most optimal implementation of the weights and systematics.
 
 * `pileup.nominal`: the MC-to-data PU reweighting based on Ntrue.
+* `generator.nominal`: the generator weight, relevant for e.g. the Sherpa samples
 * `toppt.nominal`: the top-pt reweighting, only defined for ttbar samples
 
 ## `stpol.stable.event.costheta`

@@ -132,7 +132,7 @@ def MuonPath(process, conf):
     )
 
     if conf.doDebug:
-        process.goodSignalMuAnalyzer = cms.EDAnalyzer("SimpleMuonAnalyzer", interestingCollections=cms.untracked.VInputTag("muonsWithIso", "goodSignalMuons", "looseVetoMuons"))
+        process.goodSignalMuAnalyzer = cms.EDAnalyzer("SimpleMuonAnalyzer", interestingCollections=cms.untracked.VInputTag("muonsWithID", "muonsWithIDAll", "muonsWithIso", "goodSignalMuons", "looseVetoMuons"))
         process.vetoEleAnalyzer = cms.EDAnalyzer("SimpleElectronAnalyzer", interestingCollections=cms.untracked.VInputTag("looseVetoElectrons"))
         process.muPrintOutSequence = cms.Sequence(process.goodSignalMuAnalyzer*process.vetoEleAnalyzer)
         process.muPath.insert(

@@ -1,0 +1,13 @@
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_1_1_5vl.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_2_1_gsE.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_3_1_SFu.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_4_1_Ks5.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_5_1_a7D.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_6_1_dRV.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_7_1_jZ1.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_8_1_HhP.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_9_1_V6l.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_10_1_kds.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_11_1_D7e.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_12_1_cZd.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/EnUp/Tbar_t/output_13_1_Rcc.root

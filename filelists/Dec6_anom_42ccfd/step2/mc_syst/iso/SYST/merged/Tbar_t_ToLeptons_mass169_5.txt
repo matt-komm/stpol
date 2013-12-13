@@ -1,0 +1,10 @@
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_1_1_nNE.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_2_1_ko2.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_3_1_Enj.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_4_1_4nT.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_5_1_LMB.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_6_1_hOC.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_7_1_COq.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_8_1_w7A.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_9_1_CJO.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_mass169_5/output_10_1_OJv.root

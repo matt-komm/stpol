@@ -609,6 +609,3 @@ if __name__=="__main__":
     process.maxEvents.input=-1
 
     print str(process.source)
-
-
-

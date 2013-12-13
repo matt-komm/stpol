@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/ResUp/T_tW/output_1_1_Ktm.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/ResUp/T_tW/output_2_1_f0S.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/ResUp/T_tW/output_3_1_KAb.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/ResUp/T_tW/output_4_1_vP4.root
