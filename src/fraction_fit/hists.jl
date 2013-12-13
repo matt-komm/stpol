@@ -241,8 +241,8 @@ function FitResult(fn::ASCIIString)
     )
 end
 
-function show_corr(a, fr::FitResult; subtitle="")
-    im = a[:matshow](fr.corr, interpolation="none", cmap="jet", vmin=-1, vmax=1)
+function show_corr(ax, fr::FitResult; subtitle="")
+    im = ax[:matshow](fr.corr, interpolation="none", cmap="jet", vmin=-1, vmax=1)
     n = length(fr.names)
 
     ax[:xaxis][:set_ticks]([0:n-1])
@@ -255,24 +255,29 @@ function show_corr(a, fr::FitResult; subtitle="")
 
     for i=1:length(fr.names)
         for j=1:length(fr.names)
-            a[:text](i-1, j-1, @sprintf("%.4f", fr.corr[i,j]), color="green", ha="center", va="center", size="large")
+            ax[:text](i-1, j-1, @sprintf("%.4f", fr.corr[i,j]), color="green", ha="center", va="center", size="large")
         end
     end
     chindf = fr.chi2 / (fr.nbins-1)
     schindf = @sprintf("%.2f", chindf)
-    a[:set_title]("corr, \$ \\chi^2/n = $schindf \$, $subtitle");
+    ax[:set_title]("corr, \$ \\chi^2/n = $schindf \$, $subtitle");
     return im
 end
 
 function run_fit(ind; output=false)
 
+    prevdir = pwd()
     workdir = "/Users/joosep/Documents/stpol/src/fraction_fit"
+
     cd(workdir);
 
     redir(cmd) = output ? run(cmd) : readall(cmd)
 
+    infiles = split(readall(`find $ind -name "*.csv.*"`))
+    println("model files: ", join(infiles, ","))
+
     #convert dataframes to root
-    for inf in split(readall(`find $ind -name "*.csv"`))
+    for inf in infiles
         of = replace(inf, ".csv", ".root")
         #println("converting $inf->$of")
         cmd = `./rootwrap.sh python convert.py $inf $of`
@@ -284,6 +289,7 @@ function run_fit(ind; output=false)
     redir(cmd)
 
     fitres = FitResult("out.txt")
+    cd(prevdir)
     return fitres
 end
 

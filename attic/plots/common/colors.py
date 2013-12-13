@@ -78,6 +78,7 @@ sample_colors_same = {
 
     'DYJets': ROOT.kViolet,
 
+    'WJets': ROOT.kGreen,
     'WJets_inclusive': ROOT.kGreen,
     'W1Jets_exclusive': ROOT.kGreen,
     'W2Jets_exclusive': ROOT.kGreen,
