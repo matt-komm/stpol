@@ -1,5 +1,9 @@
 include("../analysis/base.jl")
 
+#uses python, not compatible with CMSSW
+include("../analysis/histo.jl")
+using Hist
+
 using Distributions, Stats
 using PyCall, PyPlot
 @pyimport numpy
@@ -480,4 +484,32 @@ end
 function yields(indata, data_cut; kwargs...)
     h = makehists(indata, data_cut, {:ljet_eta}, {linspace(-5, 5, 10)}; kwargs...)
     return yields(h;kwargs...)
+end
+
+function writehists(ofname, hists)
+    writetable("$ofname.csv.mu", to_df(mergehists_3comp(hists[:mu])); separator=',')
+    writetable("$ofname.csv.ele", to_df(mergehists_3comp(hists[:ele])); separator=',')
+end
+
+function svfg(fname)
+    savefig("$fname.png", bbox_inches="tight", pad_inches=0.2)
+    savefig("$fname.pdf", bbox_inches="tight", pad_inches=0.2)
+end
+
+function reweight_qcd(indata, inds)
+    #stpol/qcd_estimation/fitted_scale_factors.py
+    indata[inds[:data_mu] .* inds[:aiso], :totweight] = 1.0
+    indata[inds[:data_ele] .* inds[:aiso], :totweight] = 1.0
+
+    #2j1t
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :totweight] = 6.6720269212
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :totweight] = 2.56924428539
+    
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :totweight] = 0.221800737672
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :totweight] = 0.215762079009
+    
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :totweight] = 0.0777717192089
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :totweight] = 0.119465043571
+
+
 end
