@@ -165,6 +165,9 @@ class CosTheta(Getter):
     def bl(self, events):
         return self._getval(events, "_costheta_bl")
 
+#class TriggerResults(Getter):
+#    #event.getByLabel(hlt_src, trig_results);
+
 class Event(Getter):
 
     class VetoLepton(Getter):
@@ -180,7 +183,11 @@ class Event(Getter):
     def __init__(self):
         self._met = SimpleHandle("vfloat", "patMETNTupleProducer", "Pt", PROCESS)
         self._centrality = SimpleHandle("double", "eventShapeVars", "C", PROCESS)
+        self._d = SimpleHandle("double", "eventShapeVars", "D", PROCESS)
         self._circularity = SimpleHandle("double", "eventShapeVars", "circularity", PROCESS)
+        self._aplanarity = SimpleHandle("double", "eventShapeVars", "aplanarity", PROCESS)
+        self._isotropy = SimpleHandle("double", "eventShapeVars", "isotropy", PROCESS)
+        self._thrust = SimpleHandle("double", "eventShapeVars", "thrust", PROCESS)
 
         self._njets = SimpleHandle("int", "goodJetCount", "", PROCESS)
         self._ntags = SimpleHandle("int", "bJetCount", "", PROCESS)
@@ -215,6 +222,21 @@ class Event(Getter):
         The centrality of the event.
         """
         return self._getval(events, "_centrality")
+
+    def d(self, events):
+        return self._getval(events, "_d")
+
+    def circularity(self, events):
+        return self._getval(events, "_circularity")
+
+    def aplanarity(self, events):
+        return self._getval(events, "_aplanarity")
+
+    def isotropy(self, events):
+        return self._getval(events, "_isotropy")
+
+    def thrust(self, events):
+        return self._getval(events, "_thrust")
 
     def njets(self, events):
         return _int(self._getval(events, "_njets"))
@@ -289,7 +311,7 @@ class Lepton(Particle):
 class Jet(Particle):
     def __init__(self, label):
         Particle.__init__(self, label)
-        for x in ["partonFlavour", "deltaR", "puMva", "bDiscriminatorCSV", "bDiscriminatorTCHP"]:
+        for x in ["partonFlavour", "deltaR", "puMva", "bDiscriminatorCSV", "bDiscriminatorTCHP", "rms"]:
             h = SimpleHandle("vfloat", label, x, PROCESS)
             setattr(self, "_"+x, h)
 
@@ -319,6 +341,9 @@ class Jet(Particle):
 
     def bd_tchp(self, events):
         return self._getval(events, "_bDiscriminatorTCHP")
+
+    def rms(self, events):
+        return self._getval(events, "_rms")
 
 class Muon(Lepton):
     def __init__(self):
