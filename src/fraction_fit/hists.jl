@@ -276,9 +276,12 @@ function run_fit(ind; output=false)
     infiles = split(readall(`find $ind -name "*.csv.*"`))
     println("model files: ", join(infiles, ","))
 
+    basedir = ""
+
     #convert dataframes to root
     for inf in infiles
         of = replace(inf, ".csv", ".root")
+        basedir = dirname(of)
         #println("converting $inf->$of")
         cmd = `./rootwrap.sh python convert.py $inf $of`
         run(cmd)
@@ -289,6 +292,8 @@ function run_fit(ind; output=false)
     redir(cmd)
 
     fitres = FitResult("out.txt")
+    println(joinpath(basedir, "results.json"))
+    cp("out.txt", joinpath(basedir, "results.json"))
     cd(prevdir)
     return fitres
 end
@@ -383,7 +388,7 @@ function reweight_to_fitres(frd, indata, inds)
         indata[si .* (inds[:tchan]), :fitweight] = means["beta_signal"]
         indata[si .* (inds[:wjets] .+ inds[:gjets] .+ inds[:dyjets] .+ inds[:diboson]), :fitweight] = means["wzjets"]
         indata[si .* (inds[:ttjets] .+ inds[:schan] .+ inds[:twchan]), :fitweight] = means["ttjets"]
-        indata[si .* inds[:aiso], :fitweight] = means["qcd"]
+        indata[si .* inds[:aiso], :fitweight] = means["ttjets"]
     end
 end
 
