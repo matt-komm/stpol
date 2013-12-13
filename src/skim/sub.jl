@@ -29,18 +29,20 @@ function submit(infiles, outfile, i::Integer)
 
     fn = "$ofdir/job.$i"
     ofile = "$ofdir/slurm.out.$i"
-    
+    skimoutput = "$ofdir/skim.out.$i"
+
     subcmd = `sbatch -p prio -J julia_job_test.$i -o $ofile $fn`
     
     #the submit script (indents matter)
     cmd="#!/bin/bash
 uname -a
+echo \$SLURM_JOB_ID
 \ls -1 /hdfs &> /dev/null
 RET=\$?
 if [ \$RET -ne 0 ]; then
     echo '/hdfs was not available'
 else
-    ~/.julia/ROOT/julia-basic \$STPOL_DIR/src/skim/skim.jl $ofdir/$outfile $infilelist
+    ~/.julia/ROOT/julia-basic \$STPOL_DIR/src/skim/skim.jl $ofdir/$outfile $infilelist > $skimoutput
     RET=\$?
 fi
 echo 'done '\$RET && exit \$RET
@@ -65,8 +67,8 @@ echo 'done '\$RET && exit \$RET
     end
 end
 
-#split a job(file list) into either 10 pieces or 25-file pieces, whichever is smaller
 maxn = length(flist)
+#either 50 files per job or split to 10 chunks
 perjob = min(50, ceil(maxn/10))
 N = ceil(maxn/perjob)-1
 
