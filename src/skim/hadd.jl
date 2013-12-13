@@ -1,7 +1,6 @@
 #!/home/joosep/.julia/ROOT/julia
-include("$(homedir())/.juliarc.jl")
-using DataFrames
-using HDF5, JLD, ROOT
+include("../analysis/base.jl")
+
 using JSON
 
 include("../analysis/util.jl")
@@ -10,6 +9,10 @@ include("../skim/jet_cls.jl")
 
 fname = ARGS[1]
 sumfname = ARGS[2]
+
+include("$(homedir())/.juliarc.jl")
+using DataFrames
+using HDF5, JLD, ROOT
 ofile = ARGS[3]
 
 flist = split(readall(fname))
@@ -17,21 +20,35 @@ flist = split(readall(fname))
 
 println("Running over $(length(flist)) files")
 
-cols = [:jet_cls, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices]
-#outcols = [:hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :mtw, :shat, :ht, :top_mass, :ljet_eta, :cos_theta_lj, :cos_theta_bl, :lepton_type, :xsweight, :sample, :isolation, :jet_cls, :n_good_vertices]
+tic()
+cols = [:hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
+
 outcols = vcat(cols, [:subsample, :xs, :ngen, :sample, :isolation, :systematic, :xsweight])
+
 tot_res = JSON.parse(readall(sumfname))
-println(tot_res)
+if DEBUG
+    println(tot_res)
+end
 dfs = Any[]
+
+nf=0
 for fi in flist
-    println(fi)
+    nf += 1
+
     acc = accompanying(fi)
     md = readtable(acc["processed"], allowcomments=true)
+    if DEBUG
+        println(fi, " ", acc["processed"])
+    end
     nrow(md) > 0 || error("metadata was empty")
     
     sample_types = [sample_type(x) for x in md[:, :files]]
+    if DEBUG
+        println("[", join(sample_types, ",\n"), "]")
+    end
 
     edf = TreeDataFrame(acc["df"])
+    #println("$fi $acc")
     subdf = edf[:, cols]
     
     xsweights = DataArray(Float32, nrow(subdf))
@@ -46,22 +63,59 @@ for fi in flist
 
         st = sample_types[subdf[i, :fileindex]]
         sample, iso, systematic = st[:sample], st[:iso], st[:systematic]
-
-        if sample in keys(cross_sections)
-            @assert (typeof(cross_sections[sample]) <: Number && cross_sections[sample] > 0.0) "illegal cross section"
-            @assert (typeof(tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"]) <: Number && tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"] > 0) "illegal ngen"
         
-            ngens[i] = tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"]
+        ngen = -1
+        if sample in keys(cross_sections)
+            ngen = tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"]
+            @assert (typeof(cross_sections[sample]) <: Number && cross_sections[sample] > 0.0) "illegal cross section"
+            @assert (typeof(ngen) <: Number && ngen > 0) "illegal ngen"
+            
+            ngens[i] = ngen
             xss[i] = cross_sections[sample]
-            xsweights[i] = sample in keys(cross_sections) ? 1.0 * cross_sections[sample] / tot_res["$(sample)/$(iso)/$(systematic)/counters/generated"] : NA
+            xsweights[i] = sample in keys(cross_sections) ? 1.0 * cross_sections[sample] / ngen : NA
         end
 
         proc = get_process(sample)
-        processes[i] = proc != :unknown ? string(proc) : string(sample)
+
+        processes[i] = (proc != :unknown ? string(proc) : string(sample))
         systematics[i] = string(systematic)
         samples[i] = sample
-        iso = string(sample_types[subdf[i, :fileindex]][:iso])
         isos[i] = string(iso)
+        
+        if DEBUG
+            passes_mu = (isos[i] == "iso") .* (processes[i] == "gjets") .* (subdf[i, :hlt_mu] .== true) .*
+                (subdf[i, :n_signal_mu] .== 1) .* (subdf[i, :n_signal_ele] .== 0) .* (subdf[i, :n_veto_mu] .== 0) .*
+                (subdf[i, :n_veto_ele] .== 0) .* (subdf[i, :njets] .== 2) .* (subdf[i, :ntags] .== 1) .*
+                (subdf[i, :mtw] .> 50) .* (subdf[i, :ljet_rms] .< 0.025)
+            
+            passes_ele = (isos[i] == "iso") .* (processes[i] == "gjets") .* (subdf[i, :hlt_ele] .== true) .*
+                (subdf[i, :n_signal_mu] .== 0) .* (subdf[i, :n_signal_ele] .== 1) .* (subdf[i, :n_veto_mu] .== 0) .*
+                (subdf[i, :n_veto_ele] .== 0) .* (subdf[i, :njets] .== 2) .* (subdf[i, :ntags] .== 1) .*
+                (subdf[i, :met] .> 45) .* (subdf[i, :ljet_rms] .< 0.025)
+            
+            if isna(passes_mu)
+                passes_mu = false
+            end
+            if isna(passes_ele)
+                passes_ele = false
+            end
+
+            println("EV $nf fi=", subdf[i, :fileindex], " f=", md[subdf[i, :fileindex], :files],
+                " ev=", int(subdf[i, :run]), ":", int(subdf[i, :lumi]), ":", int(subdf[i, :event]),
+                " s=", samples[i], " p=", processes[i],
+                " hm=", int(subdf[i, :hlt_mu]), " he=", int(subdf[i, :hlt_ele]),
+                " nsm=", subdf[i, :n_signal_mu], " nse=", subdf[i, :n_signal_ele],
+                " nvm=", subdf[i, :n_veto_mu], " nve=", subdf[i, :n_veto_ele],
+                " nj=", subdf[i, :njets], " nt=", subdf[i, :ntags],
+                " mtw=", subdf[i, :mtw],
+                " met=", subdf[i, :met],
+                " rms=", subdf[i, :ljet_rms],
+                " i=", isos[i][1],
+                " pm=$(int(passes_mu))",
+                " pe=$(int(passes_ele))",
+            )
+
+        end
     end
     subdf["xsweight"] = xsweights
     subdf["subsample"] = samples 
@@ -88,9 +142,13 @@ for fi in flist
     push!(dfs, df)
 end
 
+toc()
 @assert length(dfs)>0 "no DataFrames were produced"
 
 df = rbind(dfs)
+
+inds = perform_selection(df)
+
 #describe(df)
 
 #write output as JLD
@@ -108,6 +166,18 @@ println("reweighting")
 tic()
 reweight(df)
 toc()
+
+fi = jldopen("$ofile.jld", "w")
+write(fi, "df", df)
+close(fi)
+
+fi = jldopen("$ofile.jld.mu.highmet", "w")
+write(fi, "df", df[inds[:mu] .* inds[:mtw], :])
+close(fi)
+
+fi = jldopen("$ofile.jld.ele.highmet", "w")
+write(fi, "df", df[inds[:ele] .* inds[:met], :])
+close(fi)
 
 println("splitting by b-tag")
 tic()
