@@ -119,7 +119,7 @@ class Weights(Getter):
     def __init__(self):
         self.pileup = self.Pileup()
         self.toppt = self.TopPt()
-        self.generator = self.generator()
+        self.generator = self.Generator()
 
 class File:
     def __init__(self):
