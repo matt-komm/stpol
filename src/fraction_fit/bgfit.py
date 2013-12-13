@@ -8,7 +8,7 @@ def is_nominal(hname):
     if '__up' in hname or '__down' in hname:
         return False
     return True
-    
+
 def get_model(infile):
     model = build_model_from_rootfile(
         infile,
@@ -36,7 +36,7 @@ def add_normal_unc(model, par, mean=1.0, unc=1.0):
 
 def build_model(indir):
     model = None
-    infiles = glob("%s/*.root" % indir)
+    infiles = glob("%s/*.root.*" % indir)
     for inf in infiles:
         print "loading model from ",inf
         m = get_model(inf)
