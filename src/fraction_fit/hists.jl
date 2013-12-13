@@ -41,8 +41,8 @@ function makehists(
         hists[k] = makehist_multid(iso, sample_is(k), vars, bins, weight_ex);
     end
 
-    hists["qcd"] = (makehist_multid(aiso, data_expr, vars, bins, :totweight) - 
-        sum([makehist_multid(aiso, sample_is(p), vars, bins, :(xsweight .* totweight)) for p in procs]))
+    hists["qcd"] = (makehist_multid(aiso, data_expr, vars, bins, :(totweight .* fitweight)) - 
+        sum([makehist_multid(aiso, sample_is(p), vars, bins, :(xsweight .* totweight .* fitweight)) for p in procs]))
 
     hists["DATA"] = makehist_multid(iso, data_expr, vars, bins, 1.0);
 
@@ -372,16 +372,16 @@ function errorbars(a, h; kwargs...)
     a[:grid]()
 end
 
-function reweigh_to_fitres(frd)
+function reweight_to_fitres(frd, indata, inds)
     for (lep, fr) in frd
         means = {k=>v for (k,v) in zip(fr.names, fr.means)}
         si = inds[lep]
         indata[si .* (inds[:tchan]), :fitweight] = means["beta_signal"]
         indata[si .* (inds[:wjets] .+ inds[:gjets] .+ inds[:dyjets] .+ inds[:diboson]), :fitweight] = means["wzjets"]
         indata[si .* (inds[:ttjets] .+ inds[:schan] .+ inds[:twchan]), :fitweight] = means["ttjets"]
-        indata[si .* inds[:aiso] .* (inds[symbol("data_$lep")]), :fitweight] = means["qcd"]
+        indata[si .* inds[:aiso], :fitweight] = means["qcd"]
     end
-end;
+end
 
 @pyimport scipy.stats.kde as KDE
 @pyimport matplotlib.cm as cmap
