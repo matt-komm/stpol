@@ -234,6 +234,14 @@ class Event(Getter):
     def nelectrons(self, events):
         return _int(self._getval(events, "_nelectrons"))
 
+    def file_index(self, events):
+        return events.fileIndex()
+
+    def file_name(self, events):
+        return events._filenames[events.fileIndex()]
+
+    def size(self, events):
+        return events.size()
 
 class Particle(Getter):
     def __init__(self, label):
