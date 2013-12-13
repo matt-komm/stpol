@@ -45,6 +45,8 @@ sources[part(:muon, :nu_soltype)] = Source(:recoNuProducerMu, :solType, :STPOLSE
 
 weight(s) = symbol("weight_$s")
 sources[weight(:pu)] = Source(:puWeightProducer, :PUWeightNtrue, :STPOLSEL2, Float64)
+sources[weight(:gen)] = Source(:genWeightProducer, :w, :STPOLSEL2, Float64)
+sources[weight(:top)] = Source(:ttbarTopWeight, :weight, :STPOLSEL2, Float64)
 
 vetolepton(s) = symbol("n_veto_lepton_$s")
 sources[vetolepton(:mu)] = Source(:looseVetoMuCount, symbol(""), :STPOLSEL2, Int32)

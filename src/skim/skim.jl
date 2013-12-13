@@ -2,7 +2,7 @@
 #julia skim.jl ofile infiles.txt
 #runs a skim/event loop on EDM files on a single core
 tstart = time()
-println("hostname $(gethostname())")
+println("hostname $(gethostname()) ", "SLURM_JOB_ID" in keys(ENV) ? ENV["SLURM_JOB_ID"] : getpid())
 
 using ROOT
 using DataFrames
@@ -14,34 +14,47 @@ include("xs.jl")
 
 const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
 if NOSKIM
-    println("***skimming DEACTIVATED")
+    println("*** skimming DEACTIVATED")
 end
-const DEBUG=true
+const DEBUG=("DEBUG" in keys(ENV) && int(ENV["DEBUG"])==1)
+if DEBUG
+    println("*** DEBUG mode activated")
+end
 
 output_file = ARGS[1]
 
 flist = Any[]
 append!(flist, ARGS[2:])
-
-#try to load the Events 
-events = nothing
-while true
-    try
-        events = Events(convert(Vector{ASCIIString}, flist))
-        break
-    catch e
-        warn(e)
+nflist = Any[]
+rflist = Any[]
+for fi in flist
+    ev = Events([fi])
+    println("EVL ", fi, " ", length(ev))
+    if length(ev) > 0
+        push!(nflist, fi)
+    else
+        push!(rflist, fi)
+        println("removing empty file $fi from list")
     end
 end
+flistd = {f=>i for (f, i) in zip(nflist, 1:length(nflist))}
+
+#try to load the Events 
+events = Events(convert(Vector{ASCIIString}, nflist))
+#while true
+#    try
+#        events = Events(convert(Vector{ASCIIString}, flist))
+#        break
+#    catch e
+#        warn(e)
+#    end
+#end
 
 #save information on spectator jets
 const do_specjets = false
 
 maxev = length(events) 
 println("running over $maxev events")
-
-#metadata
-processed_files = DataFrame(files=flist)
 
 #events
 df = similar(
@@ -88,6 +101,8 @@ df = similar(
             n_good_vertices=Int32[],
 #weights
             pu_weight=Float32[],
+            gen_weight=Float32[],
+            top_weight=Float32[],
 
 #file-level metadata
             run=Int64[], lumi=Int64[], event=Int64[],
@@ -111,7 +126,7 @@ prfiles = similar(
 )
 
 i = 1
-for fi in flist
+for fi in vcat(nflist, rflist)
     x = ROOT.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
     prfiles[i, :files] = fi
     prfiles[i, :total_processed] = x
@@ -132,16 +147,18 @@ fails = {
 tic()
 timeelapsed = @elapsed for i=1:maxev
     nproc += 1
-
     if nproc%(ceil(maxev/20)) == 0
         println("$nproc ($(ceil(nproc/maxev*100.0))%) events processed")
         toc()
         tic()
     end
+    
     to!(events, i)
+    #println("EV $(time_ns()) $i ", where_file(events))
     
     if DEBUG
-        println(where(events))
+        run, lumi, event = where(events)
+        println("EV $i ev=", int(run), ":", int(lumi), ":", int(event))
     end
 
     for cn in colnames(df)
@@ -155,13 +172,23 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :hlt_ele] = passes_hlt(events, HLTS[:ele]) 
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
-    df[i, :fileindex] = where_file(events)
-
-    df[i, :pu_weight] = events[sources[weight(:pu)]] |> ifpresent
-
-    findex = df[i, :fileindex]
+    fn = string("file:", split(get_current_file_name(events), ":")[1])
+    findex = flistd[fn]
+    #findex = where_file(events)
+    df[i, :fileindex] = findex
+        
+    if fn != prfiles[findex, :files]
+        error("incorrect file: $fn $(prfiles[findex, :files])")
+    end
+    
+    df[i, :pu_weight] = events[sources[weight(:pu)]]
+    df[i, :top_weight] = events[sources[weight(:top)]]
+    df[i, :gen_weight] = events[sources[weight(:gen)]]
     
     sample = prfiles[findex, :cls][:sample]
+    if DEBUG
+        println("EV $i FIDX $findex ", join(prfiles[findex, :], ", "))
+    end
 
 #    #fill the file-level metadata
 #    df[i, :xs] = haskey(cross_sections, sample) ? cross_sections[sample] : NA
@@ -171,7 +198,12 @@ timeelapsed = @elapsed for i=1:maxev
    
     nmu = events[sources[:nsignalmu]]
     nele = events[sources[:nsignalele]]
-    df[i, :lepton_pt], lepton_type = either(events[sources[:muon_Pt]], events[sources[:electron_Pt]])
+    
+    if DEBUG
+        println("EV $i nmu=", events[sources[:nsignalmu]])
+        println("EV $i nele=", events[sources[:nsignalele]])
+    end
+    
     df[i, :n_signal_mu] = nmu 
     df[i, :n_signal_ele] = nele
 
@@ -191,23 +223,33 @@ timeelapsed = @elapsed for i=1:maxev
         fails[:lepton] += 1
         continue
     end
-   
-    nveto_mu = events[sources[vetolepton(:mu)]] |> ifpresent
-    nveto_ele = events[sources[vetolepton(:ele)]] |> ifpresent
-    df[i, :n_veto_mu] = nveto_mu |> ifpresent
-    df[i, :n_veto_ele] = nveto_ele |> ifpresent
+    
+    nveto_mu = events[sources[vetolepton(:mu)]]
+    nveto_ele = events[sources[vetolepton(:ele)]]
+    if DEBUG
+        println("EV $i nvetomu=", events[sources[vetolepton(:mu)]])
+        println("EV $i nvetoele=", events[sources[vetolepton(:ele)]])
+    end
+    df[i, :n_veto_mu] = nveto_mu
+    df[i, :n_veto_ele] = nveto_ele
 
-    #if nveto_mu != 0 || nveto_ele != 0
-    #    fails[:lepton] += 1
-    #    continue
-    #end
-
-    df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
-    df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
-    #df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]] |> ifpresent
-    df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
-    #df[i, :lepton_phi] = events[sources[part(lepton_type, :Phi)]] |> ifpresent
-    df[i, :mtw] = events[sources[part(lepton_type, :mtw)]] |> ifpresent
+    if nveto_mu != 0 || nveto_ele != 0
+        fails[:lepton] += 1
+        continue
+    end
+    
+    if DEBUG
+        println("EV $i lepton_type = ", lepton_type)
+    end
+    if lepton_type == :muon || lepton_type == :electron
+        df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
+        df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
+        df[i, :lepton_pt] = events[sources[part(lepton_type, :Pt)]] |> ifpresent
+        df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]] |> ifpresent
+        df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
+        df[i, :lepton_phi] = events[sources[part(lepton_type, :Phi)]] |> ifpresent
+        df[i, :mtw] = events[sources[part(lepton_type, :mtw)]] |> ifpresent
+    end 
     df[i, :met] = events[sources[:met]] |> ifpresent
     
   
@@ -225,8 +267,8 @@ timeelapsed = @elapsed for i=1:maxev
 #    end
     
     #get jet, tag
-    df[i, :njets] = events[sources[:njets]] |> ifpresent
-    df[i, :ntags] = events[sources[:ntags]] |> ifpresent
+    df[i, :njets] = events[sources[:njets]]
+    df[i, :ntags] = events[sources[:ntags]]
     
     #check for 2 jets
     if !(df[i, :njets] >= 2 && df[i, :ntags] >= 0)
@@ -320,8 +362,10 @@ timeelapsed = @elapsed for i=1:maxev
         df[i, lowercase(string(p))] = events[sources[p]] |> ifpresent
     end
 
-    df[i, :nu_soltype] = events[sources[part(lepton_type, :nu_soltype)]] |> ifpresent
-   
+    if lepton_type == :muon || lepton_type == :electron
+        df[i, :nu_soltype] = events[sources[part(lepton_type, :nu_soltype)]] |> ifpresent
+    end
+
     #calculate the invariant mass of the system
     totvec = FourVectorSph(0.0, 0.0, 0.0, 0.0)
     for particle in [:top, :ljet]
@@ -343,6 +387,20 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :shat] = l(totvec)
     df[i, :ht] = df[i, :bjet_pt] + df[i, :ljet_pt]
+   
+    if DEBUG
+        println("SEL EV fi=", df[i, :fileindex], " f=", prfiles[df[i, :fileindex], :files],
+            " ev=", int(df[i, :run]), ":", int(df[i, :lumi]), ":", int(df[i, :event]),
+            " s=", sample, " p=", get_process(sample),
+            " hm=", int(df[i, :hlt_mu]), " he=", int(df[i, :hlt_ele]),
+            " nsm=", df[i, :n_signal_mu], " nse=", df[i, :n_signal_ele],
+            " nvm=", df[i, :n_veto_mu], " nve=", df[i, :n_veto_ele],
+            " nj=", df[i, :njets], " nt=", df[i, :ntags],
+            " mtw=", df[i, :mtw],
+            " met=", df[i, :met],
+            " rms=", df[i, :ljet_rms],
+        )
+    end
 
     df[i, :passes] = true
 end
@@ -359,6 +417,7 @@ println("failure reasons: $fails")
 #save output
 writetable("$(output_file)_processed.csv", prfiles)
 writetree("$(output_file).root", mydf)
+write(jldopen("$(output_file).jld", "w"), "df", mydf)
 
 tend = time()
 ttot = tend-tstart
