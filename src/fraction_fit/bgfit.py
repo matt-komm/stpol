@@ -55,8 +55,8 @@ nbins = sum([model.get_range_nbins(o)[2] for o in model.get_observables()])
 model_summary(model)
 
 options = Options()
-options.set("minimizer","strategy","robust")
-#options.set("minimizer","strategy","newton_vanilla")
+#options.set("minimizer","strategy","robust")
+options.set("minimizer","strategy","newton_vanilla")
 options.set("global", "debug", "true")
 
 #print "options=", options
