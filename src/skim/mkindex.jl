@@ -34,7 +34,9 @@ for (k, v) in flatsel
 end
 println("performing ", length(output), " selections")
 
-for i=1:2
+@profile let
+for i=1:1000
+    println(i)
     if i%100000 == 0
         print(".")
         flush_cstdio()
@@ -57,6 +59,9 @@ for i=1:2
     #     #eval(ex)
     # end
 end
+end #profile
+
+Profile.print(C=true)
 el = toq()
 
 println("processed ", nrow(df)/el, " events/second")
