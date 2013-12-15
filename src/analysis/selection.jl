@@ -5,13 +5,27 @@ const selections = {
     :mu => :((lepton_type .== 13) .* (n_signal_mu .== 1) .* (n_signal_ele .== 0)),
     :ele => :((lepton_type .== 11) .* (n_signal_mu .== 0) .* (n_signal_ele .== 1)),
     :vetolep => :((n_veto_mu .== 0) .* (n_veto_ele .== 0)),
-    :dr => :((ljet_dr .> 0.5) .* (bjet_dr .> 0.5)),
+    #:dr => :((ljet_dr .> 0.5) .* (bjet_dr .> 0.5)),
     :iso => :(isolation .== "iso"),
     :aiso => :(isolation .== "antiiso"),
     :ntags => {k=>:(ntags .== $k) for k in [0,1,2]},
     :njets => {k=>:(njets .== $k) for k in [2,3]},
-    :sample => {k=>:(sample .== $k) for k in ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan", "wjets_sherpa"]},
-    :systematic => {k=>:(systematic .== $k) for k in ["nominal", "ResUp", "ResDown", "EnUp", "EnDown", "scaleup", "scaledown", "matchingup", "matchingdown"]},
+    :sample => {k=>:(sample .== $k)
+        for k in [
+            "data_mu", "data_ele", "tchan",
+            "ttjets", "wjets", "dyjets",
+            "diboson", "gjets", "schan",
+            "twchan", "wjets_sherpa"
+        ]
+    },
+    :systematic => {k=>:(systematic .== $k)
+        for k in [
+            "nominal", "ResUp", "ResDown",
+            "EnUp", "EnDown", "scaleup",
+            "scaledown", "matchingup", "matchingdown",
+            "wjets_fsim_nominal"
+        ]
+    },
 }
 
 function perform_selection(indata)
@@ -51,3 +65,19 @@ function perform_selection(indata)
 #
     return inds
 end
+
+function recurse_down(sel::Expr, prev)
+    s = join(prev, "->")
+    #println("Expr: [$s] => $sel")
+    return (prev, sel)
+end
+
+function recurse_down{R <: Any}(sel::AbstractArray{R}, prev)
+    return vcat([recurse_down(x, prev) for x in sel]...)
+end
+
+function recurse_down{A <: Any, B <: Any}(sel::Associative{A, B}, prev)
+    return vcat([recurse_down(v, vcat(prev, k)) for (k, v) in sel]...)
+end
+
+const flatsel = recurse_down(selections, Any[:sel])
