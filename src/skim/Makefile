@@ -30,8 +30,10 @@ parhadd:
 	split -a5 -l5 $(DIR)/merged/files.txt $(DIR)/merged/files.split.
 	echo "hadding in parallel"
 	find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j25 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
-	julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.1T $(DIR)/merged/$(DIR).*.jld.1T	> $(DIR)/merged/hadd2.1T.out
-	julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.2T $(DIR)/merged/$(DIR).*.jld.2T > $(DIR)/merged/hadd2.2T.out
+	source ~/.julia/ROOT/setenv.sh && hadd $(DIR).root.hmet $(DIR)/merged/$(DIR).root.hmet
+	source ~/.julia/ROOT/setenv.sh && hadd $(DIR).root.lmet $(DIR)/merged/$(DIR).root.lmet
+	#julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.1T $(DIR)/merged/$(DIR).*.jld.1T	> $(DIR)/merged/hadd2.1T.out
+	#julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.2T $(DIR)/merged/$(DIR).*.jld.2T > $(DIR)/merged/hadd2.2T.out
 	#julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.mu.highmet $(DIR)/merged/$(DIR).*.jld.mu.highmet
 	#julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.ele.highmet $(DIR)/merged/$(DIR).*.jld.ele.highmet	
 
