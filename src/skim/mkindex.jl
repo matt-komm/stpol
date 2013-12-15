@@ -13,7 +13,16 @@ arr() = BitArray(nrow(df))
 set_branch_status!(df.tree, "*", false)
 reset_cache!(df.tree)
 
-brs = [:sample, :njets, :ntags, :lepton_type, :systematic, :isolation, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele]
+#only these branches are read from the TTree
+brs = [
+    :sample, :njets, :ntags,
+    :lepton_type, :systematic, :isolation,
+    :n_signal_mu, :n_signal_ele, :n_veto_mu,
+    :n_veto_ele,
+    :mtw, :met,
+    :ljet_dr, :bjet_dr, :hlt_mu, :hlt_ele, :ljet_rms
+]
+
 for b in brs
     set_branch_status!(df.tree, "$(b)*", true)
     add_cache!(df.tree, "$(b)*")

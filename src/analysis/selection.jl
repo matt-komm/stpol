@@ -5,12 +5,17 @@ const selections = {
     :mu => :((lepton_type .== 13) .* (n_signal_mu .== 1) .* (n_signal_ele .== 0)),
     :ele => :((lepton_type .== 11) .* (n_signal_mu .== 0) .* (n_signal_ele .== 1)),
     :vetolep => :((n_veto_mu .== 0) .* (n_veto_ele .== 0)),
-    #:dr => :((ljet_dr .> 0.5) .* (bjet_dr .> 0.5)),
+    :dr => :((ljet_dr .> 0.5) .* (bjet_dr .> 0.5)),
+    :hlt => {:mu=>:(hlt_mu .== true), :ele=>:(hlt_ele .== true)},
     :iso => :(isolation .== "iso"),
     :aiso => :(isolation .== "antiiso"),
     :ntags => {k=>:(ntags .== $k) for k in [0,1,2]},
     :njets => {k=>:(njets .== $k) for k in [2,3]},
-    :sample => {k=>:(sample .== $k)
+    :ljet_rms => :(ljet_rms .< 0.025),
+    :mtw => {k=>:(mtw .> $k) for k in [20, 30, 40, 50]},
+    :met => {k=>:(met .> $k) for k in [20, 30, 40, 45, 50]},
+    :sample => {
+        k=>:(sample .== $k)
         for k in [
             "data_mu", "data_ele", "tchan",
             "ttjets", "wjets", "dyjets",
