@@ -10,6 +10,7 @@ var,name
 "ljet_pt","\$ p_{t,j'} \$\ [GeV]"
 "bjet_pt","\$ p_{t,b} \$\ [GeV]"
 "mtw","\$ M_{l,\\nu} \$\ [GeV]"
+"met","MET"
 "cos_theta_lj","\$ \\cos{\\theta*} \$"
 "cos_theta_bl","\$ \\cos{\\theta*}_{\\eta-bl} \$"
 
