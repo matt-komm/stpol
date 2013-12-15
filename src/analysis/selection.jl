@@ -1,14 +1,17 @@
 
 sample_is(x) = :(sample .== $x)
 
-selections = {
-    :mu => :(lepton_type .== 13),
-    :ele => :(lepton_type .== 11),
+const selections = {
+    :mu => :((lepton_type .== 13) .* (n_signal_mu .== 1) .* (n_signal_ele .== 0)),
+    :ele => :((lepton_type .== 11) .* (n_signal_mu .== 0) .* (n_signal_ele .== 1)),
+    :vetolep => :((n_veto_mu .== 0) .* (n_veto_ele .== 0)),
     :dr => :((ljet_dr .> 0.5) .* (bjet_dr .> 0.5)),
     :iso => :(isolation .== "iso"),
     :aiso => :(isolation .== "antiiso"),
-    :ntags => n -> :(ntags .== $n),
-    :njets => n -> :(njets .== $n),
+    :ntags => {k=>:(ntags .== $k) for k in [0,1,2]},
+    :njets => {k=>:(njets .== $k) for k in [2,3]},
+    :sample => {k=>:(sample .== $k) for k in ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan", "wjets_sherpa"]},
+    :systematic => {k=>:(systematic .== $k) for k in ["nominal", "ResUp", "ResDown", "EnUp", "EnDown", "scaleup", "scaledown", "matchingup", "matchingdown"]},
 }
 
 function perform_selection(indata)
