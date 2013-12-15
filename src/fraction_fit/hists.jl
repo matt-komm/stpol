@@ -114,10 +114,10 @@ function mergehists_3comp(hists)
     return out
 end
 
-to_df(bins, errs, edges) =
+todf(bins, errs, edges) =
     DataFrame(bins=vcat(bins, -1.0), errs=vcat(errs, -1.0), edges=edges);
 
-function to_df(h::Histogram)
+function todf(h::Histogram)
     errs = (sqrt(h.bin_entries) ./ h.bin_entries .* h.bin_contents) 
     for i=1:length(errs)
         if !(errs[i] > 0)
@@ -131,10 +131,10 @@ function to_df(h::Histogram)
     );
 end
 
-function to_df(d::Associative)
+function todf(d::Associative)
     tot_df = DataFrame()
     for (k, v) in d
-        df = to_df(v)
+        df = todf(v)
         rename!(index(df), x -> "$(x)__$(k)")
         tot_df = hcat(tot_df, df)
     end
@@ -239,6 +239,25 @@ function FitResult(fn::ASCIIString)
         fit["chi2"][1],
         fit["nbins"]
     )
+end
+
+function todf(fr::FitResult)
+    procs = fr.names
+    df = DataFrame()
+
+    for (m, s, p) in zip(fr.means, fr.sigmas, fr.names)
+        df["mean__$p"] = m
+        df["sigma__$p"] = s
+    end
+    df["chi2"] = fr.chi2
+    df["nbins"] = fr.nbins
+
+    for (c1, c2) in collect(combinations(fr.names, 2))
+        i = findfirst(fr.names, c1)
+        j = findfirst(fr.names, c2)
+        df["corr__$(c1)__$(c2)"] = fr.corr[i,j]
+    end
+    return df
 end
 
 function show_corr(ax, fr::FitResult; subtitle="")
@@ -455,6 +474,16 @@ function channel_comparison(
 
     a21[:set_ylabel]("(Data - MC) / Data")
 
+    lowlim = 0
+    for (k, v) in kwargs
+        if k == :logy && v==true
+            lowlim = 1
+            break
+        end
+    end
+    a12[:set_ylim](bottom=lowlim)
+    a22[:set_ylim](bottom=lowlim)
+
     a11[:set_xlabel](varname)
     a21[:set_xlabel](varname)
 
@@ -498,8 +527,8 @@ function yields(indata, data_cut; kwargs...)
 end
 
 function writehists(ofname, hists)
-    writetable("$ofname.csv.mu", to_df(mergehists_3comp(hists[:mu])); separator=',')
-    writetable("$ofname.csv.ele", to_df(mergehists_3comp(hists[:ele])); separator=',')
+    writetable("$ofname.csv.mu", todf(mergehists_3comp(hists[:mu])); separator=',')
+    writetable("$ofname.csv.ele", todf(mergehists_3comp(hists[:ele])); separator=',')
 end
 
 function svfg(fname)
@@ -521,6 +550,38 @@ function reweight_qcd(indata, inds)
     
     indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :totweight] = 0.0777717192089
     indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :totweight] = 0.119465043571
-
-
 end
+
+
+
+function biaxes(frac=0.1)
+    a1 = PyPlot.plt.axes((0.0, 0.0, 0.5-frac, 1.0));
+    a2 = PyPlot.plt.axes((0.5+frac, 0.0, 0.5-frac, 1.0));
+    return a1, a2
+end
+
+
+# typealias ErrorsHistogram Histogram;
+# import Hist.errors, Hist.normed;
+# Hist.errors{T <: ErrorsHistogram}(h::T) = h.bin_entries;
+
+# function Hist.normed{T <: ErrorsHistogram}(h::T)
+#     i = integral(h)
+#     return Histogram(h.bin_entries/i, h.bin_contents/i, h.bin_edges);
+# end
+
+function read_hists(fn)
+    t = readtable(fn);
+    hists = Dict()
+    for i=1:3:length(t)
+        cn = colnames(t)
+        sname = split(cn[i], "__")[2]
+        binscol, errscol, edgescol = cn[i:i+2];
+        println(binscol, " ", errscol, " ", edgescol)
+        sub = t[:, [errscol, binscol, edgescol]];
+        hist = fromdf(sub;entries=:poissonerrors)
+        hists[sname] = hist
+    end
+    return hists
+end
+
