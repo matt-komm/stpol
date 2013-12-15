@@ -20,3 +20,4 @@ readdf(fn) = read(jldopen(fn), "df")
 
 t = readtable("$BASE/src/analysis/varnames.csv";separator=',');
 vars = {symbol(t[i, 1]) => t[i, 2] for i=1:nrow(t)};
+const VARS = vars
