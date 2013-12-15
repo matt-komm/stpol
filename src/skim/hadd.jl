@@ -21,7 +21,7 @@ flist = split(readall(fname))
 println("Running over $(length(flist)) files")
 
 tic()
-cols = [:hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
+cols = [:bjet_pt, :ljet_pt, :bjet_eta, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
 
 outcols = vcat(cols, [:subsample, :xs, :ngen, :sample, :isolation, :systematic, :xsweight])
 
@@ -149,37 +149,41 @@ df = rbind(dfs)
 
 inds = perform_selection(df)
 
-#describe(df)
 
 #write output as JLD
-println("writing $(nrow(df)) events to $ofile as JLD")
-fi = jldopen(string(ofile, ".jld"), "w")
-tic(); write(fi, "df", df); toc()
-close(fi)
+#println("writing $(nrow(df)) events to $ofile as JLD")
+#fi = jldopen(string(ofile, ".jld"), "w")
+#tic(); write(fi, "df", df); toc()
+#close(fi)
 
 ##write output as CSV
-#tic();writetable(string(ofile, ".csv"), df, separator=',');toc()
 include("../analysis/reweight.jl")
 include("../analysis/split.jl")
 
 println("reweighting")
-tic()
 reweight(df)
-toc()
 
-fi = jldopen("$ofile.jld", "w")
-write(fi, "df", df)
-close(fi)
+highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
+lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
 
-fi = jldopen("$ofile.jld.mu.highmet", "w")
-write(fi, "df", df[inds[:mu] .* inds[:mtw], :])
-close(fi)
+#fi = jldopen("$ofile.jld", "w")
+#write(fi, "df", df)
+#close(fi)
 
-fi = jldopen("$ofile.jld.ele.highmet", "w")
-write(fi, "df", df[inds[:ele] .* inds[:met], :])
-close(fi)
-
-println("splitting by b-tag")
 tic()
-split_tag(df, ofile)
+writetree("$ofile.root.hmet", highmet)
+writetree("$ofile.root.lmet", lowmet)
 toc()
+
+#fi = jldopen("$ofile.jld.mu.highmet", "w")
+#write(fi, "df", df[inds[:mu] .* inds[:mtw], :])
+#close(fi)
+#
+#fi = jldopen("$ofile.jld.ele.highmet", "w")
+#write(fi, "df", df[inds[:ele] .* inds[:met], :])
+#close(fi)
+#
+#println("splitting by b-tag")
+#tic()
+#split_tag(df, ofile)
+#toc()
