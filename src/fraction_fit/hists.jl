@@ -3,6 +3,7 @@ include("../analysis/base.jl")
 #uses python, not compatible with CMSSW
 include("../analysis/histo.jl")
 using Hist
+using JSON
 
 using Distributions, Stats
 using PyCall, PyPlot
@@ -34,10 +35,10 @@ end
 #weight_ex - the weight expression used for MC and QCD
 function makehists(
     df, data_expr, vars, bins;
-    weight_ex = :(xsweight .* totweight .* fitweight), mc_sel=selections[:iso]
+    weight_ex = :(xsweight .* totweight .* fitweight), mc_sel=:(isolation .== "iso")
   )
     iso = select(mc_sel, df)
-    aiso = select(selections[:aiso], df)
+    aiso = select(:(isolation .== "antiiso"), df)
 
     procs = ["wjets", "ttjets", "tchan", "gjets", "dyjets", "schan", "twchan", "diboson"]
     hists = Dict()
