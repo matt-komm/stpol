@@ -32,6 +32,8 @@ end
 dfs = Any[]
 
 nf=0
+
+println("looping over files")
 for fi in flist
     nf += 1
 
@@ -47,9 +49,11 @@ for fi in flist
         println("[", join(sample_types, ",\n"), "]")
     end
 
+    println("opening dataframe ", acc["df"], " in ROOT mode")
     edf = TreeDataFrame(acc["df"])
     #println("$fi $acc")
-    subdf = edf[:, cols]
+    println("reading ", nrow(edf), " rows, ", length(cols), " columns to memory")
+    subdf = edf[1:nrow(edf), cols]
     
     xsweights = DataArray(Float32, nrow(subdf))
     ngens = DataArray(Int32, nrow(subdf))
@@ -58,7 +62,8 @@ for fi in flist
     samples = DataArray(ASCIIString, nrow(subdf))
     systematics = DataArray(ASCIIString, nrow(subdf))
     isos = DataArray(ASCIIString, nrow(subdf))
-
+    
+    println("looping over events in memory")
     for i=1:nrow(subdf)
 
         st = sample_types[subdf[i, :fileindex]]
@@ -149,13 +154,6 @@ df = rbind(dfs)
 
 inds = perform_selection(df)
 
-
-#write output as JLD
-#println("writing $(nrow(df)) events to $ofile as JLD")
-#fi = jldopen(string(ofile, ".jld"), "w")
-#tic(); write(fi, "df", df); toc()
-#close(fi)
-
 ##write output as CSV
 include("../analysis/reweight.jl")
 include("../analysis/split.jl")
@@ -166,24 +164,17 @@ reweight(df)
 highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
 lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
 
-#fi = jldopen("$ofile.jld", "w")
-#write(fi, "df", df)
-#close(fi)
+systs = collect(keys(Stats.table(df["systematic"])))
 
-tic()
-writetree("$ofile.root.hmet", highmet)
-writetree("$ofile.root.lmet", lowmet)
-toc()
-
-#fi = jldopen("$ofile.jld.mu.highmet", "w")
-#write(fi, "df", df[inds[:mu] .* inds[:mtw], :])
-#close(fi)
-#
-#fi = jldopen("$ofile.jld.ele.highmet", "w")
-#write(fi, "df", df[inds[:ele] .* inds[:met], :])
-#close(fi)
-#
-#println("splitting by b-tag")
-#tic()
-#split_tag(df, ofile)
-#toc()
+for syst in systs
+    for nt in [0, 1, 2]
+        writetree(
+            "$ofile.root.$(syst).$(nt).hmet",
+            highmet[:((systematic .== $syst) .* (ntags .== $nt)), :]
+        )
+        writetree(
+            "$ofile.root.$(syst).$(nt).lmet",
+            lowmet[:((systematic .== $syst) .* (ntags .== $nt)), :]
+        )
+    end
+end
