@@ -1,72 +1,93 @@
 #!/home/joosep/.julia/ROOT/julia
-using ROOT,DataFrames
+addprocs(4)
 
-include("../analysis/base.jl")
-include("$BASE/src/analysis/selection.jl")
+const INFILE = ARGS[1]
+const OUTFILE = ARGS[2]
 
-df = TreeDataFrame(ARGS[1])
-println("opened TreeDataFrame ", ARGS[1], " with ", nrow(df), " events")
+
+#MAP
+@eval @everywhere const INFILE=$(INFILE)
+@eval @everywhere const OUTFILE=$(OUTFILE)
+
+@everywhere using ROOT, DataFrames
+
+@everywhere include("../analysis/base.jl")
+@everywhere include("$BASE/src/analysis/selection.jl")
+
+df = TreeDataFrame(INFILE)
+const NROW = nrow(df)
+#const NROW = 2000000
+
+#distribute chunks across workers
+wks = setdiff(workers(), myid())
+cks = chunks(int(NROW/(length(wks)))+1, NROW)
+@assert(length(wks)==length(cks), "incorrect number of chunks")
+for (w, c) in zip(wks, cks)
+    @spawnat w eval(:(const CHUNK=$c))
+end
+
 tic()
 
-arr() = BitArray(nrow(df))
+@everywhere begin
 
-set_branch_status!(df.tree, "*", false)
-reset_cache!(df.tree)
+function perfsel(_chunk)
+    println("loopin over chunk ", _chunk.start, ":", [_chunk][length(_chunk)-1])
+    df = TreeDataFrame(INFILE)
+    println("opened TreeDataFrame ", ARGS[1], " with ", nrow(df), " events")
+    tic()
 
-#only these branches are read from the TTree
-brs = [
-    :sample, :njets, :ntags,
-    :lepton_type, :systematic, :isolation,
-    :n_signal_mu, :n_signal_ele, :n_veto_mu,
-    :n_veto_ele,
-    :mtw, :met,
-    :ljet_dr, :bjet_dr, :hlt_mu, :hlt_ele, :ljet_rms
-]
+    arr(c) = BitArray(length(c))
 
-for b in brs
-    set_branch_status!(df.tree, "$(b)*", true)
-    add_cache!(df.tree, "$(b)*")
+    set_branch_status!(df.tree, "*", false)
+    reset_cache!(df.tree)
+
+    #only these branches are read from the TTree
+    brs = [
+        :sample, :njets, :ntags,
+        :lepton_type, :systematic, :isolation,
+        :n_signal_mu, :n_signal_ele, :n_veto_mu,
+        :n_veto_ele,
+        :mtw, :met,
+        :ljet_dr, :bjet_dr, :hlt_mu, :hlt_ele, :ljet_rms
+    ]
+
+    for b in brs
+        set_branch_status!(df.tree, "$(b)*", true)
+        add_cache!(df.tree, "$(b)*")
+    end
+
+    loutput = Dict()
+    loutput[(:_chunk,)] = _chunk
+
+    for (k, v) in flatsel
+        loutput[k] = arr(_chunk)
+    end
+    println("performing ", length(loutput), " selections over ", length(_chunk), " events")
+
+    j=1
+    sdf = df[_chunk, brs]
+    for (k, v) in flatsel
+        ba = with(sdf, v)
+        for i=1:length(loutput[k])
+            loutput[k][i] = isna(ba[i]) ? false : ba[i]
+        end
+    end
+
+    return loutput
 end
 
+end #everywhere
+
+refs = [@spawnat(w, eval(Main, :(perfsel(CHUNK)))) for w in wks]
+outputs = [fetch(r) for r in refs]
 output = Dict()
 for (k, v) in flatsel
-    output[k] = arr()
+    output[k] = vcat([o[k] for o in outputs]...)
 end
-println("performing ", length(output), " selections")
-
-@profile let
-for i=1:1000
-    println(i)
-    if i%100000 == 0
-        print(".")
-        flush_cstdio()
-    end
-    if i%1000000 == 0
-        print("|")
-        flush_cstdio()
-    end
-
-    x = df[i:i, brs]
-    for (k::Any, v::Expr) in flatsel
-        n = nrow(select(v, x))
-        output[k][i] = (n == 1)
-    end
-    # for b in brs
-    #     sb = symbol(string(":", b))
-    #     ex = :($b = df[$i, $sb])
-    #     println(ex)
-    #     println(df[i, :sample])
-    #     #eval(ex)
-    # end
-end
-end #profile
-
-Profile.print(C=true)
 el = toq()
+println("processed $(NROW/el) events/second in $el seconds")
 
-println("processed ", nrow(df)/el, " events/second")
-
-for (k, v) in output
-    println(join(k, "->"), " ", sum(v))
-end
-write(jldopen(ARGS[2], "w"), "inds", output)
+println("writing output")
+tic()
+write(jldopen(OUTFILE, "w"), "inds", output)
+toc()
