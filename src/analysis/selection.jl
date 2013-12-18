@@ -12,7 +12,7 @@ const selections = {
     :ntags => {k=>:(ntags .== $k) for k in [0,1,2]},
     :njets => {k=>:(njets .== $k) for k in [2,3]},
     :ljet_rms => :(ljet_rms .< 0.025),
-    :mtw => {k=>:(mtw .> $k) for k in [20, 30, 40, 50]},
+    :mtw => {k=>:(mtw .> $k) for k in [20, 30, 40, 50, 60, 70]},
     :met => {k=>:(met .> $k) for k in [20, 30, 40, 45, 50]},
     :sample => {
         k=>:(sample .== $k)
@@ -28,7 +28,10 @@ const selections = {
             "nominal", "ResUp", "ResDown",
             "EnUp", "EnDown", "scaleup",
             "scaledown", "matchingup", "matchingdown",
-            "wjets_fsim_nominal"
+            "wjets_fsim_nominal",
+            "signal_comphep_anomWtb-unphys",
+            "signal_comphep_anomWtb-0100",
+            "signal_comphep_nominal"
         ]
     },
 }
@@ -78,6 +81,7 @@ function load_selection(selfile)
         :ele => _inds[{:sel, :ele}],
         :ljet_rms => _inds[{:sel, :ljet_rms}],
         :mtw => _inds[{:sel, :mtw, 50}],
+        :_mtw => x -> _inds[{:sel, :mtw, x}],
         :met => _inds[{:sel, :met, 45}],
         :dr => _inds[{:sel, :dr}],
         :iso => _inds[{:sel, :iso}],
