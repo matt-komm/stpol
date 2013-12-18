@@ -3,8 +3,10 @@ using HDF5, JLD, DataFrames, DataArrays;
 
 include("../analysis/selection.jl")
 
-@osx_only const BASE="/Users/joosep/Documents/stpol/"
-@linux_only const BASE="/home/joosep/singletop/stpol2/";
+if ENV["USER"] == "joosep"
+	@osx_only const BASE="/Users/joosep/Documents/stpol/"
+	@linux_only const BASE="/home/joosep/singletop/stpol2/";
+end
 
 const DEBUG=("DEBUG" in keys(ENV) && int(ENV["DEBUG"])==1)
 if DEBUG
@@ -17,7 +19,9 @@ const YDIR = "output/yields"
 const FITDIR = "output/fits"
 
 readdf(fn) = read(jldopen(fn), "df")
+writedf(fn, df) = write(jldopen(fn, "w"), "df", df)
 
-t = readtable("$BASE/src/analysis/varnames.csv";separator=',');
-vars = {symbol(t[i, 1]) => t[i, 2] for i=1:nrow(t)};
-const VARS = vars
+include("$BASE/src/analysis/varnames.jl")
+
+chunk(n, c, maxn) = sum([n]*(c-1))+1:min(n*c, maxn)
+chunks(csize, nmax) = [chunk(csize, i, nmax) for i=1:convert(Int64, ceil(nmax/csize))]
