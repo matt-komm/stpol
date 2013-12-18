@@ -57,7 +57,7 @@ function perfsel(_chunk)
     end
 
     loutput = Dict()
-    loutput[(:_chunk,)] = _chunk
+    loutput[(:chunk,)] = _chunk
 
     for (k, v) in flatsel
         loutput[k] = arr(_chunk)
@@ -81,12 +81,12 @@ end #everywhere
 refs = [@spawnat(w, eval(Main, :(perfsel(CHUNK)))) for w in wks]
 outputs = [fetch(r) for r in refs]
 output = Dict()
-for (k, v) in flatsel
+for k in keys(outputs[1])
     output[k] = vcat([o[k] for o in outputs]...)
 end
 el = toq()
 println("processed $(NROW/el) events/second in $el seconds")
-
+@assert(length(output[(:chunk, )]) == NROW, "failed to process some chunks")
 println("writing output")
 tic()
 write(jldopen(OUTFILE, "w"), "inds", output)
