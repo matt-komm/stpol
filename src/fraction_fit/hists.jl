@@ -267,11 +267,12 @@ function show_corr(ax, fr::FitResult; subtitle="")
 
     ax[:xaxis][:set_ticks]([0:n-1])
     ax[:xaxis][:set_ticks_position]("bottom")
-    ax[:xaxis][:set_ticklabels](
-        [@sprintf("%s:\n %.2f \$ \\pm \$ %.2f", fr.names[i], fr.means[i], fr.sigmas[i]) for i=1:n], rotation=90
-    );
+    ax[:xaxis][:set_ticklabels](fr.names)
+
     ax[:yaxis][:set_ticks]([0:n-1])
-    ax[:yaxis][:set_ticklabels](fr.names)
+    ax[:yaxis][:set_ticklabels](
+        [@sprintf("%s:\n %.2f \$ \\pm \$ %.2f", fr.names[i], fr.means[i], fr.sigmas[i]) for i=1:n], rotation=0
+    );
 
     for i=1:length(fr.names)
         for j=1:length(fr.names)
@@ -320,7 +321,7 @@ end
 
 function rslegend(a; x...)
     handles, labels = a[:get_legend_handles_labels]()
-    a[:legend](reverse(handles), reverse(labels), loc="center left", bbox_to_anchor=(1, 0.5), numpoints=1; x...);
+    a[:legend](reverse(handles), reverse(labels), loc="center left", bbox_to_anchor=(1, 0.5), numpoints=1, fancybox=true; x...);
 end;
 
 function bdt_plot(a, df::DataFrame, data_ex, fr::FitResult; xrange=linspace(-1, 1, 20))
@@ -447,10 +448,12 @@ function channel_comparison(
     )
     kwd = {k=>v for (k,v) in kwargs}
     
-    if var in keys(VARS)
+    if :varname in keys(kwd)
+        varname = pop!(kwd, :varname)
+    elseif var in keys(VARS)
         varname = VARS[var]
     else
-        varname = pop!(kwd, :varname)
+        error("provide xlabel either through global VARS or :varname kwd")
     end
 
     (fig, (a11, a12, a21, a22)) = ratio_axes2();
@@ -489,8 +492,8 @@ function channel_comparison(
     a12[:set_ylim](bottom=lowlim)
     a22[:set_ylim](bottom=lowlim)
 
-    a11[:set_xlabel](varname)
-    a21[:set_xlabel](varname)
+    a11[:set_xlabel](varname, size="x-large")
+    a21[:set_xlabel](varname, size="x-large")
 
     return {:figure=>fig, :yields=>{:mu=>ymu, :ele=>yele}, :hists=>{:mu=>hmu, :ele=>hele}}
 end
