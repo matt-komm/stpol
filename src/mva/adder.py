@@ -56,7 +56,7 @@ def main():
                     break #one variable was NA, lets stop
                 varbuffers[var][0] = v
 
-            if isna:
+            if (isna) or not event.passes:
                 x = "NA" #MVA(..., NA, ...) -> NA
             else:
                 #print [(x, y[0]) for x,y in varbuffers.items()]
