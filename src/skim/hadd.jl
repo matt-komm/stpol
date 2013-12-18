@@ -1,6 +1,11 @@
 #!/home/joosep/.julia/ROOT/julia
 include("../analysis/base.jl")
 
+const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
+if NOSKIM
+    println("*** skimming DEACTIVATED")
+end
+
 using JSON
 
 include("../analysis/util.jl")
@@ -160,6 +165,9 @@ include("../analysis/split.jl")
 
 println("reweighting")
 reweight(df)
+
+write(jldopen("$ofile.jld", "w"), "df", df)
+run(`pbzip2 -9 $ofile.jld`)
 
 highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
 lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]

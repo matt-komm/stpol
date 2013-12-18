@@ -88,6 +88,8 @@ df = similar(
 #event-level characteristics
             cos_theta_lj=Float32[], 
             cos_theta_bl=Float32[], 
+            cos_theta_lj_gen=Float32[], 
+            cos_theta_bl_gen=Float32[], 
             met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
             C=Float32[],# D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
             top_mass=Float32[], top_eta=Float32[], top_phi=Float32[], top_pt=Float32[],
@@ -298,6 +300,8 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
     df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]] |> ifpresent
     df[i, :cos_theta_bl] = events[sources[:cos_theta_bl]] |> ifpresent
+    df[i, :cos_theta_lj_gen] = events[sources[:cos_theta_lj_gen]] |> ifpresent
+    df[i, :cos_theta_bl_gen] = events[sources[:cos_theta_bl_gen]] |> ifpresent
     
     df[i, :n_good_vertices] = events[sources[:n_good_vertices]] |> ifpresent
 
