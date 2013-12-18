@@ -71,6 +71,32 @@ function perform_selection(indata)
     return inds
 end
 
+function load_selection(selfile)
+    _inds = read(jldopen(selfile), "inds");
+    inds = {
+        :mu => _inds[{:sel, :mu}],
+        :ele => _inds[{:sel, :ele}],
+        :ljet_rms => _inds[{:sel, :ljet_rms}],
+        :mtw => _inds[{:sel, :mtw, 50}],
+        :met => _inds[{:sel, :met, 45}],
+        :dr => _inds[{:sel, :dr}],
+        :iso => _inds[{:sel, :iso}],
+        :aiso => _inds[{:sel, :aiso}],
+        #:data_mu => _inds[{:sel, :sample, "data_mu"}]
+        #:data_ele => 
+        :njets => n -> _inds[{:sel, :njets, n}],
+        :ntags => n -> _inds[{:sel, :ntags, n}],
+        :hlt => lep -> _inds[{:sel, :hlt, lep}],
+        :sample => x -> _inds[{:sel, :sample, x}]
+    }
+    
+    samples = ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan"]
+    for s in samples
+        inds[symbol(s)] = _inds[{:sel, :sample, s}]
+    end
+    return inds
+end
+
 function recurse_down(sel::Expr, prev)
     s = join(prev, "->")
     #println("Expr: [$s] => $sel")

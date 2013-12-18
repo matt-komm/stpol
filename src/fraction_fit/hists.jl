@@ -456,17 +456,28 @@ function channel_comparison(
         error("provide xlabel either through global VARS or :varname kwd")
     end
 
+    #the columns to extract for plotting from the data frame
+    cols = nothing
+    if :cols in keys(kwd)
+        cols = pop!(kwd, :cols)
+    else
+        cols = colnames(indata)
+    end
+
     (fig, (a11, a12, a21, a22)) = ratio_axes2();
+
+
     hmu = data_mc_stackplot(
-        indata[base_sel .* sels[:mu], :],
+        indata[base_sel .* sels[:mu], cols],
         sample_is("data_mu"), a12,
         var, bins; kwd...
     );
     hele = data_mc_stackplot(
-        indata[base_sel .* sels[:ele], :],
+        indata[base_sel .* sels[:ele], cols],
         sample_is("data_ele"), a22,
         var, bins; kwd...
     );
+    
     ymu = yields(hmu)
     yele = yields(hele)
     yt = hcat(ymu, yele)
