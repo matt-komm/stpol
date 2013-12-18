@@ -1,5 +1,5 @@
 #!/home/joosep/.julia/ROOT/julia
-addprocs(4)
+addprocs(30)
 
 const INFILE = ARGS[1]
 const OUTFILE = ARGS[2]
@@ -88,6 +88,9 @@ el = toq()
 println("processed $(NROW/el) events/second in $el seconds")
 @assert(length(output[(:chunk, )]) == NROW, "failed to process some chunks")
 println("writing output")
+for (k, v) in output
+    println(join(k, ","), " => ", sum(v))
+end
 tic()
 write(jldopen(OUTFILE, "w"), "inds", output)
 toc()
