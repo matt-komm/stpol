@@ -158,8 +158,9 @@ function data_mc_stackplot(df, data_ex, ax, var, bins; kwargs...)
         ("diboson", hists["diboson"], {:color=>"blue", :label=>"diboson"}),
         ("schan", hists["schan"], {:color=>"yellow", :label=>"s-channel"}),
         ("twchan", hists["twchan"], {:color=>"Gold", :label=>"tW-channel"}),
-        ("gjets", hists["gjets"], {:color=>"gray", :label=>"\$ \\gamma \$-jets"}),
-        ("qcd", hists["qcd"], {:color=>"gray", :label=>"QCD"}),
+        ("gjets_qcd", hists["gjets"]+hists["qcd"], {:color=>"gray", :label=>"QCD, \$ \\gamma \$-jets"}),
+        #("gjets", hists["gjets"], {:color=>"gray", :label=>"\$ \\gamma \$-jets"}),
+        #("qcd", hists["qcd"], {:color=>"gray", :label=>"QCD"}),
         ("wjets", hists["wjets"], {:color=>"green", :label=>"W+jets"}),
         ("ttjets", hists["ttjets"], {:color=>"orange", :label=>"\$ t \\bar{t} \$"}),
         ("tchan", hists["tchan"], {:color=>"red", :label=>"t-channel"})
@@ -267,11 +268,12 @@ function show_corr(ax, fr::FitResult; subtitle="")
 
     ax[:xaxis][:set_ticks]([0:n-1])
     ax[:xaxis][:set_ticks_position]("bottom")
-    ax[:xaxis][:set_ticklabels](
-        [@sprintf("%s:\n %.2f \$ \\pm \$ %.2f", fr.names[i], fr.means[i], fr.sigmas[i]) for i=1:n], rotation=90
-    );
+    ax[:xaxis][:set_ticklabels](fr.names)
+
     ax[:yaxis][:set_ticks]([0:n-1])
-    ax[:yaxis][:set_ticklabels](fr.names)
+    ax[:yaxis][:set_ticklabels](
+        [@sprintf("%s:\n %.2f \$ \\pm \$ %.2f", fr.names[i], fr.means[i], fr.sigmas[i]) for i=1:n], rotation=0
+    );
 
     for i=1:length(fr.names)
         for j=1:length(fr.names)
@@ -320,7 +322,7 @@ end
 
 function rslegend(a; x...)
     handles, labels = a[:get_legend_handles_labels]()
-    a[:legend](reverse(handles), reverse(labels), loc="center left", bbox_to_anchor=(1, 0.5); x...);
+    a[:legend](reverse(handles), reverse(labels), loc="center left", bbox_to_anchor=(1, 0.5), numpoints=1, fancybox=true; x...);
 end;
 
 function bdt_plot(a, df::DataFrame, data_ex, fr::FitResult; xrange=linspace(-1, 1, 20))
@@ -443,20 +445,40 @@ end
 
 #plots a comparison of the ele and mu channels, stacked format
 function channel_comparison(
-    indata, base_sel, var, bins, varname, sels; kwargs...
+    indata, base_sel, var, bins, sels; kwargs...
     )
+    kwd = {k=>v for (k,v) in kwargs}
+    
+    if :varname in keys(kwd)
+        varname = pop!(kwd, :varname)
+    elseif var in keys(VARS)
+        varname = VARS[var]
+    else
+        error("provide xlabel either through global VARS or :varname kwd")
+    end
+
+    #the columns to extract for plotting from the data frame
+    cols = nothing
+    if :cols in keys(kwd)
+        cols = pop!(kwd, :cols)
+    else
+        cols = colnames(indata)
+    end
 
     (fig, (a11, a12, a21, a22)) = ratio_axes2();
+
+
     hmu = data_mc_stackplot(
-        indata[base_sel .* sels[:mu], :],
+        indata[base_sel .* sels[:mu], cols],
         sample_is("data_mu"), a12,
-        var, bins; kwargs...
+        var, bins; kwd...
     );
     hele = data_mc_stackplot(
-        indata[base_sel .* sels[:ele], :],
+        indata[base_sel .* sels[:ele], cols],
         sample_is("data_ele"), a22,
-        var, bins; kwargs...
+        var, bins; kwd...
     );
+    
     ymu = yields(hmu)
     yele = yields(hele)
     yt = hcat(ymu, yele)
@@ -476,22 +498,19 @@ function channel_comparison(
     a21[:set_ylabel]("(Data - MC) / Data")
 
     lowlim = 0
-    for (k, v) in kwargs
-        if k == :logy && v==true
-            lowlim = 1
-            break
-        end
+    if :logy in keys(kwd) && kwd[:logy]
+        lowlim = 10
     end
     a12[:set_ylim](bottom=lowlim)
     a22[:set_ylim](bottom=lowlim)
 
-    a11[:set_xlabel](varname)
-    a21[:set_xlabel](varname)
+    a11[:set_xlabel](varname, size="x-large")
+    a21[:set_xlabel](varname, size="x-large")
 
     return {:figure=>fig, :yields=>{:mu=>ymu, :ele=>yele}, :hists=>{:mu=>hmu, :ele=>hele}}
 end
 
-function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwargs...)
+function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
 
     #copy the input histogram collection to keep it unmodified
     h = deepcopy(h)
