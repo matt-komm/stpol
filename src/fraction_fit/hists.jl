@@ -46,8 +46,20 @@ function makehists(
         hists[k] = makehist_multid(iso, sample_is(k), vars, bins, weight_ex);
     end
 
-    hists["qcd"] = (makehist_multid(aiso, data_expr, vars, bins, :(totweight .* fitweight)) - 
-        sum([makehist_multid(aiso, sample_is(p), vars, bins, :(xsweight .* totweight .* fitweight)) for p in procs]))
+    hists["qcd"] = (
+        makehist_multid(
+            aiso, data_expr,
+            vars, bins, :(totweight .* qcd_weight)
+        ) - 
+        sum([
+            makehist_multid(
+                aiso, sample_is(p),
+                vars, bins,
+                :(xsweight .* totweight .* qcd_weight)
+            )
+            for p in procs
+        ])
+    )
 
     hists["DATA"] = makehist_multid(iso, data_expr, vars, bins, 1.0);
 
@@ -404,13 +416,14 @@ function errorbars(a, h; kwargs...)
 end
 
 function reweight_to_fitres(frd, indata, inds)
+    indata["fitweight"] = 1.0
     for (lep, fr) in frd
         means = {k=>v for (k,v) in zip(fr.names, fr.means)}
         si = inds[lep]
-        indata[si .* (inds[:tchan]), :fitweight] = means["beta_signal"]
-        indata[si .* (inds[:wjets] .+ inds[:gjets] .+ inds[:dyjets] .+ inds[:diboson]), :fitweight] = means["wzjets"]
-        indata[si .* (inds[:ttjets] .+ inds[:schan] .+ inds[:twchan]), :fitweight] = means["ttjets"]
-        indata[si .* inds[:aiso], :fitweight] = means["ttjets"]
+        indata[si & (inds[:tchan]), :fitweight] = means["beta_signal"]
+        indata[si & (inds[:wjets] | inds[:gjets] | inds[:dyjets] | inds[:diboson]), :fitweight] = means["wzjets"]
+        indata[si & (inds[:ttjets] | inds[:schan] | inds[:twchan]), :fitweight] = means["ttjets"]
+        indata[si & inds[:aiso], :fitweight] = means["ttjets"]
     end
 end
 
@@ -478,7 +491,7 @@ function channel_comparison(
         sample_is("data_ele"), a22,
         var, bins; kwd...
     );
-    
+
     ymu = yields(hmu)
     yele = yields(hele)
     yt = hcat(ymu, yele)
@@ -558,18 +571,19 @@ end
 
 function reweight_qcd(indata, inds)
     #stpol/qcd_estimation/fitted_scale_factors.py
-    indata[inds[:data_mu] .* inds[:aiso], :totweight] = 1.0
-    indata[inds[:data_ele] .* inds[:aiso], :totweight] = 1.0
+    indata["qcd_weight"] = 1.0
+    indata[inds[:data_mu] .* inds[:aiso], :qcd_weight] = 1.0
+    indata[inds[:data_ele] .* inds[:aiso], :qcd_weight] = 1.0
 
     #2j1t
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :totweight] = 6.6720269212
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :totweight] = 2.56924428539
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :qcd_weight] = 6.6720269212
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :qcd_weight] = 2.56924428539
     
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :totweight] = 0.221800737672
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :totweight] = 0.215762079009
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :qcd_weight] = 0.221800737672
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :qcd_weight] = 0.215762079009
     
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :totweight] = 0.0777717192089
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :totweight] = 0.119465043571
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :qcd_weight] = 0.0777717192089
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :qcd_weight] = 0.119465043571
 end
 
 
