@@ -414,6 +414,13 @@ println("processed $(nproc/timeelapsed) events/second")
 
 #Select only the events that actually pass
 mydf = NOSKIM ? df : df[with(df, :(passes)), :]
+
+for cn in colnames(mydf)
+    if all(isna(mydf[cn]))
+        println("$cn ISNA")
+    end
+end
+
 #describe(mydf)
 println("total rows = $(nrow(mydf))")
 println("failure reasons: $fails")
@@ -421,7 +428,7 @@ println("failure reasons: $fails")
 #save output
 writetable("$(output_file)_processed.csv", prfiles)
 writetree("$(output_file).root", mydf)
-write(jldopen("$(output_file).jld", "w"), "df", mydf)
+#write(jldopen("$(output_file).jld", "w"), "df", mydf)
 
 tend = time()
 ttot = tend-tstart

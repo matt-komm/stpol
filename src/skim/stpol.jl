@@ -20,8 +20,8 @@ end
 
 sources[:cos_theta_lj] = Source(:cosTheta, :cosThetaLightJet, :STPOLSEL2, Float64)
 sources[:cos_theta_bl] = Source(:cosTheta, :cosThetaEtaBeamline, :STPOLSEL2, Float64)
-sources[:cos_theta_lj_gen] = Source(:cosThetaTrueAll, :cosThetaLightJet, :STPOLSEL2, Float64)
-sources[:cos_theta_bl_gen] = Source(:cosThetaTrueAll, :cosThetaEtaBeamline, :STPOLSEL2, Float64)
+sources[:cos_theta_lj_gen] = Source(:cosThetaProducerTrueAll, :cosThetaLightJet, :STPOLSEL2, Float64)
+sources[:cos_theta_bl_gen] = Source(:cosThetaProducerTrueAll, :cosThetaEtaBeamline, :STPOLSEL2, Float64)
 sources[:met] = Source(:patMETNTupleProducer, :Pt, :STPOLSEL2)
 sources[part(:muon, :mtw)] = Source(:muMTW, symbol(""), :STPOLSEL2, Float64)
 sources[part(:electron, :mtw)] = Source(:eleMTW, symbol(""), :STPOLSEL2, Float64)
