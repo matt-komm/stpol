@@ -25,6 +25,7 @@ const selections = {
     },
     :systematic => {k=>:(systematic .== $k)
         for k in [
+            "unknown",
             "nominal", "ResUp", "ResDown",
             "EnUp", "EnDown", "scaleup",
             "scaledown", "matchingup", "matchingdown",
@@ -74,8 +75,7 @@ function perform_selection(indata)
     return inds
 end
 
-function load_selection(selfile)
-    _inds = read(jldopen(selfile), "inds");
+function reformat_selection(_inds)
     inds = {
         :mu => _inds[{:sel, :mu}],
         :ele => _inds[{:sel, :ele}],
@@ -91,7 +91,8 @@ function load_selection(selfile)
         :njets => n -> _inds[{:sel, :njets, n}],
         :ntags => n -> _inds[{:sel, :ntags, n}],
         :hlt => lep -> _inds[{:sel, :hlt, lep}],
-        :sample => x -> _inds[{:sel, :sample, x}]
+        :sample => x -> _inds[{:sel, :sample, x}],
+        :systematic => x -> _inds[{:sel, :systematic, x}]
     }
     
     samples = ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan"]
@@ -100,6 +101,13 @@ function load_selection(selfile)
     end
     return inds
 end
+
+function load_selection(selfile)
+    _inds = read(jldopen(selfile), "inds");
+    return reformat_selection(_inds)
+end
+
+
 
 function recurse_down(sel::Expr, prev)
     s = join(prev, "->")
