@@ -9,51 +9,54 @@ using Distributions, Stats
 using PyCall, PyPlot
 @pyimport numpy
 
-function makehist(df, sample_ex, var_ex, bins, weight_ex)
-    subdf = select(sample_ex, df)
-    #x = subdf[var_ex]
-    x = with(subdf, var_ex)
-    weights = []
-    if typeof(weight_ex) <: Expr || typeof(weight_ex) <: Symbol
-      weights = with(subdf, weight_ex)
-    elseif typeof(weight_ex) <: Number
-      weights = Float64[convert(Float64, weight_ex) for i=1:nrow(subdf)]
-    else
-      error("unknown weights type $(typeof(weight_ex))")
-    end
-    counts, edges = numpy.histogram(x, bins)
-    bins, edges = numpy.histogram(x, bins, weights=weights)
-    #errs = sqrt(counts)/counts * bins
-    ret = Histogram(counts, bins, edges)
-    return ret
-end
+# function makehist(df, sample_ex, var_ex, bins, weight_ex)
+#     subdf = select(sample_ex, df)
+#     #x = subdf[var_ex]
+#     x = with(subdf, var_ex)
+#     weights = []
+#     if typeof(weight_ex) <: Expr || typeof(weight_ex) <: Symbol
+#       weights = with(subdf, weight_ex)
+#     elseif typeof(weight_ex) <: Number
+#       weights = Float64[convert(Float64, weight_ex) for i=1:nrow(subdf)]
+#     else
+#       error("unknown weights type $(typeof(weight_ex))")
+#     end
+#     counts, edges = numpy.histogram(x, bins)
+#     bins, edges = numpy.histogram(x, bins, weights=weights)
+#     #errs = sqrt(counts)/counts * bins
+#     ret = Histogram(counts, bins, edges)
+#     return ret
+# end
 
 #df - a DataFrame
-#data_expr - the projection expression to get the measured data from 'df'
+#inds - a dict of bitarrays
 #var - a list of variable expressions to plot
 #bins - a list of binning specifications for the variables in 'var'
 #weight_ex - the weight expression used for MC and QCD
 function makehists(
-    df, data_expr, vars, bins;
-    weight_ex = :(xsweight .* totweight .* fitweight), mc_sel=:(isolation .== "iso")
+    mc_iso::AbstractDataFrame, mc_aiso::AbstractDataFrame,
+    data_iso::AbstractDataFrame, data_aiso::AbstractDataFrame,
+    vars::AbstractArray, bins::AbstractArray;
+    weight_ex = :(xsweight .* totweight .* fitweight),
   )
-    iso = select(mc_sel, df)
-    aiso = select(:(isolation .== "antiiso"), df)
 
-    procs = ["wjets", "ttjets", "tchan", "gjets", "dyjets", "schan", "twchan", "diboson"]
+    procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson]
     hists = Dict()
     for k in procs
-        hists[k] = makehist_multid(iso, sample_is(k), vars, bins, weight_ex);
+        hists[string(k)] = makehist_multid(
+            select(:(sample .== $(string(k))), mc_iso),
+            vars, bins, weight_ex
+        );
     end
 
     hists["qcd"] = (
         makehist_multid(
-            aiso, data_expr,
+            data_aiso,
             vars, bins, :(totweight .* qcd_weight)
         ) - 
         sum([
             makehist_multid(
-                aiso, sample_is(p),
+                select(:(sample .== $(string(p))), mc_aiso), 
                 vars, bins,
                 :(xsweight .* totweight .* qcd_weight)
             )
@@ -61,33 +64,37 @@ function makehists(
         ])
     )
 
-    hists["DATA"] = makehist_multid(iso, data_expr, vars, bins, 1.0);
+    hists["DATA"] = makehist_multid(data_iso, vars, bins, 1.0);
 
     return hists
 end
 
-makehists(df, data_expr, var::Union(Expr, Symbol), bins; args...) = 
-    makehists(df, data_expr, {var,}, {bins,}; args...)
+makehists(mc_iso::AbstractDataFrame, mc_aiso::AbstractDataFrame, data_iso::AbstractDataFrame, data_aiso::AbstractDataFrame, var::Union(Expr, Symbol), bins; args...) = 
+    makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
 
 flatten{T}(a::Array{T,1}) =
     any(map(x->isa(x,Array),a)) ? flatten(vcat(map(flatten,a)...)): a
 flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
 flatten(a)=a
 
-function makehist_multid(df, sample_ex, vars, bins, weight_ex)
-    subdf = select(sample_ex, df)
+function makehist_multid(df, vars, bins, weight_ex)
+    
+    if nrow(df)==0
+        return Histogram(bins)
+    end
+
     arrs = Any[]
     @assert length(vars)==length(bins) "vars and bins must be the same length"
     for i=1:length(vars)
         v = vars[i]
-        push!(arrs, with(subdf, v))    
+        push!(arrs, with(df, v))    
     end
     arr = hcat(arrs...)
 
     if typeof(weight_ex) <: Expr || typeof(weight_ex) <: Symbol
-        weights = with(subdf, weight_ex)
+        weights = with(df, weight_ex)
     elseif typeof(weight_ex) <: Number
-        weights = Float64[convert(Float64, weight_ex) for i=1:nrow(subdf)]
+        weights = Float64[convert(Float64, weight_ex) for i=1:nrow(df)]
     else
         error("unknown weights type $(typeof(weight_ex))")
     end
@@ -163,7 +170,7 @@ function data_mc_stackplot(df, data_ex, ax, var, bins; kwargs...)
         bar_args[:log] = true
     end
 
-    hists = makehists(df, data_ex, var, bins; kwd...);
+    hists = makehists(df_mc, df_mc[:(isolation .== "antiiso")], var, bins; kwd...);
 
     draws = [
         ("dyjets", hists["dyjets"], {:color=>"purple", :label=>"DY-jets"}),
@@ -482,8 +489,9 @@ function channel_comparison(
 
 
     hmu = data_mc_stackplot(
-        indata[base_sel .* sels[:mu], cols],
-        sample_is("data_mu"), a12,
+        indata[base_sel & sels[:mu] & sels[:iso] & sels[:data], cols],
+        indata[base_sel & sels[:mu] & sels[:iso], cols],
+        a12,
         var, bins; kwd...
     );
     hele = data_mc_stackplot(
