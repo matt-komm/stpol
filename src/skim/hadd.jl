@@ -26,7 +26,7 @@ flist = split(readall(fname))
 println("Running over $(length(flist)) files")
 
 tic()
-cols = [:passes, :bjet_pt, :ljet_pt, :bjet_eta, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :cos_theta_lj_gen, cos_theta_bl_gen, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
+cols = [:passes, :bjet_pt, :ljet_pt, :bjet_eta, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :cos_theta_lj_gen, :cos_theta_bl_gen, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
 
 outcols = vcat(cols, [:subsample, :xs, :ngen, :sample, :isolation, :systematic, :xsweight])
 
@@ -167,18 +167,25 @@ println("reweighting")
 reweight(df)
 
 write(jldopen("$ofile.jld", "w"), "df", df)
-run(`pbzip2 -9 $ofile.jld`)
+run(`pbzip2 -f9 $ofile.jld`)
 
-highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
-lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
+#highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
+#lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
 
 systs = collect(keys(Stats.table(df["systematic"])))
 
+N = nrow(df)
+
+ch = chunks(50000, N)
+for _c in ch
+    sdf = df[_c, :]
+    _st = _c.start
+    writedf("$ofile.$(_st).jld", sdf)
+end
+
 for syst in systs
-     writetree(
-         "$ofile.$(syst).root",
-         df[:(systematic .== $syst), :]
-     )
+     writetree("$ofile.$(syst).root", df[:(systematic .== $syst), :])
+end
 #    for nt in [0, 1, 2]
 #        writetree(
 #            "$ofile.root.$(syst).$(nt).hmet",
@@ -189,4 +196,3 @@ for syst in systs
 #            lowmet[:((systematic .== $syst) .* (ntags .== $nt)), :]
 #        )
 #    end
-end
