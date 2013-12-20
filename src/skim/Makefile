@@ -39,8 +39,8 @@ add_mva:
 
 hists:
 	mkdir -p $(DIR)/hists/
-	find $(DIR)/merged/ -name "*.jld" | $(PARCMD) -j25 -n10 ../analysis/projecthists.jl $(DIR)/hists/hist.{#}.jld {} > $(DIR)/hists/hists.out	
-		
+	find `pwd`/$(DIR)/merged/ -name "*.jld" | $(PARCMD) -j25 -n25 echo sbatch -o$(DIR)/hists/out.{#} runhists.sh ../analysis/projecthists.jl $(DIR)/hists/hist.{#}.jld {} > $(DIR)/hists/hists.out	
+	source $(DIR)/hists/hists.out
 
 parhadd:
 	mkdir -p $(DIR)/merged
