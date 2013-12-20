@@ -314,7 +314,7 @@ function run_fit(ind; output=false)
 
     redir(cmd) = output ? run(cmd) : readall(cmd)
 
-    infiles = split(readall(`find $ind -name "*.csv.*"`))
+    infiles = split(readall(`find $ind -name "*.csv*"`))
     println("model files: ", join(infiles, ","))
 
     basedir = ""

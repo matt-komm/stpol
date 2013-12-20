@@ -36,7 +36,7 @@ def add_normal_unc(model, par, mean=1.0, unc=1.0):
 
 def build_model(indir):
     model = None
-    infiles = glob("%s/*.root.*" % indir)
+    infiles = glob("%s/*.root*" % indir)
     for inf in infiles:
         print "loading model from ",inf
         m = get_model(inf)

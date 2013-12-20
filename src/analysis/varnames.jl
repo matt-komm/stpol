@@ -13,6 +13,8 @@ const VARS={
 	:met=>"MET",
 	:cos_theta_lj=>"\$ \\cos{\ \\theta^*} \$",
 	:cos_theta_bl=>"\$ \\cos{\ \\theta}_{\\eta-bl} \$",
+	:cos_theta_lj_gen=>"generated \$ \\cos{\ \\theta^*} \$",
+	:cos_theta_bl_gen=>"generated \$ \\cos{\ \\theta}_{\\eta-bl} \$",
 	:ljet_rms=>"\$ RMS_{j'} \$",
 	:ljet_dr=>"\$\\Delta R_{j'}\$",
 }
