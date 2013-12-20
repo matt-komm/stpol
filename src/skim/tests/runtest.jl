@@ -1,5 +1,5 @@
 #!/usr/bin/env julia
-inf = split(readall(`head -n5 input/iso_csvt.txt`))
+inf = split(readall("input/tchan.test.txt"))
 flist = join(inf, " ")
 exe=joinpath(ENV["HOME"], ".julia/ROOT/julia")
 run(`$exe skim.jl test $flist`)
