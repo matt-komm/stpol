@@ -13,7 +13,7 @@ const selections = {
     :njets => {k=>:(njets .== $k) for k in [2,3]},
     :ljet_rms => :(ljet_rms .< 0.025),
     :mtw => {k=>:(mtw .> $k) for k in [20, 30, 40, 50, 60, 70]},
-    :met => {k=>:(met .> $k) for k in [20, 30, 40, 45, 50]},
+    :met => {k=>:(met .> $k) for k in [20, 30, 40, 45, 50, 55]},
     :sample => {
         k=>:(sample .== $k)
         for k in [
@@ -25,10 +25,12 @@ const selections = {
     },
     :systematic => {k=>:(systematic .== $k)
         for k in [
-            "unknown",
-            "nominal", "ResUp", "ResDown",
-            "EnUp", "EnDown", "scaleup",
-            "scaledown", "matchingup", "matchingdown",
+            "unknown", "mass166_5", "mass169_5", "mass175_5", "mass178_5",
+            "UnclusteredEnDown", "UnclusteredEnUp",
+            "nominal",
+            "ResUp", "ResDown",
+            "EnUp", "EnDown",
+            "scaleup", "scaledown", "matchingup", "matchingdown",
             "wjets_fsim_nominal",
             "signal_comphep_anomWtb-unphys",
             "signal_comphep_anomWtb-0100",
@@ -82,6 +84,7 @@ function reformat_selection(_inds)
         :ljet_rms => _inds[{:sel, :ljet_rms}],
         :mtw => _inds[{:sel, :mtw, 50}],
         :_mtw => x -> _inds[{:sel, :mtw, x}],
+        :_met => x -> _inds[{:sel, :met, x}],
         :met => _inds[{:sel, :met, 45}],
         :dr => _inds[{:sel, :dr}],
         :iso => _inds[{:sel, :iso}],
