@@ -1,5 +1,5 @@
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
-using HDF5, JLD, DataFrames, DataArrays;
+using HDF5, JLD, DataFrames
 
 include("../analysis/selection.jl")
 
