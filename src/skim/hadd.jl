@@ -92,41 +92,6 @@ for fi in flist
         samples[i] = sample
         isos[i] = string(iso)
         
-        if DEBUG
-            passes_mu = (isos[i] == "iso") .* (processes[i] == "gjets") .* (subdf[i, :hlt_mu] .== true) .*
-                (subdf[i, :n_signal_mu] .== 1) .* (subdf[i, :n_signal_ele] .== 0) .* (subdf[i, :n_veto_mu] .== 0) .*
-                (subdf[i, :n_veto_ele] .== 0) .* (subdf[i, :njets] .== 2) .* (subdf[i, :ntags] .== 1) .*
-                (subdf[i, :mtw] .> 50) .* (subdf[i, :ljet_rms] .< 0.025)
-            
-            passes_ele = (isos[i] == "iso") .* (processes[i] == "gjets") .* (subdf[i, :hlt_ele] .== true) .*
-                (subdf[i, :n_signal_mu] .== 0) .* (subdf[i, :n_signal_ele] .== 1) .* (subdf[i, :n_veto_mu] .== 0) .*
-                (subdf[i, :n_veto_ele] .== 0) .* (subdf[i, :njets] .== 2) .* (subdf[i, :ntags] .== 1) .*
-                (subdf[i, :met] .> 45) .* (subdf[i, :ljet_rms] .< 0.025)
-            
-            if isna(passes_mu)
-                passes_mu = false
-            end
-            if isna(passes_ele)
-                passes_ele = false
-            end
-
-            println("EV $nf fi=", subdf[i, :fileindex], " f=", md[subdf[i, :fileindex], :files],
-                " ev=", int(subdf[i, :run]), ":", int(subdf[i, :lumi]), ":", int(subdf[i, :event]),
-                " s=", samples[i], " p=", processes[i],
-                " hm=", int(subdf[i, :hlt_mu]), " he=", int(subdf[i, :hlt_ele]),
-                " nsm=", subdf[i, :n_signal_mu], " nse=", subdf[i, :n_signal_ele],
-                " nvm=", subdf[i, :n_veto_mu], " nve=", subdf[i, :n_veto_ele],
-                " nj=", subdf[i, :njets], " nt=", subdf[i, :ntags],
-                " mtw=", subdf[i, :mtw],
-                " met=", subdf[i, :met],
-                " rms=", subdf[i, :ljet_rms],
-                " i=", isos[i][1],
-                " pm=$(int(passes_mu))",
-                " pe=$(int(passes_ele))",
-            )
-
-        end
-    end
     subdf["xsweight"] = xsweights
     subdf["subsample"] = samples 
     subdf["xs"] = xss
@@ -166,22 +131,23 @@ include("../analysis/split.jl")
 println("reweighting")
 reweight(df)
 
-write(jldopen("$ofile.jld", "w"), "df", df)
-run(`pbzip2 -f9 $ofile.jld`)
+#write(jldopen("$ofile.jld", "w"), "df", df)
+#run(`pbzip2 -f9 $ofile.jld`)
 
 #highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
 #lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
 
-systs = collect(keys(Stats.table(df["systematic"])))
+#systs = collect(keys(Stats.table(df["systematic"])))
+systs = unique(df["systematic"])
 
 N = nrow(df)
 
-ch = chunks(50000, N)
-for _c in ch
-    sdf = df[_c, :]
-    _st = _c.start
-    writedf("$ofile.$(_st).jld", sdf)
-end
+#ch = chunks(50000, N)
+#for _c in ch
+#    sdf = df[_c, :]
+#    _st = _c.start
+#    writedf("$ofile.$(_st).jld", sdf)
+#end
 
 for syst in systs
      writetree("$ofile.$(syst).root", df[:(systematic .== $syst), :])

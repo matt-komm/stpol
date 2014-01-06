@@ -3,8 +3,8 @@ include ../analysis/Makefile.options
 
 #INF=input/Aug22_csvt.txt
 INF=input/dec18.txt
-#DIR=skim_dec18_1
-DIR=skim_dec12_1
+DIR=skim_dec20_1
+#DIR=skim_dec12_1
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
 
@@ -39,8 +39,7 @@ add_mva:
 
 hists:
 	mkdir -p $(DIR)/hists/
-	find `pwd`/$(DIR)/merged/ -name "*.jld" | $(PARCMD) -j25 -n25 echo sbatch -o$(DIR)/hists/out.{#} runhists.sh ../analysis/projecthists.jl $(DIR)/hists/hist.{#}.jld {} > $(DIR)/hists/hists.out	
-	source $(DIR)/hists/hists.out
+	find `pwd`/$(DIR)/merged/ -name "*.root" | $(PARCMD) -j25 -n25 echo sbatch -o$(DIR)/hists/out.{#} runhists.sh ../analysis/projecthists.jl $(DIR)/hists/hist.{#}.jld {} > $(DIR)/hists/hists.out	
 
 parhadd:
 	mkdir -p $(DIR)/merged
@@ -48,7 +47,7 @@ parhadd:
 	julia metahadd.jl $(DIR)/merged/files.txt $(DIR)/merged/md.txt > $(DIR)/merged/metahadd.out
 	split -a5 -l5 $(DIR)/merged/files.txt $(DIR)/merged/files.split.
 	echo "hadding in parallel"
-	find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j25 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
+	find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j32 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
 
 gjets_tchpt:
 	mkdir -p output/gjets_tchpt

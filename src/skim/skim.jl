@@ -172,6 +172,9 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :hlt] = passes_hlt(events, hlts) 
     df[i, :hlt_mu] = passes_hlt(events, HLTS[:mu]) 
     df[i, :hlt_ele] = passes_hlt(events, HLTS[:ele]) 
+    
+    df[i, :cos_theta_lj_gen] = events[sources[:cos_theta_lj_gen]] |> ifpresent
+    df[i, :cos_theta_bl_gen] = events[sources[:cos_theta_bl_gen]] |> ifpresent
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     fn = string("file:", split(get_current_file_name(events), ":")[1])
@@ -300,8 +303,6 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
     df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]] |> ifpresent
     df[i, :cos_theta_bl] = events[sources[:cos_theta_bl]] |> ifpresent
-    df[i, :cos_theta_lj_gen] = events[sources[:cos_theta_lj_gen]] |> ifpresent
-    df[i, :cos_theta_bl_gen] = events[sources[:cos_theta_bl_gen]] |> ifpresent
     
     df[i, :n_good_vertices] = events[sources[:n_good_vertices]] |> ifpresent
 
