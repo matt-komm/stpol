@@ -166,8 +166,8 @@ include("../analysis/split.jl")
 println("reweighting")
 reweight(df)
 
-write(jldopen("$ofile.jld", "w"), "df", df)
-run(`pbzip2 -f9 $ofile.jld`)
+#write(jldopen("$ofile.jld", "w"), "df", df)
+#run(`pbzip2 -f9 $ofile.jld`)
 
 #highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
 #lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
@@ -176,12 +176,12 @@ systs = collect(keys(Stats.table(df["systematic"])))
 
 N = nrow(df)
 
-ch = chunks(50000, N)
-for _c in ch
-    sdf = df[_c, :]
-    _st = _c.start
-    writedf("$ofile.$(_st).jld", sdf)
-end
+#ch = chunks(50000, N)
+#for _c in ch
+#    sdf = df[_c, :]
+#    _st = _c.start
+#    writedf("$ofile.$(_st).jld", sdf)
+#end
 
 for syst in systs
      writetree("$ofile.$(syst).root", df[:(systematic .== $syst), :])
