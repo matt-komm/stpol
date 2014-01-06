@@ -206,7 +206,7 @@ class Event(Getter):
         self.costheta = CosTheta("cosTheta")
 
         #Gen
-        self.costheta_gen = CosTheta("cosThetaTrueAll")
+        self.costheta_gen = CosTheta("cosThetaProducerTrueAll")
 
         self.vetolepton = self.VetoLepton()
 

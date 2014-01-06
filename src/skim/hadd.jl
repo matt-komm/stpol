@@ -1,6 +1,11 @@
 #!/home/joosep/.julia/ROOT/julia
 include("../analysis/base.jl")
 
+const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
+if NOSKIM
+    println("*** skimming DEACTIVATED")
+end
+
 using JSON
 
 include("../analysis/util.jl")
@@ -21,7 +26,7 @@ flist = split(readall(fname))
 println("Running over $(length(flist)) files")
 
 tic()
-cols = [:bjet_pt, :ljet_pt, :bjet_eta, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
+cols = [:passes, :bjet_pt, :ljet_pt, :bjet_eta, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :cos_theta_lj_gen, :cos_theta_bl_gen, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
 
 outcols = vcat(cols, [:subsample, :xs, :ngen, :sample, :isolation, :systematic, :xsweight])
 
@@ -32,6 +37,8 @@ end
 dfs = Any[]
 
 nf=0
+
+println("looping over files")
 for fi in flist
     nf += 1
 
@@ -47,9 +54,11 @@ for fi in flist
         println("[", join(sample_types, ",\n"), "]")
     end
 
+    println("opening dataframe ", acc["df"], " in ROOT mode")
     edf = TreeDataFrame(acc["df"])
     #println("$fi $acc")
-    subdf = edf[:, cols]
+    println("reading ", nrow(edf), " rows, ", length(cols), " columns to memory")
+    subdf = edf[1:nrow(edf), cols]
     
     xsweights = DataArray(Float32, nrow(subdf))
     ngens = DataArray(Int32, nrow(subdf))
@@ -58,7 +67,8 @@ for fi in flist
     samples = DataArray(ASCIIString, nrow(subdf))
     systematics = DataArray(ASCIIString, nrow(subdf))
     isos = DataArray(ASCIIString, nrow(subdf))
-
+    
+    println("looping over events in memory")
     for i=1:nrow(subdf)
 
         st = sample_types[subdf[i, :fileindex]]
@@ -149,13 +159,6 @@ df = rbind(dfs)
 
 inds = perform_selection(df)
 
-
-#write output as JLD
-#println("writing $(nrow(df)) events to $ofile as JLD")
-#fi = jldopen(string(ofile, ".jld"), "w")
-#tic(); write(fi, "df", df); toc()
-#close(fi)
-
 ##write output as CSV
 include("../analysis/reweight.jl")
 include("../analysis/split.jl")
@@ -163,27 +166,33 @@ include("../analysis/split.jl")
 println("reweighting")
 reweight(df)
 
-highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
-lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
+write(jldopen("$ofile.jld", "w"), "df", df)
+run(`pbzip2 -f9 $ofile.jld`)
 
-#fi = jldopen("$ofile.jld", "w")
-#write(fi, "df", df)
-#close(fi)
+#highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
+#lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
 
-tic()
-writetree("$ofile.root.hmet", highmet)
-writetree("$ofile.root.lmet", lowmet)
-toc()
+systs = collect(keys(Stats.table(df["systematic"])))
 
-#fi = jldopen("$ofile.jld.mu.highmet", "w")
-#write(fi, "df", df[inds[:mu] .* inds[:mtw], :])
-#close(fi)
-#
-#fi = jldopen("$ofile.jld.ele.highmet", "w")
-#write(fi, "df", df[inds[:ele] .* inds[:met], :])
-#close(fi)
-#
-#println("splitting by b-tag")
-#tic()
-#split_tag(df, ofile)
-#toc()
+N = nrow(df)
+
+ch = chunks(50000, N)
+for _c in ch
+    sdf = df[_c, :]
+    _st = _c.start
+    writedf("$ofile.$(_st).jld", sdf)
+end
+
+for syst in systs
+     writetree("$ofile.$(syst).root", df[:(systematic .== $syst), :])
+end
+#    for nt in [0, 1, 2]
+#        writetree(
+#            "$ofile.root.$(syst).$(nt).hmet",
+#            highmet[:((systematic .== $syst) .* (ntags .== $nt)), :]
+#        )
+#        writetree(
+#            "$ofile.root.$(syst).$(nt).lmet",
+#            lowmet[:((systematic .== $syst) .* (ntags .== $nt)), :]
+#        )
+#    end
