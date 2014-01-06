@@ -5,7 +5,6 @@ using DataArrays
 
 using PyCall
 @pyimport numpy
-
 using PyPlot
 
 import Base.+, Base.-, Base.*, Base./
@@ -16,16 +15,19 @@ immutable Histogram
 
     function Histogram(entries, contents, edges)
         @assert length(entries)==length(contents) "entries and contents vector must be of equal length"
-        @assert length(entries)==length(edges)-1 "must specify n+1 edges"
+        if (length(entries)!=length(edges)-1)
+            error("must specify n+1 edges, $(length(entries))!=$(length(edges)-1)")
+        end
         @assert all(entries .>= 0.0) "number of entries must be >= 0"
         new(entries, contents, edges)
     end
 end
 
 function Histogram(n::Integer, low::Number, high::Number)
-    bins = linspace(low, high, n+1)
+    bins = linspace(low, high, n)
     unshift!(bins, -inf(Float64))
-    n_contents = size(bins,1)
+    push!(bins, inf(Float64))
+    n_contents = size(bins,1)-1
     return Histogram(
         zeros(Float64, (n_contents, )),
         zeros(Float64, (n_contents, )),
