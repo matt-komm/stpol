@@ -1,5 +1,5 @@
 using HDF5,JLD
-using DataArrays, DataFrames
+using DataFrames
 inf = ARGS[1]
 
 tic()
