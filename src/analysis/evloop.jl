@@ -10,9 +10,9 @@ for k in [
     "hlt_mu", "hlt_ele",
     "n_signal_mu", "n_signal_ele",
     "n_veto_mu", "n_veto_ele",
-    "systematic",
+    "systematic", "isolation",
     "sample",
-    "cos_theta_lj",
+    "cos_theta_lj", "xsweight", "pu_weight",
     "njets", "ntags", "lepton_type", "met", "mtw",
     "bdt_sig_bg", "C", "lepton_pt", "ljet_eta"
     ]
@@ -36,6 +36,12 @@ hdescs = {
 
 println("looping over ", nrow(df), " events")
 
+function createhist(res, k, var)
+  if !in(k, keys(res))
+    res[k] = Histogram(hdescs[var]...)
+  end
+end
+
 function fillhists(res, k, cache)
   for var in [:cos_theta_lj, :met, :mtw, :bdt_sig_bg]
     if !in(var, keys(cache))
@@ -43,15 +49,26 @@ function fillhists(res, k, cache)
     end
 
     k1 = "$(k)/$(var)"
-    if !in(k1, keys(res))
-      res[k1] = Histogram(hdescs[var]...)
-    end
-    hfill!(res[k1], cache[var])
+    createhist(res, "$(k1)/unweighted", var)
+    hfill!(
+      res["$k1/unweighted"],
+      cache[var],
+      cache[:xsweight]
+    )
+
+    createhist(res, "$(k1)/pu_weighted", var)
+    hfill!(
+      res["$k1/pu_weighted"],
+      cache[var],
+      cache[:xsweight] * cache[:pu_weight]
+    )
   end
 end
 
 for i=1:nrow(df)
   cache = Dict()
+  cache[:xsweight] = df.tree[:xsweight]
+  cache[:pu_weight] = df.tree[:pu_weight]
 
   NB += ROOT.getentry!(df.tree, i);
 
