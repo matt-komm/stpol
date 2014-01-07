@@ -58,7 +58,7 @@ function hfill!(h::Histogram, v::Real, w::Real=1.0)
     return sum(h.bin_contents)
 end
 
-function hfill!(h::Histogram, v::NAtype, w::Union(Real, NAtype))
+function hfill!(h::Histogram, v::NAtype, w::Union(Real, NAtype)=1.0)
     h.bin_entries[1] += 1
     h.bin_contents[1] += 1
     return sum(h.bin_contents)
