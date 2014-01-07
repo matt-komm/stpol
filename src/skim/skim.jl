@@ -305,7 +305,6 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :cos_theta_bl] = events[sources[:cos_theta_bl]] |> ifpresent
     
     df[i, :n_good_vertices] = events[sources[:n_good_vertices]] |> ifpresent
-
    
     if do_specjets
         
