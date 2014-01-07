@@ -25,3 +25,10 @@ include("$BASE/src/analysis/varnames.jl")
 
 chunk(n, c, maxn) = sum([n]*(c-1))+1:min(n*c, maxn)
 chunks(csize, nmax) = [chunk(csize, i, nmax) for i=1:convert(Int64, ceil(nmax/csize))]
+
+
+#generic flatten for any iterable to uniterable
+flatten{T}(a::Array{T,1}) =
+    any(map(x->isa(x,Array),a)) ? flatten(vcat(map(flatten,a)...)) : a
+flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
+flatten(a)=a

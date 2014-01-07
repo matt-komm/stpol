@@ -2,31 +2,13 @@ include("../analysis/base.jl")
 
 #uses python, not compatible with CMSSW
 include("../analysis/histo.jl")
+include("../analysis/hplot.jl")
 using Hist
 using JSON
 
 using Distributions, Stats
 using PyCall, PyPlot
 @pyimport numpy
-
-# function makehist(df, sample_ex, var_ex, bins, weight_ex)
-#     subdf = select(sample_ex, df)
-#     #x = subdf[var_ex]
-#     x = with(subdf, var_ex)
-#     weights = []
-#     if typeof(weight_ex) <: Expr || typeof(weight_ex) <: Symbol
-#       weights = with(subdf, weight_ex)
-#     elseif typeof(weight_ex) <: Number
-#       weights = Float64[convert(Float64, weight_ex) for i=1:nrow(subdf)]
-#     else
-#       error("unknown weights type $(typeof(weight_ex))")
-#     end
-#     counts, edges = numpy.histogram(x, bins)
-#     bins, edges = numpy.histogram(x, bins, weights=weights)
-#     #errs = sqrt(counts)/counts * bins
-#     ret = Histogram(counts, bins, edges)
-#     return ret
-# end
 
 #df - a DataFrame
 #inds - a dict of bitarrays
@@ -69,13 +51,14 @@ function makehists(
     return hists
 end
 
-makehists(mc_iso::AbstractDataFrame, mc_aiso::AbstractDataFrame, data_iso::AbstractDataFrame, data_aiso::AbstractDataFrame, var::Union(Expr, Symbol), bins; args...) = 
+makehists(
+    mc_iso::AbstractDataFrame,
+    mc_aiso::AbstractDataFrame,
+    data_iso::AbstractDataFrame,
+    data_aiso::AbstractDataFrame,
+    var::Union(Expr, Symbol), bins; args...
+    ) = 
     makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
-
-flatten{T}(a::Array{T,1}) =
-    any(map(x->isa(x,Array),a)) ? flatten(vcat(map(flatten,a)...)): a
-flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
-flatten(a)=a
 
 function makehist_multid(df, vars, bins, weight_ex)
     

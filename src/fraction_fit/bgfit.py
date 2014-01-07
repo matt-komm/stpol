@@ -51,6 +51,7 @@ model = build_model(indir)
 print "processes:", sorted(model.processes)
 print "observables:", sorted(model.get_observables())
 print "parameters(signal):", sorted(model.get_parameters(["tchan"]))
+print [model.get_range_nbins(o)[2] for o in model.get_observables()]
 nbins = sum([model.get_range_nbins(o)[2] for o in model.get_observables()])
 model_summary(model)
 

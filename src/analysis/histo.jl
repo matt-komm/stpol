@@ -43,9 +43,13 @@ end
 function findbin(h::Histogram, v::Real)
     v < h.bin_edges[1] && return -Inf
     v >= h.bin_edges[length(h.bin_edges)] && return +Inf
+    isnan(v) && return 1
 
     idx = searchsorted(h.bin_edges, v)
     low = idx.start-1
+    if (low<1 || low>length(h.bin_entries))
+        error("bin index out of range: i=$(low), v=$(v)")
+    end
     return low
 end
 
@@ -124,7 +128,18 @@ function normed{T <: Histogram}(h::T)
 end
 
 #conversion to dataframe
-#todf(h::Histogram) = DataFrame(bin_edges=h.bin_edges, bin_contents=h.bin_contents, bin_entries=h.bin_entries)
+todf(h::Histogram) = DataFrame(
+    bin_edges=h.bin_edges,
+    bin_contents=vcat(h.bin_contents, 0),
+    bin_entries=vcat(h.bin_entries, 0)
+)
+
+function fromdf(df::DataFrame)
+    edges = df[1]
+    conts = df[2][1:nrow(df)-1]
+    entries = df[3][1:nrow(df)-1]
+    return Histogram(entries, conts, edges)
+end
 
 #assumes df columns are entries, contents, edges
 #length(entries) = length(contents) = length(edges) - 1, edges are lower, lower, lower, ..., upper
