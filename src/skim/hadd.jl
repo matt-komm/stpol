@@ -152,13 +152,9 @@ N = nrow(df)
 for syst in systs
      writetree("$ofile.$(syst).root", df[:(systematic .== $syst), :])
 end
-#    for nt in [0, 1, 2]
-#        writetree(
-#            "$ofile.root.$(syst).$(nt).hmet",
-#            highmet[:((systematic .== $syst) .* (ntags .== $nt)), :]
-#        )
-#        writetree(
-#            "$ofile.root.$(syst).$(nt).lmet",
-#            lowmet[:((systematic .== $syst) .* (ntags .== $nt)), :]
-#        )
-#    end
+for nt in [0, 1, 2]
+    writetree(
+        "$ofile.root.$(syst).$(nt)",
+        df[:((systematic .== $syst) .* (ntags .== $nt)), :]
+    )
+end
