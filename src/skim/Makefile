@@ -37,17 +37,17 @@ add_mva:
 #	find $(DIR) -name "*.root" > files.txt
 #	./hadd.jl files.txt $(DIR)
 
-hists:
-	mkdir -p $(DIR)/hists/
-	find `pwd`/$(DIR)/merged/ -name "*.root" | $(PARCMD) -j25 -n25 echo sbatch -o$(DIR)/hists/out.{#} runhists.sh ../analysis/projecthists.jl $(DIR)/hists/hist.{#}.jld {} > $(DIR)/hists/hists.out	
 
 parhadd:
 	mkdir -p $(DIR)/merged
 	find $(DIR) -name "*.root" > $(DIR)/merged/files.txt
 	julia metahadd.jl $(DIR)/merged/files.txt $(DIR)/merged/md.txt > $(DIR)/merged/metahadd.out
 	split -a5 -l5 $(DIR)/merged/files.txt $(DIR)/merged/files.split.
-	echo "hadding in parallel"
-	find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j32 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
+	#echo "hadding in parallel"
+	#find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j32 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
+	echo "hadding on cluster"
+	julia submit_hadd.jl $(DIR)
+	$(PARCMD) -j200 < subs.txt
 
 gjets_tchpt:
 	mkdir -p output/gjets_tchpt
