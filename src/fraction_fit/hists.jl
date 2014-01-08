@@ -577,19 +577,16 @@ end
 
 function reweight_qcd(indata, inds)
     #stpol/qcd_estimation/fitted_scale_factors.py
+    @pyimport fitted_scale_factors
+    sfs = fitted_scale_factors.scale_factors
     indata["qcd_weight"] = 1.0
     indata[inds[:data_mu] .* inds[:aiso], :qcd_weight] = 1.0
     indata[inds[:data_ele] .* inds[:aiso], :qcd_weight] = 1.0
-
-    #2j1t
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :qcd_weight] = 6.6720269212
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :qcd_weight] = 2.56924428539
     
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :qcd_weight] = 0.221800737672
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :qcd_weight] = 0.215762079009
-    
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :qcd_weight] = 0.0777717192089
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :qcd_weight] = 0.119465043571
+    for (nj, nt) in [(2,0),(2,1),(3,1),(3,2)]
+        indata[inds[:mu] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["mu"]["$(nj)j$(nt)t"]["mtw"]
+        indata[inds[:ele] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["mu"]["$(nj)j$(nt)t"]["met"] 
+    end
 end
 
 
