@@ -68,6 +68,12 @@ function hfill!(h::Histogram, v::NAtype, w::Union(Real, NAtype)=1.0)
     return sum(h.bin_contents)
 end
 
+function hfill!(h::Histogram, v::Real, w::NAtype=NA)
+    h.bin_entries[1] += 1
+    h.bin_contents[1] += 1
+    return sum(h.bin_contents)
+end
+
 function +(h1::Histogram, h2::Histogram)
     @assert h1.bin_edges == h2.bin_edges
     h = Histogram(h1.bin_entries + h2.bin_entries, h1.bin_contents+h2.bin_contents, h1.bin_edges)
@@ -107,6 +113,10 @@ end
 
 function integral(h::Histogram)
     return sum(h.bin_contents)
+end
+
+function nentries(h::Histogram)
+    return int(sum(h.bin_entries))
 end
 
 function integral(h::Histogram, x1::Real, x2::Real)
@@ -164,7 +174,8 @@ end
 
 flatten(h) = reshape(h, prod(size(h)))
 
-export Histogram, hfill!, integral, normed, errors, findbin
+export Histogram, hfill!
+export integral, nentries, normed, errors, findbin
 export +, -, *, /
 export todf, fromdf
 export flatten
