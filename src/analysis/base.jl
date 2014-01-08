@@ -2,6 +2,7 @@ include(joinpath(ENV["HOME"], ".juliarc.jl"))
 using HDF5, JLD, DataFrames
 
 include("../analysis/selection.jl")
+include("../analysis/util.jl")
 
 if ENV["USER"] == "joosep"
 	@osx_only const BASE="/Users/joosep/Documents/stpol/"
