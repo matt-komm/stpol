@@ -2,7 +2,7 @@ module Hist
 
 using DataFrames
 
-import Base.+, Base.-, Base.*, Base./
+import Base.+, Base.-, Base.*, Base./, Base.==
 immutable Histogram
     bin_entries::Vector{Float64} #n values
     bin_contents::Vector{Float64} #n values
@@ -78,6 +78,12 @@ function +(h1::Histogram, h2::Histogram)
     @assert h1.bin_edges == h2.bin_edges
     h = Histogram(h1.bin_entries + h2.bin_entries, h1.bin_contents+h2.bin_contents, h1.bin_edges)
     return h
+end
+
+function ==(h1::Histogram, h2::Histogram)
+    ret = h1.bin_edges == h2.bin_edges
+    ret = ret && (h1.bin_contents==h2.bin_contents)
+    ret = ret && (h1.bin_entries==h2.bin_entries)
 end
 
 -(h1::Histogram, h2::Histogram) = h1 + (-1.0 * h2)
@@ -176,7 +182,7 @@ flatten(h) = reshape(h, prod(size(h)))
 
 export Histogram, hfill!
 export integral, nentries, normed, errors, findbin
-export +, -, *, /
+export +, -, *, /, ==
 export todf, fromdf
 export flatten
 export lowedge, widths
