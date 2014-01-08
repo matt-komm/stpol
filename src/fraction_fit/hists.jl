@@ -435,7 +435,7 @@ function reweight_to_fitres(frd, indata, inds)
         indata[si & (inds[:tchan]), :fitweight] = means["beta_signal"]
         indata[si & (inds[:wjets] | inds[:gjets] | inds[:dyjets] | inds[:diboson]), :fitweight] = means["wzjets"]
         indata[si & (inds[:ttjets] | inds[:schan] | inds[:twchan]), :fitweight] = means["ttjets"]
-        indata[si & inds[:aiso], :fitweight] = means["ttjets"]
+        #indata[si & inds[:aiso], :fitweight] = means["ttjets"]
     end
 end
 
@@ -585,7 +585,7 @@ function reweight_qcd(indata, inds)
     
     for (nj, nt) in [(2,0),(2,1),(3,1),(3,2)]
         indata[inds[:mu] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["mu"]["$(nj)j$(nt)t"]["mtw"]
-        indata[inds[:ele] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["mu"]["$(nj)j$(nt)t"]["met"] 
+        indata[inds[:ele] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["ele"]["$(nj)j$(nt)t"]["met"] 
     end
 end
 
