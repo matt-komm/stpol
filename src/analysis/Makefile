@@ -1,10 +1,10 @@
-all: histo_tchpt histo_csvt histo_csvm
+include ../analysis/Makefile.options
 
-histo_tchpt:
-	~/.julia/ROOT.jl/julia -p 3 runhisto.jl input/tchpt.cfg
+INDIR=../skim/merged1
+OFDIR=out/hists
 
-histo_csvt:
-	~/.julia/ROOT.jl/julia -p 3 runhisto.jl input/csvt.cfg
+.PHONY: hists
 
-histo_csvm:
-	~/.julia/ROOT.jl/julia -p 3 runhisto.jl input/csvm_with_bdisc.cfg
+hists:
+	mkdir -p $(OFDIR)
+	find $(INDIR) -name "*.root" | $(PARCMD) -j10 ./evloop.jl {} $(OFDIR)/hist.{#}.jld > $(OFDIR)/log.txt
