@@ -15,7 +15,7 @@ const selections = {
     :mtw => {k=>:(mtw .> $k) for k in [20, 30, 40, 50, 60, 70]},
     :met => {k=>:(met .> $k) for k in [20, 30, 40, 45, 50, 55]},
     :sample => {
-        k=>:(sample .== $(hash(k)))
+        k=>sample_is(k)
         for k in [
             "data_mu", "data_ele", "tchan",
             "ttjets", "wjets", "dyjets",
@@ -47,6 +47,8 @@ function perform_selection(indata)
         :ljet_rms =>indata["ljet_rms"] .> 0.025,
         :mtw =>indata["mtw"] .> 50,
         :met =>indata["met"] .> 45,
+        :_mtw => x -> indata["mtw"] .> x,
+        :_met => x -> indata["met"] .> x,
         :dr => (indata["ljet_dr"] .> 0.5) .* (indata["bjet_dr"] .> 0.5),
         :iso => indata["isolation"] .== hash("iso"),
         :aiso => indata["isolation"] .== hash("antiiso"),
@@ -55,7 +57,8 @@ function perform_selection(indata)
         :njets => n -> indata["njets"] .== n,
         :ntags => n -> indata["ntags"] .== n,
         :hlt => n -> indata["hlt_$n"] .== true,
-        :sample => (x -> indata["sample"] .== x),
+        :sample => (x -> indata["sample"] .== hash(x)),
+        :systematic => (x -> indata["systematic"] .== hash(x)),
         :nominal => ((indata["systematic"] .== hash("nominal")) .+ (indata["systematic"] .== hash("unknown")))
     }
     
