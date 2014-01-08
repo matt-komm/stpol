@@ -57,3 +57,18 @@ function issame(arr::Vector{Any})
     end
     return true
 end
+
+#outputs <: AbstractVector{Associative{Any, Histogram}}
+function merge_outputs(outputs)
+    output = Dict()
+    for o in outputs
+        for (k, v) in o
+            if k in keys(output)
+                output[k] += v
+            else
+                output[k] = v
+            end
+        end
+    end
+    return output
+end

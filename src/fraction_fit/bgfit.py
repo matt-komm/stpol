@@ -36,7 +36,7 @@ def add_normal_unc(model, par, mean=1.0, unc=1.0):
 
 def build_model(indir):
     model = None
-    infiles = glob("%s/*.root.*" % indir)
+    infiles = glob("%s/*.root*" % indir)
     for inf in infiles:
         print "loading model from ",inf
         m = get_model(inf)
@@ -51,12 +51,13 @@ model = build_model(indir)
 print "processes:", sorted(model.processes)
 print "observables:", sorted(model.get_observables())
 print "parameters(signal):", sorted(model.get_parameters(["tchan"]))
+print [model.get_range_nbins(o)[2] for o in model.get_observables()]
 nbins = sum([model.get_range_nbins(o)[2] for o in model.get_observables()])
 model_summary(model)
 
 options = Options()
-options.set("minimizer","strategy","robust")
-#options.set("minimizer","strategy","newton_vanilla")
+#options.set("minimizer","strategy","robust")
+options.set("minimizer","strategy","newton_vanilla")
 options.set("global", "debug", "true")
 
 #print "options=", options

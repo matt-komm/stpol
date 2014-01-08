@@ -2,16 +2,30 @@
 include ../analysis/Makefile.options
 
 #INF=input/Aug22_csvt.txt
-INF=input/dec12.txt
-DIR=skim_dec12_1
-#DIR=skim_nov29_5
+INF=input/dec18.txt
+DIR=skim_dec20_1
+#DIR=skim_dec12_1
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
+
+.PHONY: comphep
 
 skim:
 	test ! -d $(DIR) || ( echo "Output diretory $(DIR) already exists" && exit 1 )
 	source $(ENVSCRIPT) && julia sub.jl $(DIR) $(INF)
 	until julia summary.jl $(DIR); do echo "."; done; echo "skim is done"
+
+comphep:
+	test ! -d comphep || ( echo "Output diretory comphep already exists" && exit 1 )
+	source $(ENVSCRIPT) && STPOL_NOSKIM=1 julia sub.jl comphep input/comphep_tchan.dec6.txt
+	until julia summary.jl comphep; do echo "."; done; echo "skim is done"
+	mkdir -p comphep/merged
+	$(ROOTWRAP) && python ../mva/adder.py bdt_sig_bg $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml comphep/*.root 
+	find comphep -name "*.root" > comphep/merged/files.txt
+	julia metahadd.jl comphep/merged/files.txt comphep/merged/md.txt
+	./hadd.jl comphep/merged/files.txt comphep/merged/md.txt comphep/merged/comphep  
+	$(ROOTWRAP) && hadd -f comphep.root comphep/merged/*.root
+	./mkindex.jl comphep.root comphep.index.jl
 
 add_mva:
 	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/merged/mva_bdt_sig_bg.out
@@ -23,17 +37,21 @@ add_mva:
 #	find $(DIR) -name "*.root" > files.txt
 #	./hadd.jl files.txt $(DIR)
 
+
 parhadd:
 	mkdir -p $(DIR)/merged
 	find $(DIR) -name "*.root" > $(DIR)/merged/files.txt
 	julia metahadd.jl $(DIR)/merged/files.txt $(DIR)/merged/md.txt > $(DIR)/merged/metahadd.out
 	split -a5 -l5 $(DIR)/merged/files.txt $(DIR)/merged/files.split.
-	echo "hadding in parallel"
-	find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j25 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
-	julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.1T $(DIR)/merged/$(DIR).*.jld.1T	> $(DIR)/merged/hadd2.1T.out
-	julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.2T $(DIR)/merged/$(DIR).*.jld.2T > $(DIR)/merged/hadd2.2T.out
-	#julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.mu.highmet $(DIR)/merged/$(DIR).*.jld.mu.highmet
-	#julia -F hadd2.jl $(DIR)/merged/$(DIR).jld.ele.highmet $(DIR)/merged/$(DIR).*.jld.ele.highmet	
+	#echo "hadding in parallel"
+	#find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j32 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
+	echo "hadding on cluster"
+	julia submit_hadd.jl $(DIR)
+	$(PARCMD) --delay=0.5 -j100 < subs.txt
+
+hadd:
+	$(ROOTWRAP) && hadd data.nominal.tagged.root $(DIR)/merged/data.*.root.nominal.1T $(DIR)/merged/data.*.root.unknown.1T $(DIR)/merged/data.*.root.nominal.2T $(DIR)/merged/data.*.root.unknown.2T
+	$(ROOTWRAP) && hadd data.nominal.untagged.root $(DIR)/merged/data.*.root.nominal.0T $(DIR)/merged/data.*.root.unknown.0T
 
 gjets_tchpt:
 	mkdir -p output/gjets_tchpt
@@ -64,3 +82,7 @@ skim_strange:
 	find output/strange -name "*.root" > output/strange/files.txt
 	julia metahadd.jl output/strange/files.txt output/strange/md.txt
 	~/.julia/ROOT/julia hadd.jl output/strange/files.txt output/strange/md.txt output/strange/output &> output/strange/hadd.txt 
+
+combine_inputs:
+	find ~/singletop/stpol/filelists/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/ -name "*.txt" -exec cat {} > input/comb.txt \;
+	find ~/singletop/stpol/filelists/Dec6_anom_42ccfd/ -name "*.txt" -exec cat {} >> input/comb.txt \;

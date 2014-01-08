@@ -1,4 +1,4 @@
-jet_classifications = [:bb, :gg, :cc, :bc, :bX, :cX, :gX, :XX]
+const jet_classifications = [:bb, :gg, :cc, :bc, :bX, :cX, :gX, :XX]
 
 #returns the 2-jet classification basesd on the pdgid of the 2 jets
 function jet_classification(id1::Number, id2::Number)

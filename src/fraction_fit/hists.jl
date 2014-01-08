@@ -1,76 +1,102 @@
-include("../analysis/base.jl")
-
-using Distributions, Stats
 using PyCall, PyPlot
 @pyimport numpy
 
-function makehist(df, sample_ex, var_ex, bins, weight_ex)
-    subdf = select(sample_ex, df)
-    #x = subdf[var_ex]
-    x = with(subdf, var_ex)
-    weights = []
-    if typeof(weight_ex) <: Expr || typeof(weight_ex) <: Symbol
-      weights = with(subdf, weight_ex)
-    elseif typeof(weight_ex) <: Number
-      weights = Float64[convert(Float64, weight_ex) for i=1:nrow(subdf)]
-    else
-      error("unknown weights type $(typeof(weight_ex))")
-    end
-    counts, edges = numpy.histogram(x, bins)
-    bins, edges = numpy.histogram(x, bins, weights=weights)
-    #errs = sqrt(counts)/counts * bins
-    ret = Histogram(counts, bins, edges)
-    return ret
-end
+include("../analysis/base.jl")
+
+#uses python, not compatible with CMSSW
+include("../analysis/histo.jl")
+
+using Hist
+include("../analysis/hplot.jl")
+using JSON
+
+using Distributions, Stats
 
 #df - a DataFrame
-#data_expr - the projection expression to get the measured data from 'df'
+#inds - a dict of bitarrays
 #var - a list of variable expressions to plot
 #bins - a list of binning specifications for the variables in 'var'
 #weight_ex - the weight expression used for MC and QCD
 function makehists(
-    df, data_expr, vars, bins;
-    weight_ex = :(xsweight .* totweight .* fitweight), mc_sel=selections[:iso]
+    mc_iso::AbstractDataFrame, mc_aiso::AbstractDataFrame,
+    data_iso::AbstractDataFrame, data_aiso::AbstractDataFrame,
+    vars::AbstractArray, bins::AbstractArray;
+    weight_ex = :(xsweight .* totweight .* fitweight),
   )
-    iso = select(mc_sel, df)
-    aiso = select(selections[:aiso], df)
 
-    procs = ["wjets", "ttjets", "tchan", "gjets", "dyjets", "schan", "twchan", "diboson"]
+    procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson]
     hists = Dict()
     for k in procs
-        hists[k] = makehist_multid(iso, sample_is(k), vars, bins, weight_ex);
+        hists[string(k)] = makehist_multid(
+            select(:(sample .== $(hash(string(k)))), mc_iso),
+            vars, bins, weight_ex
+        );
     end
 
-    hists["qcd"] = (makehist_multid(aiso, data_expr, vars, bins, :totweight) - 
-        sum([makehist_multid(aiso, sample_is(p), vars, bins, :(xsweight .* totweight)) for p in procs]))
+    hists["qcd"] = (
+        makehist_multid(
+            data_aiso,
+            vars, bins, :(totweight .* qcd_weight)
+        ) - 
+        sum([
+            makehist_multid(
+                select(:(sample .== $(string(p))), mc_aiso), 
+                vars, bins,
+                :(xsweight .* totweight .* qcd_weight)
+            )
+            for p in procs
+        ])
+    )
 
-    hists["DATA"] = makehist_multid(iso, data_expr, vars, bins, 1.0);
+    hists["DATA"] = makehist_multid(data_iso, vars, bins, 1.0);
 
     return hists
 end
 
-makehists(df, data_expr, var::Union(Expr, Symbol), bins; args...) = 
-    makehists(df, data_expr, {var,}, {bins,}; args...)
+makehists(
+    mc_iso::AbstractDataFrame,
+    mc_aiso::AbstractDataFrame,
+    data_iso::AbstractDataFrame,
+    data_aiso::AbstractDataFrame,
+    var::Union(Expr, Symbol), bins; args...
+    ) = 
+    makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
 
-flatten{T}(a::Array{T,1}) =
-    any(map(x->isa(x,Array),a)) ? flatten(vcat(map(flatten,a)...)): a
-flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
-flatten(a)=a
+makehists(
+    mc_iso::AbstractDataFrame,
+    mc_aiso::AbstractDataFrame,
+    data_iso::AbstractDataFrame,
+    data_aiso::AbstractDataFrame,
+    var::Union(Expr, Symbol), bins; args...
+    ) = 
+    makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
 
-function makehist_multid(df, sample_ex, vars, bins, weight_ex)
-    subdf = select(sample_ex, df)
+function makehist_multid(df, vars, bins, weight_ex)
+    
+    if nrow(df)==0
+        if length(bins)==1
+            return Histogram(
+                [0.0 for i=1:length(bins[1])-1],
+                [0.0 for i=1:length(bins[1])-1],
+                bins[1]
+            )
+        else
+            error("nrow=0 multid not implemented")
+        end
+    end
+
     arrs = Any[]
     @assert length(vars)==length(bins) "vars and bins must be the same length"
     for i=1:length(vars)
         v = vars[i]
-        push!(arrs, with(subdf, v))    
+        push!(arrs, with(df, v))    
     end
     arr = hcat(arrs...)
 
     if typeof(weight_ex) <: Expr || typeof(weight_ex) <: Symbol
-        weights = with(subdf, weight_ex)
+        weights = with(df, weight_ex)
     elseif typeof(weight_ex) <: Number
-        weights = Float64[convert(Float64, weight_ex) for i=1:nrow(subdf)]
+        weights = Float64[convert(Float64, weight_ex) for i=1:nrow(df)]
     else
         error("unknown weights type $(typeof(weight_ex))")
     end
@@ -110,10 +136,10 @@ function mergehists_3comp(hists)
     return out
 end
 
-to_df(bins, errs, edges) =
+todf(bins, errs, edges) =
     DataFrame(bins=vcat(bins, -1.0), errs=vcat(errs, -1.0), edges=edges);
 
-function to_df(h::Histogram)
+function todf(h::Histogram)
     errs = (sqrt(h.bin_entries) ./ h.bin_entries .* h.bin_contents) 
     for i=1:length(errs)
         if !(errs[i] > 0)
@@ -127,17 +153,17 @@ function to_df(h::Histogram)
     );
 end
 
-function to_df(d::Associative)
+function todf(d::Associative)
     tot_df = DataFrame()
     for (k, v) in d
-        df = to_df(v)
+        df = todf(v)
         rename!(index(df), x -> "$(x)__$(k)")
         tot_df = hcat(tot_df, df)
     end
     return tot_df
 end
 
-function data_mc_stackplot(df, data_ex, ax, var, bins; kwargs...)
+function data_mc_stackplot(df, ax, var, bins; kwargs...)
     kwd = {k=>v for (k,v) in kwargs}
     order = pop!(kwd, :order, nothing)
 
@@ -146,15 +172,19 @@ function data_mc_stackplot(df, data_ex, ax, var, bins; kwargs...)
         bar_args[:log] = true
     end
 
-    hists = makehists(df, data_ex, var, bins; kwd...);
+    hists = makehists(
+        df[(:mc,:iso)],  df[(:mc,:aiso)],  df[(:data,:iso)],  df[(:data,:aiso)],
+        var, bins; kwd...
+    );
 
     draws = [
         ("dyjets", hists["dyjets"], {:color=>"purple", :label=>"DY-jets"}),
         ("diboson", hists["diboson"], {:color=>"blue", :label=>"diboson"}),
         ("schan", hists["schan"], {:color=>"yellow", :label=>"s-channel"}),
         ("twchan", hists["twchan"], {:color=>"Gold", :label=>"tW-channel"}),
-        ("gjets", hists["gjets"], {:color=>"gray", :label=>"\$ \\gamma \$-jets"}),
-        ("qcd", hists["qcd"], {:color=>"gray", :label=>"QCD"}),
+        ("gjets_qcd", hists["gjets"]+hists["qcd"], {:color=>"gray", :label=>"QCD, \$ \\gamma \$-jets"}),
+        #("gjets", hists["gjets"], {:color=>"gray", :label=>"\$ \\gamma \$-jets"}),
+        #("qcd", hists["qcd"], {:color=>"gray", :label=>"QCD"}),
         ("wjets", hists["wjets"], {:color=>"green", :label=>"W+jets"}),
         ("ttjets", hists["ttjets"], {:color=>"orange", :label=>"\$ t \\bar{t} \$"}),
         ("tchan", hists["tchan"], {:color=>"red", :label=>"t-channel"})
@@ -237,17 +267,37 @@ function FitResult(fn::ASCIIString)
     )
 end
 
+function todf(fr::FitResult)
+    procs = fr.names
+    df = DataFrame()
+
+    for (m, s, p) in zip(fr.means, fr.sigmas, fr.names)
+        df["mean__$p"] = m
+        df["sigma__$p"] = s
+    end
+    df["chi2"] = fr.chi2
+    df["nbins"] = fr.nbins
+
+    for (c1, c2) in collect(combinations(fr.names, 2))
+        i = findfirst(fr.names, c1)
+        j = findfirst(fr.names, c2)
+        df["corr__$(c1)__$(c2)"] = fr.corr[i,j]
+    end
+    return df
+end
+
 function show_corr(ax, fr::FitResult; subtitle="")
     im = ax[:matshow](fr.corr, interpolation="none", cmap="jet", vmin=-1, vmax=1)
     n = length(fr.names)
 
     ax[:xaxis][:set_ticks]([0:n-1])
     ax[:xaxis][:set_ticks_position]("bottom")
-    ax[:xaxis][:set_ticklabels](
-        [@sprintf("%s:\n %.2f \$ \\pm \$ %.2f", fr.names[i], fr.means[i], fr.sigmas[i]) for i=1:n], rotation=90
-    );
+    ax[:xaxis][:set_ticklabels](fr.names)
+
     ax[:yaxis][:set_ticks]([0:n-1])
-    ax[:yaxis][:set_ticklabels](fr.names)
+    ax[:yaxis][:set_ticklabels](
+        [@sprintf("%s:\n %.2f \$ \\pm \$ %.2f", fr.names[i], fr.means[i], fr.sigmas[i]) for i=1:n], rotation=0
+    );
 
     for i=1:length(fr.names)
         for j=1:length(fr.names)
@@ -269,12 +319,15 @@ function run_fit(ind; output=false)
 
     redir(cmd) = output ? run(cmd) : readall(cmd)
 
-    infiles = split(readall(`find $ind -name "*.csv.*"`))
+    infiles = split(readall(`find $ind -name "*.csv*"`))
     println("model files: ", join(infiles, ","))
+
+    basedir = ""
 
     #convert dataframes to root
     for inf in infiles
         of = replace(inf, ".csv", ".root")
+        basedir = dirname(of)
         #println("converting $inf->$of")
         cmd = `./rootwrap.sh python convert.py $inf $of`
         run(cmd)
@@ -285,13 +338,15 @@ function run_fit(ind; output=false)
     redir(cmd)
 
     fitres = FitResult("out.txt")
+    println(joinpath(basedir, "results.json"))
+    cp("out.txt", joinpath(basedir, "results.json"))
     cd(prevdir)
     return fitres
 end
 
 function rslegend(a; x...)
     handles, labels = a[:get_legend_handles_labels]()
-    a[:legend](reverse(handles), reverse(labels), loc="center left", bbox_to_anchor=(1, 0.5); x...);
+    a[:legend](reverse(handles), reverse(labels), loc="center left", bbox_to_anchor=(1, 0.5), numpoints=1, fancybox=true; x...);
 end;
 
 function bdt_plot(a, df::DataFrame, data_ex, fr::FitResult; xrange=linspace(-1, 1, 20))
@@ -372,16 +427,17 @@ function errorbars(a, h; kwargs...)
     a[:grid]()
 end
 
-function reweigh_to_fitres(frd)
+function reweight_to_fitres(frd, indata, inds)
+    indata["fitweight"] = 1.0
     for (lep, fr) in frd
         means = {k=>v for (k,v) in zip(fr.names, fr.means)}
         si = inds[lep]
-        indata[si .* (inds[:tchan]), :fitweight] = means["beta_signal"]
-        indata[si .* (inds[:wjets] .+ inds[:gjets] .+ inds[:dyjets] .+ inds[:diboson]), :fitweight] = means["wzjets"]
-        indata[si .* (inds[:ttjets] .+ inds[:schan] .+ inds[:twchan]), :fitweight] = means["ttjets"]
-        indata[si .* inds[:aiso] .* (inds[symbol("data_$lep")]), :fitweight] = means["qcd"]
+        indata[si & (inds[:tchan]), :fitweight] = means["beta_signal"]
+        indata[si & (inds[:wjets] | inds[:gjets] | inds[:dyjets] | inds[:diboson]), :fitweight] = means["wzjets"]
+        indata[si & (inds[:ttjets] | inds[:schan] | inds[:twchan]), :fitweight] = means["ttjets"]
+        indata[si & inds[:aiso], :fitweight] = means["ttjets"]
     end
-end;
+end
 
 @pyimport scipy.stats.kde as KDE
 @pyimport matplotlib.cm as cmap
@@ -414,20 +470,34 @@ end
 
 #plots a comparison of the ele and mu channels, stacked format
 function channel_comparison(
-    indata, base_sel, var, bins, varname, sels; kwargs...
+    indata, df, base_sel, var, bins, sels; kwargs...
     )
+    kwd = {k=>v for (k,v) in kwargs}
+    
+    if :varname in keys(kwd)
+        varname = pop!(kwd, :varname)
+    elseif var in keys(VARS)
+        varname = VARS[var]
+    else
+        error("provide xlabel either through global VARS or :varname kwd")
+    end
 
     (fig, (a11, a12, a21, a22)) = ratio_axes2();
+
+    indmu = {k=>indata[v & base_sel & sels[:mu], :] for (k,v) in df}
+    indele = {k=>indata[v & base_sel & sels[:ele], :] for (k,v) in df}
+
     hmu = data_mc_stackplot(
-        indata[base_sel .* sels[:mu], :],
-        sample_is("data_mu"), a12,
-        var, bins; kwargs...
+        indmu,
+        a12,
+        var, bins; kwd...
     );
     hele = data_mc_stackplot(
-        indata[base_sel .* sels[:ele], :],
-        sample_is("data_ele"), a22,
-        var, bins; kwargs...
+        indele,
+        a22,
+        var, bins; kwd...
     );
+
     ymu = yields(hmu)
     yele = yields(hele)
     yt = hcat(ymu, yele)
@@ -446,13 +516,20 @@ function channel_comparison(
 
     a21[:set_ylabel]("(Data - MC) / Data")
 
-    a11[:set_xlabel](varname)
-    a21[:set_xlabel](varname)
+    lowlim = 0
+    if :logy in keys(kwd) && kwd[:logy]
+        lowlim = 10
+    end
+    a12[:set_ylim](bottom=lowlim)
+    a22[:set_ylim](bottom=lowlim)
+
+    a11[:set_xlabel](varname, size="x-large")
+    a21[:set_xlabel](varname, size="x-large")
 
     return {:figure=>fig, :yields=>{:mu=>ymu, :ele=>yele}, :hists=>{:mu=>hmu, :ele=>hele}}
 end
 
-function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwargs...)
+function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
 
     #copy the input histogram collection to keep it unmodified
     h = deepcopy(h)
@@ -487,3 +564,64 @@ function yields(indata, data_cut; kwargs...)
     h = makehists(indata, data_cut, {:ljet_eta}, {linspace(-5, 5, 10)}; kwargs...)
     return yields(h;kwargs...)
 end
+
+function writehists(ofname, hists)
+    writetable("$ofname.csv.mu", todf(mergehists_3comp(hists[:mu])); separator=',')
+    writetable("$ofname.csv.ele", todf(mergehists_3comp(hists[:ele])); separator=',')
+end
+
+function svfg(fname)
+    savefig("$fname.png", bbox_inches="tight", pad_inches=0.2)
+    savefig("$fname.pdf", bbox_inches="tight", pad_inches=0.2)
+end
+
+function reweight_qcd(indata, inds)
+    #stpol/qcd_estimation/fitted_scale_factors.py
+    indata["qcd_weight"] = 1.0
+    indata[inds[:data_mu] .* inds[:aiso], :qcd_weight] = 1.0
+    indata[inds[:data_ele] .* inds[:aiso], :qcd_weight] = 1.0
+
+    #2j1t
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :qcd_weight] = 6.6720269212
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :qcd_weight] = 2.56924428539
+    
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :qcd_weight] = 0.221800737672
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :qcd_weight] = 0.215762079009
+    
+    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :qcd_weight] = 0.0777717192089
+    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :qcd_weight] = 0.119465043571
+end
+
+
+
+function biaxes(frac=0.1)
+    a1 = PyPlot.plt.axes((0.0, 0.0, 0.5-frac, 1.0));
+    a2 = PyPlot.plt.axes((0.5+frac, 0.0, 0.5-frac, 1.0));
+    return a1, a2
+end
+
+
+# typealias ErrorsHistogram Histogram;
+# import Hist.errors, Hist.normed;
+# Hist.errors{T <: ErrorsHistogram}(h::T) = h.bin_entries;
+
+# function Hist.normed{T <: ErrorsHistogram}(h::T)
+#     i = integral(h)
+#     return Histogram(h.bin_entries/i, h.bin_contents/i, h.bin_edges);
+# end
+
+function read_hists(fn)
+    t = readtable(fn);
+    hists = Dict()
+    for i=1:3:length(t)
+        cn = colnames(t)
+        sname = split(cn[i], "__")[2]
+        binscol, errscol, edgescol = cn[i:i+2];
+        println(binscol, " ", errscol, " ", edgescol)
+        sub = t[:, [errscol, binscol, edgescol]];
+        hist = fromdf(sub;entries=:poissonerrors)
+        hists[sname] = hist
+    end
+    return hists
+end
+

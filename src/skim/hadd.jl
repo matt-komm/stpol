@@ -1,6 +1,13 @@
 #!/home/joosep/.julia/ROOT/julia
 include("../analysis/base.jl")
 
+println("hostname $(gethostname()) ", "SLURM_JOB_ID" in keys(ENV) ? ENV["SLURM_JOB_ID"] : getpid())
+
+const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
+if NOSKIM
+    println("*** skimming DEACTIVATED")
+end
+
 using JSON
 
 include("../analysis/util.jl")
@@ -21,7 +28,7 @@ flist = split(readall(fname))
 println("Running over $(length(flist)) files")
 
 tic()
-cols = [:hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
+cols = [:passes, :bjet_pt, :ljet_pt, :bjet_eta, :hlt_mu, :hlt_ele, :event, :run, :lumi, :n_veto_mu, :n_veto_ele, :n_signal_mu, :n_signal_ele, :met, :ljet_rms, :pu_weight, :gen_weight, :top_weight, :C, :bjet_phi, :ljet_phi, :njets, :ntags, :ljet_dr, :bjet_dr, :shat, :ht, :cos_theta_lj, :cos_theta_bl, :cos_theta_lj_gen, :cos_theta_bl_gen, :top_mass, :ljet_eta, :mtw, :lepton_id, :lepton_type, :fileindex, :n_good_vertices, :lepton_pt, :jet_cls]
 
 outcols = vcat(cols, [:subsample, :xs, :ngen, :sample, :isolation, :systematic, :xsweight])
 
@@ -32,6 +39,10 @@ end
 dfs = Any[]
 
 nf=0
+
+systs = ASCIIString[]
+
+println("looping over files")
 for fi in flist
     nf += 1
 
@@ -47,18 +58,21 @@ for fi in flist
         println("[", join(sample_types, ",\n"), "]")
     end
 
+    println("opening dataframe ", acc["df"], " in ROOT mode")
     edf = TreeDataFrame(acc["df"])
     #println("$fi $acc")
-    subdf = edf[:, cols]
+    println("reading ", nrow(edf), " rows, ", length(cols), " columns to memory")
+    subdf = edf[1:nrow(edf), cols]
     
     xsweights = DataArray(Float32, nrow(subdf))
     ngens = DataArray(Int32, nrow(subdf))
     xss = DataArray(Float32, nrow(subdf))
-    processes = DataArray(ASCIIString, nrow(subdf))
-    samples = DataArray(ASCIIString, nrow(subdf))
-    systematics = DataArray(ASCIIString, nrow(subdf))
-    isos = DataArray(ASCIIString, nrow(subdf))
-
+    processes = DataArray(Uint64, nrow(subdf))
+    samples = DataArray(Uint64, nrow(subdf))
+    systematics = DataArray(Uint64, nrow(subdf))
+    isos = DataArray(Uint64, nrow(subdf))
+    
+    println("looping over events in memory")
     for i=1:nrow(subdf)
 
         st = sample_types[subdf[i, :fileindex]]
@@ -77,48 +91,18 @@ for fi in flist
 
         proc = get_process(sample)
 
-        processes[i] = (proc != :unknown ? string(proc) : string(sample))
-        systematics[i] = string(systematic)
-        samples[i] = sample
-        isos[i] = string(iso)
-        
-        if DEBUG
-            passes_mu = (isos[i] == "iso") .* (processes[i] == "gjets") .* (subdf[i, :hlt_mu] .== true) .*
-                (subdf[i, :n_signal_mu] .== 1) .* (subdf[i, :n_signal_ele] .== 0) .* (subdf[i, :n_veto_mu] .== 0) .*
-                (subdf[i, :n_veto_ele] .== 0) .* (subdf[i, :njets] .== 2) .* (subdf[i, :ntags] .== 1) .*
-                (subdf[i, :mtw] .> 50) .* (subdf[i, :ljet_rms] .< 0.025)
-            
-            passes_ele = (isos[i] == "iso") .* (processes[i] == "gjets") .* (subdf[i, :hlt_ele] .== true) .*
-                (subdf[i, :n_signal_mu] .== 0) .* (subdf[i, :n_signal_ele] .== 1) .* (subdf[i, :n_veto_mu] .== 0) .*
-                (subdf[i, :n_veto_ele] .== 0) .* (subdf[i, :njets] .== 2) .* (subdf[i, :ntags] .== 1) .*
-                (subdf[i, :met] .> 45) .* (subdf[i, :ljet_rms] .< 0.025)
-            
-            if isna(passes_mu)
-                passes_mu = false
-            end
-            if isna(passes_ele)
-                passes_ele = false
-            end
+        processes[i] = hash(string(proc))
+        systematics[i] = hash(string(systematic))
+        samples[i] = hash(string(sample))
+        isos[i] = hash(string(iso))
 
-            println("EV $nf fi=", subdf[i, :fileindex], " f=", md[subdf[i, :fileindex], :files],
-                " ev=", int(subdf[i, :run]), ":", int(subdf[i, :lumi]), ":", int(subdf[i, :event]),
-                " s=", samples[i], " p=", processes[i],
-                " hm=", int(subdf[i, :hlt_mu]), " he=", int(subdf[i, :hlt_ele]),
-                " nsm=", subdf[i, :n_signal_mu], " nse=", subdf[i, :n_signal_ele],
-                " nvm=", subdf[i, :n_veto_mu], " nve=", subdf[i, :n_veto_ele],
-                " nj=", subdf[i, :njets], " nt=", subdf[i, :ntags],
-                " mtw=", subdf[i, :mtw],
-                " met=", subdf[i, :met],
-                " rms=", subdf[i, :ljet_rms],
-                " i=", isos[i][1],
-                " pm=$(int(passes_mu))",
-                " pe=$(int(passes_ele))",
-            )
-
+        if !in(string(systematic), systs)
+            push!(systs, string(systematic))
         end
     end
+
     subdf["xsweight"] = xsweights
-    subdf["subsample"] = samples 
+    subdf["subsample"] = samples
     subdf["xs"] = xss
     subdf["ngen"] = ngens
     subdf["sample"] = processes
@@ -149,37 +133,37 @@ df = rbind(dfs)
 
 inds = perform_selection(df)
 
-#describe(df)
-
-#write output as JLD
-println("writing $(nrow(df)) events to $ofile as JLD")
-fi = jldopen(string(ofile, ".jld"), "w")
-tic(); write(fi, "df", df); toc()
-close(fi)
-
 ##write output as CSV
-#tic();writetable(string(ofile, ".csv"), df, separator=',');toc()
 include("../analysis/reweight.jl")
 include("../analysis/split.jl")
 
 println("reweighting")
-tic()
 reweight(df)
-toc()
 
-fi = jldopen("$ofile.jld", "w")
-write(fi, "df", df)
-close(fi)
+#write(jldopen("$ofile.jld", "w"), "df", df)
+#run(`pbzip2 -f9 $ofile.jld`)
 
-fi = jldopen("$ofile.jld.mu.highmet", "w")
-write(fi, "df", df[inds[:mu] .* inds[:mtw], :])
-close(fi)
+N = nrow(df)
 
-fi = jldopen("$ofile.jld.ele.highmet", "w")
-write(fi, "df", df[inds[:ele] .* inds[:met], :])
-close(fi)
+#ch = chunks(50000, N)
+#for _c in ch
+#    sdf = df[_c, :]
+#    _st = _c.start
+#    writedf("$ofile.$(_st).jld", sdf)
+#end
 
-println("splitting by b-tag")
+#for (cn, ct) in zip(colnames(df), coltypes(df))
+#    println(cn, " ", ct)
+#end
+
 tic()
-split_tag(df, ofile)
-toc()
+for syst in systs
+    #println("writing systematic $syst")
+    for nt in [0, 1, 2]
+        sdf = df[:((systematic .== $(hash(syst))) .* (ntags .== $nt)), :]
+        #println("writing tag $nt, ", toq())
+        tic()
+        write(jldopen("$ofile.jld.$(syst).$(nt)T", "w"), "df", sdf)
+        writetree("$ofile.root.$(syst).$(nt)T", sdf)
+    end
+end

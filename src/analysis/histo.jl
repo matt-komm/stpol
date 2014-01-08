@@ -1,14 +1,8 @@
 module Hist
 
 using DataFrames
-using DataArrays
 
-using PyCall
-@pyimport numpy
-
-using PyPlot
-
-import Base.+, Base.-, Base.*, Base./
+import Base.+, Base.-, Base.*, Base./, Base.==
 immutable Histogram
     bin_entries::Vector{Float64} #n values
     bin_contents::Vector{Float64} #n values
@@ -16,16 +10,19 @@ immutable Histogram
 
     function Histogram(entries, contents, edges)
         @assert length(entries)==length(contents) "entries and contents vector must be of equal length"
-        @assert length(entries)==length(edges)-1 "must specify n+1 edges"
+        if (length(entries)!=length(edges)-1)
+            error("must specify n+1 edges, $(length(entries))!=$(length(edges)-1)")
+        end
         @assert all(entries .>= 0.0) "number of entries must be >= 0"
         new(entries, contents, edges)
     end
 end
 
 function Histogram(n::Integer, low::Number, high::Number)
-    bins = linspace(low, high, n+1)
+    bins = linspace(low, high, n)
     unshift!(bins, -inf(Float64))
-    n_contents = size(bins,1)
+    push!(bins, inf(Float64))
+    n_contents = size(bins,1)-1
     return Histogram(
         zeros(Float64, (n_contents, )),
         zeros(Float64, (n_contents, )),
@@ -34,20 +31,44 @@ function Histogram(n::Integer, low::Number, high::Number)
 end
 
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
+# function Histogram(edges::AbstractArray)
+#     hist, bins = numpy.histogramdd([[0.0 for x=1:length(edges)]], edges)
+#     return Histogram(0 * flatten(hist), 0 * flatten(hist), bins[1])
+# end
 
 function errors(h::Histogram)
     return h.bin_contents ./ sqrt(h.bin_entries)
 end
 
-function hfill!(h::Histogram, v::Real, w::Real=1.0)
+function findbin(h::Histogram, v::Real)
+    v < h.bin_edges[1] && return -Inf
+    v >= h.bin_edges[length(h.bin_edges)] && return +Inf
+    isnan(v) && return 1
+
     idx = searchsorted(h.bin_edges, v)
     low = idx.start-1
+    if (low<1 || low>length(h.bin_entries))
+        error("bin index out of range: i=$(low), v=$(v)")
+    end
+    return low
+end
+
+function hfill!(h::Histogram, v::Real, w::Real=1.0)
+    low = findbin(h, v)
+    abs(low) == Inf && error("over- or underflow for $v")
+
     h.bin_entries[low] += 1
     h.bin_contents[low] += w
     return sum(h.bin_contents)
 end
 
-function hfill!(h::Histogram, v::NAtype, w::Union(Real, NAtype))
+function hfill!(h::Histogram, v::NAtype, w::Union(Real, NAtype)=1.0)
+    h.bin_entries[1] += 1
+    h.bin_contents[1] += 1
+    return sum(h.bin_contents)
+end
+
+function hfill!(h::Histogram, v::Real, w::NAtype=NA)
     h.bin_entries[1] += 1
     h.bin_contents[1] += 1
     return sum(h.bin_contents)
@@ -57,6 +78,12 @@ function +(h1::Histogram, h2::Histogram)
     @assert h1.bin_edges == h2.bin_edges
     h = Histogram(h1.bin_entries + h2.bin_entries, h1.bin_contents+h2.bin_contents, h1.bin_edges)
     return h
+end
+
+function ==(h1::Histogram, h2::Histogram)
+    ret = h1.bin_edges == h2.bin_edges
+    ret = ret && (h1.bin_contents==h2.bin_contents)
+    ret = ret && (h1.bin_entries==h2.bin_entries)
 end
 
 -(h1::Histogram, h2::Histogram) = h1 + (-1.0 * h2)
@@ -94,6 +121,10 @@ function integral(h::Histogram)
     return sum(h.bin_contents)
 end
 
+function nentries(h::Histogram)
+    return int(sum(h.bin_entries))
+end
+
 function integral(h::Histogram, x1::Real, x2::Real)
     if !(x1 in h.bin_edges) || !(x2 in h.bin_edges)
         warn("integration will be inexact due to binning")
@@ -107,94 +138,54 @@ end
 lowedge(arr) = arr[1:length(arr)-1];
 widths(arr) = [arr[i+1]-arr[i] for i=1:length(arr)-1]
 
-function normed(h::Histogram)
+function normed{T <: Histogram}(h::T)
     i = integral(h)
     return i > 0 ? h/i : error("histogram integral was $i")
 end
 
 #conversion to dataframe
-todf(h::Histogram) = DataFrame(bin_edges=h.bin_edges, bin_contents=h.bin_contents, bin_entries=h.bin_entries)
-fromdf(df::DataFrame) = Histogram(df[:, :bin_entries].data, df[:, :bin_contents].data, df[:, :bin_edges].data)
+todf(h::Histogram) = DataFrame(
+    bin_edges=h.bin_edges,
+    bin_contents=vcat(h.bin_contents, 0),
+    bin_entries=vcat(h.bin_entries, 0)
+)
 
-histogramdd(args...;kwargs...) = numpy.histogramdd(args..., kwargs...);
+function fromdf(df::DataFrame)
+    edges = df[1]
+    conts = df[2][1:nrow(df)-1]
+    entries = df[3][1:nrow(df)-1]
+    return Histogram(entries, conts, edges)
+end
+
+#assumes df columns are entries, contents, edges
+#length(entries) = length(contents) = length(edges) - 1, edges are lower, lower, lower, ..., upper
+function fromdf(df::DataFrame; entries=:entries)
+    ent = df[1].data[1:nrow(df)-1]
+    cont = df[2].data[1:nrow(df)-1]
+    if entries == :poissonerrors
+        ent = (cont ./ ent ) .^ 2
+        ent = Float64[x > 0 ? x : 0 for x in ent]
+    elseif entries == :entries
+        ent = ent
+    else
+        error("unknown value for keyword :entries=>$(entries)")
+    end
+
+    Histogram(
+        ent, #entries
+        cont, #contents
+        df[3].data #edges
+    )
+end
+
 flatten(h) = reshape(h, prod(size(h)))
 
-function hplot(figure::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
-    kwargsd = {k=>v for (k, v) in kwargs}
-
-    nbins = length(kwargs)
-    #in case of log scale, low bins must be \eps; otherwise 0,0,0,...,0 or lower
-    if (:log in keys(kwargsd) && kwargsd[:log])
-        prevbins = [x > 0 ? x : 1 for x in prevhist.bin_contents]
-    else
-        prevbins = prevhist.bin_contents
-    end
-
-    figure[:bar](lowedge(h.bin_edges), h.bin_contents, widths(h.bin_edges), prevbins; kwargs...)
-end
-
-function hplot{T <: Number}(figure::PyObject, h::Histogram, prevval::T;kwargs...)
-    prevh = Histogram(
-        Float64[1 for i=1:length(h.bin_entries)],
-        Float64[convert(Float64, prevval) for i=1:length(h.bin_entries)],
-        h.bin_edges
-    )
-    hplot(figure, h, prevh; kwargs...)
-end
-
-function hplot(figure::PyObject, h::Histogram; kwargs...)
-    return hplot(figure, h, 0.0*h; kwargs...)
-end
-
-function hplot(figure::PyObject, hists::Vector{Histogram}, args=Dict[]; common_args=Dict(), kwargs...)
-    ret = Any[]
-    kwd = {k=>v for (k,v) in kwargs}
-    for i=1:length(hists)
-
-        h = hists[i]
-        
-        arg = i <= length(args) ? args[i] : Dict()
-        argd = {k=>v for (k, v) in merge(arg, common_args, kwd)}
-
-        if !haskey(argd, :color)
-            argd[:color] = figure[:_get_lines][:color_cycle][:next]()
-        end
-
-        prevh = i>1 ? sum(hists[1:i-1]) : 0.0
-        r = hplot(figure, h, prevh; argd...)
-        
-        push!(ret, r)
-    end
-    return ret
-end
-
-function eplot(figure::PyObject, h::Histogram;kwargs...)
-    #figure[:plot](midpoints(h.bin_edges), h.bin_contents; kwargs...)
-    figure[:errorbar](midpoints(h.bin_edges), h.bin_contents, errors(h); kwargs...)
-end
-
-
-function eplot(figure::PyObject, hs::Vector{Histogram};kwargs...)
-   for h in hs
-        eplot(figure, h; kwargs...)
-   end
-end
-
-export Histogram, hfill!, hplot, integral, normed, errors
-export +, -, *, /
+export Histogram, hfill!
+export integral, nentries, normed, errors, findbin
+export +, -, *, /, ==
 export todf, fromdf
-export histogramdd, flatten
-
-export hplot, eplot
+export flatten
+export lowedge, widths
 
 end #module
 
-if "--test" in ARGS
-    using Hist
-    h = Histogram([1,2], [2.0,3.0], [0,1,2])
-    d = h / h
-    m = h - h
-    println(d)
-    println(m)
-    m / d
-end
