@@ -47,7 +47,11 @@ parhadd:
 	#find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j32 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
 	echo "hadding on cluster"
 	julia submit_hadd.jl $(DIR)
-	$(PARCMD) -j200 < subs.txt
+	$(PARCMD) --delay=0.5 -j100 < subs.txt
+
+hadd:
+	$(ROOTWRAP) && hadd data.nominal.tagged.root $(DIR)/merged/data.*.root.nominal.1T $(DIR)/merged/data.*.root.unknown.1T $(DIR)/merged/data.*.root.nominal.2T $(DIR)/merged/data.*.root.unknown.2T
+	$(ROOTWRAP) && hadd data.nominal.untagged.root $(DIR)/merged/data.*.root.nominal.0T $(DIR)/merged/data.*.root.unknown.0T
 
 gjets_tchpt:
 	mkdir -p output/gjets_tchpt
