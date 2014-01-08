@@ -1,5 +1,5 @@
 
-sample_is(x) = :(sample .== $x)
+sample_is(x) = :(sample .== $(hash(x)))
 
 const selections = {
     :mu => :((lepton_type .== 13) .* (n_signal_mu .== 1) .* (n_signal_ele .== 0)),
@@ -7,15 +7,15 @@ const selections = {
     :vetolep => :((n_veto_mu .== 0) .* (n_veto_ele .== 0)),
     :dr => :((ljet_dr .> 0.5) .* (bjet_dr .> 0.5)),
     :hlt => {:mu=>:(hlt_mu .== true), :ele=>:(hlt_ele .== true)},
-    :iso => :(isolation .== "iso"),
-    :aiso => :(isolation .== "antiiso"),
+    :iso => :(isolation .== hash("iso")),
+    :aiso => :(isolation .== hash("antiiso")),
     :ntags => {k=>:(ntags .== $k) for k in [0,1,2]},
     :njets => {k=>:(njets .== $k) for k in [2,3]},
     :ljet_rms => :(ljet_rms .< 0.025),
     :mtw => {k=>:(mtw .> $k) for k in [20, 30, 40, 50, 60, 70]},
     :met => {k=>:(met .> $k) for k in [20, 30, 40, 45, 50, 55]},
     :sample => {
-        k=>:(sample .== $k)
+        k=>:(sample .== $(hash(k)))
         for k in [
             "data_mu", "data_ele", "tchan",
             "ttjets", "wjets", "dyjets",
@@ -23,7 +23,8 @@ const selections = {
             "twchan", "wjets_sherpa"
         ]
     },
-    :systematic => {k=>:(systematic .== $k)
+    :systematic => {
+        k=>:(systematic .== $(hash(k)))
         for k in [
             "unknown", "mass166_5", "mass169_5", "mass175_5", "mass178_5",
             "UnclusteredEnDown", "UnclusteredEnUp",
@@ -47,33 +48,21 @@ function perform_selection(indata)
         :mtw =>indata["mtw"] .> 50,
         :met =>indata["met"] .> 45,
         :dr => (indata["ljet_dr"] .> 0.5) .* (indata["bjet_dr"] .> 0.5),
-        :iso => indata["isolation"] .== "iso",
-        :aiso => indata["isolation"] .== "antiiso",
-        :data_mu => indata["sample"] .== "data_mu",
-        :data_ele => indata["sample"] .== "data_ele",
+        :iso => indata["isolation"] .== hash("iso"),
+        :aiso => indata["isolation"] .== hash("antiiso"),
+        :data_mu => indata["sample"] .== hash("data_mu"),
+        :data_ele => indata["sample"] .== hash("data_ele"),
         :njets => n -> indata["njets"] .== n,
         :ntags => n -> indata["ntags"] .== n,
         :hlt => n -> indata["hlt_$n"] .== true,
         :sample => (x -> indata["sample"] .== x),
-        :nominal => ((indata["systematic"] .== "nominal") .+ (indata["systematic"] .== "unknown"))
+        :nominal => ((indata["systematic"] .== hash("nominal")) .+ (indata["systematic"] .== hash("unknown")))
     }
     
     samples = ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan"]
     for s in samples
-        inds[symbol(s)] = indata["sample"] .== s
+        inds[symbol(s)] = indata["sample"] .== hash(s)
     end
-#
-#    for s in ["gjets", "wjets", "ttjets", "tchan"]
-#        muind = inds[:iso] .* inds[:sample](s) .* inds[:hlt](:mu) .* inds[:mu] .* inds[:njets](2) .* inds[:ntags](1) .* inds[:mtw] .* inds[:ljet_rms]
-#        eleind = inds[:iso] .* inds[:sample](s) .* inds[:hlt](:ele) .* inds[:ele] .* inds[:njets](2) .* inds[:ntags](1) .* inds[:met] .* inds[:ljet_rms]
-#       
-#        mud = indata[muind, :xsweight]
-#        eled = indata[eleind, :xsweight]
-#
-#        println("FY ", s, " mu ", length(mud), " ", sum(mud))
-#        println("FY ", s, " ele ", length(eled), " ", sum(eled))
-#    end
-#
     return inds
 end
 
