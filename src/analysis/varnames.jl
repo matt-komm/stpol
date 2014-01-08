@@ -1,4 +1,4 @@
-const VARS={
+const VARS = {
 	:C=>"C variable",
 	:shat=>"\$ \\hat{S} \$\ [GeV]",
 	:ht=>"\$ H_t \$\ [GeV]",
