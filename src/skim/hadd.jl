@@ -1,6 +1,8 @@
 #!/home/joosep/.julia/ROOT/julia
 include("../analysis/base.jl")
 
+println("hostname $(gethostname()) ", "SLURM_JOB_ID" in keys(ENV) ? ENV["SLURM_JOB_ID"] : getpid())
+
 const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
 if NOSKIM
     println("*** skimming DEACTIVATED")
@@ -38,6 +40,8 @@ dfs = Any[]
 
 nf=0
 
+systs = ASCIIString[]
+
 println("looping over files")
 for fi in flist
     nf += 1
@@ -63,10 +67,10 @@ for fi in flist
     xsweights = DataArray(Float32, nrow(subdf))
     ngens = DataArray(Int32, nrow(subdf))
     xss = DataArray(Float32, nrow(subdf))
-    processes = DataArray(ASCIIString, nrow(subdf))
-    samples = DataArray(ASCIIString, nrow(subdf))
-    systematics = DataArray(ASCIIString, nrow(subdf))
-    isos = DataArray(ASCIIString, nrow(subdf))
+    processes = DataArray(Uint64, nrow(subdf))
+    samples = DataArray(Uint64, nrow(subdf))
+    systematics = DataArray(Uint64, nrow(subdf))
+    isos = DataArray(Uint64, nrow(subdf))
     
     println("looping over events in memory")
     for i=1:nrow(subdf)
@@ -87,13 +91,18 @@ for fi in flist
 
         proc = get_process(sample)
 
-        processes[i] = (proc != :unknown ? string(proc) : string(sample))
-        systematics[i] = string(systematic)
-        samples[i] = sample
-        isos[i] = string(iso)
-        
+        processes[i] = hash(string(proc))
+        systematics[i] = hash(string(systematic))
+        samples[i] = hash(string(sample))
+        isos[i] = hash(string(iso))
+
+        if !in(string(systematic), systs)
+            push!(systs, string(systematic))
+        end
+    end
+
     subdf["xsweight"] = xsweights
-    subdf["subsample"] = samples 
+    subdf["subsample"] = samples
     subdf["xs"] = xss
     subdf["ngen"] = ngens
     subdf["sample"] = processes
@@ -134,12 +143,6 @@ reweight(df)
 #write(jldopen("$ofile.jld", "w"), "df", df)
 #run(`pbzip2 -f9 $ofile.jld`)
 
-#highmet = df[(inds[:mu] .* inds[:mtw]) .+ (inds[:ele] .* inds[:met]), :]
-#lowmet = df[(inds[:mu] .* !inds[:mtw]) .+ (inds[:ele] .* !inds[:met]), :]
-
-#systs = collect(keys(Stats.table(df["systematic"])))
-systs = unique(df["systematic"])
-
 N = nrow(df)
 
 #ch = chunks(50000, N)
@@ -149,12 +152,18 @@ N = nrow(df)
 #    writedf("$ofile.$(_st).jld", sdf)
 #end
 
+#for (cn, ct) in zip(colnames(df), coltypes(df))
+#    println(cn, " ", ct)
+#end
+
+tic()
 for syst in systs
-     writetree("$ofile.$(syst).root", df[:(systematic .== $syst), :])
-end
-for nt in [0, 1, 2]
-    writetree(
-        "$ofile.root.$(syst).$(nt)",
-        df[:((systematic .== $syst) .* (ntags .== $nt)), :]
-    )
+    #println("writing systematic $syst")
+    for nt in [0, 1, 2]
+        sdf = df[:((systematic .== $(hash(syst))) .* (ntags .== $nt)), :]
+        #println("writing tag $nt, ", toq())
+        tic()
+        write(jldopen("$ofile.jld.$(syst).$(nt)T", "w"), "df", sdf)
+        writetree("$ofile.root.$(syst).$(nt)T", sdf)
+    end
 end
