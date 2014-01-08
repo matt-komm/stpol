@@ -31,10 +31,10 @@ function Histogram(n::Integer, low::Number, high::Number)
 end
 
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
-function Histogram(edges::AbstractArray)
-    hist, bins = numpy.histogramdd([[0.0 for x=1:length(edges)]], edges)
-    return Histogram(0 * flatten(hist), 0 * flatten(hist), bins[1])
-end
+# function Histogram(edges::AbstractArray)
+#     hist, bins = numpy.histogramdd([[0.0 for x=1:length(edges)]], edges)
+#     return Histogram(0 * flatten(hist), 0 * flatten(hist), bins[1])
+# end
 
 function errors(h::Histogram)
     return h.bin_contents ./ sqrt(h.bin_entries)
@@ -179,6 +179,7 @@ export integral, nentries, normed, errors, findbin
 export +, -, *, /
 export todf, fromdf
 export flatten
+export lowedge, widths
 
 end #module
 

@@ -1,14 +1,16 @@
+using PyCall, PyPlot
+@pyimport numpy
+
 include("../analysis/base.jl")
 
 #uses python, not compatible with CMSSW
 include("../analysis/histo.jl")
-include("../analysis/hplot.jl")
+
 using Hist
+include("../analysis/hplot.jl")
 using JSON
 
 using Distributions, Stats
-using PyCall, PyPlot
-@pyimport numpy
 
 #df - a DataFrame
 #inds - a dict of bitarrays
@@ -26,7 +28,7 @@ function makehists(
     hists = Dict()
     for k in procs
         hists[string(k)] = makehist_multid(
-            select(:(sample .== $(string(k))), mc_iso),
+            select(:(sample .== $(hash(string(k)))), mc_iso),
             vars, bins, weight_ex
         );
     end
@@ -60,10 +62,27 @@ makehists(
     ) = 
     makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
 
+makehists(
+    mc_iso::AbstractDataFrame,
+    mc_aiso::AbstractDataFrame,
+    data_iso::AbstractDataFrame,
+    data_aiso::AbstractDataFrame,
+    var::Union(Expr, Symbol), bins; args...
+    ) = 
+    makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
+
 function makehist_multid(df, vars, bins, weight_ex)
     
     if nrow(df)==0
-        return Histogram(bins)
+        if length(bins)==1
+            return Histogram(
+                [0.0 for i=1:length(bins[1])-1],
+                [0.0 for i=1:length(bins[1])-1],
+                bins[1]
+            )
+        else
+            error("nrow=0 multid not implemented")
+        end
     end
 
     arrs = Any[]
@@ -144,7 +163,7 @@ function todf(d::Associative)
     return tot_df
 end
 
-function data_mc_stackplot(df, data_ex, ax, var, bins; kwargs...)
+function data_mc_stackplot(df, ax, var, bins; kwargs...)
     kwd = {k=>v for (k,v) in kwargs}
     order = pop!(kwd, :order, nothing)
 
@@ -153,7 +172,10 @@ function data_mc_stackplot(df, data_ex, ax, var, bins; kwargs...)
         bar_args[:log] = true
     end
 
-    hists = makehists(df_mc, df_mc[:(isolation .== "antiiso")], var, bins; kwd...);
+    hists = makehists(
+        df[(:mc,:iso)],  df[(:mc,:aiso)],  df[(:data,:iso)],  df[(:data,:aiso)],
+        var, bins; kwd...
+    );
 
     draws = [
         ("dyjets", hists["dyjets"], {:color=>"purple", :label=>"DY-jets"}),
@@ -448,7 +470,7 @@ end
 
 #plots a comparison of the ele and mu channels, stacked format
 function channel_comparison(
-    indata, base_sel, var, bins, sels; kwargs...
+    indata, df, base_sel, var, bins, sels; kwargs...
     )
     kwd = {k=>v for (k,v) in kwargs}
     
@@ -460,26 +482,19 @@ function channel_comparison(
         error("provide xlabel either through global VARS or :varname kwd")
     end
 
-    #the columns to extract for plotting from the data frame
-    cols = nothing
-    if :cols in keys(kwd)
-        cols = pop!(kwd, :cols)
-    else
-        cols = colnames(indata)
-    end
-
     (fig, (a11, a12, a21, a22)) = ratio_axes2();
 
+    indmu = {k=>indata[v & base_sel & sels[:mu], :] for (k,v) in df}
+    indele = {k=>indata[v & base_sel & sels[:ele], :] for (k,v) in df}
 
     hmu = data_mc_stackplot(
-        indata[base_sel & sels[:mu] & sels[:iso] & sels[:data], cols],
-        indata[base_sel & sels[:mu] & sels[:iso], cols],
+        indmu,
         a12,
         var, bins; kwd...
     );
     hele = data_mc_stackplot(
-        indata[base_sel .* sels[:ele], cols],
-        sample_is("data_ele"), a22,
+        indele,
+        a22,
         var, bins; kwd...
     );
 
