@@ -1,8 +1,7 @@
 using PyCall
-@pyimport numpy
 using PyPlot
 
-histogramdd(args...;kwargs...) = numpy.histogramdd(args..., kwargs...);
+#histogramdd(args...;kwargs...) = numpy.histogramdd(args..., kwargs...);
 
 function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
     kwargsd = {k=>v for (k, v) in kwargs}
@@ -67,5 +66,3 @@ function eplot{T <: Histogram}(ax::PyObject, hs::Vector{T};kwargs...)
    end
    return rets
 end
-
-export hplot, eplot
