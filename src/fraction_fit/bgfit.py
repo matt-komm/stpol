@@ -19,7 +19,7 @@ def get_model(infile):
 
     add_normal_unc(model, "wzjets", mean=1.5, unc=1.0)
     add_normal_unc(model, "ttjets", unc=0.5)
-    add_normal_unc(model, "qcd", unc=0.2)
+    add_normal_unc(model, "qcd", unc=0.000001)
     return model
 
 def add_normal_unc(model, par, mean=1.0, unc=1.0):
