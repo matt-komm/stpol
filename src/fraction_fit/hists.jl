@@ -611,7 +611,7 @@ function read_hists(fn)
         sname = split(cn[i], "__")[2]
         binscol, errscol, edgescol = cn[i:i+2];
         println(binscol, " ", errscol, " ", edgescol)
-        sub = t[:, [errscol, binscol, edgescol]];
+        sub = t[:, [edgescol, errscol, binscol]];
         hist = fromdf(sub;entries=:poissonerrors)
         hists[sname] = hist
     end
