@@ -538,11 +538,7 @@ function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
     hmc = nothing 
     for (k, v) in h
         if k != "DATA"
-            if hmc == nothing
-                hmc = v
-            else
-                hmc += v
-            end
+            hmc = hmc == nothing ? v : hmc+v
         end
     end
     h["MC"] = hmc
