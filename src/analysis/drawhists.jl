@@ -28,7 +28,7 @@ frd = {
 reweight_to_fitres(frd, indata, inds);
 
 wcols = [:xsweight, :totweight, :sample, :isolation, :qcd_weight, :pu_weight]
-wex = {:qcd=>:(xsweight .* totweight .* qcd_weight), :qcd_fractionfit=>:(xsweight .* totweight .* qcd_weight .* fitweight)}
+wex = {:qcd=>:(xsweight .* totweight), :qcd_fractionfit=>:(xsweight .* totweight .* fitweight)}
 
 #println("performing preselection for 2j1t")
 #tic()

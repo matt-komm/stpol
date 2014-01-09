@@ -13,3 +13,11 @@ hs=sum([h,h])
 
 hs=sum([h])
 @test hs==h
+
+#show(h)
+#df = todf(h)
+#show(df)
+#h1 = fromdf(df)
+#show(h1)
+
+@test fromdf(todf(h)) == h

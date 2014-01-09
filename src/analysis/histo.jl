@@ -150,21 +150,24 @@ todf(h::Histogram) = DataFrame(
     bin_entries=vcat(h.bin_entries, 0)
 )
 
-function fromdf(df::DataFrame)
-    edges = df[1]
-    conts = df[2][1:nrow(df)-1]
-    entries = df[3][1:nrow(df)-1]
-    return Histogram(entries, conts, edges)
-end
+#function fromdf(df::DataFrame)
+#    edges = df[1]
+#    conts = df[2][1:nrow(df)-1]
+#    entries = df[3][1:nrow(df)-1]
+#    return Histogram(entries, conts, edges)
+#end
 
 #assumes df columns are entries, contents, edges
 #length(entries) = length(contents) = length(edges) - 1, edges are lower, lower, lower, ..., upper
 function fromdf(df::DataFrame; entries=:entries)
-    ent = df[1].data[1:nrow(df)-1]
-    cont = df[2].data[1:nrow(df)-1]
+    ent = df[2].data[1:nrow(df)-1]
+    cont = df[3].data[1:nrow(df)-1]
+
+    #entries column reflects poisson errors of the contents column 
     if entries == :poissonerrors
         ent = (cont ./ ent ) .^ 2
         ent = Float64[x > 0 ? x : 0 for x in ent]
+    #entries column reflects raw entries/events
     elseif entries == :entries
         ent = ent
     else
@@ -174,7 +177,7 @@ function fromdf(df::DataFrame; entries=:entries)
     Histogram(
         ent, #entries
         cont, #contents
-        df[3].data #edges
+        df[1].data #edges
     )
 end
 

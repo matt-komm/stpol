@@ -538,11 +538,7 @@ function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
     hmc = nothing 
     for (k, v) in h
         if k != "DATA"
-            if hmc == nothing
-                hmc = v
-            else
-                hmc += v
-            end
+            hmc = hmc == nothing ? v : hmc+v
         end
     end
     h["MC"] = hmc
@@ -566,8 +562,8 @@ function yields(indata, data_cut; kwargs...)
 end
 
 function writehists(ofname, hists)
-    writetable("$ofname.csv.mu", todf(mergehists_3comp(hists[:mu])); separator=',')
-    writetable("$ofname.csv.ele", todf(mergehists_3comp(hists[:ele])); separator=',')
+    writetable("$ofname.csv.mu", todf(mergehists_4comp(hists[:mu])); separator=',')
+    writetable("$ofname.csv.ele", todf(mergehists_4comp(hists[:ele])); separator=',')
 end
 
 function svfg(fname)
