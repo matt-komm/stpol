@@ -29,6 +29,7 @@ scale_factors["ele"]["3j2t"]["met"] = 0.245998596181
 scale_factors["ele"]["3j2t"]["mtw"] = 2.11648078839e-07
 scale_factors["ele"]["3j2t"]["qcd_mva"] = 0.306415861569
 
+mva_cuts = {}
 mva_cuts["ele"] = 0.10
 mva_cuts["mu"] = 0.05
 
