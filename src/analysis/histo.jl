@@ -55,6 +55,11 @@ end
 
 function hfill!(h::Histogram, v::Real, w::Real=1.0)
     low = findbin(h, v)
+    
+    if isnan(w)
+        w = 0.0
+    end
+
     abs(low) == Inf && error("over- or underflow for $v")
 
     h.bin_entries[low] += 1
@@ -183,12 +188,28 @@ end
 
 flatten(h) = reshape(h, prod(size(h)))
 
+function rebin(h::Histogram, k::Integer)
+    @assert(length(h.bin_contents)%k == 0, "number of bins is not divisible by k")
+
+    new_entries = Int64[]
+    new_contents = Float64[]
+    new_edges = Float64[]
+    for i=1:k:length(h.bin_contents)
+        push!(new_contents, sum(h.bin_contents[i:i+k-1]))
+        push!(new_entries, sum(h.bin_entries[i:i+k-1]))
+        push!(new_edges, h.bin_edges[i])
+    end
+    push!(new_edges, h.bin_edges[length(h.bin_edges)])
+    return Histogram(new_entries, new_contents, new_edges)
+end
+
 export Histogram, hfill!
 export integral, nentries, normed, errors, findbin
 export +, -, *, /, ==
 export todf, fromdf
 export flatten
 export lowedge, widths
+export rebin
 
 end #module
 
