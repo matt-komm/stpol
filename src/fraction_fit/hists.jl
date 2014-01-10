@@ -435,7 +435,7 @@ function reweight_to_fitres(frd, indata, inds)
         indata[si & (inds[:tchan]), :fitweight] = means["beta_signal"]
         indata[si & (inds[:wjets] | inds[:gjets] | inds[:dyjets] | inds[:diboson]), :fitweight] = means["wzjets"]
         indata[si & (inds[:ttjets] | inds[:schan] | inds[:twchan]), :fitweight] = means["ttjets"]
-        indata[si & inds[:aiso], :fitweight] = means["ttjets"]
+        indata[si & inds[:aiso], :fitweight] = means["qcd"]
     end
 end
 
@@ -538,11 +538,7 @@ function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
     hmc = nothing 
     for (k, v) in h
         if k != "DATA"
-            if hmc == nothing
-                hmc = v
-            else
-                hmc += v
-            end
+            hmc = hmc == nothing ? v : hmc+v
         end
     end
     h["MC"] = hmc
@@ -566,8 +562,8 @@ function yields(indata, data_cut; kwargs...)
 end
 
 function writehists(ofname, hists)
-    writetable("$ofname.csv.mu", todf(mergehists_3comp(hists[:mu])); separator=',')
-    writetable("$ofname.csv.ele", todf(mergehists_3comp(hists[:ele])); separator=',')
+    writetable("$ofname.csv.mu", todf(mergehists_4comp(hists[:mu])); separator=',')
+    writetable("$ofname.csv.ele", todf(mergehists_4comp(hists[:ele])); separator=',')
 end
 
 function svfg(fname)
@@ -577,19 +573,16 @@ end
 
 function reweight_qcd(indata, inds)
     #stpol/qcd_estimation/fitted_scale_factors.py
+    @pyimport fitted_scale_factors
+    sfs = fitted_scale_factors.scale_factors
     indata["qcd_weight"] = 1.0
     indata[inds[:data_mu] .* inds[:aiso], :qcd_weight] = 1.0
     indata[inds[:data_ele] .* inds[:aiso], :qcd_weight] = 1.0
-
-    #2j1t
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :qcd_weight] = 6.6720269212
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](2) .* inds[:ntags](1), :qcd_weight] = 2.56924428539
     
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :qcd_weight] = 0.221800737672
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](1), :qcd_weight] = 0.215762079009
-    
-    indata[inds[:mu] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :qcd_weight] = 0.0777717192089
-    indata[inds[:ele] .* inds[:aiso] .* inds[:njets](3) .* inds[:ntags](2), :qcd_weight] = 0.119465043571
+    for (nj, nt) in [(2,0),(2,1),(3,1),(3,2)]
+        indata[inds[:mu] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["mu"]["$(nj)j$(nt)t"]["mtw"]
+        indata[inds[:ele] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["ele"]["$(nj)j$(nt)t"]["met"] 
+    end
 end
 
 
@@ -618,7 +611,7 @@ function read_hists(fn)
         sname = split(cn[i], "__")[2]
         binscol, errscol, edgescol = cn[i:i+2];
         println(binscol, " ", errscol, " ", edgescol)
-        sub = t[:, [errscol, binscol, edgescol]];
+        sub = t[:, [edgescol, errscol, binscol]];
         hist = fromdf(sub;entries=:poissonerrors)
         hists[sname] = hist
     end
