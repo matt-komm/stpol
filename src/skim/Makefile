@@ -3,7 +3,7 @@ include ../analysis/Makefile.options
 
 #INF=input/Aug22_csvt.txt
 INF=input/dec18.txt
-DIR=skim_dec20_1
+DIR=skim_jan14
 #DIR=skim_dec12_1
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
@@ -28,7 +28,7 @@ comphep:
 	./mkindex.jl comphep.root comphep.index.jl
 
 add_mva:
-	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/merged/mva_bdt_sig_bg.out
+	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j100 -n10 srun python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg1 $(WEIGHTSDIR)/stpol_bdt_sig_wjets_lepton_flavour.weights.xml {} )
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg2 $(WEIGHTSDIR)/stpol_bdt_sig_ttjets_lepton_flavour.weights.xml {} )
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_bg1_bg2 $(WEIGHTSDIR)/stpol_bdt_wjets_ttjets_lepton_flavour.weights.xml {} )
@@ -52,6 +52,11 @@ parhadd:
 hadd:
 	$(ROOTWRAP) && hadd data.nominal.tagged.root $(DIR)/merged/data.*.root.nominal.1T $(DIR)/merged/data.*.root.unknown.1T $(DIR)/merged/data.*.root.nominal.2T $(DIR)/merged/data.*.root.unknown.2T
 	$(ROOTWRAP) && hadd data.nominal.untagged.root $(DIR)/merged/data.*.root.nominal.0T $(DIR)/merged/data.*.root.unknown.0T
+	rm -Rf $(DIR)/chunked
+	mkdir $(DIR)/chunked
+	$(ROOTWRAP) && ( find $(DIR)/merged -name "*.root.*" | $(PARCMD) -n100 -j32 hadd $(DIR)/chunked/data.{#}.root {} )
+	julia conv.jl data.nominal.tagged.root data.nominal.tagged.jld
+	julia conv.jl data.nominal.untagged.root data.nominal.untagged.jld
 
 gjets_tchpt:
 	mkdir -p output/gjets_tchpt
