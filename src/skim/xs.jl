@@ -131,6 +131,8 @@ merges = {
         "Tbar_t_ToLeptons_mass178_5", 
         
         "T_t_ToLeptons_scaleup", 
+        "T_t_ToLeptons_scaledown", 
+        "Tbar_t_ToLeptons_scaleup", 
         "Tbar_t_ToLeptons_scaledown", 
     ],
 
@@ -216,4 +218,21 @@ function test_cls(inf)
         xs = samp in keys(cross_sections) ? cross_sections[samp] : -1.0
         println("$f $st $proc $xs")
     end
+end
+
+#create a hash-map for strings
+hmap = {:to=>Dict(), :from=>Dict()}
+tomap = Any[]
+for k in keys(merges)
+    push!(tomap, k)
+    for p in merges[k] 
+        push!(tomap, p)
+    end
+end
+
+others = split(readall("../skim/hmap_others.txt"))
+for tm in vcat(tomap, others)
+    println(tm, " ", int(hash(tm)))
+    hmap[:to][tm] = int(hash(tm))
+    hmap[:from][int(hash(tm))] = tm
 end
