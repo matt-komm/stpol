@@ -15,7 +15,9 @@ cols = df.columns
 hists = {}
 
 for c in cols:
-    name, sample = c.split("__")
+    ns = c.split("__")
+    name = ns[0]
+    sample = "__".join(ns[1:])
     if not sample in hists.keys():
         hists[sample] = {}
     hists[sample][name] = numpy.array(df[c])
@@ -26,6 +28,10 @@ for sample in hists.keys():
     edges = hists[sample]["edges"]
     bins = hists[sample]["bins"]
     errs = hists[sample]["errs"]
+    print(edges)
+    print(bins)
+    print(errs)
+    print(varname, sample)
     hi = ROOT.TH1D(varname + "__" + sample, sample, edges.size-1, edges)
     for i in range(1, edges.size):
         hi.SetBinContent(i, bins[i-1])

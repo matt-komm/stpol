@@ -163,6 +163,54 @@ function todf(d::Associative)
     return tot_df
 end
 
+function project_hists(df, var, bins;kwd...)
+    hists = makehists(
+        df[(:mc,:iso)],  df[(:mc,:aiso)],  df[(:data,:iso)],  df[(:data,:aiso)],
+        var, bins; kwd...
+    );
+end
+
+function draw_data_mc_stackplot(ax, hists;order=nothing,kwd...)
+    draws = [
+        ("dyjets", hists["dyjets"], {:color=>"purple", :label=>"DY-jets"}),
+        ("diboson", hists["diboson"], {:color=>"blue", :label=>"diboson"}),
+        ("schan", hists["schan"], {:color=>"yellow", :label=>"s-channel"}),
+        ("twchan", hists["twchan"], {:color=>"Gold", :label=>"tW-channel"}),
+        ("gjets_qcd", hists["gjets"]+hists["qcd"], {:color=>"gray", :label=>"QCD, \$ \\gamma \$-jets"}),
+        #("gjets", hists["gjets"], {:color=>"gray", :label=>"\$ \\gamma \$-jets"}),
+        #("qcd", hists["qcd"], {:color=>"gray", :label=>"QCD"}),
+        ("wjets", hists["wjets"], {:color=>"green", :label=>"W+jets"}),
+        ("ttjets", hists["ttjets"], {:color=>"orange", :label=>"\$ t \\bar{t} \$"}),
+        ("tchan", hists["tchan"], {:color=>"red", :label=>"t-channel"})
+    ]
+    dd = {k[1]=>k for k in draws}
+
+    order = order==nothing ? [k[1] for k in draws] : order
+    hlist = Histogram[dd[o][2] for o in order]
+    arglist = Dict{Any, Any}[dd[o][3] for o in order]
+    
+    hplot(
+        ax, hlist, arglist,
+        common_args=merge({:edgecolor=>"none", :linewidth=>0.0}; kwd...)
+    )
+
+    tot_mc = 0.0
+    tot_data = 0.0
+    yieldsd = Dict()
+    for (hn, hi) in hists
+        yieldsd[hn] = integral(hi)
+        if hn == "DATA"
+            tot_data += integral(hi)
+        else
+            tot_mc += integral(hi)
+        end
+    end
+    yieldsd["total_mc"] = tot_mc
+    yieldsd["total_data"] = tot_data
+
+    eplot(ax, hists["DATA"], ls="", marker="o", color="black", label="Data")
+end
+
 function data_mc_stackplot(df, ax, var, bins; kwargs...)
     kwd = {k=>v for (k,v) in kwargs}
     order = pop!(kwd, :order, nothing)
