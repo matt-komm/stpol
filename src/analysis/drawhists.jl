@@ -59,6 +59,27 @@ svfg("$PDIR/bdt__2j1t_hmet")
 writehists("$HDIR/bdt__2j1t_hmet", ret[:hists])
 toc()
 
+println("scanning over BDT")
+for bdt_cut in linspace(-1, 1, 11)
+    println("cos_theta 2j1t, bdt>$(bdt_cut)")
+    tic()
+
+    bdt_inds = indata["bdt_sig_bg"] .> bdt_cut
+
+    ret = channel_comparison(
+        indata, df, inds[:njets](2) .* inds[:ntags](1) .* inds[:dr] .* bdt_inds,
+        :cos_theta_lj, linspace(-1, 1, 20), 
+        {:mu=>inds[:hlt](:mu) .* inds[:mu] .* inds[:mtw], :ele=>inds[:hlt](:ele) .* inds[:ele] .* inds[:met]};
+        weight_ex=wex[:qcd_fractionfit]
+    )
+    bdts = @sprintf("%.2f", bdt_cut)
+
+    svfg("$PDIR/cos_theta__2j1t_bdt_$(bdts)_hmet")
+    writehists("$HDIR/cos_theta__2j1t_bdt_$(bdts)_hmet", ret[:hists])
+    toc()
+end
+
+
 println("bdt 3j1t")
 tic()
 ret = channel_comparison(
@@ -92,21 +113,8 @@ ret = channel_comparison(
     weight_ex=wex[:qcd]
 )
 svfg("$PDIR/bdt__2j1t_hmet_mtw60")
-writehists("$HDIR/bdt__2j1t_hmet", ret[:hists])
-toc()
-
-println("bdt 2j1t mtw")
-tic()
-ret = channel_comparison(
-    indata, df, inds[:njets](2) .* inds[:ntags](1) .* inds[:dr],
-    :bdt_sig_bg, linspace(-1, 1, 20),
-    {:mu=>inds[:hlt](:mu) .* inds[:mu] .* inds[:mtw], :ele=>inds[:hlt](:ele) .* inds[:ele] .* inds[:_mtw](60)},
-    weight_ex=wex[:qcd]
-)
-svfg("$PDIR/bdt__2j1t_hmet_mtw60")
 writehists("$HDIR/bdt__2j1t_hmet_mtw60", ret[:hists])
 toc()
-
 
 println("bdt 3j1t mtw")
 tic()
