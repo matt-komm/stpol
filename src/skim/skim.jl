@@ -51,7 +51,7 @@ events = Events(convert(Vector{ASCIIString}, nflist))
 #end
 
 #save information on spectator jets
-const do_specjets = false
+const do_specjets = true
 
 maxev = length(events) 
 println("running over $maxev events")
@@ -82,8 +82,8 @@ df = similar(
             ljet_dr=Float32[],
 #
 ##spectator jets
-#            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
-#            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
+            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
+            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
 
 #event-level characteristics
             cos_theta_lj=Float32[], 
@@ -91,7 +91,9 @@ df = similar(
             cos_theta_lj_gen=Float32[], 
             cos_theta_bl_gen=Float32[], 
             met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
-            C=Float32[],# D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
+            met_phi=Float32[],
+
+            C=Float32[], D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
             top_mass=Float32[], top_eta=Float32[], top_phi=Float32[], top_pt=Float32[],
             #wjets_cls=Int32[],
             jet_cls=Int32[],
@@ -103,8 +105,30 @@ df = similar(
             n_good_vertices=Int32[],
 #weights
             pu_weight=Float32[],
+            pu_weight__up=Float32[],
+            pu_weight__down=Float32[],
+            
+            lepton_weight__id=Float32[],
+            lepton_weight__id__up=Float32[],
+            lepton_weight__id__down=Float32[],
+            lepton_weight__iso=Float32[],
+            lepton_weight__iso__up=Float32[],
+            lepton_weight__iso__down=Float32[],
+            lepton_weight__trigger=Float32[],
+            lepton_weight__trigger__up=Float32[],
+            lepton_weight__trigger__down=Float32[],
+            
             gen_weight=Float32[],
+
             top_weight=Float32[],
+            top_weight__up=Float32[],
+            top_weight__down=Float32[],
+
+            b_weight=Float32[],
+            b_weight__bc__up=Float32[],
+            b_weight__bc__down=Float32[],
+            b_weight__l__up=Float32[],
+            b_weight__l__down=Float32[],
 
 #file-level metadata
             run=Int64[], lumi=Int64[], event=Int64[],
@@ -186,8 +210,17 @@ timeelapsed = @elapsed for i=1:maxev
         error("incorrect file: $fn $(prfiles[findex, :files])")
     end
     
-    df[i, :pu_weight] = events[sources[weight(:pu)]]
+
+    df[i, :b_weight] = events[sources[weight(:btag)]]
+    df[i, :b_weight__bc__up] = events[sources[weight(:btag, :bc, :up)]]
+    df[i, :b_weight__bc__down] = events[sources[weight(:btag, :bc, :down)]]
+    df[i, :b_weight__l__up] = events[sources[weight(:btag, :l, :up)]]
+    df[i, :b_weight__l__down] = events[sources[weight(:btag, :l, :down)]]
+    
     df[i, :top_weight] = events[sources[weight(:top)]]
+    df[i, :top_weight__up] = df[i, :top_weight]^2
+    df[i, :top_weight__down] = 1.0
+
     df[i, :gen_weight] = events[sources[weight(:gen)]]
     
     sample = prfiles[findex, :cls][:sample]
@@ -256,6 +289,7 @@ timeelapsed = @elapsed for i=1:maxev
         df[i, :mtw] = events[sources[part(lepton_type, :mtw)]] |> ifpresent
     end 
     df[i, :met] = events[sources[:met]] |> ifpresent
+    df[i, :met_phi] = events[sources[(:met, :phi)]] |> ifpresent
     
   
     ##event had no MET
@@ -305,6 +339,27 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :cos_theta_bl] = events[sources[:cos_theta_bl]] |> ifpresent
     
     df[i, :n_good_vertices] = events[sources[:n_good_vertices]] |> ifpresent
+    
+    df[i, :pu_weight] = events[sources[weight(:pu)]]
+    df[i, :pu_weight__up] = events[sources[weight(:pu, :up)]]
+    df[i, :pu_weight__down] = events[sources[weight(:pu, :down)]]
+    
+    df[i, :lepton_weight__id] = events[sources[weight(lepton_type, :id)]]
+    df[i, :lepton_weight__id__up] = events[sources[weight(lepton_type, :id, :up)]]
+    df[i, :lepton_weight__id__down] = events[sources[weight(lepton_type, :id, :down)]]
+    df[i, :lepton_weight__trigger] = events[sources[weight(lepton_type, :trigger)]]
+    df[i, :lepton_weight__trigger__up] = events[sources[weight(lepton_type, :trigger, :up)]]
+    df[i, :lepton_weight__trigger__down] = events[sources[weight(lepton_type, :trigger, :down)]]
+    
+    if lepton_type == :muon
+        df[i, :lepton_weight__iso] = events[sources[weight(lepton_type, :iso)]]
+        df[i, :lepton_weight__iso__up] = events[sources[weight(lepton_type, :iso, :up)]]
+        df[i, :lepton_weight__iso__down] = events[sources[weight(lepton_type, :iso, :down)]]
+    else
+        df[i, :lepton_weight__iso] = 1.0
+        df[i, :lepton_weight__iso__up] = 1.0
+        df[i, :lepton_weight__iso__down] = 1.0
+    end
    
     if do_specjets
         
@@ -318,7 +373,7 @@ timeelapsed = @elapsed for i=1:maxev
         jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
         
         if all(map(ispresent, Any[jet_pts, jet_etas, jet_ids, jet_bds]))
-            #get the indices of the b-tagged jet and the light jet
+            #get the indices of the b-tagged jet and the light jet by comparing with pt
             indb = find(x -> abs(x-df[i, :bjet_pt])<eps(x), jet_pts)[1]
             indl = find(x -> abs(x-df[i, :ljet_pt])<eps(x), jet_pts)[1]
 
@@ -355,8 +410,7 @@ timeelapsed = @elapsed for i=1:maxev
         end
     end
 
-    #for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
-    for v in [:C]
+    for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
         df[i, v] = events[sources[v]]
     end
 
