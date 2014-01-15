@@ -435,7 +435,7 @@ function reweight_to_fitres(frd, indata, inds)
         indata[si & (inds[:tchan]), :fitweight] = means["beta_signal"]
         indata[si & (inds[:wjets] | inds[:gjets] | inds[:dyjets] | inds[:diboson]), :fitweight] = means["wzjets"]
         indata[si & (inds[:ttjets] | inds[:schan] | inds[:twchan]), :fitweight] = means["ttjets"]
-        indata[si & inds[:aiso], :fitweight] = means["qcd"]
+        #indata[si & inds[:aiso], :fitweight] = means["qcd"]
     end
 end
 
@@ -562,6 +562,8 @@ function yields(indata, data_cut; kwargs...)
 end
 
 function writehists(ofname, hists)
+    println("writing histograms to $ofname")
+
     writetable("$ofname.csv.mu", todf(mergehists_4comp(hists[:mu])); separator=',')
     writetable("$ofname.csv.ele", todf(mergehists_4comp(hists[:ele])); separator=',')
 end
@@ -610,7 +612,7 @@ function read_hists(fn)
         cn = colnames(t)
         sname = split(cn[i], "__")[2]
         binscol, errscol, edgescol = cn[i:i+2];
-        println(binscol, " ", errscol, " ", edgescol)
+        #println(binscol, " ", errscol, " ", edgescol)
         sub = t[:, [edgescol, errscol, binscol]];
         hist = fromdf(sub;entries=:poissonerrors)
         hists[sname] = hist
