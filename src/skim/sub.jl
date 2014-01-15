@@ -31,7 +31,7 @@ function submit(infiles, outfile, i::Integer)
     ofile = "$ofdir/slurm.out.$i"
     skimoutput = "$ofdir/skim.out.$i"
 
-    subcmd = `sbatch -p prio -J julia_job_test.$i -o $ofile $fn`
+    subcmd = `sbatch --exclude=./excluded_wns.txt -p prio -J julia_job_test.$i -o $ofile $fn`
     
     #the submit script (indents matter)
     cmd="#!/bin/bash
