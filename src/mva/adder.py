@@ -10,12 +10,17 @@ import time
 
 from xml.dom import minidom
 
+treename = "dataframe"
+
 def main():
     tstart = time.time()
-
-    mvaname = sys.argv[1]
-    weightfile = sys.argv[2]
-    infiles = sys.argv[3:]
+    try:
+        mvaname = sys.argv[1]
+        weightfile = sys.argv[2]
+        infiles = sys.argv[3:]
+    except:
+        print "adder.py mvaname weightfile.xml infile1.root infile2.root ..."
+        return
 
     mvareader, varbuffers = setup_mva(mvaname, weightfile)
 
@@ -26,10 +31,10 @@ def main():
         print "Processing file",infn
         #get the events tree
         inf = ROOT.TFile(infn)
-        tree = inf.Get("dataframe")
+        tree = inf.Get(treename)
 
         if not tree:
-            raise Exception("Could not open TTree 'dataframe' in %s" % infn)
+            raise Exception("Could not open TTree '%s' in %s" % (treename, infn))
 
         ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
 
@@ -74,6 +79,8 @@ def main():
 
     tend = time.time()
     print "total elapsed time", tend-tstart, " sec, processed events",counters["processed"]
+
+
 
 def setup_mva(mvaname, weightfile):
     """
