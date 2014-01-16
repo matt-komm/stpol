@@ -73,7 +73,7 @@ function hfill!(h::Histogram, v::NAtype, w::Union(Real, NAtype)=1.0)
     return sum(h.bin_contents)
 end
 
-function hfill!(h::Histogram, v::Real, w::NAtype=NA)
+function hfill!(h::Histogram, v::Real, w::NAtype)
     h.bin_entries[1] += 1
     h.bin_contents[1] += 1
     return sum(h.bin_contents)
@@ -208,6 +208,23 @@ function rebin(h::Histogram, k::Integer)
     return Histogram(new_entries, new_contents, new_edges)
 end
 
+function cumulative(h::Histogram)
+    hc = Histogram(h)
+    for i=1:length(hc.bin_contents)
+        hc.bin_contents[i] = sum(h.bin_contents[1:i])
+        hc.bin_entries[i] = sum(h.bin_entries[1:i])
+    end
+    return hc
+end
+
+function test_ks(h1::Histogram, h2::Histogram)
+    ch1 = cumulative(h1)
+    ch2 = cumulative(h2)
+    ch1 = ch1 / integral(h1)
+    ch2 = ch2 / integral(h2)
+    return maximum(abs(ch1.bin_contents - ch2.bin_contents))
+end
+
 export Histogram, hfill!
 export integral, nentries, normed, errors, findbin
 export +, -, *, /, ==
@@ -215,6 +232,8 @@ export todf, fromdf
 export flatten
 export lowedge, widths
 export rebin
+export cumulative
+export test_ks
 
 end #module
 
