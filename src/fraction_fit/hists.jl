@@ -24,7 +24,7 @@ function makehists(
     weight_ex = :(xsweight .* totweight .* fitweight),
   )
 
-    procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson]
+    procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
     hists = Dict()
     for k in procs
         hists[string(k)] = makehist_multid(
@@ -634,7 +634,7 @@ function svfg(fname)
     savefig("$fname.pdf", bbox_inches="tight", pad_inches=0.2)
 end
 
-function reweight_qcd(indata, inds)
+function reweight_qcd(indata, inds, fit_variables={:mu=>"qcd_mva", :ele=>"qcd_mva"})
     #stpol/qcd_estimation/fitted_scale_factors.py
     @pyimport fitted_scale_factors
     sfs = fitted_scale_factors.scale_factors
@@ -643,8 +643,12 @@ function reweight_qcd(indata, inds)
     indata[inds[:data_ele] .* inds[:aiso], :qcd_weight] = 1.0
     
     for (nj, nt) in [(2,0),(2,1),(3,1),(3,2)]
-        indata[inds[:mu] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["mu"]["$(nj)j$(nt)t"]["mtw"]
-        indata[inds[:ele] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["ele"]["$(nj)j$(nt)t"]["met"] 
+        for lep in [:mu, :ele]
+            indata[
+                inds[lep] & inds[:aiso] & inds[:njets](nj) & inds[:ntags](nt),
+                :qcd_weight
+            ] = sfs[string(lep)]["$(nj)j$(nt)t"][fit_variables[lep]]
+        end
     end
 end
 
