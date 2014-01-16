@@ -163,7 +163,7 @@ for syst in systs
         sdf = df[:((systematic .== $(hash(syst))) .* (ntags .== $nt)), :]
         #println("writing tag $nt, ", toq())
         tic()
-        write(jldopen("$ofile.jld.$(syst).$(nt)T", "w"), "df", sdf)
+        #write(jldopen("$ofile.jld.$(syst).$(nt)T", "w"), "df", sdf)
         writetree("$ofile.root.$(syst).$(nt)T", sdf)
     end
 end
