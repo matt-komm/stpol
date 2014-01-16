@@ -34,3 +34,9 @@ h = Histogram([1,2],[3,4],[1,2,3])
 	Histogram([6, 3], [12, 9], [1, 4, 7])
 
 @test_throws rebin(Histogram([1,2],[3,4],[1,2,3]), 3)
+
+h = Histogram([1,2],[3,4],[1,2,3])
+@test cumulative(h)==Histogram([1,3],[3,7],[1,2,3])
+
+@test_approx_eq_eps(test_ks(h, h), 0.0, 0.00001)
+@test_approx_eq_eps(test_ks(h, 3.3*h), 0.0, 0.00001)
