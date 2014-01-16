@@ -85,6 +85,14 @@ function +(h1::Histogram, h2::Histogram)
     return h
 end
 
+function +(h1::Histogram, x::Real)
+    nb = length(h1.bin_entries)
+    h2 = Histogram([0.0 for n=1:nb], [x for n=1:nb], h1.bin_edges)
+    return h1+h2
+end
+
++(x::Real, h1::Histogram) = h1+x
+
 function ==(h1::Histogram, h2::Histogram)
     ret = h1.bin_edges == h2.bin_edges
     ret = ret && (h1.bin_contents==h2.bin_contents)
@@ -122,13 +130,10 @@ function /(h1::Histogram, h2::Histogram)
     )
 end
 
-function integral(h::Histogram)
-    return sum(h.bin_contents)
-end
+integral(h::Histogram) = sum(h.bin_contents)
+integral(x::Real) = x
+nentries(h::Histogram) = int(sum(h.bin_entries))
 
-function nentries(h::Histogram)
-    return int(sum(h.bin_entries))
-end
 
 function integral(h::Histogram, x1::Real, x2::Real)
     if !(x1 in h.bin_edges) || !(x2 in h.bin_edges)
