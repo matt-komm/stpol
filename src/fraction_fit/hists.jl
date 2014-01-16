@@ -487,6 +487,19 @@ function reweight_to_fitres(frd, indata, inds)
     end
 end
 
+function reweight_hists_to_fitres(fr, hists)
+    means = {k=>v for (k,v) in zip(fr.names, fr.means)}
+    hists["tchan"] = hists["tchan"] * means["beta_signal"]
+    for s in ["wjets", "gjets", "dyjets", "diboson"]
+        hists[s] = hists[s] * means["wzjets"]
+    end
+    for s in ["ttjets", "twchan", "schan"]
+        hists[s] = hists[s] * means["ttjets"]
+    end
+    hists["qcd"] = hists["qcd"] * means["qcd"]
+    return hists
+end
+
 @pyimport scipy.stats.kde as KDE
 @pyimport matplotlib.cm as cmap
 function kde_contour(arr, X, Y, n=6; kwargs...)
