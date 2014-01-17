@@ -1,7 +1,7 @@
 include ../analysis/Makefile.options
 
-INDIR=../skim/skim_dec20_1/chunked
-OFDIR=out1
+INDIR=../skim/skim_jan14/chunked
+OFDIR=output/batch
 
 .PHONY: hists
 
@@ -13,5 +13,5 @@ hists:
 merge:
 	rm -Rf $(OFDIR)/merged
 	mkdir -p $(OFDIR)/merged
-	find $(OFDIR)/hists -name "*.jld" | $(PARCMD) -n10 ./merge.jl $(OFDIR)/merged/hist.{#}.jld {} > $(OFDIR)/merged/log.txt
+	find $(OFDIR)/hists -name "*.jld" | $(PARCMD) -n10 -j32 ./merge.jl $(OFDIR)/merged/hist.{#}.jld {} > $(OFDIR)/merged/log.txt
 	./merge.jl merged.jld $(OFDIR)/merged/*.jld
