@@ -1,3 +1,4 @@
+#!/home/joosep/.julia/ROOT/julia
 include("../analysis/base.jl")
 using ROOT
 
