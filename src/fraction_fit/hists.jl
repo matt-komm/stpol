@@ -268,7 +268,14 @@ function data_mc_stackplot(df, ax, var, bins; kwargs...)
 end
 
 function ratio_hist(hists)
-    mc = sum([v for (k,v) in filter(x -> x[1] != "DATA", collect(hists))])
+    mc = sum([
+        hists[k] for k in [
+            "tchan", "ttjets", "wjets",
+            "qcd", "gjets", "twchan",
+            "schan", "diboson", "dyjets"
+        ]
+    ])
+    
     data = sum([v for (k,v) in filter(x -> x[1] == "DATA", collect(hists))])
 
     mcs = [(!isna(x) && x>0) ? Poisson(x) : Poisson(1) for x in mc.bin_entries]
