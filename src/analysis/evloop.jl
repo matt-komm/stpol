@@ -8,6 +8,9 @@ inf = ARGS[1]
 ofname = ARGS[2]
 
 df = TreeDataFrame(inf);
+for k in sort(collect(keys(df.tree.branches)))
+    println(k)
+end
 
 tic()
 ROOT.set_branch_status!(df.tree, "*", false);
@@ -17,7 +20,13 @@ for k in [
     "n_veto_mu", "n_veto_ele",
     "systematic", "isolation",
     "sample",
-    "cos_theta_lj", "xsweight", "pu_weight",
+    "cos_theta_lj", "xsweight",
+    "pu_weight", "pu_weight__up", "pu_weight__down",
+
+    "lepton_weight__id", "lepton_weight__id__up", "lepton_weight__id__down",
+    "lepton_weight__iso", "lepton_weight__iso__up", "lepton_weight__iso__down",
+    "lepton_weight__trigger", "lepton_weight__trigger__up", "lepton_weight__trigger__down",
+    
     "njets", "ntags", "lepton_type", "met", "mtw",
     "bdt_sig_bg", "C", "lepton_pt", "ljet_eta",
     "bjet_dr", "ljet_dr"
@@ -60,10 +69,10 @@ for i=1:nrow(df)
   NB += ROOT.getentry!(df.tree, i);
   
   cache[:xsweight] = df.tree[:xsweight]
-  cache[:pu_weight] = df.tree[:pu_weight]
 
-  cache[:pu_weight__up] = 1.1 * df.tree[:pu_weight]
-  cache[:pu_weight__down] = 0.9 * df.tree[:pu_weight]
+  for sw in syst_weights
+    cache[sw] = df.tree[sw]
+  end
 
   n_signal_mu = df.tree[:n_signal_mu]
   n_signal_ele = df.tree[:n_signal_ele]
@@ -135,8 +144,15 @@ for i=1:nrow(df)
   if syst == "nominal"
       weights[:pu_weight__up] = weight * cache[:pu_weight__up] / cache[:pu_weight]
       weights[:pu_weight__down] = weight * cache[:pu_weight__down] / cache[:pu_weight]
-      #weights[:lepton_weight__up] = weight * df.tree[:lepton_weight__up] / cache[:lepton_weight]
-      #weights[:lepton_weight__down] = weight * df.tree[:lepton_weight__down] / cache[:lepton_weight]
+
+      weights[:lepton_weight__id__up] = weight * df.tree[:lepton_weight__id__up] / cache[:lepton_weight__id]
+      weights[:lepton_weight__id__down] = weight * df.tree[:lepton_weight__id__down] / cache[:lepton_weight__id]
+
+      weights[:lepton_weight__iso__up] = weight * df.tree[:lepton_weight__iso__up] / cache[:lepton_weight__iso]
+      weights[:lepton_weight__iso__down] = weight * df.tree[:lepton_weight__iso__down] / cache[:lepton_weight__iso]
+
+      weights[:lepton_weight__trigger__up] = weight * df.tree[:lepton_weight__trigger__up] / cache[:lepton_weight__trigger]
+      weights[:lepton_weight__trigger__down] = weight * df.tree[:lepton_weight__trigger__down] / cache[:lepton_weight__trigger]
   end
 
   bdt = df.tree[:bdt_sig_bg]
