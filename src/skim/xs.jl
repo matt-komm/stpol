@@ -232,7 +232,7 @@ end
 
 others = split(readall("../skim/hmap_others.txt"))
 for tm in vcat(tomap, others)
-    println(tm, " ", int(hash(tm)))
+    #println(tm, " ", int(hash(tm)))
     hmap[:to][tm] = int(hash(tm))
     hmap[:from][int(hash(tm))] = tm
 end
