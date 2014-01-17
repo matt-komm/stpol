@@ -4,9 +4,9 @@ using HDF5, JLD, DataFrames
 include("../analysis/selection.jl")
 include("../analysis/util.jl")
 
+#paths to be added here
 if ENV["USER"] == "joosep"
-	@osx_only const BASE="/Users/joosep/Documents/stpol/"
-	@linux_only const BASE="/home/joosep/singletop/stpol2/";
+    BASE = joinpath(ENV["HOME"], "Dropbox/kbfi/top/stpol")
 end
 
 const DEBUG=("DEBUG" in keys(ENV) && int(ENV["DEBUG"])==1)
