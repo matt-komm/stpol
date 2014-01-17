@@ -28,10 +28,10 @@ for sample in hists.keys():
     edges = hists[sample]["edges"]
     bins = hists[sample]["bins"]
     errs = hists[sample]["errs"]
-    print(edges)
-    print(bins)
-    print(errs)
-    print(varname, sample)
+    #print(edges)
+    #print(bins)
+    #print(errs)
+    #print(varname, sample)
     hi = ROOT.TH1D(varname + "__" + sample, sample, edges.size-1, edges)
     for i in range(1, edges.size):
         hi.SetBinContent(i, bins[i-1])
