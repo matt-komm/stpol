@@ -31,10 +31,6 @@ function Histogram(n::Integer, low::Number, high::Number)
 end
 
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
-# function Histogram(edges::AbstractArray)
-#     hist, bins = numpy.histogramdd([[0.0 for x=1:length(edges)]], edges)
-#     return Histogram(0 * flatten(hist), 0 * flatten(hist), bins[1])
-# end
 
 function errors(h::Histogram)
     return h.bin_contents ./ sqrt(h.bin_entries)
@@ -209,12 +205,14 @@ function rebin(h::Histogram, k::Integer)
 end
 
 function cumulative(h::Histogram)
-    hc = Histogram(h)
-    for i=1:length(hc.bin_contents)
-        hc.bin_contents[i] = sum(h.bin_contents[1:i])
-        hc.bin_entries[i] = sum(h.bin_entries[1:i])
+    #hc = Histogram(h)
+    cont = deepcopy(h.bin_contents)
+    ent = deepcopy(h.bin_contents)
+    for i=1:length(h.bin_contents)
+        cont[i] = sum(h.bin_contents[1:i])
+        ent[i] = sum(h.bin_entries[1:i])
     end
-    return hc
+    return Histogram(ent, cont, h.bin_edges)
 end
 
 function test_ks(h1::Histogram, h2::Histogram)
