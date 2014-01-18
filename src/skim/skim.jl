@@ -201,7 +201,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :cos_theta_bl_gen] = events[sources[:cos_theta_bl_gen]] |> ifpresent
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
-    fn = string("file:", split(get_current_file_name(events), ":")[1])
+    fn = string("file:", get_current_file_name(events))
     findex = flistd[fn]
     #findex = where_file(events)
     df[i, :fileindex] = findex
