@@ -73,7 +73,7 @@ function hfill!(h::Histogram, v::NAtype, w::Union(Real, NAtype)=1.0)
     return sum(h.bin_contents)
 end
 
-function hfill!(h::Histogram, v::Real, w::NAtype=NA)
+function hfill!(h::Histogram, v::Real, w::NAtype)
     h.bin_entries[1] += 1
     h.bin_contents[1] += 1
     return sum(h.bin_contents)
@@ -84,6 +84,14 @@ function +(h1::Histogram, h2::Histogram)
     h = Histogram(h1.bin_entries + h2.bin_entries, h1.bin_contents+h2.bin_contents, h1.bin_edges)
     return h
 end
+
+function +(h1::Histogram, x::Real)
+    nb = length(h1.bin_entries)
+    h2 = Histogram([0.0 for n=1:nb], [x for n=1:nb], h1.bin_edges)
+    return h1+h2
+end
+
++(x::Real, h1::Histogram) = h1+x
 
 function ==(h1::Histogram, h2::Histogram)
     ret = h1.bin_edges == h2.bin_edges
@@ -122,13 +130,10 @@ function /(h1::Histogram, h2::Histogram)
     )
 end
 
-function integral(h::Histogram)
-    return sum(h.bin_contents)
-end
+integral(h::Histogram) = sum(h.bin_contents)
+integral(x::Real) = x
+nentries(h::Histogram) = int(sum(h.bin_entries))
 
-function nentries(h::Histogram)
-    return int(sum(h.bin_entries))
-end
 
 function integral(h::Histogram, x1::Real, x2::Real)
     if !(x1 in h.bin_edges) || !(x2 in h.bin_edges)
@@ -203,6 +208,23 @@ function rebin(h::Histogram, k::Integer)
     return Histogram(new_entries, new_contents, new_edges)
 end
 
+function cumulative(h::Histogram)
+    hc = Histogram(h)
+    for i=1:length(hc.bin_contents)
+        hc.bin_contents[i] = sum(h.bin_contents[1:i])
+        hc.bin_entries[i] = sum(h.bin_entries[1:i])
+    end
+    return hc
+end
+
+function test_ks(h1::Histogram, h2::Histogram)
+    ch1 = cumulative(h1)
+    ch2 = cumulative(h2)
+    ch1 = ch1 / integral(h1)
+    ch2 = ch2 / integral(h2)
+    return maximum(abs(ch1.bin_contents - ch2.bin_contents))
+end
+
 export Histogram, hfill!
 export integral, nentries, normed, errors, findbin
 export +, -, *, /, ==
@@ -210,6 +232,8 @@ export todf, fromdf
 export flatten
 export lowedge, widths
 export rebin
+export cumulative
+export test_ks
 
 end #module
 

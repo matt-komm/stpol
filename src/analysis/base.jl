@@ -4,9 +4,9 @@ using HDF5, JLD, DataFrames
 include("../analysis/selection.jl")
 include("../analysis/util.jl")
 
+#paths to be added here
 if ENV["USER"] == "joosep"
-	@osx_only const BASE="/Users/joosep/Documents/stpol/"
-	@linux_only const BASE="/home/joosep/singletop/stpol2/";
+    BASE = joinpath(ENV["HOME"], "Dropbox/kbfi/top/stpol")
 end
 
 const DEBUG=("DEBUG" in keys(ENV) && int(ENV["DEBUG"])==1)
@@ -33,3 +33,10 @@ flatten{T}(a::Array{T,1}) =
     any(map(x->isa(x,Array),a)) ? flatten(vcat(map(flatten,a)...)) : a
 flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
 flatten(a)=a
+
+syst_weights = [
+    :pu_weight, :pu_weight__up, :pu_weight__down,
+    :lepton_weight__id, :lepton_weight__id__up, :lepton_weight__id__down,
+    :lepton_weight__iso, :lepton_weight__iso__up, :lepton_weight__iso__down,
+    :lepton_weight__trigger, :lepton_weight__trigger__up, :lepton_weight__trigger__down
+]

@@ -3,7 +3,7 @@ include ../analysis/Makefile.options
 
 #INF=input/Aug22_csvt.txt
 INF=input/dec18.txt
-DIR=skim_dec20_1
+DIR=skim_jan14
 #DIR=skim_dec12_1
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
@@ -28,7 +28,8 @@ comphep:
 	./mkindex.jl comphep.root comphep.index.jl
 
 add_mva:
-	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/merged/mva_bdt_sig_bg.out
+	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n10 srun -p prio python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
+	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n10 srun -p prio python ../mva/qcd_mva_adder.py {} ) > $(DIR)/mva_bdt_qcd.out
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg1 $(WEIGHTSDIR)/stpol_bdt_sig_wjets_lepton_flavour.weights.xml {} )
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg2 $(WEIGHTSDIR)/stpol_bdt_sig_ttjets_lepton_flavour.weights.xml {} )
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_bg1_bg2 $(WEIGHTSDIR)/stpol_bdt_wjets_ttjets_lepton_flavour.weights.xml {} )
@@ -42,16 +43,23 @@ parhadd:
 	mkdir -p $(DIR)/merged
 	find $(DIR) -name "*.root" > $(DIR)/merged/files.txt
 	julia metahadd.jl $(DIR)/merged/files.txt $(DIR)/merged/md.txt > $(DIR)/merged/metahadd.out
-	split -a5 -l5 $(DIR)/merged/files.txt $(DIR)/merged/files.split.
+	split -a5 -l3 $(DIR)/merged/files.txt $(DIR)/merged/files.split.
 	#echo "hadding in parallel"
 	#find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j32 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
 	echo "hadding on cluster"
-	julia submit_hadd.jl $(DIR)
-	$(PARCMD) --delay=0.5 -j100 < subs.txt
+	find $(DIR) -name "files.split*" | julia createscript.jl "./hadd.jl {} $(DIR)/merged/md.txt skim_jan14/merged/data.{#}" hadd.$(DIR) > $(DIR)/hadd.cmds
+	source $(DIR)/hadd.cmds
+	#julia submit_hadd.jl $(DIR)
+	#$(PARCMD) --delay=0.5 -j1000 < hadd.submit.txt
 
 hadd:
 	$(ROOTWRAP) && hadd data.nominal.tagged.root $(DIR)/merged/data.*.root.nominal.1T $(DIR)/merged/data.*.root.unknown.1T $(DIR)/merged/data.*.root.nominal.2T $(DIR)/merged/data.*.root.unknown.2T
 	$(ROOTWRAP) && hadd data.nominal.untagged.root $(DIR)/merged/data.*.root.nominal.0T $(DIR)/merged/data.*.root.unknown.0T
+	rm -Rf $(DIR)/chunked
+	mkdir $(DIR)/chunked
+	$(ROOTWRAP) && ( find $(DIR)/merged -name "*.root.*" | $(PARCMD) -n100 -j32 hadd $(DIR)/chunked/data.{#}.root {} )
+	~/.julia/ROOT/julia conv.jl data.nominal.tagged.root data.nominal.tagged.jld
+	~/.julia/ROOT/julia conv.jl data.nominal.untagged.root data.nominal.untagged.jld
 
 gjets_tchpt:
 	mkdir -p output/gjets_tchpt

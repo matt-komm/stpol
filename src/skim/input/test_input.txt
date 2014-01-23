@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/W3Jets_exclusive/output_792_1_eMI.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/W2Jets_exclusive/output_87_1_RZe.root

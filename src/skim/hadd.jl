@@ -61,8 +61,8 @@ for fi in flist
     println("opening dataframe ", acc["df"], " in ROOT mode")
     edf = TreeDataFrame(acc["df"])
     #println("$fi $acc")
-    println("reading ", nrow(edf), " rows, ", length(cols), " columns to memory")
-    subdf = edf[1:nrow(edf), cols]
+    #println("reading ", nrow(edf), " rows, ", length(cols), " columns to memory")
+    subdf = edf[1:nrow(edf), :]
     
     xsweights = DataArray(Float32, nrow(subdf))
     ngens = DataArray(Int32, nrow(subdf))
@@ -109,7 +109,7 @@ for fi in flist
     subdf["systematic"] = systematics
     subdf["isolation"] = isos
     
-    local_outcols = deepcopy(outcols)
+    #local_outcols = deepcopy(outcols)
     for k in keys(acc)
         m = match(r"mva_(.*)", string(k))
         m == nothing && continue
@@ -118,11 +118,11 @@ for fi in flist
         mvatable = readtable(acc[k], allowcomments=true)[1]
         @assert length(mvatable)==nrow(subdf) "number of rows in mva table $k is wrong"
         subdf[string(mvaname)] = mvatable
-        push!(local_outcols, symbol(mvaname)) 
+    #    push!(local_outcols, symbol(mvaname)) 
     end
     df = subdf
     
-    df = df[:, local_outcols]
+    #df = df[:, local_outcols]
     push!(dfs, df)
 end
 
@@ -163,7 +163,7 @@ for syst in systs
         sdf = df[:((systematic .== $(hash(syst))) .* (ntags .== $nt)), :]
         #println("writing tag $nt, ", toq())
         tic()
-        write(jldopen("$ofile.jld.$(syst).$(nt)T", "w"), "df", sdf)
+        #write(jldopen("$ofile.jld.$(syst).$(nt)T", "w"), "df", sdf)
         writetree("$ofile.root.$(syst).$(nt)T", sdf)
     end
 end

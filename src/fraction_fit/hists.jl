@@ -24,7 +24,7 @@ function makehists(
     weight_ex = :(xsweight .* totweight .* fitweight),
   )
 
-    procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson]
+    procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
     hists = Dict()
     for k in procs
         hists[string(k)] = makehist_multid(
@@ -268,7 +268,14 @@ function data_mc_stackplot(df, ax, var, bins; kwargs...)
 end
 
 function ratio_hist(hists)
-    mc = sum([v for (k,v) in filter(x -> x[1] != "DATA", collect(hists))])
+    mc = sum([
+        hists[k] for k in [
+            "tchan", "ttjets", "wjets",
+            "qcd", "gjets", "twchan",
+            "schan", "diboson", "dyjets"
+        ]
+    ])
+    
     data = sum([v for (k,v) in filter(x -> x[1] == "DATA", collect(hists))])
 
     mcs = [(!isna(x) && x>0) ? Poisson(x) : Poisson(1) for x in mc.bin_entries]
@@ -483,8 +490,21 @@ function reweight_to_fitres(frd, indata, inds)
         indata[si & (inds[:tchan]), :fitweight] = means["beta_signal"]
         indata[si & (inds[:wjets] | inds[:gjets] | inds[:dyjets] | inds[:diboson]), :fitweight] = means["wzjets"]
         indata[si & (inds[:ttjets] | inds[:schan] | inds[:twchan]), :fitweight] = means["ttjets"]
-        indata[si & inds[:aiso], :fitweight] = means["qcd"]
+        #indata[si & inds[:aiso], :fitweight] = means["qcd"]
     end
+end
+
+function reweight_hists_to_fitres(fr, hists)
+    means = {k=>v for (k,v) in zip(fr.names, fr.means)}
+    hists["tchan"] = hists["tchan"] * means["beta_signal"]
+    for s in ["wjets", "gjets", "dyjets", "diboson"]
+        hists[s] = hists[s] * means["wzjets"]
+    end
+    for s in ["ttjets", "twchan", "schan"]
+        hists[s] = hists[s] * means["ttjets"]
+    end
+    hists["qcd"] = hists["qcd"] * means["qcd"]
+    return hists
 end
 
 @pyimport scipy.stats.kde as KDE
@@ -610,6 +630,8 @@ function yields(indata, data_cut; kwargs...)
 end
 
 function writehists(ofname, hists)
+    println("writing histograms to $ofname")
+
     writetable("$ofname.csv.mu", todf(mergehists_4comp(hists[:mu])); separator=',')
     writetable("$ofname.csv.ele", todf(mergehists_4comp(hists[:ele])); separator=',')
 end
@@ -619,7 +641,7 @@ function svfg(fname)
     savefig("$fname.pdf", bbox_inches="tight", pad_inches=0.2)
 end
 
-function reweight_qcd(indata, inds)
+function reweight_qcd(indata, inds, fit_variables={:mu=>"qcd_mva", :ele=>"qcd_mva"})
     #stpol/qcd_estimation/fitted_scale_factors.py
     @pyimport fitted_scale_factors
     sfs = fitted_scale_factors.scale_factors
@@ -628,8 +650,12 @@ function reweight_qcd(indata, inds)
     indata[inds[:data_ele] .* inds[:aiso], :qcd_weight] = 1.0
     
     for (nj, nt) in [(2,0),(2,1),(3,1),(3,2)]
-        indata[inds[:mu] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["mu"]["$(nj)j$(nt)t"]["mtw"]
-        indata[inds[:ele] .* inds[:aiso] .* inds[:njets](nj) .* inds[:ntags](nt), :qcd_weight] = sfs["ele"]["$(nj)j$(nt)t"]["met"] 
+        for lep in [:mu, :ele]
+            indata[
+                inds[lep] & inds[:aiso] & inds[:njets](nj) & inds[:ntags](nt),
+                :qcd_weight
+            ] = sfs[string(lep)]["$(nj)j$(nt)t"][fit_variables[lep]]
+        end
     end
 end
 
@@ -658,7 +684,7 @@ function read_hists(fn)
         cn = colnames(t)
         sname = split(cn[i], "__")[2]
         binscol, errscol, edgescol = cn[i:i+2];
-        println(binscol, " ", errscol, " ", edgescol)
+        #println(binscol, " ", errscol, " ", edgescol)
         sub = t[:, [edgescol, errscol, binscol]];
         hist = fromdf(sub;entries=:poissonerrors)
         hists[sname] = hist
