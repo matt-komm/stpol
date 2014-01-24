@@ -1,6 +1,6 @@
 def get_varlist(channel):
     varlist = ["met", "c", "top_mass", "top_eta",
-        "D", "circularity", "aplanarity", "isotropy", "thrust", 
+        "D", "aplanarity", "isotropy", "thrust", 
         #"bjet_dr", 
         #"bjet_eta", 
         "bjet_mass", 
