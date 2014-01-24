@@ -50,6 +50,9 @@ function makehists(
 
     hists["DATA"] = makehist_multid(data_iso, vars, bins, 1.0);
 
+    all([nbins(h)==nbins(hists["DATA"]) for h in values(hists)]) || (error("not all histograms have the same binning:\n --- \n $hists \n --- \n"))
+    integral(hists["DATA"])==0 && warn("data histogram was empty: N(data)=$(nrow(data_iso)) vars=[join($vars, ', ')] weight=[$weight_ex]")
+
     return hists
 end
 
@@ -75,11 +78,7 @@ function makehist_multid(df, vars, bins, weight_ex)
     
     if nrow(df)==0
         if length(bins)==1
-            return Histogram(
-                [0.0 for i=1:length(bins[1])-1],
-                [0.0 for i=1:length(bins[1])-1],
-                bins[1]
-            )
+            return Histogram(bins[1])
         else
             error("nrow=0 multid not implemented")
         end
@@ -87,6 +86,8 @@ function makehist_multid(df, vars, bins, weight_ex)
 
     arrs = Any[]
     @assert length(vars)==length(bins) "vars and bins must be the same length"
+    ndim = length(vars)
+
     for i=1:length(vars)
         v = vars[i]
         push!(arrs, with(df, v))    
@@ -103,16 +104,25 @@ function makehist_multid(df, vars, bins, weight_ex)
 
     hist, edges = numpy.histogramdd(arr, bins, weights=weights)
     counts, edges = numpy.histogramdd(arr, bins)
-    fhist = flatten(hist)
-    fcounts = flatten(counts)
 
-    #in case of a 1D histogram, bin labels are well-defined.
-    #otherwise, use simply sequential numbering
-    edges = length(vars)>1 ? [1:length(fhist)+1] : edges[1]
+    for i=1:ndim
+        dd = [size(hist)...]
+        dd[i] = 1
+        tdd = tuple(dd...)
+        hist = cat(i, hist, zeros(Float64, tdd))
+        counts = cat(i, counts, zeros(Float64, tdd))
+    end
 
-    return Histogram(fcounts, fhist, edges)
+    fhist = reshape(hist, prod([length(b) for b in bins]))
+    fcounts = reshape(hist, prod([length(b) for b in bins]))
+
+    # #in case of a 1D histogram, bin labels are well-defined.
+    # #otherwise, use simply sequential numbering
+    edges = length(vars)>1 ? [1:length(fhist)] : edges[1]
+    h = Histogram(int(fcounts), fhist, edges)
+    @assert nbins(h) == prod([length(b) for b in bins]) "$(nbins(h)) != $bins"
+    return h
 end
-
 
 function mergehists_4comp(hists)
     out = Dict()
@@ -137,7 +147,7 @@ function mergehists_3comp(hists)
 end
 
 todf(bins, errs, edges) =
-    DataFrame(bins=vcat(bins, -1.0), errs=vcat(errs, -1.0), edges=edges);
+    DataFrame(bins=bins, errs=errs, edges=edges);
 
 function todf(h::Histogram)
     errs = (sqrt(h.bin_entries) ./ h.bin_entries .* h.bin_contents) 
@@ -147,8 +157,8 @@ function todf(h::Histogram)
         end
     end 
     return DataFrame(
-        bins=vcat(h.bin_contents, -1.0),
-        errs=vcat(errs, -1.0),
+        bins=h.bin_contents,
+        errs=errs,
         edges=h.bin_edges
     );
 end
@@ -243,6 +253,7 @@ function data_mc_stackplot(df, ax, var, bins; kwargs...)
     hlist = Histogram[dd[o][2] for o in order]
     arglist = Dict{Any, Any}[dd[o][3] for o in order]
     
+
     hplot(
         ax, hlist, arglist,
         common_args=merge({:edgecolor=>"none", :linewidth=>0.0}, bar_args)
@@ -368,7 +379,7 @@ end
 function run_fit(ind; output=false)
 
     prevdir = pwd()
-    workdir = "/Users/joosep/Documents/stpol/src/fraction_fit"
+    workdir = "$BASE/src/fraction_fit"
 
     cd(workdir);
 
@@ -474,10 +485,10 @@ end
 
 function errorbars(a, h; kwargs...)
     hdata = h["DATA"]
+    nb = nbins(hdata)
     means, errs = ratio_hist(h)
 
-    a[:errorbar](midpoints(hdata.bin_edges), means, errs, ls="", marker=".", color="black"; kwargs...)
-    #a[:errorbar](midpoints(hdata.bin_edges), means, errs, ls="", marker="", color="black"; kwargs...)
+    a[:errorbar](midpoints(hdata.bin_edges), means[1:nb-1], errs[1:nb-1], ls="", marker=".", color="black"; kwargs...)
     a[:axhline](0.0, color="black")
     a[:grid]()
 end
@@ -569,7 +580,7 @@ function channel_comparison(
     ymu = yields(hmu)
     yele = yields(hele)
     yt = hcat(ymu, yele)
-    show(yt)
+    println(yt)
 
     a12[:set_title]("\$ \\mu \$")
     a22[:set_title]("\$ e \$")
@@ -617,7 +628,7 @@ function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
     #create the total yield table
     yi = DataFrame(
         ds=ASCIIString[x for (x,y) in hc], #process name
-        uy=Int64[sum(y.bin_entries) for (x,y) in hc], #unweighted raw events
+        uy=Int64[int(sum(y.bin_entries)) for (x,y) in hc], #unweighted raw events
         y=Float64[integral(y) for (x,y) in hc], #events after xs weight, other weights
     )
     return yi
@@ -690,5 +701,13 @@ function read_hists(fn)
         hists[sname] = hist
     end
     return hists
+end
+
+function toroot{T <: Any, H <: Histogram}(hd::Associative{T, H}, fn)
+    tn = tempname()
+    df = todf(hd)
+    writetable(tn, df)
+    cmd = `$BASE/src/fraction_fit/rootwrap.sh python $BASE/src/fraction_fit/convert.py $tn $fn`
+    rm(tn)
 end
 
