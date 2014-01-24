@@ -23,3 +23,15 @@ end
 function jet_cls_from_number(i::Integer)
     i>0 && i<=length(jet_classifications) ? jet_classifications[i] : :unknown
 end
+
+function jet_cls_heavy_light(s::Symbol)
+    if s in [:bb, :cc, :bX, :cX, :bc]
+        return :heavy
+    elseif s in [:gg, :gX, :XX]
+        return :light
+    else
+        error("unknown jet classification $s")
+    end
+end
+
+jet_cls_heavy_light(x::Integer) = jet_cls_heavy_light(jet_cls_from_number(x))
