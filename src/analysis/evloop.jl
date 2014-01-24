@@ -2,7 +2,9 @@
 include("histo.jl");
 include("base.jl");
 include("../skim/xs.jl");
-using DataFrames, ROOT, Hist
+using DataFrames, Hist
+include("hroot.jl")
+using ROOT
 
 inf = ARGS[1]
 ofname = ARGS[2]
@@ -38,7 +40,7 @@ N = 0
 res = Dict() #histograms
 # dfres = Dict() #dataframe
 
-bins = {:cos_theta=>vcat(-Inf, linspace(-1, 1, 21))}
+bins = {:cos_theta=>vcat(-Inf, linspace(-1, 1, 20), Inf)}
 hdescs = {
   :cos_theta_lj=>(Histogram, bins[:cos_theta]),
 
@@ -195,6 +197,17 @@ end
 NB=NB/1024/1024
 q = toq();
 println("$N $(nrow(df)) $(NB)Mb $(q)s")
+
+# tf = tfile("$ofname.root", "UPDATE")
+# n = 1
+# for (k, v) in collect(res)[1:500]
+#   x = tf[:Get][:__call__](k)
+#   println(n, " ", length(res), " ", k, " ", isnone(x))
+#   toroot(v, tf, k)
+#   n += 1
+# end
+# rwrite(tf)
+# rclose(tf)
 
 of = jldopen("$ofname.histograms.jld", "w")
 write(of, "res", res)
