@@ -1,12 +1,11 @@
 using PyCall
 using PyPlot
 
-#histogramdd(args...;kwargs...) = numpy.histogramdd(args..., kwargs...);
-
 function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
+    
+    @assert nbins(h)==nbins(prevhist) "Histograms have different bins: $(nbins(h)) != $(nbins(prevhist))"
     kwargsd = {k=>v for (k, v) in kwargs}
 
-    nbins = length(kwargs)
     #in case of log scale, low bins must be \eps; otherwise 0,0,0,...,0 or lower
     if (:log in keys(kwargsd) && kwargsd[:log])
         prevbins = [x > 0 ? x : 1 for x in prevhist.bin_contents]
@@ -14,7 +13,7 @@ function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
         prevbins = prevhist.bin_contents
     end
 
-    ax[:bar](lowedge(h.bin_edges), h.bin_contents, widths(h.bin_edges), prevbins; kwargs...)
+    ax[:bar](lowedge(h.bin_edges), h.bin_contents[1:nbins(h)-1], widths(h.bin_edges), prevbins[1:nbins(h)-1]; kwargs...)
 end
 
 function hplot{T <: Number}(ax::PyObject, h::Histogram, prevval::T;kwargs...)
@@ -54,7 +53,7 @@ end
 
 function eplot{T <: Histogram}(ax::PyObject, h::T;kwargs...)
     #ax[:plot](midpoints(h.bin_edges), h.bin_contents; kwargs...)
-    ax[:errorbar](midpoints(h.bin_edges), h.bin_contents, errors(h); kwargs...)
+    ax[:errorbar](midpoints(h.bin_edges), h.bin_contents[1:nbins(h)-1], errors(h)[1:nbins(h)-1]; kwargs...)
 end
 
 

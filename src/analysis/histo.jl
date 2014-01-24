@@ -1,34 +1,45 @@
 module Hist
-
-using DataFrames
+using DataArrays, DataFrames
+import DataArrays.NAtype
 
 import Base.+, Base.-, Base.*, Base./, Base.==
+import Base.show
+
 immutable Histogram
     bin_entries::Vector{Float64} #n values
     bin_contents::Vector{Float64} #n values
     bin_edges::Vector{Float64} #n+1 values, lower edges of all bins + upper edge of last bin
 
     function Histogram(entries, contents, edges)
-        @assert length(entries)==length(contents) "entries and contents vector must be of equal length"
-        if (length(entries)!=length(edges)-1)
-            error("must specify n+1 edges, $(length(entries))!=$(length(edges)-1)")
-        end
-        @assert all(entries .>= 0.0) "number of entries must be >= 0"
+        @assert length(entries)==length(contents)
+        @assert length(entries)==length(edges)
+        @assert all(entries .>= 0.0)
+        @assert issorted(edges)
         new(entries, contents, edges)
     end
 end
 
-function Histogram(n::Integer, low::Number, high::Number)
-    bins = linspace(low, high, n)
-    unshift!(bins, -inf(Float64))
-    push!(bins, inf(Float64))
-    n_contents = size(bins,1)-1
-    return Histogram(
-        zeros(Float64, (n_contents, )),
-        zeros(Float64, (n_contents, )),
-        bins
-    )
-end
+# function Histogram(n::Integer, low::Number, high::Number)
+#     bins = linspace(low, high, n)
+
+#     #underflow low edge
+#     unshift!(bins, -inf(Float64))
+
+#     #overflow high edge
+#     push!(bins, inf(Float64))
+
+#     n_contents = size(bins,1)-1
+#     return Histogram(
+#         zeros(Float64, (n_contents, )),
+#         zeros(Float64, (n_contents, )),
+#         bins
+#     )
+# end
+Histogram(a::Array) = Histogram(
+    [0.0 for i=1:length(a)],
+    [0.0 for i=1:length(a)],
+    a
+)
 
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
 
@@ -37,29 +48,23 @@ function errors(h::Histogram)
 end
 
 function findbin(h::Histogram, v::Real)
-    v < h.bin_edges[1] && return -Inf
-    v >= h.bin_edges[length(h.bin_edges)] && return +Inf
-    isnan(v) && return 1
+    v < h.bin_edges[1] && error("underflow v=$v")
+    v >= h.bin_edges[nbins(h)] && error("overflow v=$v, min=$(minimum(h.bin_edges)), max=$(maximum(h.bin_edges))")
 
-    idx = searchsorted(h.bin_edges, v)
-    low = idx.start-1
-    if (low<1 || low>length(h.bin_entries))
-        error("bin index out of range: i=$(low), v=$(v)")
+    isnan(v) && return 1 #put nans in underflow bin
+
+    idx = searchsortedfirst(h.bin_edges, v) - 1
+    if (idx<1 || idx>length(h.bin_entries))
+        error("bin index out of range: i=$(idx), v=$(v)")
     end
-    return low
+    return idx
 end
 
 function hfill!(h::Histogram, v::Real, w::Real=1.0)
     low = findbin(h, v)
-    
-    if isnan(w)
-        w = 0.0
-    end
-
-    abs(low) == Inf && error("over- or underflow for $v")
 
     h.bin_entries[low] += 1
-    h.bin_contents[low] += w
+    h.bin_contents[low] += isnan(w) ? 0.0 : w
     return sum(h.bin_contents)
 end
 
@@ -78,11 +83,12 @@ end
 function +(h1::Histogram, h2::Histogram)
     @assert h1.bin_edges == h2.bin_edges
     h = Histogram(h1.bin_entries + h2.bin_entries, h1.bin_contents+h2.bin_contents, h1.bin_edges)
+    @assert abs(integral(h1)+integral(h2)-integral(h))<0.00001
     return h
 end
 
 function +(h1::Histogram, x::Real)
-    nb = length(h1.bin_entries)
+    nb = nbins(h)
     h2 = Histogram([0.0 for n=1:nb], [x for n=1:nb], h1.bin_edges)
     return h1+h2
 end
@@ -152,8 +158,8 @@ end
 #conversion to dataframe
 todf(h::Histogram) = DataFrame(
     bin_edges=h.bin_edges,
-    bin_contents=vcat(h.bin_contents, 0),
-    bin_entries=vcat(h.bin_entries, 0)
+    bin_contents=h.bin_contents,
+    bin_entries=h.bin_entries,
 )
 
 #function fromdf(df::DataFrame)
@@ -166,8 +172,8 @@ todf(h::Histogram) = DataFrame(
 #assumes df columns are entries, contents, edges
 #length(entries) = length(contents) = length(edges) - 1, edges are lower, lower, lower, ..., upper
 function fromdf(df::DataFrame; entries=:entries)
-    ent = df[2].data[1:nrow(df)-1]
-    cont = df[3].data[1:nrow(df)-1]
+    ent = df[2].data
+    cont = df[3].data
 
     #entries column reflects poisson errors of the contents column 
     if entries == :poissonerrors
@@ -190,17 +196,17 @@ end
 flatten(h) = reshape(h, prod(size(h)))
 
 function rebin(h::Histogram, k::Integer)
-    @assert(length(h.bin_contents)%k == 0, "number of bins is not divisible by k")
+    @assert((nbins(h)) % k == 0, "number of bins $(nbins(h))+1 is not divisible by k=$k")
 
     new_entries = Int64[]
     new_contents = Float64[]
     new_edges = Float64[]
-    for i=1:k:length(h.bin_contents)
+    for i=1:k:nbins(h)
         push!(new_contents, sum(h.bin_contents[i:i+k-1]))
         push!(new_entries, sum(h.bin_entries[i:i+k-1]))
         push!(new_edges, h.bin_edges[i])
     end
-    push!(new_edges, h.bin_edges[length(h.bin_edges)])
+    #push!(new_edges, h.bin_edges[nbins(h)+1])
     return Histogram(new_entries, new_contents, new_edges)
 end
 
@@ -223,8 +229,38 @@ function test_ks(h1::Histogram, h2::Histogram)
     return maximum(abs(ch1.bin_contents - ch2.bin_contents))
 end
 
+#account for the under- and overflow bins
+nbins(h::Histogram) = length(h.bin_contents)
+
+type NHistogram
+    baseh::Histogram
+    edges::Vector{Vector{Float64}}
+end
+
+function NHistogram(edges)
+    nb = prod([length(e) for e in edges])
+    baseh = Histogram([1:nb])
+    NHistogram(baseh, edges)
+end
+
+nbins(h::NHistogram) = prod([length(e) for e in h.edges])
+
+function findbin_nd(h::NHistogram, v)
+    return tuple(Int64[searchsortedfirst(h.edges[i], v[i])-1 for i=1:length(h.edges)]...)
+end
+
+function hfill!(h::NHistogram, v, w::Real)
+    xb = findbin_nd(h, v)
+    a = reshape(h.baseh.bin_contents, Int64[length(e) for e in h.edges]...)
+    a[xb...] += isna(w) ? 0.0 : w
+    b = reshape(h.baseh.bin_entries, Int64[length(e) for e in h.edges]...)
+    b[xb...] += 1
+end
+
+Base.show(io::IO, h::Histogram) = show(io, todf(h))
+
 export Histogram, hfill!
-export integral, nentries, normed, errors, findbin
+export integral, nentries, normed, errors, findbin, nbins
 export +, -, *, /, ==
 export todf, fromdf
 export flatten
@@ -232,6 +268,7 @@ export lowedge, widths
 export rebin
 export cumulative
 export test_ks
+export NHistogram, findbin_nd
 
 end #module
 
