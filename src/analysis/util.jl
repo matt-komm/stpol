@@ -18,6 +18,10 @@ function accompanying(fn)
     end
     return out
 end
+
+function +(d1::DataFrame, d2::DataFrame)
+    return vcat(d1, d2)
+end
     
 function +(d1::Dict{Any, Any}, d2::Dict{Any, Any})
 
