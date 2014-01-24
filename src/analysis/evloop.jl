@@ -2,16 +2,13 @@
 include("histo.jl");
 include("base.jl");
 include("../skim/xs.jl");
-using ROOT, DataFrames, Hist
+using DataFrames, ROOT, Hist
 
 inf = ARGS[1]
 ofname = ARGS[2]
 
 df = TreeDataFrame(inf);
-for k in sort(collect(keys(df.tree.branches)))
-    println(k)
-end
-
+println("opened TTree $inf with branches: ", join(zip(names(df), types(df)), ','))
 tic()
 ROOT.set_branch_status!(df.tree, "*", false);
 for k in [
@@ -20,7 +17,8 @@ for k in [
     "n_veto_mu", "n_veto_ele",
     "systematic", "isolation",
     "sample",
-    "cos_theta_lj", "xsweight",
+    "cos_theta_lj", "cos_theta_lj_gen",
+    "xsweight",
     "pu_weight", "pu_weight__up", "pu_weight__down",
 
     "lepton_weight__id", "lepton_weight__id__up", "lepton_weight__id__down",
@@ -34,29 +32,28 @@ for k in [
     ROOT.set_branch_status!(df.tree, "$k*", true);
 end
 
-h = Histogram(100, -1, 1)
 NB = 0
 N = 0
 
-res = Dict()
-nbins = 119
+res = Dict() #histograms
+# dfres = Dict() #dataframe
+
+bins = {:cos_theta=>vcat(-Inf, linspace(-1, 1, 21))}
 hdescs = {
-  :cos_theta_lj=>(nbins, -1, 1),
-  :met=>(nbins, 0, 300),
-  :mtw=>(nbins, 0, 300),
-  :bdt_sig_bg=>(nbins, -1, 1),
-  :C=>(nbins, 0, 1),
-  :lepton_pt=>(nbins, 0, 300),
-  :ljet_eta=>(nbins, -5, 5),
+  :cos_theta_lj=>(Histogram, bins[:cos_theta]),
+
+  :cos_theta_gen_reco=>(NHistogram, {bins[:cos_theta], bins[:cos_theta]})
 }
 
 println("looping over ", nrow(df), " events")
 
 function gethist(res, k, var)
-  if !in(k, keys(res))
-    res[k] = Histogram(hdescs[var]...)
+  subk = "$k/$var"
+  if !in(subk, keys(res))
+    T, args = hdescs[var]
+    res[subk] = T(args)
   end
-  return res[k]
+  return res[subk]
 end
 
 for i=1:nrow(df)
@@ -78,7 +75,20 @@ for i=1:nrow(df)
   n_signal_ele = df.tree[:n_signal_ele]
   hlt_mu = df.tree[:hlt_mu]
   hlt_ele = df.tree[:hlt_ele]
-  
+
+  lepton = int(df.tree[:lepton_type])
+  cos_theta_lj_gen = df.tree[:cos_theta_lj_gen]
+  cos_theta_lj_reco = df.tree[:cos_theta_lj]
+
+  # sig_df = similar(DataFrame(
+  #   lepton_type=Int64[],
+  #   cos_theta_lj_gen=Float64[],
+  #   cos_theta_lj_reco=Float64[]
+  # ), 1)
+  # sig_df[1, :lepton_type] = lepton
+  # sig_df[1, :cos_theta_lj_gen] = cos_theta_lj_gen
+
+
   (isna(n_signal_mu) || isna(n_signal_ele) || isna(hlt_mu) || isna(hlt_ele)) && continue
 
   if !(
@@ -103,7 +113,6 @@ for i=1:nrow(df)
 
   syst = df.tree[:systematic]
   
-  lepton = int(df.tree[:lepton_type])
   isna(lepton) && continue
   
   if lepton==13
@@ -131,6 +140,7 @@ for i=1:nrow(df)
   end
 
   cache[:cos_theta_lj] = df.tree[:cos_theta_lj]
+  cache[:cos_theta_lj_gen] = df.tree[:cos_theta_lj_gen]
   sample = hmap[:from][int(df.tree[:sample])]
   syst = hmap[:from][int(df.tree[:systematic])]
   iso = hmap[:from][int(df.tree[:isolation])]
@@ -157,11 +167,18 @@ for i=1:nrow(df)
 
   bdt = df.tree[:bdt_sig_bg]
   for bdt_cut in linspace(-1, 1, 21)
-    bdt < bdt_cut && continue
     bdts = @sprintf("%.2f", bdt_cut)
-    
     hn ="$leptype/$iso/$syst/$njets/$ntags/$sample/met__$passes_met/$bdts" 
-    
+
+    passes_bdt = bdt < bdt_cut
+    genval = passes_bdt ? cache[:cos_theta_lj_gen] : NA
+
+    hgr = gethist(res, hn, :cos_theta_gen_reco)
+    #println("$bdt_cut $passes_bdt", cache[:cos_theta_lj], " ", cache[:cos_theta_lj_gen], " ", findbin_nd(hgr, {cache[:cos_theta_lj], cache[:cos_theta_lj_gen]}))
+    hfill!(hgr, {cache[:cos_theta_lj], genval}, weight)
+
+    passes_bdt && continue
+   
     h = gethist(res, hn, :cos_theta_lj)
     hfill!(h, cache[:cos_theta_lj], weight)
     
@@ -179,7 +196,13 @@ NB=NB/1024/1024
 q = toq();
 println("$N $(nrow(df)) $(NB)Mb $(q)s")
 
-of = jldopen(ofname, "w")
+of = jldopen("$ofname.histograms.jld", "w")
 write(of, "res", res)
 println("wrote $(length(res)) histograms")
-close(of)
+
+# of = jldopen("$ofname.df.jld", "w")
+# write(of, "res", dfres)
+# println("wrote $(length(dfres)) dataframes")
+# for (k, v) in dfres
+#     println(k, " ", join(types(v), ","))
+# end
