@@ -1,3 +1,4 @@
+#!/usr/bin/env julia
 cmd = ARGS[1]
 jobname = ARGS[2]
 
@@ -9,6 +10,6 @@ for line in readlines(STDIN)
     x = replace(x, "{#}", i)
 
     i += 1
-    out = "echo \$'#!/bin/bash\\necho $line\\nset -e\\n$x\\necho \$?' | sbatch --exclude ./exclude.txt -p prio -J $jobname -e error-%j.out "
+    out = "echo \$'#!/bin/bash\\necho $line\\nset -e\\n$x\\necho \$?' | sbatch --exclude ../skim/exclude.txt -p prio -J $jobname -e error-%j.out "
     println(out)
 end
