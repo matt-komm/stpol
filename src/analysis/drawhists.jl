@@ -8,7 +8,8 @@ using DataFrames
 mkpath(PDIR)
 mkpath(HDIR)
 
-indata = readdf("/hdfs/local/joosep/stpol/skims/Jan16.nominal.tagged.jld")
+indata = readdf("$BASE/results/data.jld")
+#indata = readdf("small.jld")
 inds = perform_selection(indata);
 
 df_mc = !(inds[:data_mu] | inds[:data_ele]);
