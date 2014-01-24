@@ -4,6 +4,9 @@ import DataArrays.NAtype
 
 import Base.+, Base.-, Base.*, Base./, Base.==
 import Base.show
+import Base.getindex
+
+using JSON
 
 immutable Histogram
     bin_entries::Vector{Float64} #n values
@@ -44,7 +47,13 @@ Histogram(a::Array) = Histogram(
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
 
 function errors(h::Histogram)
-    return h.bin_contents ./ sqrt(h.bin_entries)
+    errs = h.bin_contents ./ sqrt(h.bin_entries)
+    for i=1:nbins(h)
+        if isnan(errs[i])
+            errs[i] = 0.0
+        end
+    end
+    return errs
 end
 
 function findbin(h::Histogram, v::Real)
@@ -250,7 +259,10 @@ function ==(h1::NHistogram, h2::NHistogram)
 end
 
 nbins(h::NHistogram) = prod([length(e) for e in h.edges])
+nbins(h::NHistogram, nd::Integer) = length(h.edges[nd])
 ndim(h::NHistogram) = length(h.edges)
+
+errors(h::NHistogram) = reshape(errors(h.baseh), Int64[length(e) for e in h.edges]...)
 
 function asarr(h::NHistogram)
     rsh(x) = reshape(x, Int64[length(e) for e in h.edges]...)
@@ -282,22 +294,36 @@ end
 
 function todf(h::NHistogram)
     hist = todf(h.baseh)
-    edges = DataFrame(h.edges...)
-    return {:hist=>hist, :edges=>edges}
+    return {:hist=>hist, :edges=>[DataFrame(e) for e in h.edges]}
 end
 
 function writecsv(fn, h::NHistogram)
     dfs = todf(h)
     writetable("$fn.hist", dfs[:hist];separator=',')
-    writetable("$fn.edges", dfs[:edges];separator=',')
+    dd = {:hist=>"$fn.hist", :edges=>Any[]}
+    j = 1
+    for e in dfs[:edges]
+        writetable("$fn.edges.$j", e; separator=',')
+        push!(dd[:edges], "$fn.edges.$j")
+        j += 1
+    end
+    of = open("$fn.json", "w")
+    write(of, JSON.json(dd))
+    close(of)
 end
 
 function readhist(fn)
-    hist = readtable("$fn.hist")
-    edges = readtable("$fn.edges")
-    nd = ncol(edges)
-    evec = [edges[i] for i=1:nd]
+    js = JSON.parse(readall("$fn.json"))
+    hist = readtable(js["hist"])
+    edges = [readtable(e) for e in js["edges"]]
+    nd = length(edges)
+    evec = [edges[i][1] for i=1:nd]
     NHistogram(fromdf(hist), evec)
+end
+
+function Base.getindex(nh::NHistogram, args...)
+    a, b = asarr(nh)
+    return a[args...]#, b[args...]
 end
 
 Base.show(io::IO, h::Histogram) = show(io, todf(h))
@@ -315,4 +341,3 @@ export test_ks
 export NHistogram, findbin_nd, ndim, asarr, readhist
 
 end #module
-
