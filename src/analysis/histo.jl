@@ -243,18 +243,61 @@ function NHistogram(edges)
     NHistogram(baseh, edges)
 end
 
-nbins(h::NHistogram) = prod([length(e) for e in h.edges])
-
-function findbin_nd(h::NHistogram, v)
-    return tuple(Int64[searchsortedfirst(h.edges[i], v[i])-1 for i=1:length(h.edges)]...)
+function ==(h1::NHistogram, h2::NHistogram)
+    ret = h1.edges == h2.edges
+    ret = ret && h1.baseh == h2.baseh
+    return ret
 end
 
-function hfill!(h::NHistogram, v, w::Real)
+nbins(h::NHistogram) = prod([length(e) for e in h.edges])
+ndim(h::NHistogram) = length(h.edges)
+
+function asarr(h::NHistogram)
+    rsh(x) = reshape(x, Int64[length(e) for e in h.edges]...)
+    return rsh(h.baseh.bin_contents), rsh(h.baseh.bin_entries)
+end
+
+function findbin_nd(h::NHistogram, v)
+    nd = length(v)
+    @assert ndim(h)==nd
+    idxs = Int64[]
+    for i=1:nd
+        x = v[i]
+        j = (isna(x) || isnan(x)) ? 1 : (searchsortedfirst(h.edges[i], x) - 1)
+        (j < 1 || j > length(h.edges[i])) && error("overflow dim=$i, v=$x")
+        push!(idxs, j)
+    end
+    return tuple(idxs...)
+end
+
+function hfill!(h::NHistogram, v, w=1.0)
+    a, b = asarr(h)
     xb = findbin_nd(h, v)
-    a = reshape(h.baseh.bin_contents, Int64[length(e) for e in h.edges]...)
+    #println(typeof(a), " ", size(a), " ", join(xb, ","), " ", join(v, ","))
+    #a = reshape(h.baseh.bin_contents, Int64[length(e) for e in h.edges]...)
     a[xb...] += isna(w) ? 0.0 : w
-    b = reshape(h.baseh.bin_entries, Int64[length(e) for e in h.edges]...)
+    #b = reshape(h.baseh.bin_entries, Int64[length(e) for e in h.edges]...)
     b[xb...] += 1
+end
+
+function todf(h::NHistogram)
+    hist = todf(h.baseh)
+    edges = DataFrame(h.edges...)
+    return {:hist=>hist, :edges=>edges}
+end
+
+function writecsv(fn, h::NHistogram)
+    dfs = todf(h)
+    writetable("$fn.hist", dfs[:hist];separator=',')
+    writetable("$fn.edges", dfs[:edges];separator=',')
+end
+
+function readhist(fn)
+    hist = readtable("$fn.hist")
+    edges = readtable("$fn.edges")
+    nd = ncol(edges)
+    evec = [edges[i] for i=1:nd]
+    NHistogram(fromdf(hist), evec)
 end
 
 Base.show(io::IO, h::Histogram) = show(io, todf(h))
@@ -267,8 +310,9 @@ export flatten
 export lowedge, widths
 export rebin
 export cumulative
+export writecsv
 export test_ks
-export NHistogram, findbin_nd
+export NHistogram, findbin_nd, ndim, asarr, readhist
 
 end #module
 
