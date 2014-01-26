@@ -3,6 +3,7 @@ cmd = ARGS[1]
 jobname = ARGS[2]
 
 i=1
+of = open("$jobname.submit.sh", "w")
 for line in readlines(STDIN)
     line = strip(line)
     x = deepcopy(cmd)
@@ -10,6 +11,7 @@ for line in readlines(STDIN)
     x = replace(x, "{#}", i)
 
     i += 1
-    out = "echo \$'#!/bin/bash\\necho $line\\nset -e\\n$x\\necho \$?' | sbatch --exclude ../skim/exclude.txt -p prio -J $jobname -e error-%j.out "
-    println(out)
+    out = "echo \$'#!/bin/bash\\necho $line\\necho $cmd\\nset -e\\n$x\\necho \$?' | sbatch --exclude ../skim/exclude.txt -p prio -J $jobname -e error-%j.out"
+    write(of, "$out\n") 
 end
+close(of)
