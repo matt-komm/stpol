@@ -1,3 +1,4 @@
+if !isdef(:SELECTION)
 
 sample_is(x) = :(sample .== $(hash(x)))
 
@@ -40,7 +41,7 @@ const selections = {
     },
 }
 
-function perform_selection(indata)
+function perform_selection(indata::DataFrame)
     inds = {
         :mu => (indata["lepton_type"] .== 13) .* (indata["n_signal_mu"] .== 1) .* (indata["n_signal_ele"] .== 0) .* (indata["n_veto_mu"] .== 0) .* (indata["n_veto_ele"] .== 0),
         :ele => (indata["lepton_type"] .== 11) .* (indata["n_signal_mu"] .== 0) .* (indata["n_signal_ele"] .== 1) .* (indata["n_veto_mu"] .== 0) .* (indata["n_veto_ele"] .== 0),
@@ -100,25 +101,5 @@ function reformat_selection(_inds)
     return inds
 end
 
-function load_selection(selfile)
-    _inds = read(jldopen(selfile), "inds");
-    return reformat_selection(_inds)
+SELECTION = 1
 end
-
-
-
-function recurse_down(sel::Expr, prev)
-    s = join(prev, "->")
-    #println("Expr: [$s] => $sel")
-    return (prev, sel)
-end
-
-function recurse_down{R <: Any}(sel::AbstractArray{R}, prev)
-    return vcat([recurse_down(x, prev) for x in sel]...)
-end
-
-function recurse_down{A <: Any, B <: Any}(sel::Associative{A, B}, prev)
-    return vcat([recurse_down(v, vcat(prev, k)) for (k, v) in sel]...)
-end
-
-const flatsel = recurse_down(selections, Any[:sel])
