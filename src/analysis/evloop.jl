@@ -1,16 +1,14 @@
 #!/home/joosep/.julia/ROOT/julia
+using DataArrays, DataFrames
 include("histo.jl");
+using Hist
 include("base.jl");
 include("../skim/xs.jl");
-using DataFrames, Hist
-include("hroot.jl")
 using ROOT
 
-inf = ARGS[1]
-ofname = ARGS[2]
-
+function process_file(inf)
 df = TreeDataFrame(inf);
-println("opened TTree $inf with branches: ", join(zip(names(df), types(df)), ','))
+
 tic()
 ROOT.set_branch_status!(df.tree, "*", false);
 for k in [
@@ -38,7 +36,6 @@ NB = 0
 N = 0
 
 res = Dict() #histograms
-# dfres = Dict() #dataframe
 
 bins = {:cos_theta=>vcat(-Inf, linspace(-1, 1, 20), Inf)}
 hdescs = {
@@ -46,8 +43,6 @@ hdescs = {
 
   :cos_theta_gen_reco=>(NHistogram, {bins[:cos_theta], bins[:cos_theta]})
 }
-
-println("looping over ", nrow(df), " events")
 
 function gethist(res, k, var)
   subk = "$k/$var"
@@ -61,14 +56,12 @@ end
 for i=1:nrow(df)
   cache = Dict()
   
-  if (i%10000 == 0)
-      print(".")
-  end
-  
-  NB += ROOT.getentry!(df.tree, i);
+  NB += ROOT.getentry!(df.tree, i)
   
   cache[:xsweight] = df.tree[:xsweight]
-
+  sample = hmap[:from][int(df.tree[:sample])]
+  
+  issignal = sample == "tchan"
   for sw in syst_weights
     cache[sw] = df.tree[sw]
   end
@@ -82,22 +75,13 @@ for i=1:nrow(df)
   cos_theta_lj_gen = df.tree[:cos_theta_lj_gen]
   cos_theta_lj_reco = df.tree[:cos_theta_lj]
 
-  # sig_df = similar(DataFrame(
-  #   lepton_type=Int64[],
-  #   cos_theta_lj_gen=Float64[],
-  #   cos_theta_lj_reco=Float64[]
-  # ), 1)
-  # sig_df[1, :lepton_type] = lepton
-  # sig_df[1, :cos_theta_lj_gen] = cos_theta_lj_gen
-
-
-  (isna(n_signal_mu) || isna(n_signal_ele) || isna(hlt_mu) || isna(hlt_ele)) && continue
+  !issignal && (isna(n_signal_mu) || isna(n_signal_ele) || isna(hlt_mu) || isna(hlt_ele)) && continue
 
   if !(
     (n_signal_mu==1 && n_signal_ele==0 && hlt_mu) ||
     (n_signal_mu==0 && n_signal_ele==1 && hlt_ele)
   )
-    continue
+    !issignal && continue
   end
 
   n_veto_mu = df.tree[:n_veto_mu]
@@ -106,44 +90,44 @@ for i=1:nrow(df)
   (isna(n_veto_mu) || isna(n_veto_ele)) && continue
 
   if !(n_veto_mu==0 && n_veto_ele==0)
-    continue
+    !issignal && continue
   end
 
   njets = df.tree[:njets]
   ntags = df.tree[:ntags]
-  (isna(ntags) || ntags<=0) && continue
+  !issignal && (isna(ntags) || ntags<=0) && continue
+  !issignal && (njets != 2 && ntags != 1) && continue
 
   syst = df.tree[:systematic]
   
-  isna(lepton) && continue
+  !issignal && isna(lepton) && continue
   
   if lepton==13
       leptype=:muon
   elseif lepton==11
       leptype=:electron
   else
-      continue
+      !issignal && continue
   end
   
   passes_met = false
   
   met = df.tree[:met]
   mtw = df.tree[:mtw]
-  (isna(met) || isna(mtw)) && continue
+  !issignal && (isna(met) || isna(mtw)) && continue
 
-  !((leptype==:electron && met > 45) || (leptype==:muon && mtw > 50)) && continue
+  !issignal && !((leptype==:electron && met > 45) || (leptype==:muon && mtw > 50)) && continue
   passes_met = true
     
   bjet_dr = df.tree[:bjet_dr]
   ljet_dr = df.tree[:ljet_dr]
 
   if (isna(bjet_dr) || isna(ljet_dr) || bjet_dr < 0.5 || ljet_dr < 0.5)
-    continue
+    !issignal && continue
   end
 
   cache[:cos_theta_lj] = df.tree[:cos_theta_lj]
   cache[:cos_theta_lj_gen] = df.tree[:cos_theta_lj_gen]
-  sample = hmap[:from][int(df.tree[:sample])]
   syst = hmap[:from][int(df.tree[:systematic])]
   iso = hmap[:from][int(df.tree[:isolation])]
 
@@ -176,7 +160,6 @@ for i=1:nrow(df)
     genval = passes_bdt ? cache[:cos_theta_lj_gen] : NA
 
     hgr = gethist(res, hn, :cos_theta_gen_reco)
-    #println("$bdt_cut $passes_bdt", cache[:cos_theta_lj], " ", cache[:cos_theta_lj_gen], " ", findbin_nd(hgr, {cache[:cos_theta_lj], cache[:cos_theta_lj_gen]}))
     hfill!(hgr, {cache[:cos_theta_lj], genval}, weight)
 
     passes_bdt && continue
@@ -198,24 +181,5 @@ NB=NB/1024/1024
 q = toq();
 println("$N $(nrow(df)) $(NB)Mb $(q)s")
 
-# tf = tfile("$ofname.root", "UPDATE")
-# n = 1
-# for (k, v) in collect(res)[1:500]
-#   x = tf[:Get][:__call__](k)
-#   println(n, " ", length(res), " ", k, " ", isnone(x))
-#   toroot(v, tf, k)
-#   n += 1
-# end
-# rwrite(tf)
-# rclose(tf)
-
-of = jldopen("$ofname.histograms.jld", "w")
-write(of, "res", res)
-println("wrote $(length(res)) histograms")
-
-# of = jldopen("$ofname.df.jld", "w")
-# write(of, "res", dfres)
-# println("wrote $(length(dfres)) dataframes")
-# for (k, v) in dfres
-#     println(k, " ", join(types(v), ","))
-# end
+resd[inf] = res
+end
