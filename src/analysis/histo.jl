@@ -45,6 +45,7 @@ Histogram(a::Array) = Histogram(
 )
 
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
+contents(h::Histogram) = h.bin_contents
 
 function errors(h::Histogram)
     errs = h.bin_contents ./ sqrt(h.bin_entries)
@@ -263,11 +264,20 @@ nbins(h::NHistogram, nd::Integer) = length(h.edges[nd])
 ndim(h::NHistogram) = length(h.edges)
 
 errors(h::NHistogram) = reshape(errors(h.baseh), Int64[length(e) for e in h.edges]...)
+nentries(h::NHistogram) = nentries(h.baseh)
+integral(h::NHistogram) = integral(h.baseh)
+
+function +(h1::NHistogram, h2::NHistogram)
+    @assert h1.edges == h2.edges
+    return NHistogram(h1.baseh+h2.baseh, h1.edges)
+end
 
 function asarr(h::NHistogram)
     rsh(x) = reshape(x, Int64[length(e) for e in h.edges]...)
     return rsh(h.baseh.bin_contents), rsh(h.baseh.bin_entries)
 end
+
+contents(h::NHistogram) = asarr(h)[1]
 
 function findbin_nd(h::NHistogram, v)
     nd = length(v)
@@ -339,5 +349,5 @@ export cumulative
 export writecsv
 export test_ks
 export NHistogram, findbin_nd, ndim, asarr, readhist
-
+export contents
 end #module
