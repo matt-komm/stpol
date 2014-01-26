@@ -29,7 +29,7 @@ hfill!(h, NA)
 
 tf = tfile("test.root", "RECREATE")
 toroot(h, tf, "some/other/dir/h1")
-close(tf)
+rclose(tf)
 
 h = Histogram([1],[1],[0])
 @test integral(h)==1
