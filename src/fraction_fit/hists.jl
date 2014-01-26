@@ -10,7 +10,7 @@ using Hist
 include("../analysis/hplot.jl")
 using JSON
 
-using Distributions, Stats
+using Distributions, StatsBase
 
 #df - a DataFrame
 #inds - a dict of bitarrays
