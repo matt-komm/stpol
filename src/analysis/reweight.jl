@@ -1,3 +1,4 @@
+if !isdefined(:REWEIGHT)
 const lumis = {:mu => 19764, :ele =>19820}
 
 include("selection.jl")
@@ -34,21 +35,6 @@ function reweight(indata)
     indata[sample_is("data_ele"), :xsweight] = 1.0
 end
 
-#########
-# SPLIT #
-#########
-#println("splitting")
-#for nt in Any[1, 2]
-#    println("ntags=$nt")
-#    tic()
-#    if isna(nt)
-#        df = select(:(isna(ntags)), indata)
-#    else
-#        df = select(:(ntags .== $nt), indata)
-#    end
-#    df = DataFrame(df)
-#    of = jldopen("$ofname.$(nt)T", "w")
-#    write(of, "df", df)
-#    close(of)
-#    toc()
-#end
+const REWEIGHT=1
+
+end #ifdef
