@@ -1,10 +1,7 @@
-
 include ../analysis/Makefile.options
 
-#INF=input/Aug22_csvt.txt
 INF=input/dec18.txt
-DIR=skim_jan14
-#DIR=skim_dec12_1
+DIR=/home/joosep/singletop/stpol2/src/skim_jan14
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
 
@@ -47,10 +44,8 @@ parhadd:
 	#echo "hadding in parallel"
 	#find $(DIR)/merged/ -name "files.split.*" | $(PARCMD) -j32 ./hadd.jl {} $(DIR)/merged/md.txt $(DIR)/merged/$(DIR).{#} > $(DIR)/merged/hadd.out	
 	echo "hadding on cluster"
-	find $(DIR) -name "files.split*" | julia createscript.jl "./hadd.jl {} $(DIR)/merged/md.txt skim_jan14/merged/data.{#}" hadd.$(DIR) > $(DIR)/hadd.cmds
-	source $(DIR)/hadd.cmds
-	#julia submit_hadd.jl $(DIR)
-	#$(PARCMD) --delay=0.5 -j1000 < hadd.submit.txt
+	find $(DIR) -name "files.split*" | julia createscript.jl "./hadd.jl {} $(DIR)/merged/md.txt skim_jan14/merged/data.{#}" hadd
+	sh hadd.submit.sh
 
 hadd:
 	$(ROOTWRAP) && hadd data.nominal.tagged.root $(DIR)/merged/data.*.root.nominal.1T $(DIR)/merged/data.*.root.unknown.1T $(DIR)/merged/data.*.root.nominal.2T $(DIR)/merged/data.*.root.unknown.2T
