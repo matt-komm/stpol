@@ -4,7 +4,7 @@ include("base.jl");
 using DataFrames, Hist
 
 ofname = ARGS[1]
-inf = ARGS[2:]
+inf = ARGS[2:length(ARGS)]
 
 function openres(fn)
     fi = jldopen(fn)
