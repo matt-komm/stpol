@@ -3,10 +3,9 @@
 SYSTEMATIC="
 tchan 
 wzjets
-top
 Res
 En
-qcd
+other
 UnclusteredEn
 btaggingBC
 btaggingL
@@ -15,52 +14,57 @@ leptonTrigger
 wjets_flat
 wjets_shape
 "
-INPUTHIST="/home/fynu/mkomm/ele_cos_theta_mva_0_13/data.root"
-RESPONSEMATRIX="/home/fynu/mkomm/ele_cos_theta_mva_0_13/matrix.root:matrix"
-FITRESULT="/home/fynu/mkomm/ele_cos_theta_mva_0_13/fitresult.txt"
-python run.py \
+INPUTHIST="/home/fynu/mkomm/ele__cos_theta__mva_0_13/data.root"
+RESPONSEMATRIX="/home/fynu/mkomm/ele__cos_theta__mva_0_13/matrix.root:matrix"
+FITRESULT="/home/fynu/mkomm/ele__cos_theta__mva_0_13/fitresult.txt"
+REGSCALE=3.0
+nice -n 10 python run.py \
 --output="electron/sys_nominal" \
 --modelName="nominal" \
 --histFile=$INPUTHIST \
 --responseMatrix=$RESPONSEMATRIX \
 --fitResult=$FITRESULT \
+--scaleRegularization=$REGSCALE \
 -f &
 sleep 1s
 
 for sys in $SYSTEMATIC
 do
-    python run.py \
+    nice -n 10 python run.py \
     --output="electron/sys_"$sys \
     --modelName="sys_"$sys \
     --histFile=$INPUTHIST \
     --responseMatrix=$RESPONSEMATRIX \
     --fitResult=$FITRESULT \
     --excludeSys=$sys \
+    --scaleRegularization=$REGSCALE \
     -f &
     sleep 1s
 done
 
-python run.py \
+nice -n 10 python run.py \
 --output="electron/sys_mcstat" \
 --modelName="sys_mcstat" \
 --histFile=$INPUTHIST \
 --responseMatrix=$RESPONSEMATRIX \
 --fitResult=$FITRESULT \
 --noMCUncertainty \
+--scaleRegularization=$REGSCALE \
 -f &
 sleep 1s
 
-python run.py \
+nice -n 10 python run.py \
 --output="electron/sys_stat" \
 --modelName="sys_stat" \
 --histFile=$INPUTHIST \
 --responseMatrix=$RESPONSEMATRIX \
 --fitResult=$FITRESULT \
 --noStatUncertainty \
+--scaleRegularization=$REGSCALE \
 -f &
 sleep 1s
 
-python run.py \
+nice -n 10 python run.py \
 --includeSys="" \
 --output="electron/sys_totalsys" \
 --modelName="sys_totalsys" \
@@ -68,6 +72,20 @@ python run.py \
 --responseMatrix=$RESPONSEMATRIX \
 --fitResult=$FITRESULT \
 --noMCUncertainty \
+--scaleRegularization=$REGSCALE \
 -f &
 sleep 1s
+
+
+nice -n 10 python run.py \
+--runOnData \
+--includeSys="" \
+--output="electron/electron_data" \
+--modelName="electron_data" \
+--histFile=$INPUTHIST \
+--responseMatrix=$RESPONSEMATRIX \
+--fitResult=$FITRESULT \
+--noMCUncertainty \
+--scaleRegularization=$REGSCALE \
+-f &
 

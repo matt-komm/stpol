@@ -2,6 +2,12 @@
 import os
 import math
 
+def convertRel(value):
+    return str(round(value,1))
+
+def convertDelta(value):
+    return str(round(value,3))
+
 systematics=[
 ["sys_nominal",""],
 
@@ -39,136 +45,60 @@ systematics=[
 ["sys_wzjets","W/Z+jets normalization"],
 ["sys_qcd","QCD normalization"],
 
-["sys_mcstat","simulation statistics"],
-["hline"],
-["sys_totalsys","total systematics"]
+["sys_mcstat","Simulation statistics"]
+
+
 
 
 ]
 
-def convertBias(value):
-    if value<0.001:
-        return "$<0$ & $001$"
-    #return "$"+str(round(value,3))+"$"
-    valuePre,valuePost= ("%4.3f" % (value)).split(".")
-    return "$"+valuePre+"$ & $"+valuePost+"$"
-
-def convertDelta(value):
-    if value<0.001:
-        return "$<0$ & $001$"
-    #return "$"+str(round(value,3))+"$"
-    valuePre,valuePost= ("%4.3f" % (value)).split(".")
-    return "$"+valuePre+"$ & $"+valuePost+"$"
-    
-
-    
-def readAsymmetries(targetDict,path):
-    for sys in systematics:
-        if os.path.exists(os.path.join(path,sys[0],"asymmetry.txt")):
-            
-            f=open(os.path.join(path,sys[0],"asymmetry.txt"),"r")
-            info={"path":path}
-            for line in f:
-                key,value=line.replace(" ","").replace("\n","").replace("\r","").split(",")
-                info[key]=float(value)
-            print "reading... ",os.path.join(path,sys[0],"asymmetry.txt"),info["mean"],info["rms"]
-            targetDict[sys[0]]=info
-            f.close()
-        else:
-            targetDict[sys[0]]=False
-        
-def printResult(asymmetryDict,sys):
-    latexTable=""
-    if not asymmetryDict[sys[0]]:
-        latexTable+="FIX & ME & FIX & ME"
+asymmetryDict={}
+for sys in systematics:
+    if os.path.exists(sys[0]):
+        f=open(os.path.join(sys[0],"asymmetry.txt"),"r")
+        info={}
+        for line in f:
+            key,value=line.replace(" ","").replace("\n","").replace("\r","").split(",")
+            info[key]=float(value)
+        asymmetryDict[sys[0]]=info
     else:
-        asymmetryMean=asymmetryDict[sys[0]]["mean"]
-        asymmetryNominalMean=asymmetryDict["sys_nominal"]["mean"]
-        asymmetryRMS=asymmetryDict[sys[0]]["rms"]
-        asymmetryNominalRMS=asymmetryDict["sys_nominal"]["rms"]
-        deltaAsymmetryMean=asymmetryMean-asymmetryNominalMean
-        deltaAsymmetryRMS=math.sqrt(math.fabs(asymmetryNominalRMS**2-asymmetryRMS**2))
-        latexTable+=convertBias(deltaAsymmetryMean)+" & "
-        latexTable+=convertDelta(deltaAsymmetryRMS)
-    return latexTable
-    
-    
-def printResultDeltaOnly(asymmetryDict,sys):
-    latexTable=""
-    if not asymmetryDict[sys[0]]:
-        latexTable+="FIX & ME"
-    else:
-        asymmetryRMS=asymmetryDict[sys[0]]["rms"]
-        asymmetryNominalRMS=asymmetryDict["sys_nominal"]["rms"]
-        deltaAsymmetryRMS=math.sqrt(math.fabs(asymmetryNominalRMS**2-asymmetryRMS**2))
-        latexTable+=convertDelta(deltaAsymmetryRMS)
-    return latexTable
-
-asymmetryMuonDict={}
-asymmetryElectronDict={}
-readAsymmetries(asymmetryMuonDict,"muon")
-readAsymmetries(asymmetryElectronDict,"electron")
-
-
-
+        asymmetryDict[sys[0]]=False
         
 latexTable=""
-latexTable+="\\begin{tabular}{  |c|| r@{.}l | r@{.}l || r@{.}l | r@{.}l | }  \n"
-latexTable+="\\hline \n"
-latexTable+="Uncertainty source  & \\multicolumn{2}{c |}{ bias $\\langle A_l^{\\mu} \\rangle$ } & \\multicolumn{2}{c ||}{ $\\delta A_l^{\\mu}$ } & \\multicolumn{2}{c |}{ bias $\\langle A_l^{e}\\rangle$ } & \\multicolumn{2}{c |}{ $\\delta A_l^{e}$ } \\\\ \n" 
+latexTable+="\\begin{tabular}{  |c||c|c||c|c| }  \n"
+
+latexTable+="Uncertainty source  & $\\Delta A_l^{\\mu}$ & $\\Delta A_l^{\\mu}/A_l^{\\mu}$ (\\%) & $\\Delta A_l^{e}$ & $\\Delta A_l^{e}/A_l^{e}$ (\%) \\\\ \n" 
 latexTable+="\\hline \n"
 for sys in systematics:
     if sys[0]=="sys_nominal":
         continue
     if sys[0]=="hline":
-        latexTable+="\\hline \n"
-    else:
-        print "add row: ",sys[1]
+         latexTable+="\\hline \n"
+    if not asymmetryDict[sys[0]]:
         latexTable+=sys[1]+" & "
-        latexTable+=printResult(asymmetryMuonDict,sys)
-        latexTable+=" & "
-        latexTable+=printResult(asymmetryElectronDict,sys)
+        latexTable+=" FIXME & "
+        latexTable+=" FIXME & "
+        latexTable+=" FIXME & "
+        latexTable+=" FIXME & "
         latexTable+="\\\\ \n"
-
-latexTable+="\\hline \n"
-latexTable+="total & \\multicolumn{2}{c |}{}"
-latexTable+=" & "+convertDelta(asymmetryMuonDict["sys_nominal"]["rms"])
-latexTable+=" & \\multicolumn{2}{c |}{} & "+convertDelta(asymmetryElectronDict["sys_nominal"]["rms"])
-latexTable+="\\\\ \n"
-latexTable+="\\hline \n"
-latexTable+="\\end{tabular}\n"
-out=open("sysAN.tex","w")
-out.write(latexTable)
-out.close()
-
-
-
-latexTable=""
-latexTable+="\\begin{tabular}{  |c|| r@{.}l || r@{.}l | }  \n"
-latexTable+="\\hline \n"
-latexTable+="Uncertainty source  & \\multicolumn{2}{c ||}{ $\\delta A_l^{\\mu}$ } & \\multicolumn{2}{c |}{ $\\delta A_l^{e}$ } \\\\ \n" 
-latexTable+="\\hline \n"
-for sys in systematics:
-    if sys[0]=="sys_nominal":
-        continue
-    if sys[0]=="hline":
-        latexTable+="\\hline \n"
     else:
-        print "add row: ",sys[1]
+        asymmetryRMSMuon=asymmetryDict[sys[0]]["rms"]
+        asymmetryNominalRMSMuon=asymmetryDict["sys_nominal"]["rms"]
+        deltaAsymmetryMuon=math.sqrt(asymmetryNominalRMSMuon**2-asymmetryRMSMuon**2)
+        deltaAsymmetryRelMuon=deltaAsymmetryMuon/asymmetryNominalRMSMuon
+        asymmetryRMSElectron=0.0
+        asymmetryNominalRMSElectron=0.0
+        deltaAsymmetryElectron=math.sqrt(asymmetryNominalRMSElectron**2-asymmetryRMSElectron**2)
+        deltaAsymmetryRelElectron=deltaAsymmetryElectron/asymmetryNominalRMSElectron
+        
         latexTable+=sys[1]+" & "
-        latexTable+=printResultDeltaOnly(asymmetryMuonDict,sys)
-        latexTable+=" & "
-        latexTable+=printResultDeltaOnly(asymmetryElectronDict,sys)
+        latexTable+=convertDelta(deltaAsymmetryMuon)+" & "
+        latexTable+=convertRel(deltaAsymmetryRelMuon)+" & "
+        latexTable+=convertDelta(deltaAsymmetryMuon)+" & "
+        latexTable+=convertRel(deltaAsymmetryRelMuon)+" & "
         latexTable+="\\\\ \n"
-
-latexTable+="\\hline \n"
-latexTable+="total "
-latexTable+=" & "+convertDelta(asymmetryMuonDict["sys_nominal"]["rms"])
-latexTable+=" & "+convertDelta(asymmetryElectronDict["sys_nominal"]["rms"])
-latexTable+="\\\\ \n"
-latexTable+="\\hline \n"
 latexTable+="\\end{tabular}\n"
-out=open("sysPAS.tex","w")
+out=open("sys.tex","w")
 out.write(latexTable)
 out.close()
 

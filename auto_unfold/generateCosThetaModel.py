@@ -10,7 +10,7 @@ import logging
 import ROOT
 
 
-def checkHistogramExistence(fileName,histoName):
+def checkHistogramExistence(fileName,histoName,debug=False):
     if not os.path.exists(fileName):
         logging.warning("file '"+fileName+"' does not exists containing histogram '"+histoName+"', will be ignored")
         return False
@@ -22,6 +22,21 @@ def checkHistogramExistence(fileName,histoName):
     if obj.GetEntries()==0:
         logging.warning("histogram '"+histoName+"' in file '"+fileName+"' contains 0 entries, will be ignored")
         return False
+    if not debug:
+        return True
+    weightSum=0.0
+    sumMC=0.0
+    print histoName
+    for ibin in range(obj.GetNbinsX()):
+        obs=max(obj.GetBinContent(ibin+1),0.0000001)
+        err=max(obj.GetBinError(ibin+1),0.000000000000000001)
+        w=err**2/obs
+        n=obs**2/err**2
+        weightSum+=w
+        sumMC+=n
+        print "\tobs:",round(obs,2),"\terr:",round(err,3),"\tw:",round(w,4),"\tn:",round(n,1)
+    avg_weight=weightSum/obj.GetNbinsX()
+    
     return True
     
 def generateModelPE(modelName="mymodel",
@@ -82,7 +97,7 @@ def generateModelPE(modelName="mymodel",
     obs=Observable(histPrefix, binning, ranges)
     for ntuple in ntupleNameList:
         name=ntuple["name"]
-        if not checkHistogramExistence(histFile,histPrefix+"__"+name):
+        if not checkHistogramExistence(histFile,histPrefix+"__"+name,debug=True):
             continue
         comp=ObservableComponent("comp_"+name)
         coeff=CoefficientMultiplyFunction()
@@ -128,6 +143,47 @@ def generateModelPE(modelName="mymodel",
     file.write(model.toConfigString())
     _writeFile(file,outputFolder,modelName,dicePoisson=dicePoisson,mcUncertainty=mcUncertainty)
     file.close()
+    
+    
+def generateNominalSignal(modelName="mymodel",
+                    outputFolder="mymodel",
+                    histFile=None,
+                    histPrefix="cos_theta",
+                    signalYieldList=[],
+                    binning=1,
+                    ranges=[-1.0,1.0],
+                    dicePoisson=False,
+                    mcUncertainty=False):
+                    
+    if histFile==None:
+        logging.error("no input histfile specified during model generation")
+        sys.exit(-1)
+    
+    
+    file=open(os.path.join(outputFolder,modelName+".cfg"), "w")
+    
+    model=Model(modelName)
+    
+    obsBG=Observable(histPrefix, binning, ranges)
+            
+    for ntuple in signalYieldList:
+        name=ntuple["name"]
+        compBG=ObservableComponent("comp_"+name)
+        coeffBG=CoefficientConstantFunction("beta_"+name,ntuple["mean"])
+        compBG.setCoefficientFunction(coeffBG)
+        histBG=RootHistogram(name,{"use_errors":"true"})
+        histBG.setFileName(histFile)
+        histBG.setHistoName(histPrefix+"__"+name)
+        file.write(histBG.toConfigString())
+        compBG.setNominalHistogram(histBG)
+        obsBG.addComponent(compBG)
+        
+        
+    model.addObservable(obsBG)
+    file.write(model.toConfigString())
+    _writeFile(file,outputFolder,modelName,dicePoisson=dicePoisson,mcUncertainty=mcUncertainty,experiments=10000)
+    file.close()
+       
     
 def generateNominalBackground(modelName="mymodel",
                     outputFolder="mymodel",

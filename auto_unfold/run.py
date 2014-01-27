@@ -14,11 +14,11 @@ logging.basicConfig(format="%(levelname)s - %(message)s",level=logging.DEBUG)
 
 #processes to consider
 SIGNAL=["tchan"]
-BACKGROUND=["top","wzjets","qcd",]
+BACKGROUND=["top","wzjets","qcd","other"]
 #will search which of the following systematics are present in the input root file
 SYS=["Res","En","UnclusteredEn","btaggingBC","btaggingL","leptonID",
-     "leptonIso","leptonTrigger","wjets_flat","wjets_shape"]
-     #"ttbar_matching","ttbar_scale"]
+     "leptonIso","leptonTrigger","wjets_flat","wjets_shape",
+     "ttbar_matching","ttbar_scale","top_pt","mass","pileup"]
 FULL=[]
 FULL.extend(SIGNAL)
 FULL.extend(BACKGROUND)
@@ -26,6 +26,9 @@ FULL.extend(SYS)
 
 
 ROOT.gROOT.SetBatch(True)
+ROOT.gStyle.SetStatX(0.4)
+ROOT.gStyle.SetStatY(0.98)
+
 
 def parseFitResult(inputfile,excludeSysList):
     yieldSys=[]
@@ -95,6 +98,38 @@ def getMeasuredHistogramBinning(histogram):
         binning[ibin]=signalHistogram.GetBinLowEdge(ibin+1)
     return binning
     
+def rebinHistograms(fileName,histPrefix,binningMeasured,folder):
+    histo=ROOT.TH1D()
+    histoBG=ROOT.TH1D()
+    file=ROOT.TFile(os.path.join(folder,fileName))
+    tree=file.Get("products")
+    
+    tree.SetBranchAddress("pd__data_obs_"+histPrefix, histo)
+    #histo.SetDirectory(0)
+    
+    fileOut=ROOT.TFile(os.path.join(folder,"subtracted_"+fileName),"RECREATE")
+    treeOut=ROOT.TTree("subtracted","subtracted")
+
+
+    histoRebinned=ROOT.TH1D("rebinned","",len(binningMeasured)-1,binningMeasured)
+    treeOut.Branch("histos", histoRebinned)
+    
+    for cnt in range(int(tree.GetEntries())):
+        tree.GetEntry(cnt)
+        
+        for ibin in range(len(binningMeasured)-1):
+            y=histo.GetBinContent(ibin+1)
+            if (y<0):
+                #logging.debug("WARNING: yield after background subtraction smaller than 0: yield="+str(y))
+                histoRebinned.SetBinContent(ibin+1,0)
+            else:
+                histoRebinned.SetBinContent(ibin+1,y)
+        treeOut.Fill()
+    
+    treeOut.Write()
+    fileOut.Close()
+    file.Close()
+    
     
 def subtrackNominalBackground(fileName,nominalFileName,histPrefix,binningMeasured,folder):
     histo=ROOT.TH1D()
@@ -117,20 +152,24 @@ def subtrackNominalBackground(fileName,nominalFileName,histPrefix,binningMeasure
 
     histoSubtracted=ROOT.TH1D("subtracted","",len(binningMeasured)-1,binningMeasured)
     treeOut.Branch("histos", histoSubtracted)
-    
+    biasCount=numpy.zeros(len(binningMeasured)-1)
     for cnt in range(int(tree.GetEntries())):
         tree.GetEntry(cnt)
         tree2.GetEntry(0)
         
         for ibin in range(len(binningMeasured)-1):
             y=histo.GetBinContent(ibin+1)-histoBG.GetBinContent(ibin+1)
+            
             if (y<0):
-                logging.debug("WARNING: yield after background subtraction smaller than 0: yield="+str(y))
+                biasCount[ibin]+=1.0
+                #logging.debug("WARNING: yield after background subtraction smaller than 0: yield="+str(y))
                 histoSubtracted.SetBinContent(ibin+1,0)
             else:
                 histoSubtracted.SetBinContent(ibin+1,y)
         treeOut.Fill()
-    
+    for ibin in range(len(binningMeasured)-1):
+        biasCount[ibin]=(1.0*biasCount[ibin])/(1.0*tree.GetEntries())
+        #logging.info("backgroundsubtraction: bin="+str(ibin+1)+" setToZero="+str(round(biasCount[ibin],3)))
     treeOut.Write()
     fileOut.Close()
     file2.Close()
@@ -189,7 +228,67 @@ def calcAsymmetry(histo):
         else:
             sumDown+=histo.GetBinContent(i+1)
     return (sumUp-sumDown)/(sumUp+sumDown)
-                        
+    
+'''
+def closureTest(histoGen,fileName,branchName,histoTreeName,outputName=None):
+    file=ROOT.TFile(fileName)
+    tree=file.Get(branchName)
+    histo=ROOT.TH1D()
+    tree.SetBranchAddress(histoTreeName, histo)
+    n=int(tree.GetEntries())
+    histoBinInfoList=[]
+    for ibin in range(histo.GetNbinsX()):
+        histoBinInfoList.append({"mean":0.0,"mean2":0.0})  
+
+    for cnt in range(n):
+        tree.GetEntry(cnt)
+        for ibin in range(histo.GetNbinsX()):
+            content=histo.GetBinContent(ibin+1)
+            histoBinInfoList[ibin]["mean"]+=content
+            histoBinInfoList[ibin]["mean2"]+=content*content
+    for ibin in range(histo.GetNbinsX()):   
+        histoBinInfoList[ibin]["rms"]=math.sqrt(math.fabs(histoBinInfoList[ibin]["mean2"]/n-histoBinInfoList[ibin]["mean"]**2/(n**2)))
+    chi2=0.0
+    for cnt in range(n):
+        tree.GetEntry(cnt)
+        for ibin in range(histo.GetNbinsX()):
+            content=histo.GetBinContent(ibin+1)
+            contentNorm=histoGen.GetBinContent(ibin+1)
+            chi2=(content-contentNorm)**2/histoBinInfoList[ibin]["rms"]**2
+'''
+
+def closureTest(asymmetryResult,responseMatrix,outputName=None):
+    histoBinInfoList=asymmetryResult["info"]
+    fileName,objectName=options.responseMatrix.rsplit(":",1)
+    rootFile = ROOT.TFile(fileName,"r")
+    responseMatrix = rootFile.Get(objectName)
+    truth =  responseMatrix.ProjectionX()
+    canvasDist=ROOT.TCanvas("canvas","",800,600)
+    histMean=ROOT.TH1D(truth)
+    for ibin in range(truth.GetNbinsX()):
+        histMean.SetBinContent(ibin+1, histoBinInfoList[ibin]["mean"])
+        histMean.SetBinError(ibin+1, histoBinInfoList[ibin]["rms"])
+    histMean.SetMarkerStyle(21)
+    histMean.SetMarkerSize(1.2)
+    histMean.Draw("PE1")
+    truth.SetLineColor(ROOT.kGreen)
+    #truth.Scale(histMean.Integral()/truth.Integral())
+    truth.Draw("LSame")
+    canvasDist.Print(outputName+"_dist.pdf")
+    
+    #logging.info("-----pull and bias--------")
+    for ibin in range(truth.GetNbinsX()):
+        bias=(histoBinInfoList[ibin]["mean"]-truth.GetBinContent(ibin+1))/truth.GetBinContent(ibin+1)
+        pull=(histoBinInfoList[ibin]["mean"]-truth.GetBinContent(ibin+1))/histoBinInfoList[ibin]["rms"]
+        #logging.info("bin: "+str(ibin+1)+": bias="+str(round(bias,3))+", pull="+str(round(pull,3)))
+    
+    truthAsymmetry=calcAsymmetry(truth)
+    measuredAsymmetry=asymmetryResult["mean"]
+    measuredRMS=asymmetryResult["mean"]
+    #logging.info("asy: bias="+str(round((measuredAsymmetry-truthAsymmetry)/truthAsymmetry,3))+", pull="+str(round((measuredAsymmetry-truthAsymmetry)/measuredRMS,3)))
+    #logging.info("--------------------------")
+    
+    
 def getAsymmetry(fileName,branchName,histoTreeName,outputName=None):
     file=ROOT.TFile(fileName)
     tree=file.Get(branchName)
@@ -201,21 +300,18 @@ def getAsymmetry(fileName,branchName,histoTreeName,outputName=None):
     
     histoBinInfoList=[]
     for ibin in range(histo.GetNbinsX()):
-        histoBinInfoList.append({"mean":0.0,"mean2":0.0, "max":histo.GetBinContent(ibin+1),"min":histo.GetBinContent(ibin+1)})  
+        histoBinInfoList.append({"max":histo.GetBinContent(ibin+1),"min":histo.GetBinContent(ibin+1)})  
     for cnt in range(n):
         tree.GetEntry(cnt)
         for ibin in range(histo.GetNbinsX()):
             content=histo.GetBinContent(ibin+1)
-            histoBinInfoList[ibin]["mean"]+=content
-            histoBinInfoList[ibin]["mean2"]+=content*content
             if (histoBinInfoList[ibin]["min"])>content:
                 histoBinInfoList[ibin]["min"]=content
             if (histoBinInfoList[ibin]["max"])<content:
                 histoBinInfoList[ibin]["max"]=content
         asy=calcAsymmetry(histo)
         asymmetryList[cnt]=asy
-    for ibin in range(histo.GetNbinsX()):   
-        histoBinInfoList[ibin]["rms"]=math.sqrt(histoBinInfoList[ibin]["mean2"]/n-histoBinInfoList[ibin]["mean"]**2/(n**2))
+    for ibin in range(histo.GetNbinsX()): 
         histoBinInfoList[ibin]["dist"]=ROOT.TH1F("dist_"+str(ibin),"bin "+str(ibin+1)+";yield;",100,histoBinInfoList[ibin]["min"],histoBinInfoList[ibin]["max"])
     sortedList=numpy.sort(asymmetryList)
     asymmetryHist = ROOT.TH1F("asymmetryHist",";asymmetry;",200,sortedList[0]-0.1,sortedList[-1]+0.1)
@@ -226,6 +322,9 @@ def getAsymmetry(fileName,branchName,histoTreeName,outputName=None):
             for ibin in range(histo.GetNbinsX()):
                 content=histo.GetBinContent(ibin+1)
                 histoBinInfoList[ibin]["dist"].Fill(content)
+    for ibin in range(histo.GetNbinsX()):
+        histoBinInfoList[ibin]["mean"]=histoBinInfoList[ibin]["dist"].GetMean()
+        histoBinInfoList[ibin]["rms"]=histoBinInfoList[ibin]["dist"].GetRMS()
     if outputName!=None:
         canvas=ROOT.TCanvas("canvas","",800,600)
         asymmetryHist.Draw();
@@ -239,10 +338,10 @@ def getAsymmetry(fileName,branchName,histoTreeName,outputName=None):
         for ibin in range(histo.GetNbinsX()):
             canvasBins.cd(ibin+1)
             histoBinInfoList[ibin]["dist"].Draw()
-        canvasBins.Print(outputName+"_bins.pdf")
             
+        canvasBins.Print(outputName+"_bins.pdf") 
     
-
+    '''
     quantilProb=numpy.zeros(3)
     quantilProb[0]=0.1584
     quantilProb[1]=0.5000
@@ -250,7 +349,8 @@ def getAsymmetry(fileName,branchName,histoTreeName,outputName=None):
     quantiles=numpy.zeros(len(quantilProb))
     index=numpy.zeros(n,dtype=numpy.int32)
     ROOT.TMath.Quantiles(n, 3,asymmetryList,quantiles, quantilProb, False, index,4)
-    return {"mean":asymmetryHist.GetMean(),"rms":asymmetryHist.GetRMS()}
+    '''
+    return {"mean":asymmetryHist.GetMean(),"rms":asymmetryHist.GetRMS(),"info":histoBinInfoList}
      
 if __name__=="__main__":
     parser=OptionParser()
@@ -268,8 +368,14 @@ if __name__=="__main__":
     parser.add_option("--noStatUncertainty",action="store_true",default=False, dest="noStatUncertainty", help="turn off statistical uncertainty")
     parser.add_option("--noMCUncertainty",action="store_true",default=False, dest="noMCUncertainty", help="turn off MC statistics uncertainty")
     
+    parser.add_option("--scaleRegularization",action="store", type="float", default=1.0, dest="regScale", help="manipulate the estimated regularization parameter: tau=tau*regScale")
+    parser.add_option("--noBackground",action="store_true",default=False, dest="noBackground", help="assumes only signal, background and its subtractions is not considered")
+    
+    
     ### currently not yet supported options
     parser.add_option("--signal",action="store", type="string", dest="signalHistogram", help="input signal sample, e.g. data.root:cos_theta__tchan")
+
+
 
     (options, args)=parser.parse_args()
     #-----------------------------------------------------------------------------
@@ -328,20 +434,22 @@ if __name__=="__main__":
     
     if options.includedSystematic!=[]:
         logging.info("include only the following systematics: "+str(options.includedSystematic))
-        for sys in SIGNAL:
-            if (sys not in options.excludedSystematic) and (sys not in options.includedSystematic):
-                options.excludedSystematic.append(sys)
-        for sys in BACKGROUND:
-            if (sys not in options.excludedSystematic) and (sys not in options.includedSystematic):
-                options.excludedSystematic.append(sys)
-        for sys in SYS:
-            if (sys not in options.excludedSystematic) and (sys not in options.includedSystematic):
-                options.excludedSystematic.append(sys)
+        for systematic in SIGNAL:
+            if (systematic not in options.excludedSystematic) and (systematic not in options.includedSystematic):
+                options.excludedSystematic.append(systematic)
+        for systematic in BACKGROUND:
+            if (systematic not in options.excludedSystematic) and (systematic not in options.includedSystematic):
+                options.excludedSystematic.append(systematic)
+        for systematic in SYS:
+            if (systematic not in options.excludedSystematic) and (systematic not in options.includedSystematic):
+                options.excludedSystematic.append(systematic)
     logging.info("excluded systematics: "+str(options.excludedSystematic))
     
     if not options.runOnData:
         logging.info("run statistical uncertainty: "+str(not options.noStatUncertainty))
         logging.info("run MC statstics uncertainty: "+str(not options.noMCUncertainty))
+        
+    logging.info("regularization scale: "+str(options.regScale))
     
     #-----------------------------------------------------------------------------
     logging.info("!!! check if all input files exist !!!")
@@ -386,7 +494,8 @@ if __name__=="__main__":
             corrList.append(systematic)
     #-----------------------------------------------------------------------------
     logging.info("!!! generate theta models !!!")
-    generateNominalBackground(modelName=options.modelName+"_backgroundNominal",
+    if not options.noBackground:
+        generateNominalBackground(modelName=options.modelName+"_backgroundNominal",
                     outputFolder=options.output,
                     histFile=options.histFile,
                     histPrefix=options.histogramPrefix,
@@ -400,6 +509,16 @@ if __name__=="__main__":
                     histPrefix=options.histogramPrefix,
                     binning=len(binningHist)-1,
                     ranges=[binningHist[0],binningHist[-1]])
+    elif options.noBackground:
+         generateNominalSignal(modelName=options.modelName,
+                    outputFolder=options.output,
+                    histFile=options.histFile,
+                    histPrefix=options.histogramPrefix,
+                    signalYieldList=signalYieldList,
+                    binning=len(binningHist)-1,
+                    ranges=[binningHist[0],binningHist[-1]],
+                    dicePoisson=not options.noStatUncertainty,
+                    mcUncertainty=not options.noMCUncertainty)
     else:
         generateModelPE(  modelName=options.modelName,
                         outputFolder=options.output,
@@ -418,15 +537,15 @@ if __name__=="__main__":
     #-----------------------------------------------------------------------------
     logging.info("!!! run theta !!!")
     shutil.copy("execute_theta.sh", os.path.join(options.output,"execute_theta.sh"))    
-    options.modelName+"_backgroundNominal"
-    err,out=runCommand(["./execute_theta.sh",options.modelName+"_backgroundNominal.cfg"],cwd=options.output)
-    if not os.path.exists(os.path.join(options.output,options.modelName+"_backgroundNominal.root")):
-        logging.error("theta output was not created")
-        logging.error(err)
-        logging.error(out)
-        sys.exit(-1)
-    writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
-    
+    if not options.noBackground:
+        err,out=runCommand(["./execute_theta.sh",options.modelName+"_backgroundNominal.cfg"],cwd=options.output)
+        if not os.path.exists(os.path.join(options.output,options.modelName+"_backgroundNominal.root")):
+            logging.error("theta output was not created")
+            logging.error(err)
+            logging.error(out)
+            sys.exit(-1)
+        writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
+        
     err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"],cwd=options.output)
     if not os.path.exists(os.path.join(options.output,options.modelName+".root")):
         logging.error("theta output was not created")
@@ -439,7 +558,10 @@ if __name__=="__main__":
     #-----------------------------------------------------------------------------
     logging.info("!!! run subtract !!!")
     #change for data the nominal model name!
-    subtrackNominalBackground(options.modelName+".root",options.modelName+"_backgroundNominal.root",options.histogramPrefix,binningMeasured,options.output)
+    if options.noBackground:
+        rebinHistograms(options.modelName+".root",options.histogramPrefix,binningMeasured,options.output)
+    else:
+        subtrackNominalBackground(options.modelName+".root",options.modelName+"_backgroundNominal.root",options.histogramPrefix,binningMeasured,options.output)
     if not os.path.exists(os.path.join(options.output,"subtracted_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
@@ -449,7 +571,7 @@ if __name__=="__main__":
     logging.info("!!! run unfolding !!!")
     responseMatrixFile,responseMatrixName=options.responseMatrix.split(":",1)
     shutil.copy("execute_unfolding.sh", os.path.join(options.output,"execute_unfolding.sh"))  
-    err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=0.35,cwd=options.output)
+    err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=options.regScale,cwd=options.output)
     if not os.path.exists(os.path.join(options.output,"unfolded_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
@@ -458,11 +580,13 @@ if __name__=="__main__":
     writeLogFile(os.path.join(options.output,"unfolding_"+options.modelName),err,out)
     #-----------------------------------------------------------------------------
     logging.info("!!! calculate asymmetry !!!")
-    asymmetry = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",os.path.join(options.output,options.modelName))
-    logging.info("final asymmetry: "+str(asymmetry))
+    
+    asymmetryResult = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",outputName=os.path.join(options.output,options.modelName))
+    closureTest(asymmetryResult,options.responseMatrix,outputName=os.path.join(options.output,options.modelName))
+    logging.info("final asymmetry: mean="+str(asymmetryResult["mean"])+", rms="+str(asymmetryResult["rms"]))
     file=open(os.path.join(options.output,"asymmetry.txt"),"w")
-    file.write("mean, "+str(round(asymmetry["mean"],4))+"\n")
-    file.write("rms, "+str(round(asymmetry["rms"],4))+"\n")
+    file.write("mean, "+str(round(asymmetryResult["mean"],7))+"\n")
+    file.write("rms, "+str(round(asymmetryResult["rms"],7))+"\n")
     file.close()
     
     

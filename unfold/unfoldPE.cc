@@ -11,6 +11,11 @@
 #include "TMatrixD.h"
 #include "TMath.h"
 #include "TUnfold.h"
+#include "TSpline.h"
+#include "TMinuit.h"
+#include "TUnfoldDensity.h"
+using namespace std;
+
 
 void copyHistContent(TH1D* from, TH1D* to)
 {
@@ -37,6 +42,72 @@ TMatrixD* convertHistToMatrix(TH2D* from)
         }
     }
     return matrix;
+}
+
+
+TUnfold* myUnfold1d_TUnfoldGlobalPointerForTMinuit;
+TH1F* myUnfold1d_hdataGlobalPointerForTMinuit;
+
+static void myUnfold1d_globalFunctionForMinuit(int &npar, double *gin, double &f, double *par, int iflag)
+{
+  
+  const double logtau = par[0];
+  const double scaleBias = par[1];
+  myUnfold1d_TUnfoldGlobalPointerForTMinuit->DoUnfold(pow(10, logtau), myUnfold1d_hdataGlobalPointerForTMinuit, scaleBias);
+  
+  f = myUnfold1d_TUnfoldGlobalPointerForTMinuit->GetRhoAvg();
+}
+
+
+double minimizeRhoAverage(TH2D* response, int nsteps, double log10min, double log10max)
+{
+    TH1D* measured =  response->ProjectionY();
+    TH1D* truth =  response->ProjectionX();
+    int nbinsM=measured->GetNbinsX();
+    int nbinsT=truth->GetNbinsX();
+    Float_t* binningM = new Float_t[nbinsM+1];
+    for (int cnt=0; cnt<nbinsM+1;++cnt)
+    {
+        binningM[cnt]=measured->GetBinLowEdge(cnt+1); 
+        //printf("measured: %f\r\n", binningM[cnt]);
+    }
+    Float_t* binningT = new Float_t[nbinsT+1];
+    for (int cnt=0; cnt<nbinsT+1;++cnt)
+    {
+        binningT[cnt]=truth->GetBinLowEdge(cnt+1);
+        //printf("truth: %f\r\n", binningT[cnt]);
+    }
+    
+  TH1F* hdata = new TH1F("input","",nbinsM,binningM);
+    for (int cnt=0; cnt<1000; ++cnt)
+    {
+        hdata->Fill(gRandom->Uniform(-1.0,1.0));
+    }
+    TUnfoldDensity* unfold = new TUnfoldDensity(response,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
+    unfold->SetInput(hdata);
+    
+  myUnfold1d_TUnfoldGlobalPointerForTMinuit = unfold;
+  myUnfold1d_hdataGlobalPointerForTMinuit = hdata;
+  
+  // Instantiate Minuit for 2 parameters
+  TMinuit minuit(2);
+  minuit.SetFCN(myUnfold1d_globalFunctionForMinuit);
+  minuit.SetPrintLevel(1); // -1 no output, 1 output
+  
+  //TMinuit::DefineParameter( Int_t parNo, const char *name, Double_t initVal, Double_t initErr, Double_t lowerLimit, Double_t upperLimit )
+  minuit.DefineParameter(0, "logtau", (log10min+log10max)/2, 1, log10min, log10max);
+  minuit.DefineParameter(1, "scaleBias", 1.0, 0.01, 0.0, 10.0);
+  minuit.FixParameter(1);
+  
+  minuit.SetMaxIterations(nsteps);
+  minuit.Migrad();
+  
+  double bestlogtau = -1000;
+  double bestlogtau_err = -1000; // error is meaningless because we don't have a likelihood, but method expects it
+  minuit.GetParameter(0, bestlogtau, bestlogtau_err);
+  //printf("tau: %f\r\n",bestlogtau);
+  return pow(10, bestlogtau);
+  //unfold->DoUnfold(pow(10, bestlogtau), hdata, scaleBias); 
 }
 
 double scanTau(TH2D* response)
@@ -73,36 +144,51 @@ double scanTau(TH2D* response)
     for (int cnt=0; cnt<measured->GetNbinsX()+1;++cnt)
     {
         binningM[cnt]=measured->GetBinLowEdge(cnt+1); 
-        printf("measured: %f\r\n", binningM[cnt]);
     }
     Float_t* binningT = new Float_t[truth->GetNbinsX()+1];
     for (int cnt=0; cnt<truth->GetNbinsX()+1;++cnt)
     {
         binningT[cnt]=truth->GetBinLowEdge(cnt+1);
-        printf("truth: %f\r\n", binningT[cnt]);
     }
     TH1D* histo_input_tunfold = new TH1D("input","",measuredT,binningM);
     for (int cnt=0; cnt<1000; ++cnt)
     {
         histo_input_tunfold->Fill(gRandom->Uniform(-1.0,1.0));
     }
+    /*
+    cout<<"......scan for tau......."<<endl;
+    TUnfoldDensity* tunfold = new TUnfoldDensity(response,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeSize);
+    tunfold->SetInput(histo_input_tunfold);
+    TSpline* scanResult;
+    cout<<"scanning...";
+    int nmin = tunfold->ScanTau(100,0,0,&scanResult);
+    cout<<"  finished"<<endl;
+    TCanvas* canvas = new TCanvas("scan","",800,600);
+    scanResult->Draw();
+    canvas->Update();
+    canvas->Print("scan.pdf");
+    double taumin=0.0;
+    double corrmin=0.0;
+    scanResult->GetKnot(nmin, taumin, corrmin);
+    return taumin;
+    */
     
     for (int cnt=0;cnt<num;++cnt) {
         tau[cnt]=cnt/(1.0*num)*0.4+0.6;
 
-        TUnfold* tunfold = new TUnfold(response,TUnfold::kHistMapOutputHoriz);
+        TUnfoldDensity* tunfold = new TUnfoldDensity(response,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
         tau[cnt]=TMath::Power(10.0,1.0*(cnt/(1.0*num)*7.0-6.0));
 
         //tau[cnt]=0.0001;
         tunfold->DoUnfold(tau[cnt],histo_input_tunfold);
         
-        TH1D *x = new TH1D("x","unfolded",nbinsT,binningT);
-        tunfold->GetOutput(x);
+        //TH1D *x = new TH1D("x","unfolded",nbinsT,binningT);
+        TH1 *x = tunfold->GetOutput("x","unfolded");
         TH2D* error = new TH2D("error","",nbinsT,binningT,nbinsT,binningT);
         tunfold->GetEmatrix(error);
         //tunfold->GetRhoIJ(error);
-        
-        /*TCanvas* test = new TCanvas("canvas","",800,600);
+        /*
+        TCanvas* test = new TCanvas("canvas","",800,600);
         test->Divide(2,1);
         test->cd(1);
         x->SetTitle("unfolded");
@@ -212,26 +298,26 @@ int main( int argc, const char* argv[] )
     for (int cnt=0; cnt<measured->GetNbinsX()+1;++cnt)
     {
         binningM[cnt]=measured->GetBinLowEdge(cnt+1); 
-        printf("measured: %f\r\n", binningM[cnt]);
     }
     Float_t* binningT = new Float_t[truth->GetNbinsX()+1];
     for (int cnt=0; cnt<truth->GetNbinsX()+1;++cnt)
     {
         binningT[cnt]=truth->GetBinLowEdge(cnt+1);
-        printf("truth: %f\r\n", binningT[cnt]);
     }
     
     TH1D* histo_output_tunfold = new TH1D("output","",nbinsT,binningT);
     tree_output->Branch("tunfold",&histo_output_tunfold);
     gErrorIgnoreLevel = kPrint | kInfo | kWarning;
-    double tau = scanTau(response)*atof(argv[7]);
-    printf("tau: %f\r\n",tau);
-
+    
+    double tau = scanTau(response);
+    double tauSteffen = minimizeRhoAverage(response, 100, -10, 0);
+    printf("tau: %e\r\n",tau);
+    printf("tauSteffen: %e\r\n",tauSteffen);
     int nevents = tree_input->GetEntries();
     //nevents=10000;
     printf("events: %i\r\n",nevents);
     
-    
+    tau=tau*atof(argv[7]);
     for (int cnt=0; cnt<nevents;++cnt) {
         
         tree_input->GetEntry(cnt);
@@ -239,11 +325,21 @@ int main( int argc, const char* argv[] )
         if (nevents>200 && cnt%int(nevents/20.0)==0) {
             printf("unfolding...%i %%\r\n",int(100.0*cnt/nevents));
         }
-        TUnfold* tunfold = new TUnfold(response,TUnfold::kHistMapOutputHoriz);
+        TUnfoldDensity* tunfold = new TUnfoldDensity(response,TUnfold::kHistMapOutputHoriz, TUnfold::kRegModeCurvature);
+        //tunfold->SetBias(truth);
         tunfold->DoUnfold(tau,histo_input);
         histo_output_tunfold->Scale(0.0);
-        tunfold->GetOutput(histo_output_tunfold);
-        
+        //tunfold->GetOutput(histo_output_tunfold);
+        TH1 *x = tunfold->GetOutput("x","unfolded");
+        if (x->GetNbinsX()!=histo_output_tunfold->GetNbinsX())
+        {
+            cout<<"error - output binning not expected - "<<x->GetNbinsX()<<":"<<histo_output_tunfold->GetNbinsX()<<endl;
+            return -1;
+        }
+        for (int ibin=0; ibin<x->GetNbinsX();++ibin)
+        {
+             histo_output_tunfold->SetBinContent(ibin+1,x->GetBinContent(ibin+1));
+        }
         /*
         TCanvas* canvas = new TCanvas("canvas","",800,600);
         //histo_input->Draw();
