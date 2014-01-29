@@ -24,7 +24,7 @@ end
 output_file = ARGS[1]
 
 flist = Any[]
-append!(flist, ARGS[2:])
+append!(flist, ARGS[2:length(ARGS)])
 nflist = Any[]
 rflist = Any[]
 for fi in flist
@@ -135,6 +135,13 @@ df = similar(
             fileindex=Int64[],
             passes=Bool[],
 
+            xs=Float32[],
+            sample=Int64[],
+            subsample=Int64[],
+            isolation=Int64[],
+            systematic=Int64[],
+            fname=Int64[],
+
         ),
         maxev
 )
@@ -187,7 +194,7 @@ timeelapsed = @elapsed for i=1:maxev
         println("EV $i ev=", int(run), ":", int(lumi), ":", int(event))
     end
 
-    for cn in colnames(df)
+    for cn in names(df)
         df[i, cn] = NA
     end
 
@@ -223,7 +230,16 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :gen_weight] = events[sources[weight(:gen)]]
     
-    sample = prfiles[findex, :cls][:sample]
+    cls = prfiles[findex, :cls]
+    sample = cls[:sample]
+   
+    df[i, :subsample] = int(hash(sample))
+    df[i, :sample] = int(hash(string(get_process(sample))))
+    df[i, :fname] = int(hash(fn))
+    df[i, :xs] = haskey(cross_sections, sample) ? float32(cross_sections[sample]) : NA
+    df[i, :isolation] = int(hash(cls[:iso]))
+    df[i, :systematic] = int(hash(cls[:systematic]))
+
     if DEBUG
         println("EV $i FIDX $findex ", join(prfiles[findex, :], ", "))
     end
@@ -465,11 +481,18 @@ end
 
 println("processed $(nproc/timeelapsed) events/second")
 
+show(df)
+
+#skim only non-signal events
+pass = (df["passes"]) | (df["sample"] .== int(hash("tchan")))
 
 #Select only the events that actually pass
-mydf = NOSKIM ? df : df[with(df, :(passes)), :]
+mydf = NOSKIM ? df : df[pass, :]
+show(mydf)
 
-for cn in colnames(mydf)
+println("NOSKIM=$NOSKIM, df=$(nrow(df)), my_df=$(nrow(mydf))")
+
+for cn in names(mydf)
     if all(isna(mydf[cn]))
         println("$cn ISNA")
     end
@@ -481,8 +504,8 @@ println("failure reasons: $fails")
 
 #save output
 writetable("$(output_file)_processed.csv", prfiles)
-writetree("$(output_file).root", mydf)
-#write(jldopen("$(output_file).jld", "w"), "df", mydf)
+#writetree("$(output_file).root", mydf)
+write(jldopen("$(output_file).jld", "w"), "df", mydf)
 
 tend = time()
 ttot = tend-tstart
