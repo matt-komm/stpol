@@ -17,4 +17,5 @@ const VARS = {
 	:cos_theta_bl_gen=>"generated \$ \\cos{\ \\theta}_{\\eta-bl} \$",
 	:ljet_rms=>"\$ RMS_{j'} \$",
 	:ljet_dr=>"\$\\Delta R_{j'}\$",
+	:bdt_qcd=>"QCD BDT output",
 }
