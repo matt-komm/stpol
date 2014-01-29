@@ -17,7 +17,7 @@ def main():
     varmaps[13] = {"mu_mtw":"mtw"}
     varmaps[11] = {"ele_mtw":"mtw"}
 
-    mvaname = "qcd"
+    mvaname = "bdt_qcd"
     for infn in infiles:
         print "Processing file",infn
         #get the events tree
