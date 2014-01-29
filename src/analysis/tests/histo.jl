@@ -1,6 +1,6 @@
 include("../histo.jl")
 using Hist
-include("../hroot.jl")
+#include("../hroot.jl")
 using Base.Test
 
 @test_throws Histogram([1],[1],[0,1])
@@ -26,10 +26,6 @@ hfill!(h, NaN)
 @test(h.bin_entries[1]==2)
 hfill!(h, NA)
 @test(h.bin_entries[1]==3)
-
-tf = tfile("test.root", "RECREATE")
-toroot(h, tf, "some/other/dir/h1")
-rclose(tf)
 
 h = Histogram([1],[1],[0])
 @test integral(h)==1
@@ -104,7 +100,9 @@ end
 writecsv("test_2d_large.csv", nh)
 @test readhist("test_2d_large.csv") == nh
 
-tf = tfile("test.root", "UPDATE")
-toroot(nh, tf, "my/nested/dir/h2d")
-toroot(nh, tf, "my/nested2/dir/h2d")
-close(tf)
+nc, ne = asarr(nh)
+x = fromarr(nc, ne, nh.edges)
+nht = transpose(nh)
+@test nht[2,3]==nh[3,2]
+@test transpose(nht)==nh
+@test x == nh
