@@ -5,77 +5,96 @@ include("../analysis/base.jl")
 
 #uses python, not compatible with CMSSW
 include("../analysis/histo.jl")
-
 using Hist
+
 include("../analysis/hplot.jl")
 using JSON
 
 using Distributions, StatsBase
+import DataFrames.allvars
+include("$BASE/src/analysis/df_extensions.jl")
 
 #df - a DataFrame
 #inds - a dict of bitarrays
 #var - a list of variable expressions to plot
 #bins - a list of binning specifications for the variables in 'var'
 #weight_ex - the weight expression used for MC and QCD
-function makehists(
-    mc_iso::AbstractDataFrame, mc_aiso::AbstractDataFrame,
-    data_iso::AbstractDataFrame, data_aiso::AbstractDataFrame,
-    vars::AbstractArray, bins::AbstractArray;
+
+flatex(v,w) = flatten([allvars(w), map(allvars, v)])
+
+function makehists(data::AbstractDataFrame, inds, sel, dsel, vars::AbstractArray, bins::AbstractArray;
     weight_ex = :(xsweight .* totweight .* fitweight),
   )
 
     procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
     hists = Dict()
+
+    varsx = flatex(vars, weight_ex)
+    
     for k in procs
+        #tic()
+        #println("projecting $k")
+        df = data[(inds[:sample](k) & inds[:iso] & sel), varsx]
+        #toc()
         hists[string(k)] = makehist_multid(
-            select(:(sample .== $(hash(string(k)))), mc_iso),
+            df, 
             vars, bins, weight_ex
-        );
+        )
     end
 
-    hists["qcd"] = (
-        makehist_multid(
-            data_aiso,
-            vars, bins, :(totweight .* qcd_weight)
-        ) - 
-        sum([
-            makehist_multid(
-                select(:(sample .== $(string(p))), mc_aiso), 
-                vars, bins,
-                :(xsweight .* totweight .* qcd_weight)
-            )
-            for p in procs
-        ])
-    )
+    qcdweight = :(xsweight .* totweight .* qcd_weight)
+    varsx = flatex(vars, qcdweight)
 
-    hists["DATA"] = makehist_multid(data_iso, vars, bins, 1.0);
+    df = data[inds[:data] & inds[:aiso] & sel & dsel, varsx]
 
-    all([nbins(h)==nbins(hists["DATA"]) for h in values(hists)]) || (error("not all histograms have the same binning:\n --- \n $hists \n --- \n"))
-    integral(hists["DATA"])==0 && warn("data histogram was empty: N(data)=$(nrow(data_iso)) vars=[join($vars, ', ')] weight=[$weight_ex]")
+    qcd_procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson]
+
+    aiso_mc = {
+        p=>makehist_multid(data[inds[:sample](p) & inds[:aiso] & sel, varsx], vars, bins, qcdweight)
+        for p in qcd_procs
+    }
+    sum_aiso_mc = aiso_mc |> values |> collect |> sum
+
+    hists["qcd"] = makehist_multid(df, vars, bins, qcdweight)
+
+    @assert integral(hists["qcd"]) > integral(sum_aiso_mc) println("qcd<0: qcd=", hists["qcd"], "\n sum=", sum_aiso_mc, "\n mc=", aiso_mc)
+    @assert integral(hists["qcd"])>=0
+    @assert all(contents(hists["qcd"]) .>= 0)
+
+    #println("projecting data iso")
+    varsx = flatten(map(allvars, vars))
+    hists["DATA"] = makehist_multid(
+        data[inds[:data] & inds[:iso] & sel & dsel, varsx], 
+        vars, bins, 1.0);
+
+    all([h.bin_edges==hists["DATA"].bin_edges for h in values(hists)]) || (error("not all histograms have the same binning:\n --- \n $hists \n --- \n"))
+    integral(hists["DATA"])<e^-1 && warn("data histogram was empty")
 
     return hists
 end
 
-makehists(
-    mc_iso::AbstractDataFrame,
-    mc_aiso::AbstractDataFrame,
-    data_iso::AbstractDataFrame,
-    data_aiso::AbstractDataFrame,
-    var::Union(Expr, Symbol), bins; args...
-    ) = 
-    makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
-
-makehists(
-    mc_iso::AbstractDataFrame,
-    mc_aiso::AbstractDataFrame,
-    data_iso::AbstractDataFrame,
-    data_aiso::AbstractDataFrame,
-    var::Union(Expr, Symbol), bins; args...
-    ) = 
-    makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
+#makehists(
+#    mc_iso::AbstractDataFrame,
+#    mc_aiso::AbstractDataFrame,
+#    data_iso::AbstractDataFrame,
+#    data_aiso::AbstractDataFrame,
+#    var::Union(Expr, Symbol), bins; args...
+#    ) = 
+#    makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
+#
+#makehists(
+#    mc_iso::AbstractDataFrame,
+#    mc_aiso::AbstractDataFrame,
+#    data_iso::AbstractDataFrame,
+#    data_aiso::AbstractDataFrame,
+#    var::Union(Expr, Symbol), bins; args...
+#    ) = 
+#    makehists(mc_iso, mc_aiso, data_iso, data_aiso, {var,}, {bins,}; args...)
 
 function makehist_multid(df, vars, bins, weight_ex)
-    
+    #println("makehist_multid")
+    #println(df)
+    #tic()
     if nrow(df)==0
         if length(bins)==1
             return Histogram(bins[1])
@@ -87,12 +106,8 @@ function makehist_multid(df, vars, bins, weight_ex)
     arrs = Any[]
     @assert length(vars)==length(bins) "vars and bins must be the same length"
     ndim = length(vars)
-
-    for i=1:length(vars)
-        v = vars[i]
-        push!(arrs, with(df, v))    
-    end
-    arr = hcat(arrs...)
+   
+    arr = hcat([with(df, v) for v in vars]...)
 
     if typeof(weight_ex) <: Expr || typeof(weight_ex) <: Symbol
         weights = with(df, weight_ex)
@@ -121,6 +136,7 @@ function makehist_multid(df, vars, bins, weight_ex)
     edges = length(vars)>1 ? [1:length(fhist)] : edges[1]
     h = Histogram(int(fcounts), fhist, edges)
     @assert nbins(h) == prod([length(b) for b in bins]) "$(nbins(h)) != $bins"
+    #toc()
     return h
 end
 
@@ -173,12 +189,12 @@ function todf(d::Associative)
     return tot_df
 end
 
-function project_hists(df, var, bins;kwd...)
-    hists = makehists(
-        df[(:mc,:iso)],  df[(:mc,:aiso)],  df[(:data,:iso)],  df[(:data,:aiso)],
-        var, bins; kwd...
-    );
-end
+#function project_hists(df, var, bins;kwd...)
+#    hists = makehists(
+#        df[(:mc,:iso)],  df[(:mc,:aiso)],  df[(:data,:iso)],  df[(:data,:aiso)],
+#        var, bins; kwd...
+#    );
+#end
 
 function draw_data_mc_stackplot(ax, hists;order=nothing,kwd...)
     draws = [
@@ -221,7 +237,12 @@ function draw_data_mc_stackplot(ax, hists;order=nothing,kwd...)
     eplot(ax, hists["DATA"], ls="", marker="o", color="black", label="Data")
 end
 
-function data_mc_stackplot(df, ax, var, bins; kwargs...)
+function data_mc_stackplot(
+    df::AbstractDataFrame,
+    inds, sel::DataVector{Bool},
+    dsel::DataVector{Bool}, ax::PyObject,
+    var, bins; kwargs...
+    )
     kwd = {k=>v for (k,v) in kwargs}
     order = pop!(kwd, :order, nothing)
 
@@ -231,7 +252,7 @@ function data_mc_stackplot(df, ax, var, bins; kwargs...)
     end
 
     hists = makehists(
-        df[(:mc,:iso)],  df[(:mc,:aiso)],  df[(:data,:iso)],  df[(:data,:aiso)],
+        df, inds, sel, dsel,
         var, bins; kwd...
     );
 
@@ -274,7 +295,6 @@ function data_mc_stackplot(df, ax, var, bins; kwargs...)
     yieldsd["total_data"] = tot_data
 
     eplot(ax, hists["DATA"], ls="", marker="o", color="black", label="Data")
-    #ax[:set_ylabel]("Event yield")
     return hists
 end
 
@@ -415,34 +435,34 @@ function rslegend(a; x...)
     a[:legend](reverse(handles), reverse(labels), loc="center left", bbox_to_anchor=(1, 0.5), numpoints=1, fancybox=true; x...);
 end;
 
-function bdt_plot(a, df::DataFrame, data_ex, fr::FitResult; xrange=linspace(-1, 1, 20))
-    #df = indata[inds[:mu] .* inds[:dr] .* inds[:mtw] .* inds[:ljet_rms], :];
-    hists = makehists(
-        df, data_ex,
-        :(bdt_sig_bg),
-        xrange
-    ) |> mergehists;
-  
-    mu = {k=>v for (k,v) in zip(fr.names, fr.means)}
-    hplot(a,
-        [
-            hists["qcd"] * mu["qcd"],
-            hists["ttjets"] * mu["ttjets"],
-            hists["wzjets"] * mu["wzjets"],
-            hists["tchan"] * mu["beta_signal"],
-        ],
-        [
-            {:label=>"QCD", :color=>"gray"},
-            {:label=>"\$ t \\bar{t} \$, s, tW", :color=>"orange"},
-            {:label=>"W+Jets+", :color=>"g"},
-            {:label=>"t-channel", :color=>"r"}
-        ]
-    )
-    eplot(a, hists["DATA"]; color="black", marker="o", ls="", drawstyle="steps-mid")
-    #rslegend(a)
-    xlabel("BDT output")
-    ylabel("expected, fitted yield")
-end
+#function bdt_plot(a, df::DataFrame, data_ex, fr::FitResult; xrange=linspace(-1, 1, 20))
+#    #df = indata[inds[:mu] .* inds[:dr] .* inds[:mtw] .* inds[:ljet_rms], :];
+#    hists = makehists(
+#        df, data_ex,
+#        :(bdt_sig_bg),
+#        xrange
+#    ) |> mergehists;
+#  
+#    mu = {k=>v for (k,v) in zip(fr.names, fr.means)}
+#    hplot(a,
+#        [
+#            hists["qcd"] * mu["qcd"],
+#            hists["ttjets"] * mu["ttjets"],
+#            hists["wzjets"] * mu["wzjets"],
+#            hists["tchan"] * mu["beta_signal"],
+#        ],
+#        [
+#            {:label=>"QCD", :color=>"gray"},
+#            {:label=>"\$ t \\bar{t} \$, s, tW", :color=>"orange"},
+#            {:label=>"W+Jets+", :color=>"g"},
+#            {:label=>"t-channel", :color=>"r"}
+#        ]
+#    )
+#    eplot(a, hists["DATA"]; color="black", marker="o", ls="", drawstyle="steps-mid")
+#    #rslegend(a)
+#    xlabel("BDT output")
+#    ylabel("expected, fitted yield")
+#end
 
 function ratio_axes(;frac=0.2, w=5, h=5)
     fig = PyPlot.plt.figure(figsize=(w,h))
@@ -549,7 +569,7 @@ end
 
 #plots a comparison of the ele and mu channels, stacked format
 function channel_comparison(
-    indata, df, base_sel, var, bins, sels; kwargs...
+    data::AbstractDataFrame, inds, sel::DataVector{Bool}, var::Union(Expr, Symbol), bins, sels; kwargs...
     )
     kwd = {k=>v for (k,v) in kwargs}
     
@@ -563,18 +583,15 @@ function channel_comparison(
 
     (fig, (a11, a12, a21, a22)) = ratio_axes2();
 
-    indmu = {k=>indata[v & base_sel & sels[:mu], :] for (k,v) in df}
-    indele = {k=>indata[v & base_sel & sels[:ele], :] for (k,v) in df}
-
     hmu = data_mc_stackplot(
-        indmu,
+        data, inds, sel&sels[:mu], inds[:data_mu], 
         a12,
-        var, bins; kwd...
+        {var}, {bins}; kwd...
     );
     hele = data_mc_stackplot(
-        indele,
+        data, inds, sel&sels[:ele], inds[:data_ele], 
         a22,
-        var, bins; kwd...
+        {var}, {bins}; kwd...
     );
 
     ymu = yields(hmu)
@@ -605,7 +622,11 @@ function channel_comparison(
     a11[:set_xlabel](varname, size="x-large")
     a21[:set_xlabel](varname, size="x-large")
 
-    return {:figure=>fig, :yields=>{:mu=>ymu, :ele=>yele}, :hists=>{:mu=>hmu, :ele=>hele}}
+    return {
+        :figure=>fig,
+        :yields=>{:mu=>ymu, :ele=>yele},
+        :hists=>{:mu=>hmu, :ele=>hele}
+    }
 end
 
 function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
@@ -656,16 +677,16 @@ function reweight_qcd(indata, inds, fit_variables={:mu=>"qcd_mva", :ele=>"qcd_mv
     #stpol/qcd_estimation/fitted_scale_factors.py
     @pyimport fitted_scale_factors
     sfs = fitted_scale_factors.scale_factors
-    indata["qcd_weight"] = 1.0
+    @assert "qcd_weight" in names(indata)
     indata[inds[:data_mu] .* inds[:aiso], :qcd_weight] = 1.0
     indata[inds[:data_ele] .* inds[:aiso], :qcd_weight] = 1.0
     
     for (nj, nt) in [(2,0),(2,1),(3,1),(3,2)]
         for lep in [:mu, :ele]
-            indata[
-                inds[lep] & inds[:aiso] & inds[:njets](nj) & inds[:ntags](nt),
-                :qcd_weight
-            ] = sfs[string(lep)]["$(nj)j$(nt)t"][fit_variables[lep]]
+            sf = sfs[string(lep)]["$(nj)j$(nt)t"][fit_variables[lep]]
+            d = inds[lep] & inds[:aiso] & inds[:njets](nj) & inds[:ntags](nt)
+            println("reweight_qcd(): reweighting anti-iso ($nj jets, $nt tags, $lep) $(sum(d)) rows -> qcd_weight=$sf")
+            indata[d, "qcd_weight"] = sf
         end
     end
 end
