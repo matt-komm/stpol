@@ -10,7 +10,7 @@ isdir(ofdir) || mkpath(ofdir)
 flist = Any[]
 
 #input files
-for a in ARGS[2:]
+for a in ARGS[2:length(ARGS)]
     #split the file by lines
     append!(flist, open(readall, a) |> split)
 end
@@ -30,8 +30,8 @@ function submit(infiles, outfile, i::Integer)
     fn = "$ofdir/job.$i"
     ofile = "$ofdir/slurm.out.$i"
     skimoutput = "$ofdir/skim.out.$i"
-
-    subcmd = `sbatch --exclude=./excluded_wns.txt -p prio -J julia_job_test.$i -o $ofile $fn`
+    
+    subcmd = `sbatch --exclude=./exclude.txt -p prio -J julia_job_test.$i -o $ofile $fn`
     
     #the submit script (indents matter)
     cmd="#!/bin/bash
@@ -56,6 +56,7 @@ echo 'done '\$RET && exit \$RET
     write(fi, cmd)
     close(fi)
     
+    #run(subcmd)
     while true
         try
             run(subcmd)
@@ -69,8 +70,8 @@ end
 
 maxn = length(flist)
 #either 50 files per job or split to 10 chunks
-perjob = min(50, ceil(maxn/10))
-N = ceil(maxn/perjob)-1
+perjob = min(50, ceil(maxn/10)) |> int
+N = int(ceil(maxn/perjob)-1)
 
 for n=1:N
     r = (1+(n-1)*perjob):(n*perjob)
