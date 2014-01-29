@@ -1,7 +1,7 @@
 include ../analysis/Makefile.options
 
 INF=input/dec18.txt
-DIR=/home/joosep/singletop/stpol2/src/skim_jan14
+DIR=/home/joosep/singletop/stpol2/src/skim_jan29
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
 
@@ -23,6 +23,9 @@ comphep:
 	./hadd.jl comphep/merged/files.txt comphep/merged/md.txt comphep/merged/comphep  
 	$(ROOTWRAP) && hadd -f comphep.root comphep/merged/*.root
 	./mkindex.jl comphep.root comphep.index.jl
+
+conv2root:
+	find $(DIR) -name "*.jld" | sort | ~/parallel $(PAROPTS) -j60 -n1 ~/.julia/ROOT/julia conv2root.jl {} {.}.root
 
 add_mva:
 	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n10 srun -p prio python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
