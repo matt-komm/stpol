@@ -42,7 +42,7 @@ for jf in jobfiles
     i += 1
 end
 
-done = df[:(ecode .== 0), :]
+done = df[df["ecode"] .== 0, :]
 println("done jobs: $(nrow(done))")
 
 if nrow(done) == length(jobfiles)
@@ -50,11 +50,11 @@ if nrow(done) == length(jobfiles)
     exit(0)
 end
 
-failed = df[:(ecode .!= 0), :]
+failed = df[df["ecode"] .!= 0, :]
 failed_counts = elem_count(failed[:ecode])
 
 for excode in keys(failed_counts)
-    failed = df[:(ecode .== $excode), :]
+    failed = df[df["ecode"] .== excode, :]
     println("failed jobs with exit code $excode $(nrow(failed))")
     for i=1:nrow(failed)
         if do_print_failed
