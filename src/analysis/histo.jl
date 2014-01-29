@@ -5,6 +5,7 @@ import DataArrays.NAtype
 import Base.+, Base.-, Base.*, Base./, Base.==
 import Base.show
 import Base.getindex
+import Base.size, Base.transpose
 
 using JSON
 
@@ -45,6 +46,10 @@ Histogram(a::Array) = Histogram(
 )
 
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
+
+#account for the under- and overflow bins
+nbins(h::Histogram) = length(h.bin_contents)
+
 contents(h::Histogram) = h.bin_contents
 
 function errors(h::Histogram)
@@ -203,7 +208,7 @@ function fromdf(df::DataFrame; entries=:entries)
     )
 end
 
-flatten(h) = reshape(h, prod(size(h)))
+flatten(h::Histogram) = reshape(h, prod(size(h)))
 
 function rebin(h::Histogram, k::Integer)
     @assert((nbins(h)) % k == 0, "number of bins $(nbins(h))+1 is not divisible by k=$k")
@@ -238,9 +243,6 @@ function test_ks(h1::Histogram, h2::Histogram)
     ch2 = ch2 / integral(h2)
     return maximum(abs(ch1.bin_contents - ch2.bin_contents))
 end
-
-#account for the under- and overflow bins
-nbins(h::Histogram) = length(h.bin_contents)
 
 type NHistogram
     baseh::Histogram
@@ -277,7 +279,22 @@ function asarr(h::NHistogram)
     return rsh(h.baseh.bin_contents), rsh(h.baseh.bin_entries)
 end
 
+function fromarr(nc, ne, edges)
+    nb = prod([length(e) for e in edges])
+    rsh(x) = reshape(x, nb)
+    NHistogram(
+        Histogram(rsh(nc), rsh(ne), [1:nb]),
+        edges
+    )
+end
+
+function Base.transpose(nh::NHistogram)
+    nc, ne = asarr(nh)
+    fromarr(transpose(nc), transpose(ne), nh.edges|>reverse|>collect)
+end
+
 contents(h::NHistogram) = asarr(h)[1]
+Base.size(h::NHistogram) = tuple([length(e) for e in h.edges]...)
 
 function findbin_nd(h::NHistogram, v)
     nd = length(v)
@@ -336,6 +353,15 @@ function Base.getindex(nh::NHistogram, args...)
     return a[args...]#, b[args...]
 end
 
+function makehist_2d(df::AbstractDataFrame, bins::AbstractVector)
+    hi = NHistogram(bins)
+    @assert ncol(df)==2
+    for i=1:nrow(df)
+        hfill!(hi, (df[i,1], df[i,2]))
+    end
+    return hi
+end
+
 Base.show(io::IO, h::Histogram) = show(io, todf(h))
 
 export Histogram, hfill!
@@ -350,4 +376,5 @@ export writecsv
 export test_ks
 export NHistogram, findbin_nd, ndim, asarr, readhist
 export contents
+export makehist_2d, fromarr
 end #module
