@@ -1,3 +1,5 @@
+if !isdefined(:BASE)
+
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
 using HDF5, JLD, DataFrames
 
@@ -7,6 +9,8 @@ include("../analysis/util.jl")
 #paths to be added here
 if ENV["USER"] == "joosep"
     BASE = joinpath(ENV["HOME"], "Dropbox/kbfi/top/stpol")
+else
+    error("undefined BASE")
 end
 
 const DEBUG=("DEBUG" in keys(ENV) && int(ENV["DEBUG"])==1)
@@ -19,7 +23,7 @@ const HDIR = "output/hists"
 const YDIR = "output/yields"
 const FITDIR = "output/fits"
 
-readdf(fn) = read(jldopen(fn), "df")
+readdf(fn) = read(jldopen(fn, "r";mmaparrays=true), "df")
 writedf(fn, df) = write(jldopen(fn, "w"), "df", df)
 
 include("$BASE/src/analysis/varnames.jl")
@@ -40,3 +44,5 @@ syst_weights = [
     :lepton_weight__iso, :lepton_weight__iso__up, :lepton_weight__iso__down,
     :lepton_weight__trigger, :lepton_weight__trigger__up, :lepton_weight__trigger__down
 ]
+
+end
