@@ -78,23 +78,23 @@ function hplot(ax::PyObject, h::NHistogram, do_transpose=true)
     nc = contents(h)
 
     #last bin contents/entries are meaningless
-    nx, ny = length(h.edges[1])-1, length(h.edges[2])-1
+    nx, ny = length(h.edges[2])-1, length(h.edges[1])-1
 
-    ax[:matshow](nc[1:nx,1:ny];interpolation="none")
+    ax[:matshow](nc[1:ny,1:nx];interpolation="none")
 
     ax[:xaxis][:set_ticks_position]("bottom")
     ax[:xaxis][:set_ticks]([0:nx-1])
     ax[:xaxis][:set_ticklabels](
-        [@sprintf("%d [%.2f, %.2f)", i, h.edges[1][i], h.edges[1][i+1]) for i=1:nx], rotation=90
+        [@sprintf("%d [%.2f, %.2f)", i, h.edges[2][i], h.edges[2][i+1]) for i=1:nx], rotation=90
     );
     ax[:yaxis][:set_ticks]([0:ny-1])
     ax[:yaxis][:set_ticklabels](
-        [@sprintf("%d [%.2f, %.2f)", i, h.edges[2][i], h.edges[2][i+1]) for i=1:ny], rotation=0
+        [@sprintf("%d [%.2f, %.2f)", i, h.edges[1][i], h.edges[1][i+1]) for i=1:ny], rotation=0
     );
 
-    for j=1:ny
-        for i=1:nx
-            ax[:text](j-1, i-1, @sprintf("%d", nc[j,i]), color="green", ha="center", va="center", size="xx-small")
-        end
-    end
+    # for j=1:ny
+    #     for i=1:nx
+    #         ax[:text](j-1, i-1, @sprintf("%d", nc[j,i]), color="green", ha="center", va="center", size="xx-small")
+    #     end
+    # end
 end
