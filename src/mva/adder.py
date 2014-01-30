@@ -100,10 +100,11 @@ def setup_mva(mvaname, weightfile):
     for v in _mvavars:
         varbuffers[v] = np.array([0], 'f')
         mvareader.AddVariable(v, varbuffers[v])
-
+        print "variable",v
     for v in _specvars:
         varbuffers[v] = np.array([0], 'f')
         mvareader.AddSpectator(v, varbuffers[v])
+        print "spectator",v
 
     mvareader.BookMVA(mvaname, weightfile)
 
@@ -131,16 +132,16 @@ def rv(event, varname):
 
     returns value, isna
     """
-    if hasattr(event, varname+"ISNA"):
+    if not hasattr(event, varname):
+        raise Exception("variable '%s' not defined" % varname)
+
+    if hasattr(event, varname+"_ISNA"):
         isna = getattr(event, varname+"_ISNA")
     else:
         isna = False
 
-    if hasattr(event, varname):
-        val = getattr(event, varname)
-    else:
-        val = 0.0
-        isna = True
+    val = getattr(event, varname)
+
     return val, isna
 
 def zero_buffers(varbuffers):

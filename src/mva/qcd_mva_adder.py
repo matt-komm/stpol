@@ -5,19 +5,19 @@ import numpy as np
 
 from adder import setup_mva, rv, zero_buffers, treename
 
+mvaname = "bdt_qcd"
 def main():
     infiles = sys.argv[1:]
     print infiles
 
     mvas = dict()
-    mvas[13] = setup_mva("qcd", "../qcd_mva/weights/anti_QCD_MVA_10_01_qcdBDT_mu.weights.xml")
-    mvas[11] = setup_mva("qcd", "../qcd_mva/weights/anti_QCD_MVA_10_01_qcdBDT_ele.weights.xml")
+    mvas[13] = setup_mva(mvaname, "../qcd_mva/weights/anti_QCD_MVA_10_01_qcdBDT_mu.weights.xml")
+    mvas[11] = setup_mva(mvaname, "../qcd_mva/weights/anti_QCD_MVA_10_01_qcdBDT_ele.weights.xml")
 
     varmaps = dict()
-    varmaps[13] = {"mu_mtw":"mtw"}
-    varmaps[11] = {"ele_mtw":"mtw"}
+    varmaps[13] = {"mu_mtw":"mtw", "c":"C"}
+    varmaps[11] = {"ele_mtw":"mtw", "c":"C"}
 
-    mvaname = "bdt_qcd"
     for infn in infiles:
         print "Processing file",infn
         #get the events tree
@@ -41,33 +41,33 @@ def main():
                 zero_buffers(mva[1])
 
             lepton_type, lepton_type_isna = rv(event, "lepton_type")
-            if lepton_type_isna:
-                continue
-
-            mvareader, varbuffers = mvas[lepton_type]
             isna = False
+            isna = isna or lepton_type_isna
+            if not isna:
+                mvareader, varbuffers = mvas[lepton_type]
 
-            varmap = varmaps[lepton_type]
-            for var in varbuffers.keys():
-                if var in varmap.keys():
-                    varn = varmap[var]
-                else:
-                    varn = var
+                varmap = varmaps[lepton_type]
+                for var in varbuffers.keys():
+                    if var in varmap.keys():
+                        varn = varmap[var]
+                    else:
+                        varn = var
 
-                v, isna = rv(event, varn)
+                    v, _isna = rv(event, varn)
+                    isna = isna or _isna
+                    if not isna:
+                        varbuffers[var][0] = v
+                    else:
+                        break
                 if not isna:
-                    varbuffers[var][0] = v
-
-            if (isna) or not event.passes:
+                    x = mvareader.EvaluateMVA(mvaname)
+            if isna:
                 x = "NA" #MVA(..., NA, ...) -> NA
-            else:
-#                print [(x, y[0]) for x,y in varbuffers.items()]
-                x = mvareader.EvaluateMVA(mvaname)
 
-#            print x
             ofile.write(str(x) + "\n")
             nproc += 1
-
+        if nproc!=int(tree.GetEntries()):
+            raise Exception("incorrect amount of MVA evaluations")
         ofile.write("# ntree=%d nproc=%d\n" % (tree.GetEntries(), nproc))
         inf.Close()
         ofile.close()
