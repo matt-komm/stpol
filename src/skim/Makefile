@@ -28,7 +28,7 @@ conv2root:
 	find $(DIR) -name "*.jld" | sort | ~/parallel $(PAROPTS) -j60 -n1 ~/.julia/ROOT/julia conv2root.jl {} {.}.root
 
 add_mva:
-	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n10 srun -p prio python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
+	#$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n20 srun -p prio python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
 	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n10 srun -p prio python ../mva/qcd_mva_adder.py {} ) > $(DIR)/mva_bdt_qcd.out
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg1 $(WEIGHTSDIR)/stpol_bdt_sig_wjets_lepton_flavour.weights.xml {} )
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg2 $(WEIGHTSDIR)/stpol_bdt_sig_ttjets_lepton_flavour.weights.xml {} )
@@ -38,6 +38,10 @@ add_mva:
 #	find $(DIR) -name "*.root" > files.txt
 #	./hadd.jl files.txt $(DIR)
 
+metahadd:
+	mkdir -p $(DIR)/merged
+	find $(DIR) -name "*.root" > $(DIR)/merged/files.txt
+	julia metahadd.jl $(DIR)/merged/files.txt $(DIR)/merged/md.txt > $(DIR)/merged/metahadd.out
 
 parhadd:
 	mkdir -p $(DIR)/merged
