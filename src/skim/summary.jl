@@ -34,7 +34,12 @@ for jf in jobfiles
         contents = readall(sf)
         m = match(r"done ([0-9]+)", contents)
         ecode = (m != nothing ? m.captures[1] : -1)
-        
+        if ecode == -1
+            lc = lowercase(contents)
+            if contains(lc, "error") || contains(lc, "segmentation") || contains(lc, "cancel") || contains(lc, "::<?::<?::<?")
+                ecode = 1
+            end
+        end
     else
         ecode = -2
     end
