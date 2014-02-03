@@ -1,7 +1,6 @@
 include ../analysis/Makefile.options
 
-INF=input/dec18.txt
-DIR=/home/joosep/singletop/stpol2/src/skim_jan29
+INF=input/jan31.txt
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
 
@@ -11,6 +10,10 @@ skim:
 	test ! -d $(DIR) || ( echo "Output diretory $(DIR) already exists" && exit 1 )
 	source $(ENVSCRIPT) && julia sub.jl $(DIR) $(INF)
 	until julia summary.jl $(DIR); do echo "."; done; echo "skim is done"
+	echo "skim is done" | sendmail $(EMAIL)
+
+skimsummary:
+	julia summary.jl $(DIR) --list
 
 comphep:
 	test ! -d comphep || ( echo "Output diretory comphep already exists" && exit 1 )
@@ -28,8 +31,11 @@ conv2root:
 	find $(DIR) -name "*.jld" | sort | ~/parallel $(PAROPTS) -j60 -n1 ~/.julia/ROOT/julia conv2root.jl {} {.}.root
 
 add_mva:
-	#$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n20 srun -p prio python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
-	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n10 srun -p prio python ../mva/qcd_mva_adder.py {} ) > $(DIR)/mva_bdt_qcd.out
+
+	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/adder.py bdt_sig_bg $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} )" mva.sig_bg
+	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/qcd_mva_adder.py {} )" mva.qcd
+	#$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n5 srun -p prio python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
+	#$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n5 srun -p prio python ../mva/qcd_mva_adder.py {} ) > $(DIR)/mva_bdt_qcd.out
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg1 $(WEIGHTSDIR)/stpol_bdt_sig_wjets_lepton_flavour.weights.xml {} )
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg2 $(WEIGHTSDIR)/stpol_bdt_sig_ttjets_lepton_flavour.weights.xml {} )
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_bg1_bg2 $(WEIGHTSDIR)/stpol_bdt_wjets_ttjets_lepton_flavour.weights.xml {} )
