@@ -76,6 +76,8 @@ def main():
         ofile.close()
 
     print counters
+    if processed != int(tree.GetEntries()):
+        raise Exception("incorrect amount of events processed")
 
     tend = time.time()
     print "total elapsed time", tend-tstart, " sec, processed events",counters["processed"]
