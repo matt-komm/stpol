@@ -222,17 +222,9 @@ end
 
 #create a hash-map for strings
 hmap = {:to=>Dict(), :from=>Dict()}
-# tomap = Any[]
-# for k in keys(merges)
-#     push!(tomap, k)
-#     for p in merges[k] 
-#         push!(tomap, p)
-#     end
-# end
-#others = split(readall("../skim/hmap_others.txt"))
 
 #list of all hashmappable strings
-tomap = Any[
+const tomap = ASCIIString[
     "antiiso",
     "data_ele",
     "data_mu",
@@ -373,6 +365,17 @@ for tm in tomap
     hmap[:to][tm] = int(hash(tm))
     hmap[:from][int(hash(tm))] = tm
 end
+
+_hmap_symb_to = Dict()
+for k in hmap[:to]|>keys
+    _hmap_symb_to[symbol(k)] = hmap[:to][k]
+end
+_hmap_symb_from= Dict()
+for k in hmap[:from]|>keys
+    _hmap_symb_from[k] = hmap[:from][k]|>symbol
+end
+const hmap_symb_to = deepcopy(_hmap_symb_to)
+const hmap_symb_from = deepcopy(_hmap_symb_from)
 
 #write out the hashmap as a CSV
 function write_hmap(fname)
