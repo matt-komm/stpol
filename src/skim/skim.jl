@@ -1,6 +1,5 @@
 #!/home/joosep/.julia/ROOT/julia
-#julia skim.jl ofile infiles.txt
-#runs a skim/event loop on EDM files on a single core
+println("running skim.jl")
 tstart = time()
 println("hostname $(gethostname()) ", "SLURM_JOB_ID" in keys(ENV) ? ENV["SLURM_JOB_ID"] : getpid())
 
@@ -41,14 +40,6 @@ flistd = {f=>i for (f, i) in zip(nflist, 1:length(nflist))}
 
 #try to load the Events 
 events = Events(convert(Vector{ASCIIString}, nflist))
-#while true
-#    try
-#        events = Events(convert(Vector{ASCIIString}, flist))
-#        break
-#    catch e
-#        warn(e)
-#    end
-#end
 
 #save information on spectator jets
 const do_specjets = true
@@ -119,6 +110,7 @@ df = similar(
             lepton_weight__trigger__down=Float32[],
             
             gen_weight=Float32[],
+            gen_lepton_id=Int32[],
 
             top_weight=Float32[],
             top_weight__up=Float32[],
@@ -141,6 +133,7 @@ df = similar(
             isolation=Int64[],
             systematic=Int64[],
             fname=Int64[],
+            processing_tag=Int64[],
 
         ),
         maxev
@@ -200,17 +193,26 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :passes] = false
     
+    df[i, :gen_lepton_id] = events[sources[(:lepton, :gen, :id)]]
+    
+    #string representations of the feynman diagrams 
+    #genstring_mu = events[sources[(:muon, :geninfo)]]
+    #genstring_ele = events[sources[(:electron, :geninfo)]]
+
     df[i, :hlt] = passes_hlt(events, hlts) 
     df[i, :hlt_mu] = passes_hlt(events, HLTS[:mu]) 
     df[i, :hlt_ele] = passes_hlt(events, HLTS[:ele]) 
+    
+    #println(gen_id, " '", genstring_mu, "' '", genstring_ele, "'")
+
     
     df[i, :cos_theta_lj_gen] = events[sources[:cos_theta_lj_gen]] |> ifpresent
     df[i, :cos_theta_bl_gen] = events[sources[:cos_theta_bl_gen]] |> ifpresent
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     fn = string("file:", get_current_file_name(events))
+    
     findex = flistd[fn]
-    #findex = where_file(events)
     df[i, :fileindex] = findex
         
     if fn != prfiles[findex, :files]
@@ -237,18 +239,13 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :sample] = int(hash(string(get_process(sample))))
     df[i, :fname] = int(hash(fn))
     df[i, :xs] = haskey(cross_sections, sample) ? float32(cross_sections[sample]) : NA
-    df[i, :isolation] = int(hash(cls[:iso]))
-    df[i, :systematic] = int(hash(cls[:systematic]))
+    df[i, :isolation] = int(hash(string(cls[:iso])))
+    df[i, :systematic] = int(hash(string(cls[:systematic])))
+    df[i, :processing_tag] = int(hash(string(cls[:tag])))
 
     if DEBUG
-        println("EV $i FIDX $findex ", join(prfiles[findex, :], ", "))
+        println("EV $i $genstring_mu $genstring_ele")
     end
-
-#    #fill the file-level metadata
-#    df[i, :xs] = haskey(cross_sections, sample) ? cross_sections[sample] : NA
-#    df[i, :nproc] = prfiles[findex, :total_processed]
-
-#    df[i, :fname] = flist[df[i, :fileindex]]
    
     nmu = events[sources[:nsignalmu]]
     nele = events[sources[:nsignalele]]
@@ -504,7 +501,7 @@ println("failure reasons: $fails")
 
 #save output
 writetable("$(output_file)_processed.csv", prfiles)
-#writetree("$(output_file).root", mydf)
+writetree("$(output_file).root", mydf)
 write(jldopen("$(output_file).jld", "w"), "df", mydf)
 
 tend = time()
