@@ -66,7 +66,7 @@ function eplot{T <: Histogram}(ax::PyObject, hs::Vector{T};kwargs...)
    return rets
 end
 
-function hplot(ax::PyObject, h::NHistogram, do_transpose=true)
+function hplot(ax::PyObject, h::NHistogram, do_transpose=true;kwargs...)
 
     if do_transpose
         h = transpose(h)
@@ -80,7 +80,7 @@ function hplot(ax::PyObject, h::NHistogram, do_transpose=true)
     #last bin contents/entries are meaningless
     nx, ny = length(h.edges[2])-1, length(h.edges[1])-1
 
-    ax[:matshow](nc[1:ny,1:nx];interpolation="none")
+    ax[:matshow](nc[1:ny,1:nx];interpolation="none",kwargs...)
 
     ax[:xaxis][:set_ticks_position]("bottom")
     ax[:xaxis][:set_ticks]([0:nx-1])
