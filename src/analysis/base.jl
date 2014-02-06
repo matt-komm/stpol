@@ -16,20 +16,24 @@ end
 ENV["PYTHONPATH"]="$BASE/qcd_estimation"
 using PyCall
 
-qcdweight(df::DataFrameRow) = df[:xsweight]*df[:totweight]*df[:fitweight]*df[:qcd_weight]*df[:lumi]
-
 const DH1 = int(hash("data_mu"))
 const DH2 = int(hash("data_ele"))
 const WT = Float32
 is_any_na(row::DataFrameRow, symbs...) = any(Bool[isna(row.df[row.row, s])::Bool for s::Symbol in symbs])::Bool
 
+get_no_na(row::DataFrameRow, s::Symbol, d=1.0) = !isna(row[s]) ? row[s] : d
+
 function nominal_weight(df::DataFrameRow)
     sample = df[:sample]::Int64
-   
-    is_any_na(df, :xsweight, :b_weight, :pu_weight, :lepton_weight__id, :lepton_weight__iso, :lepton_weight__trigger) && return NA
 
-    if sample!=DH1 && sample!=DH2
-        return df[:xsweight]::Float64*df[:b_weight]::WT*df[:pu_weight]::WT*df[:lepton_weight__id]::WT*df[:lepton_weight__iso]::WT*df[:lepton_weight__trigger]::WT
+    if sample!=DH1 && sample!=DH2 #data
+        const b_weight = get_no_na(df, :b_weight, float32(1))::WT
+        const pu_weight = get_no_na(df, :b_weight, float32(1))::WT
+        const lepton_weight__id = get_no_na(df, :lepton_weight__id, float32(1))::WT
+        const lepton_weight__iso = get_no_na(df, :lepton_weight__iso, float32(1))::WT
+        const lepton_weight__trigger = get_no_na(df, :lepton_weight__trigger, float32(1))::WT
+
+        return df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id * lepton_weight__iso * lepton_weight__trigger
     else
         return 1.0
     end
@@ -38,6 +42,7 @@ end
 const procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
 const qcd_procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson]
 const mcsamples = [:ttjets, :wjets, :tchan, :dyjets, :diboson, :twchan, :schan, :gjets];
+const TOTAL_SAMPLES = vcat(mcsamples, :qcd)
 
 const systematic_processings = [
    :nominal,
