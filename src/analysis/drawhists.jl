@@ -1,5 +1,6 @@
 #!/home/joosep/.julia/ROOT/julia
-ENV["PYTHONPATH"]="../../qcd_estimation"
+error("this file is deprecated")
+ENV["PYTHONPATH"]=join("../../qcd_estimation")
 
 include("../fraction_fit/hists.jl");
 include("../analysis/util.jl");
@@ -9,17 +10,13 @@ mkpath(PDIR)
 mkpath(HDIR)
 
 indata = readdf("$BASE/results/data.jld")
-#indata = readdf("small.jld")
-inds = perform_selection(indata);
+#indata = readdf("/scratch/joosep/test.jld")
+println("opened data S=$(size(indata))")
 
-df_mc = !(inds[:data_mu] | inds[:data_ele]);
-df_data = (inds[:data_mu] | inds[:data_ele]);
-df = {
-    (:mc, :iso)=>df_mc & inds[:iso],
-    (:mc, :aiso)=>df_mc & inds[:aiso],
-    (:data, :iso)=>df_data & inds[:iso],
-    (:data, :aiso)=>df_data & inds[:aiso]
-};
+println("performing selection")
+tic()
+inds = perform_selection(indata);
+toc()
 
 reweight_qcd(indata, inds)
 frd = {
@@ -28,7 +25,6 @@ frd = {
 };
 reweight_to_fitres(frd, indata, inds);
 
-wcols = [:xsweight, :totweight, :sample, :isolation, :qcd_weight, :pu_weight]
 wex = {:qcd=>:(xsweight .* totweight), :qcd_fractionfit=>:(xsweight .* totweight .* fitweight)}
 
 #println("c variable 2j1t")
@@ -45,8 +41,7 @@ wex = {:qcd=>:(xsweight .* totweight), :qcd_fractionfit=>:(xsweight .* totweight
 
 println("bdt 2j1t qcd mva")
 tic()
-ret = channel_comparison(
-    indata, df, inds[:njets](2) .* inds[:ntags](1) .* inds[:dr],
+ret = channel_comparison(indata, inds, (inds[:njets](2) & inds[:ntags](1) & inds[:dr] & inds[:nominal]),
     :bdt_sig_bg, linspace(-1, 1, 20),
     {:mu=>inds[:hlt](:mu) & inds[:mu] & inds[:qcd_mva016], :ele=>inds[:hlt](:ele) & inds[:ele] & inds[:qcd_mva027]},
     weight_ex=wex[:qcd]
