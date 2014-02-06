@@ -23,22 +23,6 @@ immutable Histogram
     end
 end
 
-# function Histogram(n::Integer, low::Number, high::Number)
-#     bins = linspace(low, high, n)
-
-#     #underflow low edge
-#     unshift!(bins, -inf(Float64))
-
-#     #overflow high edge
-#     push!(bins, inf(Float64))
-
-#     n_contents = size(bins,1)-1
-#     return Histogram(
-#         zeros(Float64, (n_contents, )),
-#         zeros(Float64, (n_contents, )),
-#         bins
-#     )
-# end
 Histogram(a::Array) = Histogram(
     [0.0 for i=1:length(a)],
     [0.0 for i=1:length(a)],
@@ -52,53 +36,73 @@ nbins(h::Histogram) = length(h.bin_contents)
 
 contents(h::Histogram) = h.bin_contents
 
+function subhist(h::Histogram, bins)
+    entries = Int64[]
+    contents = Float64[]
+    edges = Float64[]
+    for b in bins
+        push!(entries, h.bin_entries[b])
+        push!(contents, h.bin_contents[b])
+        push!(edges, h.bin_edges[b])
+    end
+    return Histogram(entries, contents, edges)
+end
+
 function errors(h::Histogram)
     errs = h.bin_contents ./ sqrt(h.bin_entries)
+    T = eltype(errs)
     for i=1:nbins(h)
         if isnan(errs[i])
             errs[i] = 0.0
+        end
+
+        #in case of zero bins, put error 1.0
+        if errs[i] < eps(T)
+            errs[i] = 1.0
         end
     end
     return errs
 end
 
-function findbin(h::Histogram, v::Real)
+function findbin{T <: Real}(h::Histogram, v::T)
+    isnan(v) && return 1 #put nans in underflow bin
+
     v < h.bin_edges[1] && error("underflow v=$v")
     v >= h.bin_edges[nbins(h)] && error("overflow v=$v, min=$(minimum(h.bin_edges)), max=$(maximum(h.bin_edges))")
 
-    isnan(v) && return 1 #put nans in underflow bin
-
-    idx = searchsortedfirst(h.bin_edges, v) - 1
+    const idx = searchsortedfirst(h.bin_edges, v) - 1
     if (idx<1 || idx>length(h.bin_entries))
         error("bin index out of range: i=$(idx), v=$(v)")
     end
     return idx
 end
 
-function hfill!(h::Histogram, v::Real, w::Real=1.0)
-    low = findbin(h, v)
+entries(h::Histogram) = h.bin_entries
+
+function hfill!{T <: Real, K <: Real}(h::Histogram, v::T, w::K=1.0)
+    const low = findbin(h, v)::Integer
 
     h.bin_entries[low] += 1
     h.bin_contents[low] += isnan(w) ? 0.0 : w
-    return sum(h.bin_contents)
+    #return sum(h.bin_contents)
 end
 
-function hfill!(h::Histogram, v::NAtype, w::Union(Real, NAtype)=1.0)
+function hfill!{T <: Real}(h::Histogram, v::NAtype, w::Union(T, NAtype)=1.0)
     h.bin_entries[1] += 1
     h.bin_contents[1] += 1
-    return sum(h.bin_contents)
+    #return sum(h.bin_contents)
 end
 
-function hfill!(h::Histogram, v::Real, w::NAtype)
+function hfill!{T <: Real}(h::Histogram, v::T, w::NAtype)
     h.bin_entries[1] += 1
     h.bin_contents[1] += 1
-    return sum(h.bin_contents)
+    #return sum(h.bin_contents)
 end
 
 function +(h1::Histogram, h2::Histogram)
     @assert h1.bin_edges == h2.bin_edges
     h = Histogram(h1.bin_entries + h2.bin_entries, h1.bin_contents+h2.bin_contents, h1.bin_edges)
-    @assert abs(integral(h1)+integral(h2)-integral(h))<0.00001
+    abs(integral(h1)+integral(h2)-integral(h))<0.00001 || warn("problem adding histograms: ", integral(h1), " ", integral(h2))
     return h
 end
 
@@ -274,9 +278,18 @@ function +(h1::NHistogram, h2::NHistogram)
     return NHistogram(h1.baseh+h2.baseh, h1.edges)
 end
 
+function *{T <: Real}(h::NHistogram, x::T)
+    return NHistogram(h.baseh, h.edges)
+end
+
+function *{T <: Real}(x::T, h::NHistogram)
+    return h * x
+end
+
+
 function asarr(h::NHistogram)
-    rsh(x) = reshape(x, Int64[length(e) for e in h.edges]...)
-    return rsh(h.baseh.bin_contents), rsh(h.baseh.bin_entries)
+    return reshape(h.baseh.bin_contents, Int64[length(e) for e in h.edges]...),
+    reshape(h.baseh.bin_entries, Int64[length(e) for e in h.edges]...)
 end
 
 function fromarr(nc, ne, edges)
@@ -290,33 +303,40 @@ end
 
 function Base.transpose(nh::NHistogram)
     nc, ne = asarr(nh)
-    fromarr(transpose(nc), transpose(ne), nh.edges|>reverse|>collect)
+    fromarr(transpose(ne), transpose(nc), nh.edges|>reverse|>collect)
 end
 
 contents(h::NHistogram) = asarr(h)[1]
+entries(h::NHistogram) = asarr(h)[2]
 Base.size(h::NHistogram) = tuple([length(e) for e in h.edges]...)
 
 function findbin_nd(h::NHistogram, v)
-    nd = length(v)
+    const nd = length(v)
     @assert ndim(h)==nd
-    idxs = Int64[]
+    const idxs = Int64[-1 for i=1:nd]
     for i=1:nd
-        x = v[i]
-        j = (isna(x) || isnan(x)) ? 1 : (searchsortedfirst(h.edges[i], x) - 1)
+        const x = v[i]
+        const j = (isna(x) || isnan(x)) ? 1 : (searchsortedfirst(h.edges[i], x) - 1)
         (j < 1 || j > length(h.edges[i])) && error("overflow dim=$i, v=$x")
-        push!(idxs, j)
+        idxs[i] = j
     end
-    return tuple(idxs...)
+    return idxs
 end
 
-function hfill!(h::NHistogram, v, w=1.0)
+#is slow
+function hfill!{K <:Real}(h::NHistogram, v, w::K=1.0)
     a, b = asarr(h)
     xb = findbin_nd(h, v)
-    #println(typeof(a), " ", size(a), " ", join(xb, ","), " ", join(v, ","))
-    #a = reshape(h.baseh.bin_contents, Int64[length(e) for e in h.edges]...)
-    a[xb...] += isna(w) ? 0.0 : w
-    #b = reshape(h.baseh.bin_entries, Int64[length(e) for e in h.edges]...)
+    a[xb...] += w
     b[xb...] += 1
+end
+
+function hfill!{K <: NAtype}(h::NHistogram, v, w::K)
+    warn("NA weight in NHistogram")
+    #a, b = asarr(h)
+    #xb = findbin_nd(h, v)
+    #a[xb...] += 0
+    #b[xb...] += 1
 end
 
 function todf(h::NHistogram)
@@ -356,11 +376,20 @@ end
 function makehist_2d(df::AbstractDataFrame, bins::AbstractVector)
     hi = NHistogram(bins)
     @assert ncol(df)==2
+    cont, ent = asarr(hi)
     for i=1:nrow(df)
-        hfill!(hi, (df[i,1], df[i,2]))
+        x = df[i,1]
+        y = df[i,2]
+        nx = isna(x)||isnan(x) ? 1 : searchsortedfirst(hi.edges[1], x)-1
+        ny = isna(y)||isnan(y) ? 1 : searchsortedfirst(hi.edges[2], y)-1
+        cont[nx, ny] += 1
+        ent[nx, ny] += 1
     end
     return hi
 end
+
+project(nh::NHistogram, n) = Histogram(sum(nh|>entries, 1)[:], sum(nh|>contents, 1)[:], nh.edges[2])
+project_y(nh::NHistogram) = Histogram(sum(nh|>entries, 2)[:], sum(nh|>contents, 2)[:], nh.edges[1])
 
 Base.show(io::IO, h::Histogram) = show(io, todf(h))
 
@@ -375,6 +404,7 @@ export cumulative
 export writecsv
 export test_ks
 export NHistogram, findbin_nd, ndim, asarr, readhist
-export contents
+export contents, entries
 export makehist_2d, fromarr
+export project_x, project_y
 end #module
