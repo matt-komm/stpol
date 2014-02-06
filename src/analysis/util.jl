@@ -1,4 +1,3 @@
-
 import Base.+
     
 function accompanying(fn)
@@ -23,7 +22,7 @@ function +(d1::DataFrame, d2::DataFrame)
     return vcat(d1, d2)
 end
     
-function +(d1::Dict{Any, Any}, d2::Dict{Any, Any})
+function +(d1::Associative, d2::Associative)
 
     k1 = Set([x for x in keys(d1)]...)
     k2 = Set([x for x in keys(d2)]...)
@@ -50,29 +49,4 @@ function +(d1::Dict{Any, Any}, d2::Dict{Any, Any})
     end
 
     return ret
-end
-
-function issame(arr::Vector{Any})
-    f = first(arr)
-    for x in arr
-        if x!= f
-            return false
-        end
-    end
-    return true
-end
-
-#outputs <: AbstractVector{Associative{Any, Histogram}}
-function merge_outputs(outputs)
-    output = Dict()
-    for o in outputs
-        for (k, v) in o
-            if k in keys(output)
-                output[k] += v
-            else
-                output[k] = v
-            end
-        end
-    end
-    return output
 end
