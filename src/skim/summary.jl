@@ -15,7 +15,7 @@ function elem_count(arr)
 end
 
 dir = ARGS[1]
-jobfiles = split(readall(`find $dir -name "job*"`))
+jobfiles = map(x->convert(ASCIIString, x), split(readall(`find $dir -name "job*"`)))
 println("total jobs: $(length(jobfiles))")
 df = similar(DataFrame(job=ASCIIString[], subcmd=ASCIIString[], ecode=Int64[]), length(jobfiles))
 
