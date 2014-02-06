@@ -1,8 +1,9 @@
 import sys, imp
 from glob import glob
 
-indir = sys.argv[2]
-signal = 'tchan'
+indir = sys.argv[2] #input directory with model files
+outfile = sys.argv[3] #JSON output file
+signal = 'tchan' #name of signal process/histogram
 
 def is_nominal(hname):
     if '__up' in hname or '__down' in hname:
@@ -31,27 +32,29 @@ def add_normal_unc(model, par, mean=1.0, unc=1.0):
         for p in model.get_processes(o):
             if par != p:
                 continue
-            #print "adding parameters for", o, p
+            print "adding parameters for", o, p
             model.get_coeff(o,p).add_factor('id', parameter=par)
 
 def build_model(indir):
     model = None
     infiles = glob("%s/*.root*" % indir)
     for inf in infiles:
-        #print "loading model from ",inf
+        print "loading model from ",inf
         m = get_model(inf)
         if model is None:
             model = m
         else:
             model.combine(m)
+    if not model:
+        raise Exception("no model was built from infiles=%s" % infiles)
     return model
 
 model = build_model(indir)
 
-#print "processes:", sorted(model.processes)
-#print "observables:", sorted(model.get_observables())
-#print "parameters(signal):", sorted(model.get_parameters(["tchan"]))
-#print [model.get_range_nbins(o)[2] for o in model.get_observables()]
+print "processes:", sorted(model.processes)
+print "observables:", sorted(model.get_observables())
+print "parameters(signal):", sorted(model.get_parameters(["tchan"]))
+print "nbins=", [model.get_range_nbins(o)[2] for o in model.get_observables()]
 nbins = sum([model.get_range_nbins(o)[2] for o in model.get_observables()])
 model_summary(model)
 
@@ -63,7 +66,7 @@ options.set("global", "debug", "true")
 #print "options=", options
 
 result = mle(model, input = 'data', n=1, with_covariance = True, options=options, chi2=True, ks=True)
-#print "result=", result
+print "result=", result
 fitresults = {}
 values = {}
 errors = {}
@@ -98,6 +101,6 @@ out = {
 }
 
 import json
-of = open("out.txt", "w")
+of = open(outfile, "w")
 of.write(json.dumps(out) + "\n")
 of.close()
