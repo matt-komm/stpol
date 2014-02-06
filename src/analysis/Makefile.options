@@ -1,5 +1,5 @@
 PAROPTS= -t --verbose --resume --joblog=`mktemp`
 PARCMD=~/parallel
 ROOTWRAP=source ~/local-sl6/root/bin/thisroot.sh
-DIR=/home/joosep/singletop/results/skims/jan31_2
+DIR=/home/joosep/singletop/output/skims/feb5
 EMAIL=joosep.pata@cern.ch
