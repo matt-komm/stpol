@@ -64,6 +64,7 @@ df = similar(
             bjet_bd_b=Float32[],
             bjet_phi=Float32[],
             bjet_dr=Float32[],
+            bjet_pumva=Float32[],
 
             ljet_pt=Float32[], ljet_eta=Float32[], ljet_mass=Float32[], ljet_id=Float32[],
             #ljet_bd_a=Float32[],
@@ -71,6 +72,7 @@ df = similar(
             ljet_rms=Float32[],
             ljet_phi=Float32[],
             ljet_dr=Float32[],
+            ljet_pumva=Float32[],
 #
 ##spectator jets
             sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
@@ -336,6 +338,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
     df[i, :bjet_phi] = events[sources[:bjet_Phi]] |> ifpresent
     df[i, :bjet_dr] = events[sources[:bjet_deltaR]] |> ifpresent
+    df[i, :bjet_pumva] = events[sources[:bjet_puMva]] |> ifpresent
 
     df[i, :ljet_pt] = events[sources[:ljet_Pt]] |> ifpresent
     df[i, :ljet_eta] = events[sources[:ljet_Eta]] |> ifpresent
@@ -346,6 +349,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_rms] = events[sources[:ljet_rms]] |> ifpresent
     df[i, :ljet_phi] = events[sources[:ljet_Phi]] |> ifpresent
     df[i, :ljet_dr] = events[sources[:ljet_deltaR]] |> ifpresent
+    df[i, :ljet_pumva] = events[sources[:ljet_puMva]] |> ifpresent
     
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
     df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]] |> ifpresent
