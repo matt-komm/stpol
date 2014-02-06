@@ -2,6 +2,7 @@ include("../histo.jl")
 using Hist
 #include("../hroot.jl")
 using Base.Test
+using DataFrames
 
 @test_throws Histogram([1],[1],[0,1])
 @test_throws Histogram([-1],[1],[0])
@@ -61,26 +62,26 @@ h = Histogram([1,2],[3,4],[1,2])
 nh = NHistogram({[-1, 0, 1], [-1, 0, 1]})
 @test nbins(nh)==9
 @test ndim(nh)==2
-@test findbin_nd(nh, [0.1, 0.1]) == (2,2)
-@test findbin_nd(nh, [1.1, 0.1]) == (3,2)
-@test findbin_nd(nh, [0.1, 1.1]) == (2,3)
+@test findbin_nd(nh, [0.1, 0.1]) == [2,2]
+@test findbin_nd(nh, [1.1, 0.1]) == [3,2]
+@test findbin_nd(nh, [0.1, 1.1]) == [2,3]
 
-hfill!(nh, {NA, NA})
-@test nh[1,1] == 1
+hfill!(nh, (NA, NA))
+@test nh[1,1]==1
 
-hfill!(nh, {0.5, 0.5})
-hfill!(nh, {0.5, 0.5})
+hfill!(nh, (0.5, 0.5))
+hfill!(nh, (0.5, 0.5))
 @test nh[2,2] == 2
 
-hfill!(nh, {0.5, 1.1})
-hfill!(nh, {0.5, 1.1})
-hfill!(nh, {0.5, 1.1})
+hfill!(nh, (0.5, 1.1))
+hfill!(nh, (0.5, 1.1))
+hfill!(nh, (0.5, 1.1))
 @test nh[2,3] == 3
 
-hfill!(nh, {1.1, 1.1})
-hfill!(nh, {1.1, 1.1})
-hfill!(nh, {1.1, 1.1})
-hfill!(nh, {1.1, 1.1})
+hfill!(nh, (1.1, 1.1))
+hfill!(nh, (1.1, 1.1))
+hfill!(nh, (1.1, 1.1))
+hfill!(nh, (1.1, 1.1))
 @test nh[3, 3] == 4
 
 writecsv("test_2d.csv", nh)
@@ -106,3 +107,12 @@ nht = transpose(nh)
 @test nht[2,3]==nh[3,2]
 @test transpose(nht)==nh
 @test x == nh
+
+
+
+verybigdf = DataFrame(x=randn(1000000),y=randn(1000000))
+tic()
+makehist_2d(verybigdf, {vcat(-Inf, linspace(-3, 3, 10), Inf), vcat(-Inf, linspace(-3, 3, 10), Inf)})
+toc()
+
+println("* histo.jl passed")
