@@ -29,6 +29,8 @@ merge-mva:
 	~/.julia/ROOT/julia -F mvamerge.jl /scratch/joosep/mva.root /scratch/joosep/skim_jan31_2/output*.jld
 
 submit-scan:
-	find cards/*.json | ~/parallel --delay 1.0 sbatch -c24 --contigous --exclude=../skim/exclude.txt parrun.sh {}
+	find cards/*.json | ~/parallel --delay 1.0 sbatch -c24 --exclude=../skim/exclude.txt parrun.sh {}
+
 convert-hists:
-	find results/scanned/ -name "*.jld" | ~/parallel --no-notice ~/.julia/ROOT/julia convert_hists.jl {} results/hists/{/.}
+	rm -Rf output/bdt_scan/hists
+	find /home/joosep/singletop/output/bdt_scan -name "*.jld" | ~/parallel ~/.julia/ROOT/julia convert_hists.jl {} output/bdt_scan/hists/{/.}
