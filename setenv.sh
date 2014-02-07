@@ -9,7 +9,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 export STPOL_DIR=$SCRIPT_DIR
 echo STPOL_DIR=$STPOL_DIR
 
-cd $SCRIPT_DIR/CMSSW_5_3_14_patch1
+cd $SCRIPT_DIR/CMSSW
 echo "pwd="`pwd`
 echo "calling cmsenv..."
 eval `scram runtime -sh`
