@@ -1,5 +1,6 @@
 if !isdefined(:REWEIGHT)
 const lumis = {:mu => 19764, :ele =>19820}
+const lumis_id = {:13 => lumis[:mu], :11 => lumis[:ele]}
 
 include("selection.jl")
 
