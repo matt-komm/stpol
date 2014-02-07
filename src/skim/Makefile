@@ -17,20 +17,17 @@ skimsummary:
 
 comphep:
 	test ! -d comphep || ( echo "Output diretory comphep already exists" && exit 1 )
-	source $(ENVSCRIPT) && STPOL_NOSKIM=1 julia sub.jl comphep input/comphep_tchan.dec6.txt
+	source $(ENVSCRIPT) && julia sub.jl comphep input/comphep.txt
 	until julia summary.jl comphep; do echo "."; done; echo "skim is done"
 	mkdir -p comphep/merged
 	$(ROOTWRAP) && python ../mva/adder.py bdt_sig_bg $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml comphep/*.root 
 	find comphep -name "*.root" > comphep/merged/files.txt
 	julia metahadd.jl comphep/merged/files.txt comphep/merged/md.txt
-	./hadd.jl comphep/merged/files.txt comphep/merged/md.txt comphep/merged/comphep  
-	$(ROOTWRAP) && hadd -f comphep.root comphep/merged/*.root
-	./mkindex.jl comphep.root comphep.index.jl
 
 conv2root:
 	find $(DIR) -name "*.jld" | sort | ~/parallel $(PAROPTS) -j60 -n1 ~/.julia/ROOT/julia conv2root.jl {} {.}.root
 
-add_mva:
+add-mva:
 
 	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/adder.py bdt_sig_bg $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} )" mva.sig_bg
 	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/qcd_mva_adder.py {} )" mva.qcd
@@ -102,3 +99,6 @@ skim_strange:
 combine_inputs:
 	find ~/singletop/stpol/filelists/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/ -name "*.txt" -exec cat {} > input/comb.txt \;
 	find ~/singletop/stpol/filelists/Dec6_anom_42ccfd/ -name "*.txt" -exec cat {} >> input/comb.txt \;
+
+
+
