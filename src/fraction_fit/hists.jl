@@ -2,8 +2,11 @@ using Hist, JSON
 using Distributions, StatsBase
 import DataFrames.allvars
 
-function makehists(data::AbstractDataFrame, inds, sel, dsel, var::Symbol, binning::AbstractVector{Float64};
-    weight_ex=nominal_weight,
+function makehists(
+    data::AbstractDataFrame, inds,
+    sel, dsel,
+    var::Symbol, binning::AbstractVector{Float64},
+    weight_ex=nominal_weight, qcdweight_ex=qcd_weight
   )
 
     hists = Dict()
@@ -13,15 +16,16 @@ function makehists(data::AbstractDataFrame, inds, sel, dsel, var::Symbol, binnin
         hists[k] = makehist_1d(df, var, binning, weight_ex)
     end
 
-    df = sub(data, inds[:data] & inds[:aiso] & sel & dsel)
     aiso_mc = {
-        p=>makehist_1d(sub(data, inds[:sample][p]&inds[:aiso]&sel), var, binning, qcdweight)
+        p=>makehist_1d(sub(data, inds[:sample][p] & inds[:aiso] & sel), var, binning, qcdweight_ex)
         for p in qcd_procs
     }
     sum_aiso_mc = aiso_mc |> values |> collect |> sum
-
-    hists[:qcd] = makehist_1d(df, var, binning, (df::DataFrameRow)->df[:qcd_weight])
-    hists[:qcd] = hists[:qcd] - sum_aiso_mc
+    
+    df = sub(data, inds[:data] & inds[:aiso] & sel & dsel)
+    hists[(:antiiso, :mc)] = sum_aiso_mc
+    hists[(:antiiso, :data)] = makehist_1d(df, var, binning, (df::DataFrameRow)->df[:qcd_weight])
+    hists[:qcd] = hists[(:antiiso, :data)] - hists[(:antiiso, :mc)]
 
     hists[:DATA] = makehist_1d(
         sub(data, inds[:data] & inds[:iso] & sel & dsel), 
@@ -30,19 +34,19 @@ function makehists(data::AbstractDataFrame, inds, sel, dsel, var::Symbol, binnin
     all([h.bin_edges==hists[:DATA].bin_edges for h in values(hists)]) ||
         (error("not all histograms have the same binning:\n --- \n $hists \n --- \n"))
 
-    return hists
+    return {string(k)=>v for (k,v) in hists}
 end
 
 function makehist_1d(df::AbstractDataFrame, var::Symbol, binning::AbstractVector{Float64}, weight_f::Function)
-    println("makehist_1d: N=", nrow(df))
-    tic()
     hi = Histogram(binning)
+    sumw = 0.0
     for row in eachrow(df)
         const x = row[var]
         const w = weight_f(row)
         hfill!(hi, x, w)
+        sumw += w
     end
-    toc()
+    #println("meanw = $(sumw/nrow(df))")
     return hi
 end
 
@@ -127,10 +131,7 @@ function reweight_hists_to_fitres(fr, hists)
     for s in ["ttjets", "twchan", "schan"]
         weightall(s, "ttjets")
     end
-
     weightall("qcd", "qcd")
-
-    return hists
 end
 
 #@pyimport scipy.stats.kde as KDE
