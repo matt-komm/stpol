@@ -7,8 +7,6 @@ all: train
 
 train: train_bdt_sig_wjets train_bdt_sig_ttjets train_bdt_wjets_ttjets train_bdt_sig_bg 
 
-#train_csvm_wjets_only train_csvt_wjets_only
-
 inputs:
 	find skims/$1/tchan -name "*.root" > input/$2/sig.txt
 	find skims/$1/ttjets -name "*.root" > input/$2/bg.txt
