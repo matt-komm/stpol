@@ -1,3 +1,6 @@
 [submodule "src/ntuple"]
 	path = src/ntuple
 	url = git@github.com:jpata/ntuple.git
+[submodule "src/CMGTools/External"]
+	path = src/CMGTools/External
+	url = https://github.com/latinos/UserCode-CMG-CMGTools-External
