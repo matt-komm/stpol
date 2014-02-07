@@ -22,15 +22,19 @@ merge:
 	./merge.jl merged.jld $(OFDIR)/merged/*.jld
 
 merge-data:
-	~/.julia/ROOT/julia -F mergedf.jl /scratch/joosep/test3.df $(DIR)/merged/md.txt /scratch/joosep/skim_jan31_2/output*.jld
+	julia -F mergedf.jl /scratch/joosep/feb5 $(DIR)/merged/md.txt /scratch/joosep/skim_feb5/output*.jld
 	echo "merge is done" | sendmail joosep.pata@cern.ch
 
 merge-mva:
 	~/.julia/ROOT/julia -F mvamerge.jl /scratch/joosep/mva.root /scratch/joosep/skim_jan31_2/output*.jld
 
 submit-scan:
-	find cards/*.json | ~/parallel --delay 1.0 sbatch -c24 --exclude=../skim/exclude.txt parrun.sh {}
+	find input/bdt_scan/cards/*.json | ~/parallel --delay 1.0 sbatch -c24 --exclude=../skim/exclude.txt parrun.sh {}
 
 convert-hists:
 	rm -Rf output/bdt_scan/hists
-	find /home/joosep/singletop/output/bdt_scan -name "*.jld" | ~/parallel ~/.julia/ROOT/julia convert_hists.jl {} output/bdt_scan/hists/{/.}
+	find /home/joosep/singletop/output/bdt_scan -name "*.jld" | ~/parallel -j32 ~/.julia/ROOT/julia convert_hists.jl {} output/bdt_scan/hists/{/.}
+	find /home/joosep/singletop/output/bdt_scan -name "*.jld" | ~/parallel -j32 ~/.julia/ROOT/julia convhists2root.jl {} output/bdt_scan/hists/{/.}/raw.root
+
+test_merge:
+	~/.julia/ROOT/julia mergedf.jl test $(DIR)/merged/md.txt $(DIR)/output_1.jld  $(DIR)/output_2.jld
