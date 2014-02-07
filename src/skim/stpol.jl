@@ -12,7 +12,7 @@ for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId, :Charge]
 end
 
 #jets
-for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms, :deltaR]
+for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms, :deltaR, :puMva]
     sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:jets, s)] = Source(:goodJetsNTupleProducer, s, :STPOLSEL2)
