@@ -19,21 +19,31 @@ using PyCall
 const DH1 = int(hash("data_mu"))
 const DH2 = int(hash("data_ele"))
 const WT = Float32
+
 is_any_na(row::DataFrameRow, symbs...) = any(Bool[isna(row.df[row.row, s])::Bool for s::Symbol in symbs])::Bool
 
-get_no_na(row::DataFrameRow, s::Symbol, d=1.0) = !isna(row[s]) ? row[s] : d
+#replaces NA and NaN with a default value
+get_no_na(row::DataFrameRow, s::Symbol, d=1.0) = (!isna(row[s]) && !isnan(row[s])) ? row[s] : d
+
+qcd_weight(r::DataFrameRow) = r[:qcd_weight] * nominal_weight(r)
+is_data(row::DataFrameRow) = ((row[:sample]::Int64==DH1) || (row[:sample]::Int64==DH2))
+is_mc(row::DataFrameRow) = !is_data(row)
 
 function nominal_weight(df::DataFrameRow)
     sample = df[:sample]::Int64
 
-    if sample!=DH1 && sample!=DH2 #data
+    if is_mc(df)
         const b_weight = get_no_na(df, :b_weight, float32(1))::WT
-        const pu_weight = get_no_na(df, :b_weight, float32(1))::WT
+        const pu_weight = get_no_na(df, :pu_weight, float32(1))::WT
         const lepton_weight__id = get_no_na(df, :lepton_weight__id, float32(1))::WT
         const lepton_weight__iso = get_no_na(df, :lepton_weight__iso, float32(1))::WT
         const lepton_weight__trigger = get_no_na(df, :lepton_weight__trigger, float32(1))::WT
 
-        return df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id * lepton_weight__iso * lepton_weight__trigger
+        const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id * lepton_weight__iso * lepton_weight__trigger
+
+        (isna(w) || isnan(w)) && error("w=$w, $(df[:xsweight]) $b_weight, $pu_weight, $lepton_weight__id, $lepton_weight__iso, $lepton_weight__trigger")
+        
+        return w
     else
         return 1.0
     end
@@ -69,6 +79,7 @@ include("$BASE/src/analysis/df_extensions.jl")
 include("$BASE/src/analysis/systematic.jl")
 include("$BASE/src/analysis/qcd.jl")
 include("$BASE/src/analysis/reweight.jl")
+include("$BASE/src/analysis/fit.jl")
 
 const PDIR = "output/plots"
 const HDIR = "output/hists"
@@ -98,6 +109,13 @@ flatten(a)=a
 #    :lepton_weight__iso, :lepton_weight__iso__up, :lepton_weight__iso__down,
 #    :lepton_weight__trigger, :lepton_weight__trigger__up, :lepton_weight__trigger__down
 #]
+
+
+#load the fit results
+const FITRESULTS = {
+    :mu=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/mu/merged/fit.json"),
+    :ele=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/ele/merged/fit.json")
+}
 
 t1 = time()
 println("done loading base in $(t1-t0) seconds")
