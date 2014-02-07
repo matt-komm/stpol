@@ -71,13 +71,13 @@ def main():
             ofile.write(str(x) + "\n")
             nproc += 1
 
+        if nproc != int(tree.GetEntries()):
+            raise Exception("incorrect amount of events processed")
         ofile.write("# ntree=%d nproc=%d\n" % (tree.GetEntries(), nproc))
+        print counters
         inf.Close()
         ofile.close()
 
-    print counters
-    if processed != int(tree.GetEntries()):
-        raise Exception("incorrect amount of events processed")
 
     tend = time.time()
     print "total elapsed time", tend-tstart, " sec, processed events",counters["processed"]
