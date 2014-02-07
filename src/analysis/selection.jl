@@ -43,8 +43,8 @@ using DataFrames
 
 function perform_selection(indata::AbstractDataFrame)
     inds = {
-        :mu => Cuts.ismu(indata),
-        :ele => Cuts.isele(indata),
+        :mu => Cuts.is_mu(indata),
+        :ele => Cuts.is_ele(indata),
         :ljet_rms =>indata[:ljet_rms] .> 0.025,
         :mtw =>indata[:mtw] .> 50,
         :met =>indata[:met] .> 45,
@@ -61,7 +61,15 @@ function perform_selection(indata::AbstractDataFrame)
         ##:bdt_grid => {k=>indata[:bdt_sig_bg].>k for k in linspace(-1, 1, 11)},
         :hlt => {k=>indata[symbol("hlt_$k")] for k in [:mu, :ele]},
         :sample => {k=>indata[:sample].==(k|>string|>hash|>int) for k in [:data_mu, :data_ele, :tchan, :ttjets, :wjets, :dyjets, :diboson, :gjets, :schan, :twchan, :qcd_mc_mu, :qcd_mc_ele]},
-        :systematic => {k=>indata[:systematic].==(k|>string|>hash|>int) for k in [:nominal, :unknown, :EnUp, :EnDown, :ResUp, :ResDown, :UnclusteredEnUp, :UnclusteredEnDown]},
+        :systematic => {k=>indata[:systematic].==(k|>string|>hash|>int) for k in [
+            :nominal, :unknown,
+            :EnUp, :EnDown,
+            :ResUp, :ResDown,
+            :UnclusteredEnUp, :UnclusteredEnDown,
+            symbol("signal_comphep_anomWtb-unphys"),
+            symbol("signal_comphep_anomWtb-0100"),
+            symbol("signal_comphep_nominal")
+        ]},
         :truelepton => {
             :mu=>abs(indata[:gen_lepton_id]).==13,
             :ele=>abs(indata[:gen_lepton_id]).==11
