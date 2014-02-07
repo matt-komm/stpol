@@ -482,14 +482,14 @@ end
 
 println("processed $(nproc/timeelapsed) events/second")
 
-show(df)
+println(df)
 
 #skim only non-signal events
 pass = (df["passes"]) | (df["sample"] .== int(hash("tchan")))
 
 #Select only the events that actually pass
 mydf = NOSKIM ? df : df[pass, :]
-show(mydf)
+println(mydf)
 
 println("NOSKIM=$NOSKIM, df=$(nrow(df)), my_df=$(nrow(mydf))")
 
@@ -505,8 +505,8 @@ println("failure reasons: $fails")
 
 #save output
 writetable("$(output_file)_processed.csv", prfiles)
-writetree("$(output_file).root", mydf)
-write(jldopen("$(output_file).jld", "w"), "df", mydf)
+println("root...");writetree("$(output_file).root", mydf)
+println("JLD...");write(jldopen("$(output_file).jld", "w"), "df", mydf)
 
 tend = time()
 ttot = tend-tstart
