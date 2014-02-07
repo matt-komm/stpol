@@ -12,14 +12,15 @@ const outfile = PARS["outfile"]
 @everywhere begin
     const bdt_cut = PARS["bdt_cut"]
     #ct_binning = PARS["binning"] #fix Inf JSON reading
-    ct_binning = vcat(-Inf, linspace(-1, 1, 11), Inf)
+    ct_binning = vcat(-Inf, linspace(-1, 1, 13), Inf) #reco
+    ct_binning2 = vcat(-Inf, linspace(-1, 1, 7), Inf) #gen
    
     const nominal_only = false #run over nominal events only, is quicker
     const do_project_bdt = PARS["project_bdt"]
     defaults_func = {
         :cos_theta_lj => ()->Histogram(ct_binning),
         :bdt_sig_bg => ()->Histogram(vcat(-Inf, linspace(-1, 1, 30), Inf)),
-        :transfer_matrix => ()->NHistogram({ct_binning, ct_binning})
+        :transfer_matrix => ()->NHistogram({ct_binning2, ct_binning})
     }
     
     defaults = Dict{Symbol, Any}()
@@ -114,17 +115,16 @@ end
                 for (scen_name, scen) in scens_gr[syst]
                     
                     nominal_only && scen_name[1]!=:nominal && continue
+                    const kk = {
+                        :sample=>sample, :iso=>iso, :true_lep=>true_lep,
+                        :systematic=>syst, :scenario=>scen_name[1]
+                    }
 
-                    h = getr({
-                            :sample=>sample, :iso=>iso, :true_lep=>true_lep,
-                            :systematic=>syst, :scenario=>scen_name[1]
-                        },
-                        :transfer_matrix
-                    )::NHistogram
+                    h = getr(kk, :transfer_matrix)::NHistogram
                    
                     const w = scen[:weight](row)
-                   
-                    h.baseh.bin_contents[linind] += isnan(w) ? 0.0 : w 
+                    (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
+                    h.baseh.bin_contents[linind] += w
                     h.baseh.bin_entries[linind] += 1.0
                 end
             end
@@ -163,12 +163,13 @@ end
                         #in case of the systematically variated sample, we only want to use the nominal weight
                         (!isdata && syst != :nominal && scen != :nominal) && continue
                         (isdata && scen != :unweighted) && continue
+                        (!isdata && scen == :unweighted) && continue #dont care about unweighted MC
                         
                         const kk = merge(p, {:scenario=>scen})
                         h = getr(kk, :bdt_sig_bg)::Histogram
                         const w = wfunc(row)::Union(NAtype, Float64)
-                        
-                        h.bin_contents[bin] += isnan(w) ? 0.0 : w 
+                        (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
+                        h.bin_contents[bin] += w
                         h.bin_entries[bin] += 1
                     end
                     
@@ -197,8 +198,8 @@ end
                     const kk = merge(p, {:scenario=>scen})
                     h = getr(kk, :cos_theta_lj)::Histogram
                     const w = wfunc(row)::Union(NAtype, Float64)
-
-                    h.bin_contents[bin] += isnan(w) ? 0.0 : w 
+                    (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
+                    h.bin_contents[bin] += w
                     h.bin_entries[bin] += 1
                 end
             end
@@ -233,16 +234,18 @@ for k in keys(ret)
         println("H $k ", @sprintf("%.2f", integral(ret[k])))
         ovfw = ret[k].bin_contents[1]
         if ovfw>0
-            println("overflow in bin=1: $(ret[k].bin_contents[1])")
+            println("overflow in bin=1: $ovfw")
         end
+        println(ret[k])
     end
-    (typeof(ret[k]) <: NHistogram) && println("H $k ", @sprintf("%.2f", integral(ret[k])))
+    (typeof(ret[k]) <: NHistogram) && println("H $k ", @sprintf("%.2f", integral(ret[k])), " N=$(nentries(ret[k]))")
 end
 
 ret[:nproc] == N || error("incomplete processing ", ret[:nproc], "!=", N)
 println(ret[:sample_counters])
 println(ret[:time])
 
+mkpath(dirname(outfile))
 of = jldopen(outfile, "w")
 write(of, "ret", ret)
 close(of)
