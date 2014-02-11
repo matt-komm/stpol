@@ -1,6 +1,5 @@
 module Hist
 using DataArrays, DataFrames
-import DataArrays.NAtype
 
 import Base.+, Base.-, Base.*, Base./, Base.==
 import Base.show
@@ -10,22 +9,26 @@ import Base.size, Base.transpose
 using JSON
 
 immutable Histogram
-    bin_entries::Vector{Float64} #n values
-    bin_contents::Vector{Float64} #n values
-    bin_edges::Vector{Float64} #n+1 values, lower edges of all bins + upper edge of last bin
+    bin_entries::Vector{Float64}
+    bin_contents::Vector{Float64}
+    bin_edges::Vector{Float64}
 
-    function Histogram(entries, contents, edges)
+    function Histogram(entries::AbstractVector, contents::AbstractVector, edges::AbstractVector)
         @assert length(entries)==length(contents)
         @assert length(entries)==length(edges)
         @assert all(entries .>= 0.0)
         @assert issorted(edges)
-        new(entries, contents, edges)
+        new(
+            convert(Vector{Float64}, entries),
+            convert(Vector{Float64}, contents),
+            convert(Vector{Float64}, edges)
+        )
     end
 end
 
-Histogram(a::Array) = Histogram(
-    [0.0 for i=1:length(a)],
-    [0.0 for i=1:length(a)],
+Histogram(a::Vector) = Histogram(
+    Float64[0.0 for i=1:length(a)],
+    Float64[0.0 for i=1:length(a)],
     a
 )
 
@@ -48,17 +51,17 @@ function subhist(h::Histogram, bins)
     return Histogram(entries, contents, edges)
 end
 
-function errors(h::Histogram)
+function errors(h::Histogram, replacenan=true, replace0=true, replaceval=0.0)
     errs = h.bin_contents ./ sqrt(h.bin_entries)
     T = eltype(errs)
     for i=1:nbins(h)
-        if isnan(errs[i])
-            errs[i] = 0.0
+        if replacenan && isnan(errs[i])
+            errs[i] = replaceval
         end
 
         #in case of zero bins, put error 1.0
-        if errs[i] < eps(T)
-            errs[i] = 1.0
+        if replace0 && errs[i] < eps(T)
+            errs[i] = replaceval
         end
     end
     return errs
@@ -97,8 +100,12 @@ end
 
 function +(h1::Histogram, h2::Histogram)
     @assert h1.bin_edges == h2.bin_edges
-    h = Histogram(h1.bin_entries + h2.bin_entries, h1.bin_contents+h2.bin_contents, h1.bin_edges)
-    abs(integral(h1)+integral(h2)-integral(h))<0.00001 || warn("problem adding histograms: $(integral(h1)) != $(integral(h2))")
+    h = Histogram(
+        h1.bin_entries + h2.bin_entries,
+        h1.bin_contents + h2.bin_contents,
+        h1.bin_edges
+    )
+    abs(integral(h1)+integral(h2)-integral(h)) < 0.00001 || warn("problem adding histograms: $(integral(h1)) != $(integral(h2))")
     return h
 end
 
@@ -126,31 +133,39 @@ function *{T <: Real}(x::T, h1::Histogram)
     return h1 * x
 end
 
+function *(h1::Histogram, h2::Histogram)
+    @assert(h1.bin_edges == h2.bin_edges, "bin edges must be the same for both histograms")
+    conts = h1.bin_contents.* h2.bin_contents
+    ents = 1.0 / (1.0 ./ entries(h1) + 1.0 ./ entries(h2))
+
+    conts[isnan(conts)] = 0.0
+    ents[isnan(ents)] = 0.0
+
+    Histogram(ents, conts, h1.bin_edges)
+end
+
 
 function /{T <: Real}(h1::Histogram, x::T)
     return h1 * (1.0/x)
 end
 
+#err / C = sqrt((err1/C1)^2 + (err2/C2)^2) 
 function /(h1::Histogram, h2::Histogram)
-    #warn("ratio plot errors are currently incorrect")
     @assert(h1.bin_edges == h2.bin_edges, "bin edges must be the same for both histograms")
-    div = h1.bin_contents ./ h2.bin_contents
-    #div = Float64[d >= 0.0 ? d : 0.0 for d in div]
+    
+    conts = h1.bin_contents ./ h2.bin_contents
+    ents = 1.0 / (1.0 ./ entries(h1) + 1.0 ./ entries(h2))
 
-    ent = (h1.bin_entries ./ h1.bin_contents) .^ 2 + (h2.bin_entries ./ h2.bin_contents) .^ 2
-    #ent = Float64[x >= 0.0 ? x : 0.0 for x in ent]
+    conts[isnan(conts)] = 0.0
+    ents[isnan(ents)] = 0.0
 
-    return Histogram(
-        ent,
-        div,
-        h1.bin_edges
-    )
+    return Histogram(ents, conts, h1.bin_edges)
+
 end
 
 integral(h::Histogram) = sum(h.bin_contents)
 integral(x::Real) = x
 nentries(h::Histogram) = int(sum(h.bin_entries))
-
 
 function integral(h::Histogram, x1::Real, x2::Real)
     if !(x1 in h.bin_edges) || !(x2 in h.bin_edges)
@@ -170,13 +185,6 @@ function normed{T <: Histogram}(h::T)
     return i > 0 ? h/i : error("histogram integral was $i")
 end
 
-#conversion to dataframe
-todf(h::Histogram) = DataFrame(
-    bin_edges=h.bin_edges,
-    bin_contents=h.bin_contents,
-    bin_entries=h.bin_entries,
-)
-
 #function fromdf(df::DataFrame)
 #    edges = df[1]
 #    conts = df[2][1:nrow(df)-1]
@@ -186,27 +194,27 @@ todf(h::Histogram) = DataFrame(
 
 #assumes df columns are entries, contents, edges
 #length(entries) = length(contents) = length(edges) - 1, edges are lower, lower, lower, ..., upper
-function fromdf(df::DataFrame; entries=:entries)
-    ent = df[2].data
-    cont = df[3].data
+# function fromdf(df::DataFrame; entries=:entries)
+#     ent = df[2].data
+#     cont = df[3].data
 
-    #entries column reflects poisson errors of the contents column 
-    if entries == :poissonerrors
-        ent = (cont ./ ent ) .^ 2
-        ent = Float64[x > 0 ? x : 0 for x in ent]
-    #entries column reflects raw entries/events
-    elseif entries == :entries
-        ent = ent
-    else
-        error("unknown value for keyword :entries=>$(entries)")
-    end
+#     #entries column reflects poisson errors of the contents column 
+#     if entries == :poissonerrors
+#         ent = (cont ./ ent ) .^ 2
+#         ent = Float64[x > 0 ? x : 0 for x in ent]
+#     #entries column reflects raw entries/events
+#     elseif entries == :entries
+#         ent = ent
+#     else
+#         error("unknown value for keyword :entries=>$(entries)")
+#     end
 
-    Histogram(
-        ent, #entries
-        cont, #contents
-        df[1].data #edges
-    )
-end
+#     Histogram(
+#         ent, #entries
+#         cont, #contents
+#         df[1].data #edges
+#     )
+# end
 
 flatten(h::Histogram) = reshape(h, prod(size(h)))
 
@@ -335,64 +343,66 @@ function hfill!{K <: NAtype}(h::NHistogram, v, w::K)
     #b[xb...] += 1
 end
 
-function todf(h::NHistogram)
-    hist = todf(h.baseh)
-    return {:hist=>hist, :edges=>[DataFrame(e) for e in h.edges]}
-end
+# function writecsv(fn, h::NHistogram)
+#     dfs = todf(h)
+#     writetable("$fn.hist", dfs[:hist];separator=',')
+#     dd = {:hist=>"$fn.hist", :edges=>Any[]}
+#     j = 1
+#     for e in dfs[:edges]
+#         writetable("$fn.edges.$j", e; separator=',')
+#         push!(dd[:edges], "$fn.edges.$j")
+#         j += 1
+#     end
+#     of = open("$fn.json", "w")
+#     write(of, JSON.json(dd))
+#     close(of)
+# end
 
-function writecsv(fn, h::NHistogram)
-    dfs = todf(h)
-    writetable("$fn.hist", dfs[:hist];separator=',')
-    dd = {:hist=>"$fn.hist", :edges=>Any[]}
-    j = 1
-    for e in dfs[:edges]
-        writetable("$fn.edges.$j", e; separator=',')
-        push!(dd[:edges], "$fn.edges.$j")
-        j += 1
-    end
-    of = open("$fn.json", "w")
-    write(of, JSON.json(dd))
-    close(of)
-end
-
-function readhist(fn)
-    js = JSON.parse(readall("$fn.json"))
-    hist = readtable(js["hist"])
-    edges = [readtable(e) for e in js["edges"]]
-    nd = length(edges)
-    evec = [edges[i][1] for i=1:nd]
-    NHistogram(fromdf(hist), evec)
-end
+# function readhist(fn)
+#     js = JSON.parse(readall("$fn.json"))
+#     hist = readtable(js["hist"])
+#     edges = [readtable(e) for e in js["edges"]]
+#     nd = length(edges)
+#     evec = [edges[i][1] for i=1:nd]
+#     NHistogram(fromdf(hist), evec)
+# end
 
 function Base.getindex(nh::NHistogram, args...)
     a, b = asarr(nh)
     return a[args...]#, b[args...]
 end
 
-function makehist_2d(df::AbstractDataFrame, bins::AbstractVector)
-    hi = NHistogram(bins)
-    @assert ncol(df)==2
-    cont, ent = asarr(hi)
-    for i=1:nrow(df)
-        x = df[i,1]
-        y = df[i,2]
-        nx = isna(x)||isnan(x) ? 1 : searchsortedfirst(hi.edges[1], x)-1
-        ny = isna(y)||isnan(y) ? 1 : searchsortedfirst(hi.edges[2], y)-1
-        cont[nx, ny] += 1
-        ent[nx, ny] += 1
-    end
-    return hi
-end
+# function makehist_2d(df::AbstractDataFrame, bins::AbstractVector)
+#     hi = NHistogram(bins)
+#     @assert ncol(df)==2
+#     cont, ent = asarr(hi)
+#     for i=1:nrow(df)
+#         x = df[i,1]
+#         y = df[i,2]
+#         nx = isna(x)||isnan(x) ? 1 : searchsortedfirst(hi.edges[1], x)-1
+#         ny = isna(y)||isnan(y) ? 1 : searchsortedfirst(hi.edges[2], y)-1
+#         cont[nx, ny] += 1
+#         ent[nx, ny] += 1
+#     end
+#     return hi
+# end
+
+# project_n(nh::NHistogram, n) = NHistogram(
+#     sum(nh|>entries, n)[:],
+#     sum(nh|>contents, n)[:],
+#     nh.edges[2]
+# )
+
 
 project_x(nh::NHistogram) = Histogram(sum(nh|>entries, 1)[:], sum(nh|>contents, 1)[:], nh.edges[2])
 project_y(nh::NHistogram) = Histogram(sum(nh|>entries, 2)[:], sum(nh|>contents, 2)[:], nh.edges[1])
 
-Base.show(io::IO, h::Histogram) = show(io, todf(h))
+Base.show(io::IO, h::Histogram) = show(io, hcat(h.bin_edges, h.bin_contents, h.bin_entries))
 
 export Histogram, hfill!
 export integral, nentries, normed, errors, findbin, nbins
 export +, -, *, /, ==
-export todf, fromdf
+#export todf, fromdf
 export flatten
 export lowedge, widths
 export rebin
