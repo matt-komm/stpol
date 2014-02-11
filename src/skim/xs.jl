@@ -113,7 +113,7 @@ function xsweight(flist)
 end
 
 #process ->[sample1, sample2, ...]
-merges = {
+const merges = {
     "tchan"=>
         ["T_t_ToLeptons", "Tbar_t_ToLeptons",
         "TToBENu_anomWtb-unphys_t-channel", "TToBENu_anomWtb-0100_t-channel", "TToBENu_t-channel",
