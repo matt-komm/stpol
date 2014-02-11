@@ -28,6 +28,9 @@ hfill!(h, NaN)
 hfill!(h, NA)
 @test(h.bin_entries[1]==3)
 
+hfill!(h, 0.5, float32(0.5))
+hfill!(h, 0.5, 0.5)
+
 h = Histogram([1],[1],[0])
 @test integral(h)==1
 
@@ -40,7 +43,7 @@ hs=sum([h,h])
 hs=sum([h])
 @test hs==h
 
-@test fromdf(todf(h)) == h
+#@test fromdf(todf(h)) == h
 
 h = Histogram([1,2],[3,4],[1,2])
 @test rebin(h, 2)==Histogram([3],[7],[1])
@@ -84,10 +87,10 @@ hfill!(nh, (1.1, 1.1))
 hfill!(nh, (1.1, 1.1))
 @test nh[3, 3] == 4
 
-writecsv("test_2d.csv", nh)
-@test isfile("test_2d.csv.json")
-@test isfile("test_2d.csv.hist")
-@test readhist("test_2d.csv") == nh
+# writecsv("test_2d.csv", nh)
+# @test isfile("test_2d.csv.json")
+# @test isfile("test_2d.csv.hist")
+# @test readhist("test_2d.csv") == nh
 
 nh = NHistogram({
 	vcat(-Inf, linspace(-3, 3, 20), Inf),
@@ -98,8 +101,8 @@ for i=1:100000
 	y = rand()>0.8 ? NA : 0.2*randn()
 	hfill!(nh, {x, y})
 end
-writecsv("test_2d_large.csv", nh)
-@test readhist("test_2d_large.csv") == nh
+# writecsv("test_2d_large.csv", nh)
+# @test readhist("test_2d_large.csv") == nh
 
 nc, ne = asarr(nh)
 x = fromarr(nc, ne, nh.edges)
@@ -110,9 +113,9 @@ nht = transpose(nh)
 
 
 
-verybigdf = DataFrame(x=randn(1000000),y=randn(1000000))
-tic()
-makehist_2d(verybigdf, {vcat(-Inf, linspace(-3, 3, 10), Inf), vcat(-Inf, linspace(-3, 3, 10), Inf)})
-toc()
+# verybigdf = DataFrame(x=randn(1000000),y=randn(1000000))
+# tic()
+# makehist_2d(verybigdf, {vcat(-Inf, linspace(-3, 3, 10), Inf), vcat(-Inf, linspace(-3, 3, 10), Inf)})
+# toc()
 
 println("* histo.jl passed")
