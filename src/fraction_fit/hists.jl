@@ -1,7 +1,3 @@
-using Hist, JSON
-using Distributions, StatsBase
-import DataFrames.allvars
-
 function makehists(
     data::AbstractDataFrame, inds,
     sel, dsel,
@@ -72,21 +68,33 @@ function mergehists_3comp(hists)
     return out
 end
 
-todf(bins, errs, edges) =
-    DataFrame(bins=bins, errs=errs, edges=edges);
+# todf(bins, errs, edges) =
+#     DataFrame(bins=bins, errs=errs, edges=edges);
 
-function todf(h::Histogram)
-    errs = (sqrt(h.bin_entries) ./ h.bin_entries .* h.bin_contents) 
-    for i=1:length(errs)
-        if !(errs[i] > 0)
-            errs[i] = 0.0
-        end
-    end 
-    return DataFrame(
-        bins=h.bin_contents,
-        errs=errs,
-        edges=h.bin_edges
-    );
+# function todf(h::Histogram)
+#     errs = (sqrt(h.bin_entries) ./ h.bin_entries .* h.bin_contents) 
+#     for i=1:length(errs)
+#         if !(errs[i] > 0)
+#             errs[i] = 0.0
+#         end
+#     end 
+#     return DataFrame(
+#         bins=h.bin_contents,
+#         errs=errs,
+#         edges=h.bin_edges
+#     );
+# end
+
+todf(h::Histogram) = DataFrame(
+    bin_edges=h.bin_edges,
+    bin_contents=contents(h),
+    bin_entries=entries(h),
+    bin_errors=errors(h),
+)
+
+function todf(h::NHistogram)
+    hist = todf(h.baseh)
+    return {:hist=>hist, :edges=>[DataFrame(e) for e in h.edges]}
 end
 
 function todf(d::Associative)
@@ -131,7 +139,7 @@ function reweight_hists_to_fitres(fr, hists)
     for s in ["ttjets", "twchan", "schan"]
         weightall(s, "ttjets")
     end
-    weightall("qcd", "qcd")
+    #weightall("qcd", "qcd")
 end
 
 #@pyimport scipy.stats.kde as KDE
