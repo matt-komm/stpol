@@ -1,10 +1,13 @@
 if !isdefined(:BASE)
 
 println("loading base.jl...")
-using JSON
-t0 = time()
-using DataFrames, DataArrays
+
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
+
+t0 = time()
+
+using DataArrays, DataFrames
+using JSON
 using HDF5, JLD
 
 #paths to be added here
@@ -13,14 +16,19 @@ if ENV["USER"] == "joosep"
 else
     error("undefined BASE")
 end
+
+#add qcd estimation modules to pythonpath
 ENV["PYTHONPATH"]="$BASE/qcd_estimation"
+
+println("PYTHONPATH before doing 'using PyCall':\n\t", ENV["PYTHONPATH"])
 using PyCall
 
 const DH1 = int(hash("data_mu"))
 const DH2 = int(hash("data_ele"))
-const WT = Float32
+const WT = Float32 #weight type
 
-is_any_na(row::DataFrameRow, symbs...) = any(Bool[isna(row.df[row.row, s])::Bool for s::Symbol in symbs])::Bool
+is_any_na(row::DataFrameRow, symbs...) =
+  any(Bool[isna(row.df[row.row, s])::Bool for s::Symbol in symbs])::Bool
 
 #replaces NA and NaN with a default value
 get_no_na(row::DataFrameRow, s::Symbol, d=1.0) = (!isna(row[s]) && !isnan(row[s])) ? row[s] : d
@@ -49,12 +57,12 @@ function nominal_weight(df::DataFrameRow)
     end
 end
 
-const procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
-const qcd_procs = [:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson]
-const mcsamples = [:ttjets, :wjets, :tchan, :dyjets, :diboson, :twchan, :schan, :gjets];
+const procs = Symbol[:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
+const mcsamples = Symbol[:ttjets, :wjets, :tchan, :dyjets, :diboson, :twchan, :schan, :gjets];
 const TOTAL_SAMPLES = vcat(mcsamples, :qcd)
 
-const systematic_processings = [
+#lists the various systematic sample types
+const systematic_processings = Symbol[
    :nominal,
    :EnUp, :EnDown,
    :UnclusteredEnUp, :UnclusteredEnDown,
@@ -93,23 +101,16 @@ function writedf(fn, df)
     close(f)
 end
 
+infb(a::AbstractVector) = vcat(-Inf, a, Inf)
+
 chunk(n, c, maxn) = sum([n]*(c-1))+1:min(n*c, maxn)
 chunks(csize, nmax) = [chunk(csize, i, nmax) for i=1:convert(Int64, ceil(nmax/csize))]
-
 
 #generic flatten for any iterable to uniterable
 flatten{T}(a::Array{T,1}) =
     any(map(x->isa(x,Array),a)) ? flatten(vcat(map(flatten,a)...)) : a
 flatten{T}(a::Array{T}) = reshape(a,prod(size(a)))
 flatten(a)=a
-
-#syst_weights = [
-#    :pu_weight, :pu_weight__up, :pu_weight__down,
-#    :lepton_weight__id, :lepton_weight__id__up, :lepton_weight__id__down,
-#    :lepton_weight__iso, :lepton_weight__iso__up, :lepton_weight__iso__down,
-#    :lepton_weight__trigger, :lepton_weight__trigger__up, :lepton_weight__trigger__down
-#]
-
 
 #load the fit results
 const FITRESULTS = {
@@ -119,4 +120,5 @@ const FITRESULTS = {
 
 t1 = time()
 println("done loading base in $(t1-t0) seconds")
+
 end
