@@ -38,3 +38,6 @@ convert-hists:
 
 test_merge:
 	~/.julia/ROOT/julia mergedf.jl test $(DIR)/merged/md.txt $(DIR)/output_1.jld  $(DIR)/output_2.jld
+
+test-evloop:
+	julia evloop.jl input/bdt_scan/test.json
