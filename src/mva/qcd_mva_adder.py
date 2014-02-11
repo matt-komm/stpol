@@ -3,9 +3,10 @@ import ROOT
 from ROOT import TMVA
 import numpy as np
 
-from adder import setup_mva, rv, zero_buffers, treename
+from adder import setup_mva, rv, zero_buffers, treename, mva_loop_lepton_separate
 
 mvaname = "bdt_qcd"
+
 def main():
     infiles = sys.argv[1:]
     print infiles
@@ -18,60 +19,7 @@ def main():
     varmaps[13] = {"mu_mtw":"mtw", "c":"C"}
     varmaps[11] = {"ele_mtw":"mtw", "c":"C"}
 
-    for infn in infiles:
-        print "Processing file",infn
-        #get the events tree
-        inf = ROOT.TFile(infn)
-        tree = inf.Get(treename)
-
-        if not tree:
-            raise Exception("Could not open TTree '%s' in %s" % (treename, infn))
-
-        ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
-
-        ofile = open(ofn, "w")
-        ofile.write("# filename=%s\n" % infn)
-        ofile.write("bdt\n")
-
-        nproc = 0
-        for event in tree:
-
-            #make sure the TBranch buffers have a 0 values
-            for (k, mva) in mvas.items():
-                zero_buffers(mva[1])
-
-            lepton_type, lepton_type_isna = rv(event, "lepton_type")
-            isna = False
-            isna = isna or lepton_type_isna
-            if not isna:
-                mvareader, varbuffers = mvas[lepton_type]
-
-                varmap = varmaps[lepton_type]
-                for var in varbuffers.keys():
-                    if var in varmap.keys():
-                        varn = varmap[var]
-                    else:
-                        varn = var
-
-                    v, _isna = rv(event, varn)
-                    isna = isna or _isna
-                    if not isna:
-                        varbuffers[var][0] = v
-                    else:
-                        break
-                if not isna:
-                    x = mvareader.EvaluateMVA(mvaname)
-            if isna:
-                x = "NA" #MVA(..., NA, ...) -> NA
-
-            ofile.write(str(x) + "\n")
-            nproc += 1
-        if nproc!=int(tree.GetEntries()):
-            raise Exception("incorrect amount of MVA evaluations")
-        ofile.write("# ntree=%d nproc=%d\n" % (tree.GetEntries(), nproc))
-        inf.Close()
-        ofile.close()
-
+    mva_loop_lepton_separate(infiles, mvas, varmaps)
 
 if __name__=="__main__":
     main()
