@@ -1,71 +1,89 @@
 require("base.jl")
 
 jsfile = ARGS[1]
+PARS = JSON.parse(readall(jsfile))
+
+PARS["ncores"] > 1 && addprocs(PARS["ncores"])
 
 @eval @everywhere PARS = JSON.parse(readall($jsfile))
 @everywhere println(PARS)
 
 const infile = PARS["infile"]
 const outfile = PARS["outfile"]
-@eval @everywhere (println("loading dataframe...");df = readdf($infile))
+@eval @everywhere (
+    println("loading dataframe...");
+    df = readdf($infile)
+)
+
+@everywhere require("histogram_defaults.jl")
 
 @everywhere begin
-    const bdt_cut = PARS["bdt_cut"]
-    #ct_binning = PARS["binning"] #fix Inf JSON reading
-    ct_binning = vcat(-Inf, linspace(-1, 1, 13), Inf) #reco
-    ct_binning2 = vcat(-Inf, linspace(-1, 1, 7), Inf) #gen
-   
-    const nominal_only = false #run over nominal events only, is quicker
-    const do_project_bdt = PARS["project_bdt"]
-    defaults_func = {
-        :cos_theta_lj => ()->Histogram(ct_binning),
-        :bdt_sig_bg => ()->Histogram(vcat(-Inf, linspace(-1, 1, 30), Inf)),
-        :transfer_matrix => ()->NHistogram({ct_binning2, ct_binning})
-    }
-    
-    defaults = Dict{Symbol, Any}()
-    for (k, v) in defaults_func
-        defaults[k] = v()
+function fill_histogram(
+    row::DataFrameRow,
+    isdata::Bool,
+    hname::Symbol,
+    hex::Function,
+    p::Dict,
+    ret::Dict
+    )
+
+    const syst = p[:systematic]
+    const x = hex(row)
+    const bin = findbin(defaults[hname]::Histogram, x)::Int64
+    for (scen::Symbol, wfunc::Function) in weight_scenarios
+        
+        nominal_only && !(scen==:nominal || scen==:unweighted) && continue
+
+        #in case of the systematically variated sample, we only want to use the nominal weight
+        (!isdata && syst != :nominal && scen != :nominal) && continue
+        (isdata && scen != :unweighted) && continue
+        (!isdata && scen == :unweighted) && continue #dont care about unweighted MC
+        
+        const kk = merge(p, {:scenario=>scen})
+        h = getr(ret, kk, hname)::Histogram
+
+        const w = wfunc(row)::Union(NAtype, Float64)
+        (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
+        h.bin_contents[bin] += w
+        h.bin_entries[bin] += 1
     end
+end
+
+function getr(ret::Associative, path::Associative, k::Symbol)
+    const x = merge(path, {:obj=>k})
+    if !(x in keys(ret))
+        ret[x] = defaults_func[k]()
+    end
+    return ret[x]
+end
+
 end
 
 @everywhere begin
 
+    #default transfer matrix shortcut
     const TM = defaults[:transfer_matrix]
-    const hsize = tuple([length(ed) for ed in TM.edges]...)
 
+    #vector of transfer matrix dimensions
+    const TM_hsize = tuple([length(ed) for ed in TM.edges]...)
 
-    sel(row, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
+    #selection function
+    sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
     
     function process_df(rows)
         const t0 = time()
 
-        T_cos = eltype(df[:cos_theta_lj_gen])
-
         nproc = 0
         ret = Dict()
+
         ret[:nreco] = 0
-        function getr(path::Associative, k::Symbol)
-            const x = merge(path, {:obj=>k})
-            if !(x in keys(ret))
-                ret[x] = defaults_func[k]()
-            end
-            return ret[x]
-        end
+
+        ret[:fails_lepton] = 0
+        ret[:ele] = 0
+        ret[:mu] = 0
+
+        ret[:fails_bdt] = 0
         
-        sample_counters = Dict{Symbol, Int64}()
-        sample_counters[:tchan] = 0
-        sample_counters[:data_mu] = 0
-        sample_counters[:data_ele] = 0
-        sample_counters[:wjets] = 0
-        sample_counters[:ttjets] = 0
-        
-        cut_counters = Dict{Symbol, Int64}()
-        cut_counters[:tchan] = 0
-        cut_counters[:data_mu] = 0
-        cut_counters[:data_ele] = 0
-        cut_counters[:wjets] = 0
-        cut_counters[:ttjets] = 0
         
         #println("looping over $(nrow(df)) rows")
         for row in eachrow(sub(df, rows))
@@ -75,25 +93,34 @@ end
             
             is_any_na(row, :sample, :systematic, :isolation) && continue
             const sample = hmap_symb_from[row[:sample]::Int64]
-            const syst = hmap_symb_from[row[:systematic]::Int64]
-
-
+            const systematic = hmap_symb_from[row[:systematic]::Int64]
             const iso = hmap_symb_from[row[:isolation]::Int64]
             const true_lep = sample==:tchan ? row[:gen_lepton_id]::Int32 : int32(0)
+
             const isdata = ((sample == :data_mu) || (sample == :data_ele)) 
-            !isdata && nominal_only && (!(syst == :nominal)||(syst == :unknown)) && continue
-            for s in [:data_mu, :data_ele, :tchan, :ttjets, :wjets]
-                sample_counters[s] += (sample == s) ? 1 : 0
-            end
-            
-            #transfer matrices
+            (   !isdata &&
+                nominal_only &&
+                (
+                    !(systematic == :nominal) || 
+                    (systematic == :unknown)
+                ) && continue
+            )
+
+            ###
+            ### transfer matrices
+            ###
             if sample==:tchan && iso==:iso
-                const x = row[:cos_theta_lj_gen]::T_cos
-                const y = row[:cos_theta_lj]::Union(NAtype, T_cos)
+
+                const x = row[:cos_theta_lj_gen]
+                const y = row[:cos_theta_lj]
                
+                #did event pass reconstruction ?
                 local reco = true 
+
                 if !is_any_na(row, :njets, :ntags, :bdt_sig_bg)
+
                     reco = reco && sel(row) && Cuts.bdt(row, bdt_cut)
+
                     if reco && Cuts.truelepton(row, :mu)
                         reco = reco & Cuts.qcd_mva_wp(row, :mu) & Cuts.is_mu(row)
                     elseif reco && Cuts.truelepton(row, :ele)
@@ -104,123 +131,200 @@ end
                 else
                     reco = false
                 end
+
                 ret[:nreco] += int(reco)
 
+                #get indices into transfer matrix
                 const nx = (isna(x)||isnan(x)) ? 1 : searchsortedfirst(TM.edges[1], x)-1
     	        const ny = (isna(y)||isnan(y)||!reco) ? 1 : searchsortedfirst(TM.edges[2], y)-1
-                const linind = sub2ind(hsize, nx, ny)
                 
-                (linind>=1 && linind<=length(TM.baseh.bin_contents)) || error("incorrect index $linind for $nx,$ny $x,$y")
+                #get transfer matrix linear index from 2D index
+                const linind = sub2ind(TM_hsize, nx, ny)
+                
+                (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
+                    error("incorrect index $linind for $nx,$ny $x,$y")
 
-                for (scen_name, scen) in scens_gr[syst]
+                for (scen_name, scen) in scens_gr[systematic]
                     
                     nominal_only && scen_name[1]!=:nominal && continue
                     const kk = {
                         :sample=>sample, :iso=>iso, :true_lep=>true_lep,
-                        :systematic=>syst, :scenario=>scen_name[1]
+                        :systematic=>systematic, :scenario=>scen_name[1]
                     }
 
-                    h = getr(kk, :transfer_matrix)::NHistogram
+                    const h = getr(kk, :transfer_matrix)::NHistogram
                    
                     const w = scen[:weight](row)
-                    (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
+
+                    (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])")
+
                     h.baseh.bin_contents[linind] += w
                     h.baseh.bin_entries[linind] += 1.0
                 end
             end
-            
-            #pre-bdt
-            is_any_na(row, :njets, :ntags, :bdt_sig_bg, :cos_theta_lj, :bdt_qcd) && continue
-            (isna(row[:bdt_sig_bg]) || isnan(row[:bdt_sig_bg])) && error("bdt was NA/NaN")
 
-            ####
-            #project 2J1T, 3J2T BDT templates with full systematics
-            ####
-            reco = true
-            if Cuts.is_reco_lepton(row, :mu)
-                const lepton = :mu
-                reco = reco & Cuts.qcd_mva_wp(row, lepton)
-            elseif Cuts.is_reco_lepton(row, :ele)
-                const lepton = :ele
-                reco = reco & Cuts.qcd_mva_wp(row, lepton)
-            else
+            ###
+            ### lepton reco
+            ###
+            if is_any_na(row, :lepton_id, :n_signal_mu, :n_signal_ele)
+                ret[:fails_lepton] += 1
                 continue
             end
+
+            if Cuts.is_reco_lepton(row, :mu)
+                const lepton = :mu
+                ret[:mu] += 1
+            elseif Cuts.is_reco_lepton(row, :ele)
+                const lepton = :ele
+                ret[:ele] += 1
+            else
+                ret[:fails_lepton] += 1
+                continue
+            end
+
+            ###
+            ### pre-bdt
+            ###
+            if is_any_na(row, :njets, :ntags, :bdt_sig_bg, :cos_theta_lj, :bdt_qcd)
+                ret[:fails_bdt] += 1
+                continue
+            end
+            (isna(row[:bdt_sig_bg]) || isnan(row[:bdt_sig_bg])) && error("bdt was NA/NaN")
+
+            ###
+            ### QCD rejection
+            ###
+            const reco = Cuts.qcd_mva_wp(row, lepton)
             
-            if do_project_bdt
+            ###
+            ### project BDT templates with full systematics
+            ###
+            if do_project_bdt::Bool
                 for (nj, nt) in [(2, 0), (2,1), (3,2)]
+
                     #pre-bdt selection
-                    _reco = reco & sel(row, nj, nt)::Bool
+                    local _reco
+                    const _reco = reco & sel(row, nj, nt)::Bool
                     _reco || continue
                     
-                    const p = {:sample=>sample, :iso=>iso, :lepton=>lepton, :systematic=>syst, :njet=>nj, :ntag=>nt} 
-                    const x = row[:bdt_sig_bg]::Float64
-                    const bin = findbin(defaults[:bdt_sig_bg]::Histogram, x)::Int64
-                    for (scen::Symbol, wfunc::Function) in weight_scenarios
-                        
-                        nominal_only && !(scen==:nominal || scen==:unweighted) && continue
+                    const p = {
+                        :sample => sample,
+                        :iso => iso,
+                        :lepton => lepton,
+                        :systematic => systematic,
+                        :njets => nj,
+                        :ntags => nt
+                    }
 
-                        #in case of the systematically variated sample, we only want to use the nominal weight
-                        (!isdata && syst != :nominal && scen != :nominal) && continue
-                        (isdata && scen != :unweighted) && continue
-                        (!isdata && scen == :unweighted) && continue #dont care about unweighted MC
-                        
-                        const kk = merge(p, {:scenario=>scen})
-                        h = getr(kk, :bdt_sig_bg)::Histogram
-                        const w = wfunc(row)::Union(NAtype, Float64)
-                        (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
-                        h.bin_contents[bin] += w
-                        h.bin_entries[bin] += 1
-                    end
+                    fill_histogram(
+                        row, isdata,
+                        :bdt_sig_bg, row->row[:bdt_sig_bg],
+                        p, ret
+                    )
+
+                    fill_histogram(
+                        row, isdata,
+                        :abs_ljet_eta, row->abs(row[:ljet_eta]),
+                        p, ret
+                    )
+
+                    fill_histogram(
+                        row, isdata,
+                        :C, row->row[:C],
+                        p, ret
+                    )
+
+                    fill_histogram(
+                        row, isdata,
+                        :cos_theta_lj, row->row[:cos_theta_lj],
+                        p, ret
+                    )
+
+                    fill_histogram(
+                        row, isdata,
+                        :cos_theta_bl, row->row[:cos_theta_bl],
+                        p, ret
+                    )
                     
                 end
             end
 
-            #post bdt, 2J1T, cos_theta lj
-            reco = reco & sel(row)::Bool
-            reco = reco & Cuts.bdt(row, bdt_cut)
-            reco || continue
+            reco = reco && sel(row)::Bool
 
-            for s in [:data_mu, :data_ele, :tchan, :ttjets, :wjets]
-                cut_counters[s] += (sample == s) ? 1 : 0
+            ###
+            ### post BDT, 2J1T
+            ###
+            if (reco && Cuts.bdt(row, bdt_cut))  
+                const p = {
+                    :sample => sample,
+                    :iso => iso,
+                    :lepton => lepton,
+                    :systematic => systematic,
+                    :njets => 2,
+                    :ntags => 1
+                }
+
+                const bdt_p = merge(p, {:purification=>:bdt_sig_bg, :bdt_cut=>bdt_cut})
+
+                fill_histogram(
+                    row, isdata,
+                    :cos_theta_lj, row->row[:cos_theta_lj],
+                    bdt_p, ret
+                )
+
+                fill_histogram(
+                    row, isdata,
+                    :cos_theta_bl, row->row[:cos_theta_bl],
+                    bdt_p, ret
+                )
             end
-            
-            begin
-                const p = {:sample=>sample, :iso=>iso, :lepton=>lepton, :systematic=>syst, :bdt_cut=>bdt_cut} 
-                const x = row[:cos_theta_lj]::T_cos
-                const bin = findbin(defaults[:cos_theta_lj]::Histogram, x)::Int64
-                for (scen::Symbol, wfunc::Function) in weight_scenarios
 
-                    #in case of the systematically variated sample, we only want to use the nominal weight
-                    (!isdata && syst != :nominal && scen != :nominal) && continue
-                    (isdata && scen != :unweighted) && continue
-                    
-                    const kk = merge(p, {:scenario=>scen})
-                    h = getr(kk, :cos_theta_lj)::Histogram
-                    const w = wfunc(row)::Union(NAtype, Float64)
-                    (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
-                    h.bin_contents[bin] += w
-                    h.bin_entries[bin] += 1
-                end
+            ###
+            ### cut-based cross-check, 2J1T
+            ###
+            if (reco && Cuts.cutbased_etajprime(row))
+
+                const p = {
+                    :sample => sample,
+                    :iso => iso,
+                    :lepton => lepton,
+                    :systematic => systematic,
+                    :njets => 2,
+                    :ntags => 1,
+                    :purification => :etajprime
+                }
+
+                fill_histogram(
+                    row, isdata,
+                    :cos_theta_lj, row->row[:cos_theta_lj],
+                    p, ret
+                )
+                
+
+                fill_histogram(
+                    row, isdata,
+                    :cos_theta_bl, row->row[:cos_theta_bl],
+                    p, ret
+                )
+                
             end
         end
 
         const t1 = time()
-        println("processing $(length(rows)) took $(t1-t0) seconds, Npre=$sample_counters Npost=$cut_counters, Nreco=$(ret[:nreco])")
+        #println("processing $(length(rows)) took $(t1-t0) seconds, Npre=$sample_counters Npost=$cut_counters, Nreco=$(ret[:nreco])")
 
         ret[:nproc] = nproc
-        ret[:sample_counters] = sample_counters
-        ret[:cut_counters] = sample_counters
         ret[:time] = (t1-t0)
         return ret
     end
 end
 
-N = nrow(df)
-cn = 10^6
-#N = 10^4
-#cn = 10^3
-rowsplits = chunks(cn, N)
+const N = PARS["maxevents"] > 0 ? PARS["maxevents"] : nrow(df)
+N > nrow(df) && error("too many rows specified: $N > $(nrow(df))")
+
+const cn = 10^6
+
+const rowsplits = chunks(cn, N)
 
 println("mapping over Nevents=$N with chunksize=$cn, nchunks=$(length(rowsplits))...")
 tic()
@@ -236,13 +340,12 @@ for k in keys(ret)
         if ovfw>0
             println("overflow in bin=1: $ovfw")
         end
-        println(ret[k])
+        #println(ret[k])
     end
     (typeof(ret[k]) <: NHistogram) && println("H $k ", @sprintf("%.2f", integral(ret[k])), " N=$(nentries(ret[k]))")
 end
 
 ret[:nproc] == N || error("incomplete processing ", ret[:nproc], "!=", N)
-println(ret[:sample_counters])
 println(ret[:time])
 
 mkpath(dirname(outfile))
