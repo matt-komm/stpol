@@ -1,8 +1,8 @@
 import sys, imp
 from glob import glob
 
-indir = sys.argv[2] #input directory with model files
-outfile = sys.argv[3] #JSON output file
+infiles = sys.argv[3:]
+outfile = sys.argv[2]
 signal = 'tchan' #name of signal process/histogram
 
 def is_nominal(hname):
@@ -13,14 +13,19 @@ def is_nominal(hname):
 def get_model(infile):
     model = build_model_from_rootfile(
         infile,
-        include_mc_uncertainties = True, histogram_filter = is_nominal
+
+        #This enables the Barlow-Beeston procedure
+        # http://www.pp.rhul.ac.uk/~cowan/stat/mcml.pdf
+        # http://atlas.physics.arizona.edu/~kjohns/teaching/phys586/s06/barlow.pdf
+        include_mc_uncertainties = True,
+        histogram_filter = is_nominal
     )
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
 
     add_normal_unc(model, "wzjets", mean=1.0, unc=3.0)
     add_normal_unc(model, "ttjets", unc=0.5)
-    add_normal_unc(model, "qcd", unc=0.000001)
+    #add_normal_unc(model, "qcd", unc=0.000001)
     return model
 
 def add_normal_unc(model, par, mean=1.0, unc=1.0):
@@ -35,9 +40,9 @@ def add_normal_unc(model, par, mean=1.0, unc=1.0):
             print "adding parameters for", o, p
             model.get_coeff(o,p).add_factor('id', parameter=par)
 
-def build_model(indir):
+def build_model(infiles):
     model = None
-    infiles = glob("%s/*.root*" % indir)
+    #infiles = glob("%s/*.root*" % indir)
     for inf in infiles:
         print "loading model from ",inf
         m = get_model(inf)
@@ -49,7 +54,7 @@ def build_model(indir):
         raise Exception("no model was built from infiles=%s" % infiles)
     return model
 
-model = build_model(indir)
+model = build_model(infiles)
 
 print "processes:", sorted(model.processes)
 print "observables:", sorted(model.get_observables())
