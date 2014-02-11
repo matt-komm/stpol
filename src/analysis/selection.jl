@@ -30,6 +30,13 @@ module Cuts
     aiso(indata) = indata[:isolation] .== hmap_symb_from[:antiiso]
     dr(indata) = (indata[:ljet_dr].>0.5) & (indata[:bjet_dr].>0.5)
 
+    cutbased_etajprime(indata) = (
+        (abs(indata[:ljet_eta]).>2.5) &
+        (indata[:top_mass]<220) &
+        (indata[:top_mass] > 130)
+    )
+
+
     function truelepton(indata, x::Symbol)
         x == :mu && return abs(indata[:gen_lepton_id]) .== 13
         x == :ele && return abs(indata[:gen_lepton_id]) .== 11
