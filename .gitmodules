@@ -1,6 +1,9 @@
 [submodule "src/ntuple"]
 	path = src/ntuple
 	url = git@github.com:jpata/ntuple.git
-[submodule "src/CMGTools/External"]
-	path = src/CMGTools/External
+[submodule "CMSSW/src/CMGTools/External"]
+	path = CMSSW/src/CMGTools/External
 	url = https://github.com/latinos/UserCode-CMG-CMGTools-External
+[submodule "CMSSW/src/QScaleISRWeightProducer"]
+	path = CMSSW/src/QScaleISRWeightProducer
+	url = git@github.com:jpata/QScaleISRWeightProducer.git
