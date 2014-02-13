@@ -14,7 +14,7 @@ function makehists(
 
     aiso_mc = {
         p=>makehist_1d(sub(data, inds[:sample][p] & inds[:aiso] & sel), var, binning, qcdweight_ex)
-        for p in qcd_procs
+        for p in mcsamples
     }
     sum_aiso_mc = aiso_mc |> values |> collect |> sum
     
