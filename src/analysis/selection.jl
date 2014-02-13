@@ -5,13 +5,13 @@ module Cuts
     }
 
     is_mu(indata) = (
-        (abs(indata[:lepton_type] .== 13)) & (indata[:n_signal_mu] .== 1) &
+        (abs(indata[:lepton_type]) .== 13) & (indata[:n_signal_mu] .== 1) &
         (indata[:n_signal_ele] .== 0) & (indata[:n_veto_mu] .== 0) &
         (indata[:n_veto_ele] .== 0) & indata[:hlt_mu]
     )
 
     is_ele(indata) = (
-        (abs(indata[:lepton_type] .== 11)) & (indata[:n_signal_mu] .== 0) &
+        (abs(indata[:lepton_type]) .== 11) & (indata[:n_signal_mu] .== 0) &
         (indata[:n_signal_ele] .== 1) & (indata[:n_veto_mu] .== 0) &
         (indata[:n_veto_ele] .== 0) & indata[:hlt_ele]
     )
