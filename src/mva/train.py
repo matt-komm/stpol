@@ -71,7 +71,7 @@ for fn in sigfiles + bgfiles:
         raise Exception("%s not in signal or background" % fn)
 
 # Set the per event weights string
-factory.SetWeightExpression("pu_weight")
+factory.SetWeightExpression("1.0")
 #cut="met>40 && ljet_pt>90"
 
 cuts = {
