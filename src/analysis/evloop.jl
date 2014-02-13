@@ -1,9 +1,10 @@
-require("base.jl")
-
+using JSON
 jsfile = ARGS[1]
 PARS = JSON.parse(readall(jsfile))
 
 PARS["ncores"] > 1 && addprocs(PARS["ncores"])
+#needs to be after addprocs
+require("base.jl")
 
 @eval @everywhere PARS = JSON.parse(readall($jsfile))
 @everywhere println(PARS)
@@ -15,9 +16,18 @@ const outfile = PARS["outfile"]
     df = readdf($infile)
 )
 
-@everywhere require("histogram_defaults.jl")
+@everywhere include("histogram_defaults.jl")
 
 @everywhere begin
+
+function getr(ret::Associative, path::Associative, k::Symbol)
+    const x = merge(path, {:obj=>k})
+    if !(x in keys(ret))
+        ret[x] = defaults_func[k]()
+    end
+    return ret[x]
+end
+
 function fill_histogram(
     row::DataFrameRow,
     isdata::Bool,
@@ -33,11 +43,10 @@ function fill_histogram(
     for (scen::Symbol, wfunc::Function) in weight_scenarios
         
         nominal_only && !(scen==:nominal || scen==:unweighted) && continue
-
         #in case of the systematically variated sample, we only want to use the nominal weight
         (!isdata && syst != :nominal && scen != :nominal) && continue
-        (isdata && scen != :unweighted) && continue
-        (!isdata && scen == :unweighted) && continue #dont care about unweighted MC
+        (isdata && scen != :unweighted) && continue #only unweighted data
+        #(!isdata && scen == :unweighted) && continue #dont care about unweighted MC
         
         const kk = merge(p, {:scenario=>scen})
         h = getr(ret, kk, hname)::Histogram
@@ -47,14 +56,6 @@ function fill_histogram(
         h.bin_contents[bin] += w
         h.bin_entries[bin] += 1
     end
-end
-
-function getr(ret::Associative, path::Associative, k::Symbol)
-    const x = merge(path, {:obj=>k})
-    if !(x in keys(ret))
-        ret[x] = defaults_func[k]()
-    end
-    return ret[x]
 end
 
 end
@@ -97,14 +98,12 @@ end
             const iso = hmap_symb_from[row[:isolation]::Int64]
             const true_lep = sample==:tchan ? row[:gen_lepton_id]::Int32 : int32(0)
 
-            const isdata = ((sample == :data_mu) || (sample == :data_ele)) 
-            (   !isdata &&
-                nominal_only &&
-                (
-                    !(systematic == :nominal) || 
-                    (systematic == :unknown)
-                ) && continue
-            )
+            const isdata = ((sample == :data_mu) || (sample == :data_ele))
+            if !isdata && nominal_only
+                if !((systematic==:nominal)||(systematic==:unknown))
+                    continue
+                end
+            end
 
             ###
             ### transfer matrices
@@ -114,17 +113,30 @@ end
                 const x = row[:cos_theta_lj_gen]
                 const y = row[:cos_theta_lj]
                
+                ###
+                ### fill the gen-level histogram before selection
+                ### 
+                const p = {
+                    :sample=>sample, :iso=>iso, :true_lep=>true_lep,
+                    :systematic=>systematic, :scenario=>:unweighted
+                }
+                fill_histogram(
+                    row, isdata,
+                    :cos_theta_lj_gen, row->row[:cos_theta_lj_gen],
+                    p, ret
+                )
+               
                 #did event pass reconstruction ?
                 local reco = true 
 
-                if !is_any_na(row, :njets, :ntags, :bdt_sig_bg)
+                if !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)
 
                     reco = reco && sel(row) && Cuts.bdt(row, bdt_cut)
 
                     if reco && Cuts.truelepton(row, :mu)
-                        reco = reco & Cuts.qcd_mva_wp(row, :mu) & Cuts.is_mu(row)
+                        reco = reco & Cuts.qcd_mva_wp(row, :mu) & Cuts.is_reco_lepton(row, :mu)
                     elseif reco && Cuts.truelepton(row, :ele)
-                        reco = reco & Cuts.qcd_mva_wp(row, :ele) & Cuts.is_ele(row)
+                        reco = reco & Cuts.qcd_mva_wp(row, :ele) & Cuts.is_reco_lepton(row, :ele)
                     else
                         reco = false
                     end
@@ -152,7 +164,7 @@ end
                         :systematic=>systematic, :scenario=>scen_name[1]
                     }
 
-                    const h = getr(kk, :transfer_matrix)::NHistogram
+                    const h = getr(ret, kk, :transfer_matrix)::NHistogram
                    
                     const w = scen[:weight](row)
 
@@ -166,7 +178,7 @@ end
             ###
             ### lepton reco
             ###
-            if is_any_na(row, :lepton_id, :n_signal_mu, :n_signal_ele)
+            if is_any_na(row, :n_signal_mu, :n_signal_ele)
                 ret[:fails_lepton] += 1
                 continue
             end
@@ -203,7 +215,6 @@ end
                 for (nj, nt) in [(2, 0), (2,1), (3,2)]
 
                     #pre-bdt selection
-                    local _reco
                     const _reco = reco & sel(row, nj, nt)::Bool
                     _reco || continue
                     
@@ -311,7 +322,7 @@ end
         end
 
         const t1 = time()
-        #println("processing $(length(rows)) took $(t1-t0) seconds, Npre=$sample_counters Npost=$cut_counters, Nreco=$(ret[:nreco])")
+        println("processing $(length(rows)) took $(t1-t0) seconds")
 
         ret[:nproc] = nproc
         ret[:time] = (t1-t0)
