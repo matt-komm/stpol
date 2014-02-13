@@ -94,10 +94,22 @@ const HDIR = "output/hists"
 const YDIR = "output/yields"
 const FITDIR = "output/fits"
 
-readdf(fn) = read(jldopen(fn, "r";mmaparrays=true), "df")
+#function readdf(fn)
+#    fi = jldopen(fn, "r";mmaparrays=true)
+#    k = read(fi, "df/names")
+#    v = read(fi, "df/values")
+#    DataFrame(v, DataFrames.Index(k))
+#end
+
+function readdf(fn)
+    fi = jldopen(fn, "r";mmaparrays=true)
+    read(fi, "df")
+end
+
 function writedf(fn, df)
     f = jldopen(fn, "w")
-    write(f, "df", df)
+    write(f, "df/names", names(df))
+    write(f, "df/values", values(df))
     close(f)
 end
 
