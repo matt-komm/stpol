@@ -19,7 +19,7 @@ def main():
     varmaps[13] = {"mu_mtw":"mtw", "c":"C"}
     varmaps[11] = {"ele_mtw":"mtw", "c":"C"}
 
-    mva_loop_lepton_separate(infiles, mvas, varmaps)
+    mva_loop_lepton_separate(mvaname, infiles, mvas, varmaps)
 
 if __name__=="__main__":
     main()

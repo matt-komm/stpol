@@ -151,7 +151,7 @@ def zero_buffers(varbuffers):
         v[0] = 0.0
 
 
-def mva_loop_lepton_separate(infiles, mvas, varmaps):
+def mva_loop_lepton_separate(mvaname, infiles, mvas, varmaps):
     for infn in infiles:
         print "Processing file",infn
         #get the events tree
