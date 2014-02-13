@@ -71,7 +71,7 @@ for fn in sigfiles + bgfiles:
         raise Exception("%s not in signal or background" % fn)
 
 # Set the per event weights string
-factory.SetWeightExpression("1.0")
+factory.SetWeightExpression("pu_weight")
 #cut="met>40 && ljet_pt>90"
 
 cuts = {
@@ -79,17 +79,18 @@ cuts = {
     "ele": "((n_signal_mu==0) && (n_signal_ele==1) && (n_veto_mu==0)&&(n_veto_ele==0) && (met > 50))"
 }
 
-cut="hlt==1 && (njets==2) && (ntags==1) && ((%s) || (%s))"%(cuts["mu"], cuts["ele"])
+cut="(hlt==1) && (njets==2) && (ntags==1) && ((%s) || (%s))" %(cuts["mu"], cuts["ele"])
 
+print("cut=", cut)
 factory.PrepareTrainingAndTestTree(
     TCut(cut), TCut(cut),
-    "SplitMode=Block:NormMode=None:VerboseLevel=Debug"
+    "NormMode=None:VerboseLevel=Debug"
 )
 
 # Book the MVA method
 mva_args = ""\
     "H:VerbosityLevel=Debug:"\
-    "NTrees=1000:"\
+    "NTrees=2000:"\
     "BoostType=Grad:"\
     "Shrinkage=0.1:"\
     "!UseBaggedGrad:"\
@@ -110,7 +111,7 @@ lepton_cat = factory.BookMethod(
 
 #muon events
 lepton_cat.AddMethod(
-    TCut("abs(lepton_type)==13.0"),
+    TCut("abs(lepton_type)==13"),
     ":".join(varlist),
     TMVA.Types.kBDT,
     "muon",
@@ -119,12 +120,20 @@ lepton_cat.AddMethod(
 
 #electron events
 lepton_cat.AddMethod(
-    TCut("abs(lepton_type)==11.0"),
+    TCut("abs(lepton_type)==11"),
     ":".join(varlist),
     TMVA.Types.kBDT,
     "electron",
     mva_args
 )
+
+
+## Without categorization
+#factory.BookMethod(
+#    TMVA.Types.kBDT,
+#    "BDT",
+#    "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.1:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"\
+#)
 
 # Train, test and evaluate them all
 factory.TrainAllMethods()
