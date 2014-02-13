@@ -30,8 +30,9 @@ function submit(infiles, outfile, i::Integer)
     fn = "$ofdir/job.$i"
     ofile = "$ofdir/slurm.out.$i"
     skimoutput = "$ofdir/skim.out.$i"
-    
-    subcmd = `sbatch --exclude=./exclude.txt -p prio -J julia_job_test.$i -o $ofile $fn`
+    scpath = dirname(Base.source_path())
+
+    subcmd = `sbatch --exclude=$scpath/exclude.txt -p prio -J julia_job_test.$i -o $ofile $fn`
     
     #the submit script (indents matter)
     cmd="#!/bin/bash
@@ -42,7 +43,7 @@ RET=\$?
 if [ \$RET -ne 0 ]; then
     echo '/hdfs was not available'
 else
-    ~/.julia/ROOT/julia-basic \$STPOL_DIR/src/skim/skim.jl $ofdir/$outfile $infilelist > $skimoutput
+    ~/.julia/ROOT/julia $scpath/skim.jl $ofdir/$outfile $infilelist > $skimoutput
     RET=\$?
 fi
 echo 'done '\$RET && exit \$RET
