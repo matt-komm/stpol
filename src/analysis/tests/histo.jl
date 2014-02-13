@@ -29,7 +29,9 @@ hfill!(h, NA)
 @test(h.bin_entries[1]==3)
 
 hfill!(h, 0.5, float32(0.5))
-hfill!(h, 0.5, 0.5)
+hfill!(h, int32(0), 0.5)
+hfill!(h, int64(0), 0.5)
+hfill!(h, int64(0), float32(0.5))
 
 h = Histogram([1],[1],[0])
 @test integral(h)==1
