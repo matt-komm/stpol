@@ -22,7 +22,8 @@ merge:
 	./merge.jl merged.jld $(OFDIR)/merged/*.jld
 
 merge-data:
-	julia -F mergedf.jl /scratch/joosep/feb5 $(DIR)/merged/md.txt /scratch/joosep/skim_feb5/output*.jld
+	echo "run OOM adjuster: echo -16 > /proc/X/oom_adj"
+	julia -F mergedf.jl /scratch/joosep/feb13 $(DIR)/merged/md.txt /scratch/joosep/skim_feb5/output*.jld
 	echo "merge is done" | sendmail joosep.pata@cern.ch
 
 merge-mva:
@@ -36,7 +37,7 @@ convert-hists:
 	find /home/joosep/singletop/output/bdt_scan -name "*.jld" | ~/parallel -j32 ~/.julia/ROOT/julia convert_hists.jl {} output/bdt_scan/hists/{/.}
 	find /home/joosep/singletop/output/bdt_scan -name "*.jld" | ~/parallel -j32 ~/.julia/ROOT/julia convhists2root.jl {} output/bdt_scan/hists/{/.}/raw.root
 
-test_merge:
+test-merge:
 	~/.julia/ROOT/julia mergedf.jl test $(DIR)/merged/md.txt $(DIR)/output_1.jld  $(DIR)/output_2.jld
 
 test-evloop:
