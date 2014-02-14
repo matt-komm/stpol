@@ -273,7 +273,7 @@ int main( int argc, const char* argv[] )
     */
     
     TFile responseFile(argv[4],"r");
-    TH2D* response =(TH2D*)responseFile.Get(argv[5]);;
+    TH2D* response =(TH2D*)responseFile.Get(argv[5]);
 
     TFile output(argv[6],"RECREATE");
     TTree* tree_output = new TTree("unfolded","");
@@ -321,9 +321,14 @@ int main( int argc, const char* argv[] )
     for (int cnt=0; cnt<nevents;++cnt) {
         
         tree_input->GetEntry(cnt);
-        
+        printf("unfolding...%i \r\n",cnt);
         if (nevents>200 && cnt%int(nevents/20.0)==0) {
             printf("unfolding...%i %%\r\n",int(100.0*cnt/nevents));
+        }
+        //just add a small amount such that the linear system stays well defined and solvable
+        for (int ibin=0; ibin<histo_input->GetNbinsX();++ibin)
+        {
+             histo_input->SetBinContent(ibin+1,histo_input->GetBinContent(ibin+1)+0.000001);
         }
         TUnfoldDensity* tunfold = new TUnfoldDensity(response,TUnfold::kHistMapOutputHoriz, TUnfold::kRegModeCurvature);
         //tunfold->SetBias(truth);
@@ -347,7 +352,7 @@ int main( int argc, const char* argv[] )
         //histo_output_tunfold->Add(truth,-1.0);
         histo_output_tunfold->Draw();
         //truth->Scale(1.06);
-        truth->Draw("P*Same");
+        //truth->Draw("P*Same");
         canvas->Update();
         canvas->WaitPrimitive();
         */

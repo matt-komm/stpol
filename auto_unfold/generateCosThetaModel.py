@@ -7,9 +7,122 @@ import math
 import sys
 import os
 import logging
+import random
 import ROOT
 
+ROOT.gROOT.SetBatch(True)
 
+def getHistogram(fileName,histName):
+    f=ROOT.TFile(fileName)
+    hist = f.Get(histName)
+    if (hist==None):
+        f.Close()
+        return None
+    hist.SetDirectory(0)
+    return hist
+
+def plotSysTemplates(fileName,signalSetDict,backgroundSetDict,shapeSysDict,outputFolder):
+    colorDict={
+        "beta_signal":ROOT.kMagenta,
+        "qcd":ROOT.kGray,
+        "ttjets":ROOT.kRed+1,
+        "wzjets":ROOT.kGreen+1
+    }
+    histStackNominal=ROOT.THStack("stackNominal"+str(random.random()),"stack")
+    sysStackDictUP={}
+    sysStackDictDOWN={}
+    for sysName in shapeSysDict.keys():
+        sysStackDictUP[sysName]=ROOT.THStack(sysName+"up"+str(random.random()),"")
+        sysStackDictDOWN[sysName]=ROOT.THStack(sysName+"up"+str(random.random()),"")
+    legend=ROOT.TLegend(0.76,0.6,0.99,0.95)
+    for backgroundSet in backgroundSetDict.keys():
+        for histName in backgroundSetDict[backgroundSet]:
+            hist=getHistogram(fileName,histName)
+            hist.SetLineWidth(0)
+            hist.SetFillStyle(1001)
+            if colorDict.has_key(backgroundSet):
+                hist.SetFillColor(colorDict[backgroundSet])
+            else:
+                hist.SetFillColor(ROOT.kAzure-4)
+            histStackNominal.Add(hist,"hist F")
+            
+                        
+            for sysName in shapeSysDict.keys():
+                histSysUP=getHistogram(fileName,histName+"__"+sysName+"__up")
+                histSysDOWN=getHistogram(fileName,histName+"__"+sysName+"__down")
+                #use nominal template if sys variation not yet present
+                if histSysUP==None:
+                    histSysUP=ROOT.TH1D(hist)
+                if histSysDOWN==None:
+                    histSysDOWN=ROOT.TH1D(hist)
+                    
+                histSysUP.SetMarkerSize(1.0)
+                histSysUP.SetMarkerStyle(22)
+                histSysUP.SetFillStyle(0)
+                histSysUP.SetLineColor(ROOT.kGray+2)
+                histSysUP.SetMarkerColor(ROOT.kGray+1)
+                sysStackDictUP[sysName].Add(histSysUP,"P")
+                
+                histSysDOWN.SetMarkerSize(1.0)
+                histSysDOWN.SetMarkerStyle(23)
+                histSysDOWN.SetFillStyle(0)
+                histSysDOWN.SetLineColor(ROOT.kGray+2)
+                histSysDOWN.SetMarkerColor(ROOT.kGray+1)
+                sysStackDictDOWN[sysName].Add(histSysDOWN,"P")
+            
+        legend.AddEntry(hist,backgroundSet,"F")
+        
+        
+    for signalSet in signalSetDict.keys():
+        for histName in signalSetDict[signalSet]:
+            hist=getHistogram(fileName,histName)
+            hist.SetLineWidth(0)
+            hist.SetFillStyle(1001)
+            if colorDict.has_key(signalSet):
+                hist.SetFillColor(colorDict[signalSet])
+            else:
+                hist.SetFillColor(ROOT.kAzure-4)
+            histStackNominal.Add(hist,"hist F")
+            
+            for sysName in shapeSysDict.keys():
+                histSysUP=getHistogram(fileName,histName+"__"+sysName+"__up")
+                histSysDOWN=getHistogram(fileName,histName+"__"+sysName+"__down")
+                #use nominal template if sys variation not yet present
+                if histSysUP==None:
+                    histSysUP=ROOT.TH1D(hist)
+                if histSysDOWN==None:
+                    histSysDOWN=ROOT.TH1D(hist)
+                    
+                histSysUP.SetMarkerSize(1.0)
+                histSysUP.SetMarkerStyle(22)
+                histSysUP.SetFillStyle(0)
+                histSysUP.SetLineColor(ROOT.kGray+2)
+                histSysUP.SetMarkerColor(ROOT.kGray+1)
+                sysStackDictUP[sysName].Add(histSysUP,"P")
+                
+                histSysDOWN.SetMarkerSize(1.0)
+                histSysDOWN.SetMarkerStyle(23)
+                histSysDOWN.SetFillStyle(0)
+                histSysDOWN.SetLineColor(ROOT.kGray+2)
+                histSysDOWN.SetMarkerColor(ROOT.kGray+1)
+                sysStackDictDOWN[sysName].Add(histSysDOWN,"P")
+                
+        legend.AddEntry(hist,signalSet,"F")
+        
+    
+    for sysName in shapeSysDict.keys():
+        canvas=ROOT.TCanvas("canvas"+sysName+str(random.random()),"",800,600)
+        canvas.cd(1)
+        ROOT.gPad.SetRightMargin(0.25)
+        histStackNominal.SetTitle(sysName)
+        histStackNominal.Draw()
+        histStackNominal.SetMaximum(histStackNominal.GetMaximum()*1.4)
+        histStackNominal.Draw()
+        sysStackDictDOWN[sysName].Draw("Same")
+        sysStackDictUP[sysName].Draw("Same")
+        legend.Draw("Same")
+        canvas.Print(os.path.join(outputFolder,"sysTempl__"+sysName+".pdf"))
+    
 def checkHistogramExistence(fileName,histoName,debug=False):
     if not os.path.exists(fileName):
         logging.warning("file '"+fileName+"' does not exists containing histogram '"+histoName+"', will be ignored")
@@ -26,7 +139,7 @@ def checkHistogramExistence(fileName,histoName,debug=False):
         return True
     weightSum=0.0
     sumMC=0.0
-    print histoName
+    #print histoName
     for ibin in range(obj.GetNbinsX()):
         obs=max(obj.GetBinContent(ibin+1),0.0000001)
         err=max(obj.GetBinError(ibin+1),0.000000000000000001)
@@ -34,7 +147,7 @@ def checkHistogramExistence(fileName,histoName,debug=False):
         n=obs**2/err**2
         weightSum+=w
         sumMC+=n
-        print "\tobs:",round(obs,2),"\terr:",round(err,3),"\tw:",round(w,4),"\tn:",round(n,1)
+        #print "\tobs:",round(obs,2),"\terr:",round(err,3),"\tw:",round(w,4),"\tn:",round(n,1)
     avg_weight=weightSum/obj.GetNbinsX()
     
     return True
@@ -42,11 +155,12 @@ def checkHistogramExistence(fileName,histoName,debug=False):
 def generateModelPE(modelName="mymodel",
                     outputFolder="mymodel",
                     histFile=None,
-                    histPrefix="cos_theta",
-                    signalYieldList=[],
-                    backgroundYieldList=[],
-                    shapeSysList=[],
-                    correlations=[],
+                    prefix="cos_theta",
+                    signalSetDict={},
+                    backgroundSetDict={},
+                    yieldSysDict={},
+                    shapeSysDict={},
+                    corrList=[],
                     binning=1,
                     ranges=[-1.0,1.0],
                     dicePoisson=True,
@@ -56,29 +170,20 @@ def generateModelPE(modelName="mymodel",
         logging.error("no input histfile specified during model generation")
         sys.exit(-1)
     
-    
     file=open(os.path.join(outputFolder,modelName+".cfg"), "w")
-    ntupleNameList=[]
-    ntupleNameList.extend(signalYieldList)
-    ntupleNameList.extend(backgroundYieldList)
     
     sysDistributions=MultiDistribution("sysDist")
-    for yieldSys in signalYieldList:
-        name ="sys_"+yieldSys["name"]
-        mean =yieldSys["mean"]
-        unc=yieldSys["unc"]
-        sysDistributions.addParameter(name,str(mean),unc)
-    for yieldSys in backgroundYieldList:
-        name ="sys_"+yieldSys["name"]
-        mean =yieldSys["mean"]
-        unc=yieldSys["unc"]
-        sysDistributions.addParameter(name,str(mean),unc)
-    for shapeSys in shapeSysList:
-        name ="sys_"+shapeSys["name"]
-        mean =shapeSys["mean"]
-        unc=shapeSys["unc"]
-        sysDistributions.addParameter(name,str(mean),unc)
-    for corr in correlations:
+    for key in yieldSysDict.keys():
+        name = "sys_"+key
+        mean = yieldSysDict[key]["mean"]
+        unc = yieldSysDict[key]["unc"]
+        sysDistributions.addParameter(name,mean,unc)
+    for key in shapeSysDict.keys():
+        name ="sys_"+key
+        mean =shapeSysDict[key]["mean"]
+        unc=shapeSysDict[key]["unc"]
+        sysDistributions.addParameter(name,mean,unc)
+    for corr in corrList:
         name1="sys_"+corr["name"][0]
         name2="sys_"+corr["name"][1]
         rho=corr["rho"]
@@ -86,57 +191,52 @@ def generateModelPE(modelName="mymodel",
     
     file.write(sysDistributions.toConfigString())
     
+    plotSysTemplates(histFile,signalSetDict,backgroundSetDict,shapeSysDict,outputFolder)
+    
     model=Model(modelName)
     if mcUncertainty:
         model=Model(modelName, {"bb_uncertainties":"true"})
 
     #yield_lumi=Distribution("beta_LUMI", "gauss", {"mean": "1.0", "width":"0.022", "range":"(\"-inf\",\"inf\")"})
     #file.write(yield_lumi.toConfigString())
+    totalSetDict={}
+    totalSetDict.update(signalSetDict)
+    totalSetDict.update(backgroundSetDict)
     
-    
-    obs=Observable(histPrefix, binning, ranges)
-    for ntuple in ntupleNameList:
-        name=ntuple["name"]
-        if not checkHistogramExistence(histFile,histPrefix+"__"+name,debug=True):
-            continue
-        comp=ObservableComponent("comp_"+name)
-        coeff=CoefficientMultiplyFunction()
-        
-        
-        #betaDist=Distribution("beta_"+ntuple, "log_normal", {"mu":str(math.log(ntupleNameList[ntuple]["yield"])), "sigma":str(ntupleNameList[ntuple]["unc"])})
-        #file.write(betaDist.toConfigString())
-        #coeff.addDistribution(betaDist)
-        
-        coeff.addDistribution(sysDistributions,"sys_"+name)
-        
-        #coeff.addDistribution(yield_lumi)
-        
-        
-        comp.setCoefficientFunction(coeff)
-        hist=RootHistogram(name+"-NOMINAL",{"use_errors":"true"})
-        hist.setFileName(histFile)
-        hist.setHistoName(histPrefix+"__"+name)
-        file.write(hist.toConfigString())
-        comp.setNominalHistogram(hist)
-        
-        for shapeSystematic in shapeSysList:
-            sysName=shapeSystematic["name"]
-            if not checkHistogramExistence(histFile,histPrefix+"__"+name+"__"+sysName+"__up"):
+    obs=Observable(prefix, binning, ranges)
+    for histSet in totalSetDict.keys():
+        for histName in totalSetDict[histSet]:
+            if not checkHistogramExistence(histFile,histName,debug=True):
                 continue
-            if not checkHistogramExistence(histFile,histPrefix+"__"+name+"__"+sysName+"__down"):
-                continue
-            histUP=RootHistogram(name+"-"+sysName+"-UP",{"use_errors":"true"})
-            histUP.setFileName(histFile)
-            histUP.setHistoName(histPrefix+"__"+name+"__"+sysName+"__up")
-            histDOWN=RootHistogram(name+"-"+sysName+"-DOWN",{"use_errors":"true"})
-            histDOWN.setFileName(histFile)
-            histDOWN.setHistoName(histPrefix+"__"+name+"__"+sysName+"__down")
-            comp.addUncertaintyHistograms(histUP, histDOWN, sysDistributions,"sys_"+sysName)
-            file.write(histUP.toConfigString())
-            file.write(histDOWN.toConfigString())
-        file.write("\n")
-        
-        obs.addComponent(comp)
+            comp=ObservableComponent(histName)
+            coeff=CoefficientMultiplyFunction()
+            coeff.addDistribution(sysDistributions,"sys_"+histSet)
+            comp.setCoefficientFunction(coeff)
+ 
+            hist=RootHistogram(histName+"-NOMINAL",{"use_errors":"true"})
+            hist.setFileName(histFile)
+            hist.setHistoName(histName)
+            file.write(hist.toConfigString())
+            comp.setNominalHistogram(hist)
+            
+            for sysName in shapeSysDict.keys():
+                if not checkHistogramExistence(histFile,histName+"__"+sysName+"__up"):
+                    continue
+                if not checkHistogramExistence(histFile,histName+"__"+sysName+"__down"):
+                    continue
+                histUP=RootHistogram(histName+"-"+sysName+"-UP",{"use_errors":"true"})
+                histUP.setFileName(histFile)
+                histUP.setHistoName(histName+"__"+sysName+"__up")
+                
+                histDOWN=RootHistogram(histName+"-"+sysName+"-DOWN",{"use_errors":"true"})
+                histDOWN.setFileName(histFile)
+                histDOWN.setHistoName(histName+"__"+sysName+"__down")
+                comp.addUncertaintyHistograms(histUP, histDOWN, sysDistributions,"sys_"+sysName)
+                file.write(histUP.toConfigString())
+                file.write(histDOWN.toConfigString())
+            file.write("\n")
+            
+            obs.addComponent(comp)
            
         
     model.addObservable(obs)
@@ -148,124 +248,221 @@ def generateModelPE(modelName="mymodel",
 def generateNominalSignal(modelName="mymodel",
                     outputFolder="mymodel",
                     histFile=None,
-                    histPrefix="cos_theta",
-                    signalYieldList=[],
+                    prefix="cos_theta",
+                    signalSetDict={},
+                    backgroundSetDict={},
+                    yieldSysDict={},
+                    shapeSysDict={},
+                    corrList=[],
                     binning=1,
                     ranges=[-1.0,1.0],
-                    dicePoisson=False,
-                    mcUncertainty=False):
+                    dicePoisson=True,
+                    mcUncertainty=True):
                     
     if histFile==None:
         logging.error("no input histfile specified during model generation")
         sys.exit(-1)
     
-    
     file=open(os.path.join(outputFolder,modelName+".cfg"), "w")
     
-    model=Model(modelName)
+    sysDistributions=MultiDistribution("sysDist")
+    for key in signalSetDict.keys():
+        name = "sys_"+key
+        mean = yieldSysDict[key]["mean"]
+        unc = 0.000000001
+        sysDistributions.addParameter(name,mean,unc)
     
-    obsBG=Observable(histPrefix, binning, ranges)
+    file.write(sysDistributions.toConfigString())
+    
+    
+    model=Model(modelName)
+    if mcUncertainty:
+        model=Model(modelName, {"bb_uncertainties":"true"})
+
+    #yield_lumi=Distribution("beta_LUMI", "gauss", {"mean": "1.0", "width":"0.022", "range":"(\"-inf\",\"inf\")"})
+    #file.write(yield_lumi.toConfigString())
+    totalSetDict={}
+    totalSetDict.update(signalSetDict)
+    
+    obs=Observable(prefix, binning, ranges)
+    for histSet in totalSetDict.keys():
+        for histName in totalSetDict[histSet]:
+            if not checkHistogramExistence(histFile,histName,debug=True):
+                continue
+            comp=ObservableComponent(histName)
+            coeff=CoefficientMultiplyFunction()
+            coeff.addDistribution(sysDistributions,"sys_"+histSet)
+            comp.setCoefficientFunction(coeff)
+ 
+            hist=RootHistogram(histName+"-NOMINAL",{"use_errors":"true"})
+            hist.setFileName(histFile)
+            hist.setHistoName(histName)
+            file.write(hist.toConfigString())
+            comp.setNominalHistogram(hist)
             
-    for ntuple in signalYieldList:
-        name=ntuple["name"]
-        compBG=ObservableComponent("comp_"+name)
-        coeffBG=CoefficientConstantFunction("beta_"+name,ntuple["mean"])
-        compBG.setCoefficientFunction(coeffBG)
-        histBG=RootHistogram(name,{"use_errors":"true"})
-        histBG.setFileName(histFile)
-        histBG.setHistoName(histPrefix+"__"+name)
-        file.write(histBG.toConfigString())
-        compBG.setNominalHistogram(histBG)
-        obsBG.addComponent(compBG)
+            obs.addComponent(comp)
+           
         
-        
-    model.addObservable(obsBG)
+    model.addObservable(obs)
     file.write(model.toConfigString())
-    _writeFile(file,outputFolder,modelName,dicePoisson=dicePoisson,mcUncertainty=mcUncertainty,experiments=10000)
+    _writeFile(file,outputFolder,modelName,dicePoisson=False,mcUncertainty=False,experiments=1)
     file.close()
        
     
 def generateNominalBackground(modelName="mymodel",
                     outputFolder="mymodel",
                     histFile=None,
-                    histPrefix="cos_theta",
-                    backgroundYieldList=[],
+                    prefix="cos_theta",
+                    signalSetDict={},
+                    backgroundSetDict={},
+                    yieldSysDict={},
+                    shapeSysDict={},
+                    corrList=[],
                     binning=1,
-                    ranges=[-1.0,1.0]):
+                    ranges=[-1.0,1.0],
+                    dicePoisson=True,
+                    mcUncertainty=True):
                     
     if histFile==None:
         logging.error("no input histfile specified during model generation")
         sys.exit(-1)
     
-    
     file=open(os.path.join(outputFolder,modelName+".cfg"), "w")
     
-    model=Model(modelName)
+    sysDistributions=MultiDistribution("sysDist")
+    for key in backgroundSetDict.keys():
+        name = "sys_"+key
+        mean = yieldSysDict[key]["mean"]
+        unc = 0.000000001
+        sysDistributions.addParameter(name,mean,unc)
     
-    obsBG=Observable(histPrefix, binning, ranges)
+    file.write(sysDistributions.toConfigString())
+    
+    model=Model(modelName)
+    if mcUncertainty:
+        model=Model(modelName, {"bb_uncertainties":"true"})
+
+    #yield_lumi=Distribution("beta_LUMI", "gauss", {"mean": "1.0", "width":"0.022", "range":"(\"-inf\",\"inf\")"})
+    #file.write(yield_lumi.toConfigString())
+    totalSetDict={}
+    totalSetDict.update(backgroundSetDict)
+    
+    obs=Observable(prefix, binning, ranges)
+    for histSet in totalSetDict.keys():
+        for histName in totalSetDict[histSet]:
+            if not checkHistogramExistence(histFile,histName,debug=True):
+                continue
+            comp=ObservableComponent(histName)
+            coeff=CoefficientMultiplyFunction()
+            coeff.addDistribution(sysDistributions,"sys_"+histSet)
+            comp.setCoefficientFunction(coeff)
+ 
+            hist=RootHistogram(histName+"-NOMINAL",{"use_errors":"true"})
+            hist.setFileName(histFile)
+            hist.setHistoName(histName)
+            file.write(hist.toConfigString())
+            comp.setNominalHistogram(hist)
             
-    for ntuple in backgroundYieldList:
-        name=ntuple["name"]
-        compBG=ObservableComponent("comp_"+name)
-        coeffBG=CoefficientConstantFunction("beta_"+name,ntuple["mean"])
-        compBG.setCoefficientFunction(coeffBG)
-        histBG=RootHistogram(name,{"use_errors":"true"})
-        histBG.setFileName(histFile)
-        histBG.setHistoName(histPrefix+"__"+name)
-        file.write(histBG.toConfigString())
-        compBG.setNominalHistogram(histBG)
-        obsBG.addComponent(compBG)
+            obs.addComponent(comp)
+           
         
-        
-    model.addObservable(obsBG)
+    model.addObservable(obs)
     file.write(model.toConfigString())
     _writeFile(file,outputFolder,modelName,dicePoisson=False,mcUncertainty=False,experiments=1)
     file.close()
     
-    
+'''    
 def generateModelData(modelName="mymodel",
                     outputFolder="mymodel",
-                    dataHist=None,
-                    histPrefix="",
+                    histFile=None,
+                    prefix="cos_theta",
+                    signalSetDict={},
+                    backgroundSetDict={},
+                    yieldSysDict={},
+                    shapeSysDict={},
+                    corrList=[],
                     binning=1,
-                    ranges=[-1.0,1.0]):
+                    ranges=[-1.0,1.0],
+                    dicePoisson=True,
+                    mcUncertainty=True):
                     
-                    
-    if dataHist==None:
+    if histFile==None:
         logging.error("no input histfile specified during model generation")
         sys.exit(-1)
     
-    
     file=open(os.path.join(outputFolder,modelName+".cfg"), "w")
-
+    
+    sysDistributions=MultiDistribution("sysDist")
+    for key in yieldSysDict.keys():
+        name = "sys_"+key
+        mean = yieldSysDict[key]["mean"]
+        unc = yieldSysDict[key]["unc"]
+        sysDistributions.addParameter(name,mean,unc)
+    for key in shapeSysDict.keys():
+        name ="sys_"+key
+        mean =shapeSysDict[key]["mean"]
+        unc=shapeSysDict[key]["unc"]
+        sysDistributions.addParameter(name,mean,unc)
+    for corr in corrList:
+        name1="sys_"+corr["name"][0]
+        name2="sys_"+corr["name"][1]
+        rho=corr["rho"]
+        sysDistributions.setCorrelation(name1,name2,rho)
+    
+    file.write(sysDistributions.toConfigString())
+    
+    
     model=Model(modelName)
+    if mcUncertainty:
+        model=Model(modelName, {"bb_uncertainties":"true"})
+
+    #yield_lumi=Distribution("beta_LUMI", "gauss", {"mean": "1.0", "width":"0.022", "range":"(\"-inf\",\"inf\")"})
+    #file.write(yield_lumi.toConfigString())
+    totalSetDict={}
+    totalSetDict.update(signalSetDict)
+    totalSetDict.update(backgroundSetDict)
     
-    
-    obs=Observable(histPrefix, binning, ranges)
-    
-    histFile,histName=dataHist.rsplit(":",1)
-    if not checkHistogramExistence(histFile,histName):
-        logging.error("data histogram '"+histName+"' in file '"+histFile+"' not found")
-        sys.exit(-1)
-    comp=ObservableComponent("comp_data")
-    coeff=CoefficientConstantFunction("beta-data")
-    
-    comp.setCoefficientFunction(coeff)
-    hist=RootHistogram("data-NOMINAL",{"use_errors":"false"})
-    hist.setFileName(histFile)
-    hist.setHistoName(histName)
-    file.write(hist.toConfigString())
-    comp.setNominalHistogram(hist)
-    
-    file.write("\n")
-    
-    obs.addComponent(comp)
-      
+    obs=Observable(prefix, binning, ranges)
+    for histSet in totalSetDict.keys():
+        for histName in totalSetDict[histSet]:
+            if not checkHistogramExistence(histFile,histName,debug=True):
+                continue
+            comp=ObservableComponent(histName)
+            coeff=CoefficientMultiplyFunction()
+            coeff.addDistribution(sysDistributions,"sys_"+histSet)
+            comp.setCoefficientFunction(coeff)
+ 
+            hist=RootHistogram(histName+"-NOMINAL",{"use_errors":"true"})
+            hist.setFileName(histFile)
+            hist.setHistoName(histName)
+            file.write(hist.toConfigString())
+            comp.setNominalHistogram(hist)
+            
+            for sysName in shapeSysDict.keys():
+                if not checkHistogramExistence(histFile,histName+"__"+sysName+"__up"):
+                    continue
+                if not checkHistogramExistence(histFile,histName+"__"+sysName+"__down"):
+                    continue
+                histUP=RootHistogram(histName+"-"+sysName+"-UP",{"use_errors":"true"})
+                histUP.setFileName(histFile)
+                histUP.setHistoName(histName+"__"+sysName+"__up")
+                
+                histDOWN=RootHistogram(histName+"-"+sysName+"-DOWN",{"use_errors":"true"})
+                histDOWN.setFileName(histFile)
+                histDOWN.setHistoName(histName+"__"+sysName+"__down")
+                comp.addUncertaintyHistograms(histUP, histDOWN, sysDistributions,"sys_"+sysName)
+                file.write(histUP.toConfigString())
+                file.write(histDOWN.toConfigString())
+            file.write("\n")
+            
+            obs.addComponent(comp)
+           
+        
     model.addObservable(obs)
     file.write(model.toConfigString())
-    _writeFile(file,outputFolder,modelName,dicePoisson=False,mcUncertainty=False,experiments=1)
-    file.close() 
-                    
+    _writeFile(file,outputFolder,modelName,dicePoisson=dicePoisson,mcUncertainty=mcUncertainty)
+    file.close()
+'''             
                     
                     
 def _writeFile(file,outputFolder,modelName,dicePoisson=True,mcUncertainty=True,experiments=10000): 

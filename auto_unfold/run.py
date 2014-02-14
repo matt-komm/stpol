@@ -7,55 +7,58 @@ import logging
 import ROOT
 import shutil
 import subprocess
+import random
 from generateCosThetaModel import *
 
 logging.basicConfig(format="%(levelname)s - %(message)s",level=logging.DEBUG)
 #logging.basicConfig(filename="run.log",format="%(levelname)s - %(message)s",level=logging.DEBUG)
-
-#processes to consider
-SIGNAL=["tchan"]
-BACKGROUND=["top","wzjets","qcd","other"]
-#will search which of the following systematics are present in the input root file
-SYS=["Res","En","UnclusteredEn","btaggingBC","btaggingL","leptonID",
-     "leptonIso","leptonTrigger","wjets_flat","wjets_shape",
-     "ttbar_matching","ttbar_scale","top_pt","mass","pileup"]
-FULL=[]
-FULL.extend(SIGNAL)
-FULL.extend(BACKGROUND)
-FULL.extend(SYS)
-
 
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetStatX(0.4)
 ROOT.gStyle.SetStatY(0.98)
 
 
-def parseFitResult(inputfile,excludeSysList):
-    yieldSys=[]
-    shapeSys=[]
-    corr=[]
+def parseFitResult(inputfile):
+    signalSetDict={}
+    backgroundSetDict={}
+    yieldSysDict={}
+    shapeSysDict={}
+    corrList=[]
     file = open(inputfile,"r")
     ln=0
     for line in file:
         ln+=1
-        splitted=line.replace("\r","").replace("\n","").replace(" ","").split(",")
-        if len(splitted)!=4:
-            loggging.error("Error while reading the fitresult file: "+line)
-            sys.exit(-1)
+        line=line.replace("\r","").replace("\n","").replace(" ","")
+        if line=="" or line.startswith("#"):
+            continue
+        splitted=line.split(",")
+        
         try:
-            if splitted[0]=="rate":
-                if splitted[1] in excludeSysList:
-                    yieldSys.append({"name":splitted[1],"mean":float(splitted[2]),"unc":0.00000001})
+            if splitted[0]=="set":
+                if len(splitted)<4:
+                    logging.error("Error while reading the fitresult file: "+line)
+                    sys.exit(-1)
+                if splitted[1]=="signal":
+                    signalSetDict[splitted[2]]=splitted[3:]
+                elif splitted[1]=="background":
+                    backgroundSetDict[splitted[2]]=splitted[3:]
                 else:
-                    yieldSys.append({"name":splitted[1],"mean":float(splitted[2]),"unc":float(splitted[3])})
+                    logging.warning("type can only be 'signal' or 'background' - found '"+splitted[1]+"' in line "+str(ln))
+            elif splitted[0]=="rate":
+                if len(splitted)!=4:
+                    logging.error("Error while reading the fitresult file: "+line)
+                    sys.exit(-1)
+                yieldSysDict[splitted[1]]={"mean":float(splitted[2]),"unc":float(splitted[3])}
             elif splitted[0]=="shape":
-                if splitted[1] in excludeSysList:
-                    shapeSys.append({"name":splitted[1],"mean":float(splitted[2]),"unc":0.00000001})
-                else:
-                    shapeSys.append({"name":splitted[1],"mean":float(splitted[2]),"unc":float(splitted[3])})
+                if len(splitted)!=4:
+                    logging.error("Error while reading the fitresult file: "+line)
+                    sys.exit(-1)
+                shapeSysDict[splitted[1]]={"mean":float(splitted[2]),"unc":float(splitted[3])}
             elif splitted[0]=="corr":
-                if (splitted[1] not in excludeSysList) and (splitted[2] not in excludeSysList):
-                    corr.append({"name":[splitted[1],splitted[2]],"rho":float(splitted[3])})
+                if len(splitted)!=4:
+                    logging.error("Error while reading the fitresult file: "+line)
+                    sys.exit(-1)
+                corrList.append({"name":[splitted[1],splitted[2]],"rho":float(splitted[3])})
             else:
                 logging.warning("type not regonized: "+splitted[0])
         except ValueError, e:
@@ -64,7 +67,7 @@ def parseFitResult(inputfile,excludeSysList):
             logging.error(e.message)
             sys.exit(-1)
     file.close()
-    return yieldSys,shapeSys,corr
+    return signalSetDict,backgroundSetDict,yieldSysDict,shapeSysDict,corrList
     
 def getResponseMatrixBinning(responseMatrix):
     fileName,objectName=responseMatrix.rsplit(":",1)
@@ -98,13 +101,13 @@ def getMeasuredHistogramBinning(histogram):
         binning[ibin]=signalHistogram.GetBinLowEdge(ibin+1)
     return binning
     
-def rebinHistograms(fileName,histPrefix,binningMeasured,folder):
+def rebinHistograms(fileName,prefix,binningMeasured,folder):
     histo=ROOT.TH1D()
     histoBG=ROOT.TH1D()
     file=ROOT.TFile(os.path.join(folder,fileName))
     tree=file.Get("products")
     
-    tree.SetBranchAddress("pd__data_obs_"+histPrefix, histo)
+    tree.SetBranchAddress("pd__data_obs_"+prefix, histo)
     #histo.SetDirectory(0)
     
     fileOut=ROOT.TFile(os.path.join(folder,"subtracted_"+fileName),"RECREATE")
@@ -131,46 +134,92 @@ def rebinHistograms(fileName,histPrefix,binningMeasured,folder):
     file.Close()
     
     
-def subtrackNominalBackground(fileName,nominalFileName,histPrefix,binningMeasured,folder):
+def subtrackNominalBackground(fileName,nominalFileName,prefix,binningMeasured,folder):
     histo=ROOT.TH1D()
+    histo.SetName("signal")
     histoBG=ROOT.TH1D()
+    histoBG.SetName("background")
     file=ROOT.TFile(os.path.join(folder,fileName))
     tree=file.Get("products")
     
-    tree.SetBranchAddress("pd__data_obs_"+histPrefix, histo)
+    tree.SetBranchAddress("pd__data_obs_"+prefix, histo)
     #histo.SetDirectory(0)
     
     file2=ROOT.TFile(os.path.join(folder,nominalFileName))
     
     tree2=file2.Get("products")
-    tree2.SetBranchAddress("pd__data_obs_"+histPrefix, histoBG)
+    tree2.SetBranchAddress("pd__data_obs_"+prefix, histoBG)
     #histoBG.SetDirectory(0)
     
     fileOut=ROOT.TFile(os.path.join(folder,"subtracted_"+fileName),"RECREATE")
     treeOut=ROOT.TTree("subtracted","subtracted")
-
-
-    histoSubtracted=ROOT.TH1D("subtracted","",len(binningMeasured)-1,binningMeasured)
+    histAsymmetryPreSubtraction=ROOT.TH1F("asymmetryPreSubtraction","asymmetryPreSubtraction",500,-0.2,0.8)
+    histAsymmetryPostSubtraction=ROOT.TH1F("asymmetryPostSubtraction","asymmetryPostSubtraction",500,-0.2,0.8)
+    histBinPreDistList=[]
+    histBinPostDistList=[]
+    
+    histoSubtracted=ROOT.TH1D("hist","",len(binningMeasured)-1,binningMeasured)
+    for cnt in range(len(binningMeasured)-1):
+        histBinPreDistList.append(ROOT.TH1F("binPreSubtraction_"+str(cnt+1),"binPreSubtraction_"+str(cnt+1),500,0.0,2500))
+        histBinPostDistList.append(ROOT.TH1F("binPostSubtraction_"+str(cnt+1),"binPostSubtraction_"+str(cnt+1),500,0.0,2500))
     treeOut.Branch("histos", histoSubtracted)
     biasCount=numpy.zeros(len(binningMeasured)-1)
     for cnt in range(int(tree.GetEntries())):
         tree.GetEntry(cnt)
         tree2.GetEntry(0)
-        
+        histAsymmetryPreSubtraction.Fill(calcAsymmetry(histo))
         for ibin in range(len(binningMeasured)-1):
+            histBinPreDistList[ibin].Fill(histo.GetBinContent(ibin+1))
+            histBinPostDistList[ibin].Fill(histo.GetBinContent(ibin+1)-histoBG.GetBinContent(ibin+1))
             y=histo.GetBinContent(ibin+1)-histoBG.GetBinContent(ibin+1)
-            
+            #y=histo.GetBinContent(ibin+1)-histoBG.Integral()/(len(binningMeasured)-1)
             if (y<0):
                 biasCount[ibin]+=1.0
                 #logging.debug("WARNING: yield after background subtraction smaller than 0: yield="+str(y))
                 histoSubtracted.SetBinContent(ibin+1,0)
             else:
                 histoSubtracted.SetBinContent(ibin+1,y)
+        histAsymmetryPostSubtraction.Fill(calcAsymmetry(histoSubtracted))
         treeOut.Fill()
     for ibin in range(len(binningMeasured)-1):
         biasCount[ibin]=(1.0*biasCount[ibin])/(1.0*tree.GetEntries())
-        #logging.info("backgroundsubtraction: bin="+str(ibin+1)+" setToZero="+str(round(biasCount[ibin],3)))
+        if biasCount[ibin]>0.01:
+            logging.warning("backgroundsubtraction: bin="+str(ibin+1)+" setToZero="+str(round(biasCount[ibin],3)))
     treeOut.Write()
+    histAsymmetryPreSubtraction.Write()
+    histAsymmetryPostSubtraction.Write()
+    
+    nUpPre=0.0
+    nUpPre_sig=0.0
+    nDownPre=0.0
+    nDownPre_sig=0.0
+    
+    nUpPost=0.0
+    nUpPost_sig=0.0
+    nDownPost=0.0
+    nDownPost_sig=0.0
+
+    for cnt in range(len(binningMeasured)-1):
+        if histoSubtracted.GetBinCenter(cnt+1)>0:
+            nUpPre+=histBinPreDistList[cnt].GetMean()
+            nUpPre_sig+=(histBinPreDistList[cnt].GetRMS())**2
+            nUpPost+=histBinPostDistList[cnt].GetMean()
+            nUpPost_sig+=(histBinPostDistList[cnt].GetRMS())**2
+        else:
+            nDownPre+=histBinPreDistList[cnt].GetMean()
+            nDownPre_sig+=(histBinPreDistList[cnt].GetRMS())**2
+            nDownPost+=histBinPostDistList[cnt].GetMean()
+            nDownPost_sig+=(histBinPostDistList[cnt].GetRMS())**2
+            
+        histBinPreDistList[cnt].Write()
+        histBinPostDistList[cnt].Write()
+    
+    nUpPre_sig=math.sqrt(nUpPre_sig)
+    nUpPost_sig=math.sqrt(nUpPost_sig)
+    nDownPre_sig=math.sqrt(nDownPre_sig)
+    nDownPost_sig=math.sqrt(nDownPost_sig)
+    logging.debug("asymmtery pre subtraction (analy.): "+str(round((nUpPre-nDownPre)/(nUpPre+nDownPre),4))+" +- "+str(round(calcAsymmetryAnalytic(nUpPre,nUpPre_sig,nDownPre,nDownPre_sig),4)))
+    logging.debug("asymmtery post subtraction (analy.): "+str(round((nUpPost-nDownPost)/(nUpPost+nDownPost),4))+" +- "+str(round(calcAsymmetryAnalytic(nUpPost,nUpPost_sig,nDownPost,nDownPost_sig),4)))
     fileOut.Close()
     file2.Close()
     file.Close()
@@ -228,7 +277,9 @@ def calcAsymmetry(histo):
         else:
             sumDown+=histo.GetBinContent(i+1)
     return (sumUp-sumDown)/(sumUp+sumDown)
-    
+
+def calcAsymmetryAnalytic(N1,sigN1,N2,sigN2):
+    return math.sqrt((1/(N1+N2)-(N1-N2)/(N1+N2)**2)**2*sigN1**2+(-1/(N1+N2)-(N1-N2)/(N1+N2)**2)**2*sigN2**2)
 '''
 def closureTest(histoGen,fileName,branchName,histoTreeName,outputName=None):
     file=ROOT.TFile(fileName)
@@ -257,7 +308,7 @@ def closureTest(histoGen,fileName,branchName,histoTreeName,outputName=None):
             chi2=(content-contentNorm)**2/histoBinInfoList[ibin]["rms"]**2
 '''
 
-def closureTest(asymmetryResult,responseMatrix,outputName=None):
+def closureTest(asymmetryResult,responseMatrix,signalScale=1.0,outputName=None):
     histoBinInfoList=asymmetryResult["info"]
     fileName,objectName=options.responseMatrix.rsplit(":",1)
     rootFile = ROOT.TFile(fileName,"r")
@@ -272,7 +323,7 @@ def closureTest(asymmetryResult,responseMatrix,outputName=None):
     histMean.SetMarkerSize(1.2)
     histMean.Draw("PE1")
     truth.SetLineColor(ROOT.kGreen)
-    #truth.Scale(histMean.Integral()/truth.Integral())
+    truth.Scale(float(signalScale))
     truth.Draw("LSame")
     canvasDist.Print(outputName+"_dist.pdf")
     
@@ -358,9 +409,9 @@ if __name__=="__main__":
     parser.add_option("--histFile",action="store", type="string", dest="histFile", help="input file from where all histogramms are taken, e.g. data.root")
     parser.add_option("--responseMatrix",action="store", type="string", dest="responseMatrix", help="point to response matrix, e.g. martix.root:matrix")
     parser.add_option("--fitResult",action="store", type="string", dest="fitResult", help="the file which contains the fit result")
-    parser.add_option("--excludeSys",action="append", type="string", default=[], dest="excludedSystematic", help="exclude this or more systematics from the PE generation. Possible values: "+str(FULL))
-    parser.add_option("--includeSys",action="append", type="string", default=[], dest="includedSystematic", help="include only this or more systematics from PE generation. Possible values: "+str(FULL))
-    parser.add_option("--histogramPrefix",action="store", type="string", default="cos_theta", dest="histogramPrefix", help="prefix for all histograms")
+    parser.add_option("--excludeSys",action="append", type="string", default=[], dest="excludedSystematic", help="exclude this or more systematics from the PE generation.")
+    parser.add_option("--includeSys",action="append", type="string", default=[], dest="includedSystematic", help="include only this or more systematics from PE generation.")
+    parser.add_option("--prefix",action="store", type="string", default="cos_theta", dest="prefix", help="prefix")
     parser.add_option("-f","--force",action="store_true", default=False, dest="force", help="deletes old output folder")
     parser.add_option("--output",action="store", type="string", default=None, dest="output", help="output directory, default is {modelName}")
     parser.add_option("--data",action="store", type="string", dest="dataHistogram", help="input data sample, e.g. data.root:cos_theta__DATA")
@@ -388,7 +439,7 @@ if __name__=="__main__":
     if os.path.exists(options.output):
         logging.warning("output directory '"+options.output+"'")
         if options.force:
-            logging.warning("force specified - old folder will be deleted")
+            logging.warning("forced override specified - old folder will be deleted")
             shutil.rmtree(options.output)
         else:
             sys.exit(-1)
@@ -408,10 +459,8 @@ if __name__=="__main__":
         logging.error("separate signal histogram not supported yet")
         sys.exit(-1)
     if options.dataHistogram:
-        logging.warning("will use '"+options.dataHistogram+"' for data instead")
+        logging.info("will use '"+options.dataHistogram+"' for data")
         filesToCheck.append(options.dataHistogram.rsplit(":",1)[0]) #removes root path to object within root file
-    else:
-        options.dataHistogram=options.histFile+":"+options.histogramPrefix+"__DATA"
 
     logging.info("run on data: "+str(options.runOnData))
     if (options.runOnData):
@@ -434,16 +483,8 @@ if __name__=="__main__":
     
     if options.includedSystematic!=[]:
         logging.info("include only the following systematics: "+str(options.includedSystematic))
-        for systematic in SIGNAL:
-            if (systematic not in options.excludedSystematic) and (systematic not in options.includedSystematic):
-                options.excludedSystematic.append(systematic)
-        for systematic in BACKGROUND:
-            if (systematic not in options.excludedSystematic) and (systematic not in options.includedSystematic):
-                options.excludedSystematic.append(systematic)
-        for systematic in SYS:
-            if (systematic not in options.excludedSystematic) and (systematic not in options.includedSystematic):
-                options.excludedSystematic.append(systematic)
-    logging.info("excluded systematics: "+str(options.excludedSystematic))
+    if options.excludedSystematic!=[] and options.includedSystematic==[]:
+        logging.info("excluded systematics: "+str(options.excludedSystematic))
     
     if not options.runOnData:
         logging.info("run statistical uncertainty: "+str(not options.noStatUncertainty))
@@ -457,83 +498,120 @@ if __name__=="__main__":
         if not  os.path.exists(f):
             logging.error("necessary file: '"+f+"' does not exist!")
             sys.exit(-1)  
-        
+    
+          
+    #-----------------------------------------------------------------------------
+    logging.info("!!! parsing fit result !!!")
+    corrListForTheta=[]
+    signalSetDict,backgroundSetDict,yieldSysDict,shapeSysDict,corrList=parseFitResult(options.fitResult)
+    
+    logging.info("signal sets:")
+    for key in signalSetDict.keys():
+        logging.info("    "+key+": "+str(signalSetDict[key])) 
+    logging.info("background sets:")
+    for key in backgroundSetDict.keys():
+        logging.info("    "+key+": "+str(backgroundSetDict[key]))
+    logging.info("yield systematics:")
+    for key in yieldSysDict.keys():
+        if not (key in signalSetDict.keys() or key in backgroundSetDict.keys()):
+            yieldSysDict.pop(key)
+            logging.warning("    yield "+key+" has no set of hists defined -> removed")
+            continue
+        if (options.includedSystematic != [] and key not in options.includedSystematic):
+            yieldSysDict[key]["unc"]=0.0000000001
+        if (key in options.excludedSystematic):
+            yieldSysDict[key]["unc"]=0.0000000001
+        logging.info("    "+key+": "+str(yieldSysDict[key]["mean"])+" +- "+str(yieldSysDict[key]["unc"]))
+    logging.info("shape systematics:")
+    for key in shapeSysDict.keys():
+        if (options.includedSystematic != [] and key not in options.includedSystematic):
+            shapeSysDict[key]["unc"]=0.0000000001  
+        if (key in options.excludedSystematic):
+            shapeSysDict[key]["unc"]=0.0000000001
+        logging.info("    "+key+": "+str(shapeSysDict[key]["mean"])+" +- "+str(shapeSysDict[key]["unc"]))
+    logging.info("correlations:")
+    for corr in corrList:
+        if not ((corr["name"][0] in yieldSysDict.keys()) or (corr["name"][0] in shapeSysDict.keys())):
+            logging.warning("    "+corr["name"][0]+" not found -> correlation ignored")
+        elif not ((corr["name"][1] in yieldSysDict.keys()) or (corr["name"][1] in shapeSysDict.keys())):
+            logging.warning("    "+corr["name"][1]+" not found -> correlation ignored")
+        else:
+            logging.info("    "+str(corr["name"])+": "+str(corr["rho"]))
+            corrListForTheta.append(corr)
+            
+      
     #-----------------------------------------------------------------------------
     logging.info("!!! check binning of response matrix and MC !!!")
-    binningHist=getMeasuredHistogramBinning(options.histFile+":"+options.histogramPrefix+"__"+SIGNAL[0])
+    binningHist=None
     binningMeasured,binningTruth=getResponseMatrixBinning(options.responseMatrix)
-    if len(binningHist)!=len(binningMeasured):
-        logging.error("response matrix (N="+str(len(binningMeasured))+") and MC (N="+str(len(binningHist))+") differ in number of bins")
-        sys.exit(-1)
-    for i in range(len(binningHist)):
-        if math.fabs(binningHist[i]-binningMeasured[i])>0.000001:
-            logging.error("different bin edges in response matrix and MC")
-            sys.exit(-1)
-            
-    #-----------------------------------------------------------------------------
-    signalYieldList=[]
-    backgroundYieldList=[]
-    sysList=[]
-    corrList=[]
-    logging.info("!!! parse fit result !!!")
-    yieldSys,shapeSysList,correlations=parseFitResult(options.fitResult,options.excludedSystematic)
-    for systematic in yieldSys:
-        if systematic["name"] in SIGNAL:
-            logging.debug("signal: "+systematic["name"]+": "+str(systematic["mean"])+" +- "+str(systematic["unc"])+" (rate)")
-            signalYieldList.append(systematic)
-        if systematic["name"] in BACKGROUND:
-            logging.debug("background: "+systematic["name"]+": "+str(systematic["mean"])+" +- "+str(systematic["unc"])+" (rate)")
-            backgroundYieldList.append(systematic)
-    for systematic in shapeSysList:
-        if systematic["name"] in SYS:
-            sysList.append(systematic)
-            logging.debug(systematic["name"]+": "+str(systematic["mean"])+" +- "+str(systematic["unc"])+" (shape)")
-    for systematic in correlations:
-        if ((systematic["name"][0] in SYS) or (systematic["name"][0] in SIGNAL) or(systematic["name"][0] in BACKGROUND)) and((systematic["name"][1] in SYS) or (systematic["name"][1] in SIGNAL) or(systematic["name"][1] in BACKGROUND)):
-            logging.debug(str(systematic["name"])+": "+str(systematic["rho"])+" (correlation)")  
-            corrList.append(systematic)
+    for signalSet in signalSetDict.values():
+        for signalHistName in signalSet:
+            binningHist=getMeasuredHistogramBinning(options.histFile+":"+signalHistName)
+            if len(binningHist)!=len(binningMeasured):
+                logging.error("response matrix (N="+str(len(binningMeasured))+") and MC (N="+str(len(binningHist))+") differ in number of bins")
+                sys.exit(-1)
+            for i in range(len(binningHist)):
+                if math.fabs(binningHist[i]-binningMeasured[i])>0.000001:
+                    logging.error("different bin edges in response matrix and MC")
+                    sys.exit(-1)
+     
+
     #-----------------------------------------------------------------------------
     logging.info("!!! generate theta models !!!")
+    
     if not options.noBackground:
-        generateNominalBackground(modelName=options.modelName+"_backgroundNominal",
-                    outputFolder=options.output,
-                    histFile=options.histFile,
-                    histPrefix=options.histogramPrefix,
-                    backgroundYieldList=backgroundYieldList,
-                    binning=len(binningHist)-1,
-                    ranges=[binningHist[0],binningHist[-1]])
+        generateNominalBackground(
+            modelName=options.modelName+"_backgroundNominal",
+            outputFolder=options.output,
+            histFile=options.histFile,
+            signalSetDict=signalSetDict,
+            backgroundSetDict=backgroundSetDict,
+            yieldSysDict=yieldSysDict,
+            shapeSysDict=shapeSysDict,
+            corrList=corrListForTheta,
+            prefix=options.prefix,
+            binning=len(binningHist)-1,
+            ranges=[binningHist[0],binningHist[-1]],
+            dicePoisson=not options.noStatUncertainty,
+            mcUncertainty=not options.noMCUncertainty
+        )
+                    
+                    
+                    
+                    
     if options.runOnData:
         generateModelData(modelName=options.modelName,
                     outputFolder=options.output,
                     dataHist=options.dataHistogram,
-                    histPrefix=options.histogramPrefix,
                     binning=len(binningHist)-1,
                     ranges=[binningHist[0],binningHist[-1]])
     elif options.noBackground:
          generateNominalSignal(modelName=options.modelName,
                     outputFolder=options.output,
                     histFile=options.histFile,
-                    histPrefix=options.histogramPrefix,
                     signalYieldList=signalYieldList,
                     binning=len(binningHist)-1,
                     ranges=[binningHist[0],binningHist[-1]],
                     dicePoisson=not options.noStatUncertainty,
                     mcUncertainty=not options.noMCUncertainty)
     else:
-        generateModelPE(  modelName=options.modelName,
-                        outputFolder=options.output,
-                        histFile=options.histFile,
-                        histPrefix=options.histogramPrefix,
-                        signalYieldList=signalYieldList,
-                        backgroundYieldList=backgroundYieldList,
-                        shapeSysList=sysList,
-                        correlations=corrList,
-                        binning=len(binningHist)-1,
-                        ranges=[binningHist[0],binningHist[-1]],
-                        dicePoisson=not options.noStatUncertainty,
-                        mcUncertainty=not options.noMCUncertainty)
+        generateModelPE(
+            modelName=options.modelName,
+            outputFolder=options.output,
+            histFile=options.histFile,
+            signalSetDict=signalSetDict,
+            backgroundSetDict=backgroundSetDict,
+            yieldSysDict=yieldSysDict,
+            shapeSysDict=shapeSysDict,
+            corrList=corrListForTheta,
+            prefix=options.prefix,
+            binning=len(binningHist)-1,
+            ranges=[binningHist[0],binningHist[-1]],
+            dicePoisson=not options.noStatUncertainty,
+            mcUncertainty=not options.noMCUncertainty
+        )
     
-    
+
     #-----------------------------------------------------------------------------
     logging.info("!!! run theta !!!")
     shutil.copy("execute_theta.sh", os.path.join(options.output,"execute_theta.sh"))    
@@ -545,7 +623,7 @@ if __name__=="__main__":
             logging.error(out)
             sys.exit(-1)
         writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
-        
+    
     err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"],cwd=options.output)
     if not os.path.exists(os.path.join(options.output,options.modelName+".root")):
         logging.error("theta output was not created")
@@ -554,19 +632,19 @@ if __name__=="__main__":
         sys.exit(-1)
     writeLogFile(os.path.join(options.output,"theta_"+options.modelName),err,out)
         
-    
     #-----------------------------------------------------------------------------
     logging.info("!!! run subtract !!!")
     #change for data the nominal model name!
     if options.noBackground:
-        rebinHistograms(options.modelName+".root",options.histogramPrefix,binningMeasured,options.output)
+        rebinHistograms(options.modelName+".root",options.prefix,binningMeasured,options.output)
     else:
-        subtrackNominalBackground(options.modelName+".root",options.modelName+"_backgroundNominal.root",options.histogramPrefix,binningMeasured,options.output)
+        subtrackNominalBackground(options.modelName+".root",options.modelName+"_backgroundNominal.root",options.prefix,binningMeasured,options.output)
     if not os.path.exists(os.path.join(options.output,"subtracted_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
         logging.error(out)
         sys.exit(-1)
+        
     #-----------------------------------------------------------------------------
     logging.info("!!! run unfolding !!!")
     responseMatrixFile,responseMatrixName=options.responseMatrix.split(":",1)
@@ -582,11 +660,10 @@ if __name__=="__main__":
     logging.info("!!! calculate asymmetry !!!")
     
     asymmetryResult = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",outputName=os.path.join(options.output,options.modelName))
-    closureTest(asymmetryResult,options.responseMatrix,outputName=os.path.join(options.output,options.modelName))
+    closureTest(asymmetryResult,options.responseMatrix,signalScale=yieldSysDict[signalSetDict.keys()[0]]["mean"],outputName=os.path.join(options.output,options.modelName))
     logging.info("final asymmetry: mean="+str(asymmetryResult["mean"])+", rms="+str(asymmetryResult["rms"]))
     file=open(os.path.join(options.output,"asymmetry.txt"),"w")
     file.write("mean, "+str(round(asymmetryResult["mean"],7))+"\n")
     file.write("rms, "+str(round(asymmetryResult["rms"],7))+"\n")
     file.close()
-    
     
