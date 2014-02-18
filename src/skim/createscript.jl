@@ -11,7 +11,7 @@ for line in readlines(STDIN)
     x = replace(x, "{#}", i)
 
     i += 1
-    out = "echo \$'#!/bin/bash\\nuname -a\\nhostname\\nwhich julia\\necho LINE=$line\\necho CMD=\"$cmd\"\\necho FCMD=\"$x\"\\nset -e\\ntime $x\\necho \$?' | sbatch --exclude ../skim/exclude.txt -p prio -J $jobname -e error-%j.out"
+    out = "echo \$'#!/bin/bash\\nuname -a\\nhostname\\nwhich julia\\necho LINE=$line\\necho CMD=\"$cmd\"\\necho FCMD=\"$x\"\\nset -e\\n$x\\necho done \$?' | sbatch --exclude ../skim/exclude.txt -p prio -J $jobname -e error-%j.out"
     write(of, "$out\n") 
 end
 close(of)
