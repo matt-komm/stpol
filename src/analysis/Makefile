@@ -23,14 +23,14 @@ merge:
 
 merge-data:
 	echo "run OOM adjuster: echo -16 > /proc/X/oom_adj"
-	julia -F mergedf.jl /scratch/joosep/feb13 $(DIR)/merged/md.txt /scratch/joosep/skim_feb5/output*.jld
+	julia -F mergedf.jl /scratch/joosep/feb15 $(DIR)/merged/md.txt /scratch/joosep/feb15_2/output*.jld
 	echo "merge is done" | sendmail joosep.pata@cern.ch
 
 merge-mva:
 	~/.julia/ROOT/julia -F mvamerge.jl /scratch/joosep/mva.root /scratch/joosep/skim_jan31_2/output*.jld
 
 submit-scan:
-	find input/bdt_scan/cards/*.json | ~/parallel --delay 1.0 sbatch -c24 --exclude=../skim/exclude.txt parrun.sh {}
+	find input/bdt_scan/cards/*.json | ~/parallel --delay 0.1 sbatch -c24 --exclude=../skim/exclude.txt parrun.sh {}
 
 convert-hists:
 	rm -Rf output/bdt_scan/hists
@@ -42,3 +42,9 @@ test-merge:
 
 test-evloop:
 	julia evloop.jl input/bdt_scan/test.json
+
+recursive-hadd:
+	cat files.txt | $(PARCMD) -n5 srun --exclude=../skim/exclude.txt julia mergehists.jl /home/joosep/singletop/output/merge_scan_{#}.jld {}
+
+conv2root:
+	find ~/singletop/output/skims/skim_merged -name "*.jld" | ~/parallel ~/.julia/ROOT/julia ../skim/conv2root.jl {} ~/singletop/output/skims/skim_root/{/.}.root
