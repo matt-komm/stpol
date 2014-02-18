@@ -1,11 +1,11 @@
 import Base.+
-    
+
 function accompanying(fn)
     #get all the files in the directory containing this file
     files = readdir(dirname(fn))
     
     #get the name without the extension
-    bn = split(basename(fn), ".")[1]
+    bn = splitext(basename(fn))[1]
     
     out = Dict()
     out["df"] = fn
@@ -18,9 +18,10 @@ function accompanying(fn)
     return out
 end
 
-function +(d1::DataFrame, d2::DataFrame)
-    return vcat(d1, d2)
-end
+# using DataFrames
+# function +(d1::DataFrame, d2::DataFrame)
+#     return vcat(d1, d2)
+# end
     
 function +(d1::Associative, d2::Associative)
 
