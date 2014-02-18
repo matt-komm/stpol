@@ -7,7 +7,7 @@ of = ARGS[2]
 
 println("reading input file $fn")
 
-df = read(jldopen(fn, "r";mmaparrays=true), "df")
+df = readdf(fn)
 
 println("saving output file $of")
 
