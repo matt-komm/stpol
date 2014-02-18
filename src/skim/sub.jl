@@ -71,19 +71,31 @@ end
 
 maxn = length(flist)
 #either 50 files per job or split to 10 chunks
-perjob = min(50, ceil(maxn/10)) |> int
-N = int(ceil(maxn/perjob)-1)
+#perjob = min(100, ceil(maxn/10)) |> int
+empty_flist = deepcopy(flist)
 
-for n=1:N
-    r = (1+(n-1)*perjob):(n*perjob)
+perjob=25
+#N = int(ceil(maxn/perjob)-1)
+
+j = 1
+for n=1:perjob:maxn
+    r = n:(n+perjob-1)
 
     #last chunk
-    if r.start+r.len > maxn
-        r = r.start:maxn-r.start
+    if r.start + r.len > maxn
+        r = r.start:maxn
+        println(r.start, ":", r.len)
     end
 
     #submit
-    println(n, " ", r.start)
-    submit(flist[r], "output_$n", n)
-    sleep(0.1)
+    println(n, " ", r.start, ":", r.start:r.len-1)
+    submit(flist[r], "output_$j", j)
+#    println(flist[r])
+    for x in flist[r]
+        splice!(empty_flist, findfirst(empty_flist, x)) 
+    end
+    j += 1
+    sleep(0.05)
 end
+
+length(empty_flist) ==0 || error("did not submit all jobs: $empty_flist")
