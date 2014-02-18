@@ -31,16 +31,34 @@ is_any_na(row::DataFrameRow, symbs...) =
   any(Bool[isna(row.df[row.row, s])::Bool for s::Symbol in symbs])::Bool
 
 #replaces NA and NaN with a default value
-get_no_na(row::DataFrameRow, s::Symbol, d=1.0) = (!isna(row[s]) && !isnan(row[s])) ? row[s] : d
+
+function get_no_na{R <: Real}(row::DataFrameRow, s::Symbol, d::R=1.0)
+    const rs = row[s]::Union(R, NAtype)
+    isna(rs) && return d
+    isnan(rs::R) && return d
+    return rs::R
+end
+
+# function get_no_na{R <: Real}(row::DataFrameRow, s::Symbol, d::R=1.0)
+#     i = row.row
+#     ci = row.df.parent.colindex[s]
+#     return !(df.parent.columns[ci].na[i]::Bool) && !isnan(df.parent.columns[ci].data[i]::R)
+# end
+
 
 qcd_weight(r::DataFrameRow) = r[:qcd_weight] * nominal_weight(r)
-is_data(row::DataFrameRow) = ((row[:sample]::Int64==DH1) || (row[:sample]::Int64==DH2))
-is_mc(row::DataFrameRow) = !is_data(row)
+
+function is_data(sample::Int64)
+    (sample==DH1 || sample==DH2) && return true
+    return false
+end
+
+is_mc(sample::Int64) = !is_data(sample)::Bool
 
 function nominal_weight(df::DataFrameRow)
-    sample = df[:sample]::Int64
+    const sample = df[:sample]::Int64
 
-    if is_mc(df)
+    if is_mc(sample)::Bool
         const b_weight = get_no_na(df, :b_weight, float32(1))::WT
         const pu_weight = get_no_na(df, :pu_weight, float32(1))::WT
         const lepton_weight__id = get_no_na(df, :lepton_weight__id, float32(1))::WT
@@ -48,8 +66,9 @@ function nominal_weight(df::DataFrameRow)
         const lepton_weight__trigger = get_no_na(df, :lepton_weight__trigger, float32(1))::WT
 
         const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id * lepton_weight__iso * lepton_weight__trigger
+        w::Float64
 
-        (isna(w) || isnan(w)) && error("w=$w, $(df[:xsweight]) $b_weight, $pu_weight, $lepton_weight__id, $lepton_weight__iso, $lepton_weight__trigger")
+#        (isna(w) || isnan(w)) && error("w=$w, $(df[:xsweight]) $b_weight, $pu_weight, $lepton_weight__id, $lepton_weight__iso, $lepton_weight__trigger")
         
         return w
     else
@@ -94,16 +113,16 @@ const HDIR = "output/hists"
 const YDIR = "output/yields"
 const FITDIR = "output/fits"
 
-#function readdf(fn)
-#    fi = jldopen(fn, "r";mmaparrays=true)
-#    k = read(fi, "df/names")
-#    v = read(fi, "df/values")
-#    DataFrame(v, DataFrames.Index(k))
-#end
-
-function readdf(fn)
+function readdf(fn::String)
     fi = jldopen(fn, "r";mmaparrays=true)
-    read(fi, "df")
+    println(names(fi))
+    if "df" in names(fi) && ("names" in names(fi["df"])) && ("values" in names(fi["df"]))
+        k = read(fi, "df/names")
+        v = read(fi, "df/values")
+        return DataFrame(v, DataFrames.Index(k))
+    else
+        return read(fi, "df")
+    end
 end
 
 function writedf(fn, df)
@@ -113,7 +132,7 @@ function writedf(fn, df)
     close(f)
 end
 
-infb(a::AbstractVector) = vcat(-Inf, a, Inf)
+infb(a::Vector{Float64}) = vcat(-Inf, a, Inf)
 
 chunk(n, c, maxn) = sum([n]*(c-1))+1:min(n*c, maxn)
 chunks(csize, nmax) = [chunk(csize, i, nmax) for i=1:convert(Int64, ceil(nmax/csize))]
