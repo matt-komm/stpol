@@ -24,22 +24,29 @@ output_file = ARGS[1]
 
 flist = Any[]
 append!(flist, ARGS[2:length(ARGS)])
-nflist = Any[]
-rflist = Any[]
-for fi in flist
-    ev = Events([fi])
-    println("EVL ", fi, " ", length(ev))
-    if length(ev) > 0
-        push!(nflist, fi)
-    else
-        push!(rflist, fi)
-        println("removing empty file $fi from list")
+
+for i=1:length(flist)
+    if !beginswith(flist[i], "file:")
+        flist[i] = string("file:",flist[i])
     end
 end
-flistd = {f=>i for (f, i) in zip(nflist, 1:length(nflist))}
+#nflist = Any[]
+#rflist = Any[]
+#for fi in flist
+#    ev = Events([fi])
+#    println("EVL ", fi, " ", length(ev))
+#    if length(ev) > 0
+#        push!(nflist, fi)
+#    else
+#        push!(rflist, fi)
+#        println("removing empty file $fi from list")
+#    end
+#end
+
+flistd = {f=>i for (f, i) in zip(flist, 1:length(flist))}
 
 #try to load the Events 
-events = Events(convert(Vector{ASCIIString}, nflist))
+events = Events(convert(Vector{ASCIIString}, flist))
 
 #save information on spectator jets
 const do_specjets = true
@@ -154,13 +161,15 @@ prfiles = similar(
 )
 
 i = 1
-for fi in vcat(nflist, rflist)
+for fi in flist
     x = ROOT.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
     prfiles[i, :files] = fi
     prfiles[i, :total_processed] = x
     prfiles[i, :cls] = sample_type(fi)
     i += 1
 end
+
+all(prfiles[:files] .== flist) || error("mismatch in input files")
 
 #Loop over the events
 println("Beginning event loop")
@@ -173,9 +182,12 @@ fails = {
 }
 
 tic()
+prevfile = ""
+
+const DF_SYMBS = map(symbol, names(df))
 timeelapsed = @elapsed for i=1:maxev
     nproc += 1
-    if nproc%(ceil(maxev/20)) == 0
+    if maxev>1000 && nproc%(ceil(maxev/20)) == 0
         println("$nproc ($(ceil(nproc/maxev*100.0))%) events processed")
         toc()
         tic()
@@ -189,7 +201,7 @@ timeelapsed = @elapsed for i=1:maxev
         println("EV $i ev=", int(run), ":", int(lumi), ":", int(event))
     end
 
-    for cn in names(df)
+    for cn in DF_SYMBS
         df[i, cn] = NA
     end
 
@@ -214,6 +226,11 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     fn = string("file:", get_current_file_name(events))
     
+    if fn != prevfile
+        println("$i switching to $fn")
+        prevfile = fn
+    end
+
     findex = flistd[fn]
     df[i, :fileindex] = findex
         
@@ -237,7 +254,7 @@ timeelapsed = @elapsed for i=1:maxev
     cls = prfiles[findex, :cls]
     sample = cls[:sample]
    
-    df[i, :subsample] = int(hash(sample))
+    df[i, :subsample] = int(hash(string(sample)))
     df[i, :sample] = int(hash(string(get_process(sample))))
     df[i, :fname] = int(hash(fn))
     df[i, :xs] = haskey(cross_sections, sample) ? float32(cross_sections[sample]) : NA
@@ -265,7 +282,7 @@ timeelapsed = @elapsed for i=1:maxev
         continue
     end
     
-    lepton_type = nothing
+    lepton_type = NA
     if nmu==1 && nele==0
         lepton_type = :muon
         df[i, :lepton_type] = 13
@@ -279,6 +296,7 @@ timeelapsed = @elapsed for i=1:maxev
     
     nveto_mu = events[sources[vetolepton(:mu)]]
     nveto_ele = events[sources[vetolepton(:ele)]]
+
     if DEBUG
         println("EV $i nvetomu=", events[sources[vetolepton(:mu)]])
         println("EV $i nvetoele=", events[sources[vetolepton(:ele)]])
@@ -294,6 +312,7 @@ timeelapsed = @elapsed for i=1:maxev
     if DEBUG
         println("EV $i lepton_type = ", lepton_type)
     end
+
     if lepton_type == :muon || lepton_type == :electron
         df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
         df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
@@ -302,7 +321,8 @@ timeelapsed = @elapsed for i=1:maxev
         df[i, :lepton_charge] = events[sources[part(lepton_type, :Charge)]] |> ifpresent
         df[i, :lepton_phi] = events[sources[part(lepton_type, :Phi)]] |> ifpresent
         df[i, :mtw] = events[sources[part(lepton_type, :mtw)]] |> ifpresent
-    end 
+    end
+
     df[i, :met] = events[sources[:met]] |> ifpresent
     df[i, :met_phi] = events[sources[(:met, :phi)]] |> ifpresent
     
@@ -482,14 +502,14 @@ end
 
 println("processed $(nproc/timeelapsed) events/second")
 
-println(df)
+#println(df)
 
 #skim only non-signal events
-pass = (df["passes"]) | (df["sample"] .== int(hash("tchan")))
+pass = (df[:passes]) | (df[:sample] .== int(hash("tchan")))
 
 #Select only the events that actually pass
 mydf = NOSKIM ? df : df[pass, :]
-println(mydf)
+#println(mydf)
 
 println("NOSKIM=$NOSKIM, df=$(nrow(df)), my_df=$(nrow(mydf))")
 
@@ -506,7 +526,12 @@ println("failure reasons: $fails")
 #save output
 writetable("$(output_file)_processed.csv", prfiles)
 println("root...");writetree("$(output_file).root", mydf)
-println("JLD...");write(jldopen("$(output_file).jld", "w"), "df", mydf)
+println("JLD...");
+
+ofi = jldopen("$(output_file).jld", "w")
+write(ofi, "df/names", names(mydf))
+write(ofi, "df/values", values(mydf))
+close(ofi)
 
 tend = time()
 ttot = tend-tstart
