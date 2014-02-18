@@ -1,6 +1,6 @@
 include ../analysis/Makefile.options
 
-INF=input/jan31.txt
+INF=input/jan31.rand.txt
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
 
@@ -8,7 +8,7 @@ ENVSCRIPT=../../setenv.sh
 
 skim:
 	test ! -d $(DIR) || ( echo "Output diretory $(DIR) already exists" && exit 1 )
-	source $(ENVSCRIPT) && julia sub.jl $(DIR) $(INF)
+	julia sub.jl $(DIR) $(INF)
 	until julia summary.jl $(DIR); do echo "."; done; echo "skim is done"
 	echo "skim is done" | sendmail $(EMAIL)
 
@@ -28,9 +28,10 @@ conv2root:
 	find $(DIR) -name "*.jld" | sort | ~/parallel $(PAROPTS) -j60 -n1 ~/.julia/ROOT/julia conv2root.jl {} {.}.root
 
 add-mva:
-
 	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/adder.py bdt_sig_bg $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} )" mva.sig_bg
 	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/qcd_mva_adder.py {} )" mva.qcd
+	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/top_13_001_mva_adder.py {} )" mva.top_13_001
+
 	#$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n5 srun -p prio python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
 	#$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n5 srun -p prio python ../mva/qcd_mva_adder.py {} ) > $(DIR)/mva_bdt_qcd.out
 #	$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) python ../mva/adder.py bdt_sig_bg1 $(WEIGHTSDIR)/stpol_bdt_sig_wjets_lepton_flavour.weights.xml {} )
@@ -44,7 +45,7 @@ add-mva:
 metahadd:
 	mkdir -p $(DIR)/merged
 	find $(DIR) -name "*.root" > $(DIR)/merged/files.txt
-	julia metahadd.jl $(DIR)/merged/files.txt $(DIR)/merged/md.txt > $(DIR)/merged/metahadd.out
+	julia metahadd.jl $(DIR)/merged/files.txt $(DIR)/merged/md.txt $(INF) > $(DIR)/merged/metahadd.out
 
 parhadd:
 	mkdir -p $(DIR)/merged
