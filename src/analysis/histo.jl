@@ -26,7 +26,7 @@ immutable Histogram
     end
 end
 
-Histogram(a::Vector) = Histogram(
+Histogram{R<:Real}(a::Vector{R}) = Histogram(
     Float64[0.0 for i=1:length(a)],
     Float64[0.0 for i=1:length(a)],
     a
