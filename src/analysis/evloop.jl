@@ -11,6 +11,9 @@ require("base.jl")
 @eval @everywhere PARS = JSON.parse(readall($jsfile))
 @everywhere println(PARS)
 
+@everywhere using ROOT
+require("hroot.jl")
+
 const infile = PARS["infile"]
 const outfile = PARS["outfile"]
 @eval @everywhere (
@@ -29,14 +32,17 @@ const do_transfer_matrix = true
 
 print_bdt(bdt_cut) = bdt_strings[bdt_cut]
 
-function getr(ret::Associative, x::HistKey, k::Symbol)
-    if !(x in keys(ret))
-        ret[x] = defaults_func[k]()::Union(Histogram, NHistogram)
+function getr{K <: Any, V <: Any}(ret::Dict{K, V}, x::HistKey, k::Symbol)
+    #const hk = hash(x)
+    const hk = x
+    if !haskey(ret, hk)
+        ret[hk] = defaults_func[k]()::V
     end
-    return ret[x]::Union(Histogram, NHistogram)
+    return ret[hk]::Union(Histogram, NHistogram)
 end
 
 function fill_histogram(
+    nw::Float64,
     row::DataFrameRow,
     isdata::Bool,
     hname::Symbol,
@@ -81,7 +87,7 @@ function fill_histogram(
 
         h = getr(ret, kk, hname)::Histogram
 
-        const w = wfunc(row)::Union(NAtype, Float64)
+        const w = wfunc(nw, row)::Union(NAtype, Float64)
         (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
         h.bin_contents[bin] += w
         h.bin_entries[bin] += 1
@@ -123,22 +129,12 @@ end
         const t0 = time()
 
         nproc = 0
-        ret = Dict()
-
-        ret[:nreco] = 0
-
-        ret[:fails_lepton] = 0
-        ret[:ele] = 0
-        ret[:mu] = 0
-
-        ret[:fails_bdt] = 0
+        ret = Dict{HistKey, Any}()
         
-        
-        #println("looping over $(nrow(df)) rows")
         for row::DataFrameRow in eachrow(sub(df, rows))
 
             nproc += 1
-            nproc%10000==0 && println("$nproc")
+            nproc%1000==0 && println("$nproc")
             const cur_row = rows[nproc]::Int64
             
             is_any_na(row, :sample, :systematic, :isolation)::Bool && continue
@@ -149,7 +145,7 @@ end
             const true_lep = sample==:tchan ? int64(row[:gen_lepton_id]::Int32) : int64(0)
 
             const isdata = ((sample == :data_mu) || (sample == :data_ele))
-            if hists_nominal_only && !isdata 
+            if !isdata && hists_nominal_only
                 if !((systematic==:nominal)||(systematic==:unknown))
                     continue
                 end
@@ -168,28 +164,22 @@ end
                 
                 #get indices into transfer matrix
                 const nx = (isna(x)||isnan(x)) ? 1 : searchsortedfirst(TM.edges[1], x)-1
-              
-                #loop over systematic weight scenarios for a given systematic processing
-                for (scen_name::(Symbol, Symbol), scen) in scens_gr[systematic]
-                    
-                    #do we want to process only nominal transfer matrix?
-                    tm_nominal_only && scen_name[1]!=:nominal && continue
-                    
-                    #the weight does not change depending on the BDT cut
-                    const w = scen[:weight](row)::Float64
-                    
-                    #weight should be nontrivial
-                    (isnan(w) || isna(w)) && error("$k2: w=$w $(df[row.row, :])")
-                    
-                    for bdt_cut::Float64 in bdt_cuts::Vector{Float64}
-                        reco = pass_selection(reco, bdt_cut, row)::Bool
-    	                
-                        #the y index will change depending on reco
-                        const ny = (isna(y)||isnan(y)||!reco) ? 1 : searchsortedfirst(TM.edges[2], y)-1
-                        #get transfer matrix linear index from 2D index
-                        const linind = sub2ind(TM_hsize, nx, ny)
-                        (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
-                            error("incorrect index $linind for $nx,$ny $x,$y")
+    	        const ny = (isna(y)||isnan(y)||!reco) ? 1 : searchsortedfirst(TM.edges[2], y)-1
+                
+                #get transfer matrix linear index from 2D index
+                const linind = sub2ind(TM_hsize, nx, ny)
+                
+                (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
+                    error("incorrect index $linind for $nx,$ny $x,$y")
+
+                const nw = nominal_weight(row)::Float64
+
+                for bdt_cut::Float64 in bdt_cuts::Vector{Float64}
+
+                    reco = pass_selection(reco, bdt_cut, row)::Bool
+
+                    for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
+                        tm_nominal_only && scen_name[1]!=:nominal && continue
                         
                         const k2 = HistKey(
                             :transfer_matrix,
@@ -197,13 +187,17 @@ end
                             iso,
                             systematic,
                             scen_name[1],
-                            :bdt_2j_1t,
+                            :bdt,
                             bdt_symbs[bdt_cut],
                             lepton_symbs[true_lep],
                             2, 1
                         )
 
                         const h = getr(ret, k2, :transfer_matrix)::NHistogram
+                       
+                        const w = scen.weight(nw, row)::Float64
+                        (isnan(w) || isna(w)) && error("$k2: w=$w $(df[row.row, :])")
+
                         h.baseh.bin_contents[linind] += w
                         h.baseh.bin_entries[linind] += 1.0
                     end
@@ -214,18 +208,14 @@ end
             ### lepton reco
             ###
             if is_any_na(row, :n_signal_mu, :n_signal_ele)
-                ret[:fails_lepton] += 1
                 continue
             end
 
             if Cuts.is_reco_lepton(row, :mu)
                 const lepton = :mu
-                ret[:mu] += 1
             elseif Cuts.is_reco_lepton(row, :ele)
                 const lepton = :ele
-                ret[:ele] += 1
             else
-                ret[:fails_lepton] += 1
                 continue
             end
 
@@ -233,7 +223,6 @@ end
             ### pre-bdt
             ###
             if is_any_na(row, :njets, :ntags, :bdt_sig_bg, :cos_theta_lj, :bdt_qcd)
-                ret[:fails_bdt] += 1
                 continue
             end
             (isna(row[:bdt_sig_bg]) || isnan(row[:bdt_sig_bg])) && error("bdt was NA/NaN")
@@ -241,7 +230,57 @@ end
             ###
             ### QCD rejection
             ###
+            const nw = nominal_weight(row)::Float64
+            if sel(row, 2, 1)
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    :bdt_qcd,
+                    row->abs(row[:bdt_qcd]::Float64),
+                    ret,
+
+                    sample,
+                    iso,
+                    systematic,
+                    :preqcd,
+                    :nothing,
+                    lepton,
+                    2, 1 
+                )
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    :mtw,
+                    row->row[:mtw],
+                    ret,
+
+                    sample,
+                    iso,
+                    systematic,
+                    :preqcd,
+                    :nothing,
+                    lepton,
+                    2, 1 
+                )
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    :met,
+                    row->row[:met],
+                    ret,
+
+                    sample,
+                    iso,
+                    systematic,
+                    :preqcd,
+                    :nothing,
+                    lepton,
+                    2, 1 
+                )
+            end
+
             const reco = Cuts.qcd_mva_wp(row, lepton)
+            reco || continue
             
             ###
             ### project BDT templates with full systematics
@@ -253,9 +292,40 @@ end
                 _reco || continue
 
                 fill_histogram(
+                    nw,
                     row, isdata,
                     :bdt_sig_bg,
                     row->row[:bdt_sig_bg]::Float64,
+                    ret,
+                    sample,
+                    iso,
+                    systematic,
+                    :preselection,
+                    :nothing,
+                    lepton,
+                    nj, nt
+                )
+                
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    :abs_ljet_eta,
+                    row->abs(row[:ljet_eta]::Float32),
+                    ret,
+                    sample,
+                    iso,
+                    systematic,
+                    :preselection,
+                    :nothing,
+                    lepton,
+                    nj, nt
+                )
+                
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    :C,
+                    row->abs(row[:C]::Float32),
                     ret,
 
                     sample,
@@ -266,30 +336,6 @@ end
                     lepton,
                     nj, nt
                 )
-
-#                fill_histogram(
-#                    row, isdata,
-#                    :abs_ljet_eta, row->abs(row[:ljet_eta]),
-#                    p, ret
-#                )
-#
-#                fill_histogram(
-#                    row, isdata,
-#                    :C, row->row[:C],
-#                    p, ret
-#                )
-
-                # fill_histogram(
-                #     row, isdata,
-                #     :cos_theta_lj, row->row[:cos_theta_lj],
-                #     p, ret
-                # )
-
-#                fill_histogram(
-#                    row, isdata,
-#                    :cos_theta_bl, row->row[:cos_theta_bl],
-#                    p, ret
-#                )
                 
             end
             
@@ -300,56 +346,27 @@ end
             ### cut-based cross-check, 2J1T
             ###
             if (reco && Cuts.cutbased_etajprime(row))
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    :cos_theta_lj,
+                    row->row[:cos_theta_lj]::Float32,
+                    ret,
 
-                # const p = {
-                #     :sample => sample,
-                #     :iso => iso,
-                #     :lepton => lepton,
-                #     :systematic => systematic,
-                #     :njets => 2,
-                #     :ntags => 1,
-                #     :purification => :etajprime
-                # }
-
-                # fill_histogram(
-                #     row, isdata,
-                #     :cos_theta_lj, row->row[:cos_theta_lj],
-                #     p, ret
-                # )
-                
-
-#                fill_histogram(
-#                    row, isdata,
-#                    :cos_theta_bl, row->row[:cos_theta_bl],
-#                    p, ret
-#                )
-                
+                    sample,
+                    iso,
+                    systematic,
+                    :cutbased,
+                    :etajprime,
+                    lepton,
+                    2, 1
+                )
             end
-
-            ###
-            ### post BDT, 2J1T
-            ###
-            # const p = {
-            #     :sample => sample,
-            #     :iso => iso,
-            #     :lepton => lepton,
-            #     :systematic => systematic,
-            #     :njets => 2,
-            #     :ntags => 1
-            #}
 
             for bdt_cut in bdt_cuts
                 if (reco && Cuts.bdt(row, bdt_cut))  
-
-                    # const bdt_p = merge(p, {:purification=>:bdt_sig_bg, :bdt_cut=>print_bdt(bdt_cut)})
-
-                    # fill_histogram(
-                    #     row, isdata,
-                    #     :cos_theta_lj, row->row[:cos_theta_lj],
-                    #     bdt_p, ret
-                    # )
-
                     fill_histogram(
+                        nw,
                         row, isdata,
                         :cos_theta_lj,
                         row->row[:cos_theta_lj]::Float32,
@@ -363,12 +380,6 @@ end
                         lepton,
                         2, 1
                     )
-
-#                    fill_histogram(
-#                        row, isdata,
-#                        :cos_theta_bl, row->row[:cos_theta_bl],
-#                        bdt_p, ret
-#                    )
                 else
                     continue
                 end
@@ -379,7 +390,6 @@ end
         const t1 = time()
         println("processing ", rows.start, ":", rows.start+rows.len-1, " (N=$(length(rows))) took $(t1-t0) seconds")
 
-        ret[:time] = (t1-t0)
         return ret
     end
 end
@@ -394,7 +404,6 @@ tic()
 
 #Profile.init(10^10, 0.001)
 
-#@profile ret = process_df(PARS["start"]:PARS["stop"])
 ret = process_df(PARS["start"]:PARS["stop"])
 
 #svg = open("profile.svg", "w")
@@ -418,13 +427,23 @@ println("projected $(length(ret)) objects")
 #end
 
 #ret[:nproc] == N || error("incomplete processing ", ret[:nproc], "!=", N)
-println(ret[:time])
 
-println("saving file $outfile")
-tic()
-mkpath(dirname(outfile))
-of = jldopen(outfile, "w")
-write(of, "ret", ret)
-close(of)
-println("saved file $outfile")
-toc()
+rfile = string(splitext(outfile)[1], ".root") 
+println("saving to $rfile")
+tf = TFile(rfile, "RECREATE")
+for (k, v) in ret
+    typeof(k) <: HistKey || continue
+    println(k)
+	toroot(tf, tostr(k), v)
+end
+write(tf.p)
+close(tf)
+
+#println("saving file $outfile")
+#tic()
+#mkpath(dirname(outfile))
+#of = jldopen(outfile, "w")
+#write(of, "ret", ret)
+#close(of)
+#println("saved file $outfile")
+#toc()
