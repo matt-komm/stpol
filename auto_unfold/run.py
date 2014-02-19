@@ -133,6 +133,52 @@ def rebinHistograms(fileName,prefix,binningMeasured,folder):
     fileOut.Close()
     file.Close()
     
+def testAfterSubtraction(prefix,folder,subtractedFile,signalFile):
+    histoSub=ROOT.TH1D()
+    histoSub.SetName("sub")
+    histoNorm=ROOT.TH1D()
+    histoNorm.SetName("norm")
+    
+    file=ROOT.TFile(os.path.join(folder,subtractedFile))
+    tree=file.Get("subtracted")
+    tree.SetBranchAddress("histos", histoSub)
+    
+    file2=ROOT.TFile(os.path.join(folder,signalFile))
+    tree2=file2.Get("products")
+    tree2.SetBranchAddress("pd__data_obs_"+prefix, histoNorm)
+    
+    tree.GetEntry(0)
+    tree2.GetEntry(0)
+    
+    binDistList=[]
+    for ibin in range(histoSub.GetNbinsX()):
+        binDistList.append(numpy.zeros(tree.GetEntries()))
+    
+    for cnt in range(int(tree.GetEntries())):
+        tree.GetEntry(cnt)
+        for ibin in range(histoSub.GetNbinsX()):
+            binDistList[ibin][cnt]=histoSub.GetBinContent(ibin+1)
+            
+    histSubMean = ROOT.TH1D(histoNorm)
+    histSubMean.SetName("histSubMean")
+    
+    for ibin in range(histoSub.GetNbinsX()):
+        result = numpy.percentile(binDistList[ibin], [15.89,50.0,84.15])
+        histSubMean.SetBinContent(ibin+1,result[1])
+        histSubMean.SetBinError(ibin+1,math.sqrt((result[0]-result[1])**2+(result[2]-result[1])**2))
+    cv=ROOT.TCanvas("subClos","",800,600)
+    cv.cd()
+    tree2.GetEntry(0)
+    
+    histoNorm.Draw()
+    histoNorm.GetYaxis().Set(500,0.0,histoNorm.GetMaximum()*1.4)
+    histoNorm.GetYaxis().SetRangeUser(0.0,histoNorm.GetMaximum()*1.4)
+    histSubMean.SetLineColor(ROOT.kGreen+1)
+    histSubMean.Draw("Same PE")
+    cv.Update()
+    cv.Print(os.path.join(folder,"subtractedDist.pdf"))
+    file.Close()
+    file2.Close()
     
 def subtrackNominalBackground(fileName,nominalFileName,prefix,binningMeasured,folder):
     histo=ROOT.TH1D()
@@ -308,7 +354,7 @@ def closureTest(histoGen,fileName,branchName,histoTreeName,outputName=None):
             chi2=(content-contentNorm)**2/histoBinInfoList[ibin]["rms"]**2
 '''
 
-def closureTest(asymmetryResult,responseMatrix,signalScale=1.0,outputName=None):
+def closureTest(asymmetryResult,responseMatrix,outputName=None):
     histoBinInfoList=asymmetryResult["info"]
     fileName,objectName=options.responseMatrix.rsplit(":",1)
     rootFile = ROOT.TFile(fileName,"r")
@@ -323,7 +369,6 @@ def closureTest(asymmetryResult,responseMatrix,signalScale=1.0,outputName=None):
     histMean.SetMarkerSize(1.2)
     histMean.Draw("PE1")
     truth.SetLineColor(ROOT.kGreen)
-    truth.Scale(float(signalScale))
     truth.Draw("LSame")
     canvasDist.Print(outputName+"_dist.pdf")
     
@@ -578,24 +623,29 @@ if __name__=="__main__":
                     
                     
                     
-                    
+    '''
     if options.runOnData:
         generateModelData(modelName=options.modelName,
                     outputFolder=options.output,
                     dataHist=options.dataHistogram,
                     binning=len(binningHist)-1,
                     ranges=[binningHist[0],binningHist[-1]])
-    elif options.noBackground:
-         generateNominalSignal(modelName=options.modelName,
-                    outputFolder=options.output,
-                    histFile=options.histFile,
-                    signalYieldList=signalYieldList,
-                    binning=len(binningHist)-1,
-                    ranges=[binningHist[0],binningHist[-1]],
-                    dicePoisson=not options.noStatUncertainty,
-                    mcUncertainty=not options.noMCUncertainty)
-    else:
-        generateModelPE(
+    '''
+    generateNominalSignal(modelName=options.modelName+"_signalNominal",
+            outputFolder=options.output,
+            histFile=options.histFile,
+            signalSetDict=signalSetDict,
+            backgroundSetDict=backgroundSetDict,
+            yieldSysDict=yieldSysDict,
+            shapeSysDict=shapeSysDict,
+            corrList=corrListForTheta,
+            prefix=options.prefix,
+            binning=len(binningHist)-1,
+            ranges=[binningHist[0],binningHist[-1]],
+            dicePoisson=not options.noStatUncertainty,
+            mcUncertainty=not options.noMCUncertainty)
+
+    generateModelPE(
             modelName=options.modelName,
             outputFolder=options.output,
             histFile=options.histFile,
@@ -624,6 +674,16 @@ if __name__=="__main__":
             sys.exit(-1)
         writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
     
+    err,out=runCommand(["./execute_theta.sh",options.modelName+"_signalNominal.cfg"],cwd=options.output)
+    if not os.path.exists(os.path.join(options.output,options.modelName+"_signalNominal.root")):
+        logging.error("theta output was not created")
+        logging.error(err)
+        logging.error(out)
+        sys.exit(-1)
+    writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
+
+    
+    
     err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"],cwd=options.output)
     if not os.path.exists(os.path.join(options.output,options.modelName+".root")):
         logging.error("theta output was not created")
@@ -644,7 +704,8 @@ if __name__=="__main__":
         logging.error(err)
         logging.error(out)
         sys.exit(-1)
-        
+    testAfterSubtraction(options.prefix,options.output,"subtracted_"+options.modelName+".root",options.modelName+"_signalNominal.root")
+    
     #-----------------------------------------------------------------------------
     logging.info("!!! run unfolding !!!")
     responseMatrixFile,responseMatrixName=options.responseMatrix.split(":",1)
@@ -660,7 +721,7 @@ if __name__=="__main__":
     logging.info("!!! calculate asymmetry !!!")
     
     asymmetryResult = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",outputName=os.path.join(options.output,options.modelName))
-    closureTest(asymmetryResult,options.responseMatrix,signalScale=yieldSysDict[signalSetDict.keys()[0]]["mean"],outputName=os.path.join(options.output,options.modelName))
+    closureTest(asymmetryResult,options.responseMatrix,outputName=os.path.join(options.output,options.modelName))
     logging.info("final asymmetry: mean="+str(asymmetryResult["mean"])+", rms="+str(asymmetryResult["rms"]))
     file=open(os.path.join(options.output,"asymmetry.txt"),"w")
     file.write("mean, "+str(round(asymmetryResult["mean"],7))+"\n")

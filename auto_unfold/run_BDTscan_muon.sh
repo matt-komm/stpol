@@ -27,14 +27,26 @@ INPUTFOLDERS="
 0.40000
 0.45000
 0.50000
+0.55000
+0.60000
+0.65000
+0.70000
+0.75000
+0.80000
+0.85000
+0.90000
+0.95000
 "
-FITRESULT="/home/fynu/mkomm/scanned_hists_feb10/fitResultMuon.txt"
+
+INPUTFOLDERS="0.55000"
+
+FITRESULT="/home/fynu/mkomm/scanned_hists_feb19/fitResultMuon.txt"
 REGSCALE=1.0
 
 for folder in $INPUTFOLDERS
 do
-    INPUTHIST="/home/fynu/mkomm/scanned_hists_feb10/hists/"$folder"/mu/cos_theta_lj.root"
-    RESPONSEMATRIX="/home/fynu/mkomm/scanned_hists_feb10/hists/"$folder"/tmatrix_nocharge.root:tm__pdgid_13__nominal"
+    INPUTHIST="/home/fynu/mkomm/scanned_hists_feb19/hists/"$folder"/mu/cos_theta_lj.root"
+    RESPONSEMATRIX="/home/fynu/mkomm/scanned_hists_feb19/hists/"$folder"/mu/tmatrix_nocharge.root:tm__pdgid_13__nominal"
     rm -rf "muon/scan/"$folder
     mkdir "muon/scan/"$folder
     
@@ -96,7 +108,7 @@ do
     --noStatUncertainty \
     -f &
     
-    sleep 10s
+    sleep 15s
 done
 
 
