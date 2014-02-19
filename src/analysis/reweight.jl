@@ -1,5 +1,7 @@
 if !isdefined(:REWEIGHT)
-const lumis = {:mu => 19764, :ele =>19820}
+const _lumis = JSON.parse(readall("lumis.json"))
+const lumis = {symbol(k)=>v for (k,v) in _lumis}
+
 const lumis_id = {:13 => lumis[:mu], :11 => lumis[:ele]}
 
 include("selection.jl")
