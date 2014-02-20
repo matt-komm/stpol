@@ -83,7 +83,13 @@ function data_cls(fn)
     return nothing
 end
 
-fpath = joinpath(dirname(Base.source_path()), "cross_sections.txt")
+#fpath = joinpath(
+#    dirname(base.source_path()), "cross_sections.txt"
+#)
+fpath = joinpath(
+    BASE, "metadata", "cross_sections.txt"
+)
+
 df = readtable(fpath, allowcomments=true)
 cross_sections = Dict{String, Float64}()
 for i=1:nrow(df)
