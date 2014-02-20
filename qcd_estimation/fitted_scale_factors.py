@@ -34,3 +34,11 @@ mva_cuts["ele"] = 0.10
 mva_cuts["mu"] = 0.05
 
 mva_name = "qcdBDT"
+
+#just so that it's not always necessary to fiddle with the python path to import this file
+import json
+def to_json(fname):
+    fi = open(fname, "w")
+    s = json.dumps(scale_factors, indent=4)
+    fi.write(s)
+    fi.close()
