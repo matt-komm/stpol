@@ -9,7 +9,7 @@ using HDF5
 using JLD
 using HEP
 
-include("xs.jl")
+include("../analysis/base.jl")
 
 const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
 if NOSKIM
@@ -526,12 +526,12 @@ println("failure reasons: $fails")
 #save output
 writetable("$(output_file)_processed.csv", prfiles)
 println("root...");writetree("$(output_file).root", mydf)
-println("JLD...");
 
-ofi = jldopen("$(output_file).jld", "w")
-write(ofi, "df/names", names(mydf))
-write(ofi, "df/values", values(mydf))
-close(ofi)
+#println("JLD...");
+#ofi = jldopen("$(output_file).jld", "w")
+#write(ofi, "df/names", names(mydf))
+#write(ofi, "df/values", values(mydf))
+#close(ofi)
 
 tend = time()
 ttot = tend-tstart
