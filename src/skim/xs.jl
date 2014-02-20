@@ -113,7 +113,7 @@ function xsweight(flist)
 end
 
 #process ->[sample1, sample2, ...]
-merges = {
+const merges = {
     "tchan"=>
         ["T_t_ToLeptons", "Tbar_t_ToLeptons",
         "TToBENu_anomWtb-unphys_t-channel", "TToBENu_anomWtb-0100_t-channel", "TToBENu_t-channel",
@@ -222,17 +222,169 @@ end
 
 #create a hash-map for strings
 hmap = {:to=>Dict(), :from=>Dict()}
-tomap = Any[]
-for k in keys(merges)
-    push!(tomap, k)
-    for p in merges[k] 
-        push!(tomap, p)
-    end
-end
 
-others = split(readall("../skim/hmap_others.txt"))
-for tm in vcat(tomap, others)
-    #println(tm, " ", int(hash(tm)))
+#list of all hashmappable strings
+const tomap = ASCIIString[
+    "antiiso",
+    "data_ele",
+    "data_mu",
+    "diboson",
+    "DYJets",
+    "dyjets",
+    "EnDown",
+    "EnUp",
+    "gjets",
+    "GJets1",
+    "GJets2",
+    "iso",
+    "mass166_5",
+    "mass169_5",
+    "mass175_5",
+    "mass178_5",
+    "matchingdown",
+    "matchingup",
+    "nominal",
+    "qcd_mc_ele",
+    "qcd_mc_mu",
+    "QCD_Pt_170_250_BCtoE",
+    "QCD_Pt_170_250_EMEnriched",
+    "QCD_Pt_20_30_BCtoE",
+    "QCD_Pt_20_30_EMEnriched",
+    "QCD_Pt_250_350_BCtoE",
+    "QCD_Pt_250_350_EMEnriched",
+    "QCD_Pt_30_80_BCtoE",
+    "QCD_Pt_30_80_EMEnriched",
+    "QCD_Pt_350_BCtoE",
+    "QCD_Pt_350_EMEnriched",
+    "QCD_Pt_80_170_BCtoE",
+    "QCD_Pt_80_170_EMEnriched",
+    "QCDMu",
+    "ResDown",
+    "ResUp",
+    "scaledown",
+    "scaleup",
+    "schan",
+    "signal_comphep_anomWtb-0100",
+    "signal_comphep_anomWtb-unphys",
+    "signal_comphep_nominal",
+    "SingleEle",
+    "SingleEle1",
+    "SingleEle2",
+    "SingleEle3",
+    "SingleEle_miss",
+    "SingleMu",
+    "SingleMu1",
+    "SingleMu2",
+    "SingleMu3",
+    "SingleMu_miss",
+    "T_s",
+    "T_t",
+    "T_t_ToLeptons",
+    "T_t_ToLeptons_mass166_5",
+    "T_t_ToLeptons_mass169_5",
+    "T_t_ToLeptons_mass175_5",
+    "T_t_ToLeptons_mass178_5",
+    "T_t_ToLeptons_scaledown",
+    "T_t_ToLeptons_scaleup",
+    "T_tW",
+    "Tbar_s",
+    "Tbar_t",
+    "Tbar_t_ToLeptons",
+    "Tbar_t_ToLeptons_mass166_5",
+    "Tbar_t_ToLeptons_mass169_5",
+    "Tbar_t_ToLeptons_mass175_5",
+    "Tbar_t_ToLeptons_mass178_5",
+    "Tbar_t_ToLeptons_scaledown",
+    "Tbar_t_ToLeptons_scaleup",
+    "Tbar_tW",
+    "tchan", 
+    "tchan_inc",
+    "ttjets",
+    "TTJets_FullLept",
+    "ttjets_inc",
+    "TTJets_mass166_5",
+    "TTJets_mass169_5",
+    "TTJets_mass175_5",
+    "TTJets_mass178_5",
+    "TTJets_MassiveBinDECAY",
+    "TTJets_matchingdown",
+    "TTJets_matchingup",
+    "TTJets_scaledown",
+    "TTJets_scaleup",
+    "TTJets_SemiLept",
+    "TToBENu_anomWtb-0100_t-channel",
+    "TToBENu_anomWtb-unphys_t-channel",
+    "TToBENu_t-channel",
+    "TToBMuNu_anomWtb-0100_t-channel",
+    "TToBMuNu_anomWtb-unphys_t-channel",
+    "TToBMuNu_t-channel",
+    "TToBTauNu_anomWtb-0100_t-channel",
+    "TToBTauNu_anomWtb-unphys_t-channel",
+    "TToBTauNu_t-channel",
+    "twchan",
+    "UnclusteredEnDown",
+    "UnclusteredEnUp",
+    "unknown",
+    "W1Jets_exclusive",
+    "W1JetsToLNu",
+    "W1JetsToLNu_matchingdown",
+    "W1JetsToLNu_matchingup",
+    "W1JetsToLNu_scaledown",
+    "W1JetsToLNu_scaleup",
+    "W2Jets_exclusive",
+    "W2JetsToLNu",
+    "W2JetsToLNu_matchingdown",
+    "W2JetsToLNu_matchingup",
+    "W2JetsToLNu_scaledown",
+    "W2JetsToLNu_scaleup",
+    "W3Jets_exclusive",
+    "W3JetsToLNu",
+    "W3JetsToLNu_matchingdown",
+    "W3JetsToLNu_matchingup",
+    "W3JetsToLNu_scaledown",
+    "W3JetsToLNu_scaleup",
+    "W4Jets_exclusive",
+    "W4JetsToLNu",
+    "W4JetsToLNu_matchingdown",
+    "W4JetsToLNu_matchingup",
+    "W4JetsToLNu_scaledown",
+    "W4JetsToLNu_scaleup",
+    "wjets",
+    "wjets_fsim_nominal",
+    "wjets_inc",
+    "WJets_inclusive",
+    "WJets_sherpa",
+    "wjets_sherpa",
+    "WW",
+    "WZ",
+    "ZZ",
+]
+
+#convert all strings to hash, create a two-way dict
+for tm in tomap
     hmap[:to][tm] = int(hash(tm))
     hmap[:from][int(hash(tm))] = tm
+end
+
+_hmap_symb_to = Dict()
+for k in hmap[:to]|>keys
+    _hmap_symb_to[symbol(k)] = hmap[:to][k]
+end
+_hmap_symb_from= Dict()
+for k in hmap[:from]|>keys
+    _hmap_symb_from[k] = hmap[:from][k]|>symbol
+end
+const hmap_symb_to = deepcopy(_hmap_symb_to)
+const hmap_symb_from = deepcopy(_hmap_symb_from)
+
+#write out the hashmap as a CSV
+function write_hmap(fname)
+    cv = collect(hmap[:to])
+
+    writetable(fname,
+        DataFrame(
+            name=ASCIIString[x[1] for x in cv],
+            hash=Int64[x[2] for x in cv]
+        )
+    )
 end

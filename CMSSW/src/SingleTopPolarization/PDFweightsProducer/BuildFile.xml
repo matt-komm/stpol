@@ -1,0 +1,16 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/PluginManager"/>
+<use name="FWCore/ParameterSet"/>
+<use   name="PhysicsTools/Utilities"/>
+<use   name="FWCore/Utilities"/>
+<use   name="root"/>
+<use   name="rootrflx"/>
+<use   name="rootminuit"/>
+<use   name="hepmc"/>
+<use   name="PhysicsTools/UtilAlgos"/>
+<use   name="CommonTools/UtilAlgos"/>
+<use   name="lhapdf"/>
+<flags EDM_PLUGIN="1"/>
+<export>
+   <lib name="1"/>
+</export>

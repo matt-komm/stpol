@@ -71,11 +71,13 @@ def main():
             ofile.write(str(x) + "\n")
             nproc += 1
 
+        if nproc != int(tree.GetEntries()):
+            raise Exception("incorrect amount of events processed")
         ofile.write("# ntree=%d nproc=%d\n" % (tree.GetEntries(), nproc))
+        print counters
         inf.Close()
         ofile.close()
 
-    print counters
 
     tend = time.time()
     print "total elapsed time", tend-tstart, " sec, processed events",counters["processed"]
@@ -100,10 +102,11 @@ def setup_mva(mvaname, weightfile):
     for v in _mvavars:
         varbuffers[v] = np.array([0], 'f')
         mvareader.AddVariable(v, varbuffers[v])
-
+        print "variable",v
     for v in _specvars:
         varbuffers[v] = np.array([0], 'f')
         mvareader.AddSpectator(v, varbuffers[v])
+        print "spectator",v
 
     mvareader.BookMVA(mvaname, weightfile)
 
@@ -131,21 +134,76 @@ def rv(event, varname):
 
     returns value, isna
     """
-    if hasattr(event, varname+"ISNA"):
+    if not hasattr(event, varname):
+        raise Exception("variable '%s' not defined" % varname)
+
+    if hasattr(event, varname+"_ISNA"):
         isna = getattr(event, varname+"_ISNA")
     else:
         isna = False
 
-    if hasattr(event, varname):
-        val = getattr(event, varname)
-    else:
-        val = 0.0
-        isna = True
+    val = getattr(event, varname)
+
     return val, isna
 
 def zero_buffers(varbuffers):
     for k, v in varbuffers.items():
         v[0] = 0.0
 
+
+def mva_loop_lepton_separate(mvaname, infiles, mvas, varmaps):
+    for infn in infiles:
+        print "Processing file",infn
+        #get the events tree
+        inf = ROOT.TFile(infn)
+        tree = inf.Get(treename)
+
+        if not tree:
+            raise Exception("Could not open TTree '%s' in %s" % (treename, infn))
+
+        ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
+
+        ofile = open(ofn, "w")
+        ofile.write("# filename=%s\n" % infn)
+        ofile.write("bdt\n")
+
+        nproc = 0
+        for event in tree:
+
+            #make sure the TBranch buffers have a 0 values
+            for (k, mva) in mvas.items():
+                zero_buffers(mva[1])
+
+            lepton_type, lepton_type_isna = rv(event, "lepton_type")
+            isna = False
+            isna = isna or lepton_type_isna
+            if not isna:
+                mvareader, varbuffers = mvas[lepton_type]
+
+                varmap = varmaps[lepton_type]
+                for var in varbuffers.keys():
+                    if var in varmap.keys():
+                        varn = varmap[var]
+                    else:
+                        varn = var
+
+                    v, _isna = rv(event, varn)
+                    isna = isna or _isna
+                    if not isna:
+                        varbuffers[var][0] = v
+                    else:
+                        break
+                if not isna:
+                    x = mvareader.EvaluateMVA(mvaname)
+            if isna:
+                x = "NA" #MVA(..., NA, ...) -> NA
+
+            ofile.write(str(x) + "\n")
+            nproc += 1
+        if nproc!=int(tree.GetEntries()):
+            raise Exception("incorrect amount of MVA evaluations")
+        ofile.write("# ntree=%d nproc=%d\n" % (tree.GetEntries(), nproc))
+        inf.Close()
+        ofile.close()
 if __name__=="__main__":
     main()

@@ -1,12 +1,11 @@
 using PyCall
 using PyPlot
 
-#histogramdd(args...;kwargs...) = numpy.histogramdd(args..., kwargs...);
-
 function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
+    
+    @assert nbins(h)==nbins(prevhist) "Histograms have different bins: $(nbins(h)) != $(nbins(prevhist))"
     kwargsd = {k=>v for (k, v) in kwargs}
 
-    nbins = length(kwargs)
     #in case of log scale, low bins must be \eps; otherwise 0,0,0,...,0 or lower
     if (:log in keys(kwargsd) && kwargsd[:log])
         prevbins = [x > 0 ? x : 1 for x in prevhist.bin_contents]
@@ -14,7 +13,7 @@ function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
         prevbins = prevhist.bin_contents
     end
 
-    ax[:bar](lowedge(h.bin_edges), h.bin_contents, widths(h.bin_edges), prevbins; kwargs...)
+    ax[:bar](lowedge(h.bin_edges), h.bin_contents[1:nbins(h)-1], widths(h.bin_edges), prevbins[1:nbins(h)-1]; kwargs...)
 end
 
 function hplot{T <: Number}(ax::PyObject, h::Histogram, prevval::T;kwargs...)
@@ -54,7 +53,7 @@ end
 
 function eplot{T <: Histogram}(ax::PyObject, h::T;kwargs...)
     #ax[:plot](midpoints(h.bin_edges), h.bin_contents; kwargs...)
-    ax[:errorbar](midpoints(h.bin_edges), h.bin_contents, errors(h); kwargs...)
+    ax[:errorbar](midpoints(h.bin_edges), h.bin_contents[1:nbins(h)-1], errors(h)[1:nbins(h)-1]; kwargs...)
 end
 
 
@@ -65,4 +64,39 @@ function eplot{T <: Histogram}(ax::PyObject, hs::Vector{T};kwargs...)
         push!(rets, r)
    end
    return rets
+end
+
+function hplot(ax::PyObject, h::NHistogram, do_transpose=true, do_labels=false;kwargs...)
+
+    if do_transpose
+        h = transpose(h)
+    end
+
+    nd = ndim(h)
+    nd != 2 && error("hplot not implemented for NHistogram with N!=2")
+
+    nc = contents(h)
+
+    #last bin contents/entries are meaningless
+    nx, ny = length(h.edges[2])-1, length(h.edges[1])-1
+
+    ax[:matshow](nc[1:ny,1:nx];interpolation="none",kwargs...)
+
+    if do_labels
+        ax[:xaxis][:set_ticks_position]("bottom")
+        ax[:xaxis][:set_ticks]([0:nx-1])
+        ax[:xaxis][:set_ticklabels](
+            [@sprintf("%d [%.2f, %.2f)", i, h.edges[2][i], h.edges[2][i+1]) for i=1:nx], rotation=90
+        );
+        ax[:yaxis][:set_ticks]([0:ny-1])
+        ax[:yaxis][:set_ticklabels](
+            [@sprintf("%d [%.2f, %.2f)", i, h.edges[1][i], h.edges[1][i+1]) for i=1:ny], rotation=0
+        );
+
+        for j=1:ny
+            for i=1:nx
+                ax[:text](i-1, j-1, @sprintf("%.2E", nc[j,i]), color="green", ha="center", va="center", size="xx-small")
+            end
+        end
+    end
 end

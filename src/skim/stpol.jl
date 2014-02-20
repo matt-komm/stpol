@@ -12,7 +12,7 @@ for s in [:Pt, :Eta, :Phi, :relIso, :genPdgId, :Charge]
 end
 
 #jets
-for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms, :deltaR]
+for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscriminatorTCHP, :rms, :deltaR, :puMva]
     sources[part(:bjet, s)] = Source(:highestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:ljet, s)] = Source(:lowestBTagJetNTupleProducer, s, :STPOLSEL2)
     sources[part(:jets, s)] = Source(:goodJetsNTupleProducer, s, :STPOLSEL2)
@@ -24,6 +24,11 @@ sources[:cos_theta_lj_gen] = Source(:cosThetaProducerTrueAll, :cosThetaLightJet,
 sources[:cos_theta_bl_gen] = Source(:cosThetaProducerTrueAll, :cosThetaEtaBeamline, :STPOLSEL2, Float64)
 sources[:met] = Source(:patMETNTupleProducer, :Pt, :STPOLSEL2)
 sources[(:met, :phi)] = Source(:patMETNTupleProducer, :Phi, :STPOLSEL2)
+
+sources[(:lepton, :gen, :id)] = Source(:genParticleSelector, :trueLeptonPdgId, :STPOLSEL2, Int32)
+
+sources[(:muon, :geninfo)] = Source(:decayTreeProducerMu, symbol(""), :STPOLSEL2, ASCIIString)
+sources[(:electron, :geninfo)] = Source(:decayTreeProducerEle, symbol(""), :STPOLSEL2, ASCIIString)
 
 sources[part(:muon, :mtw)] = Source(:muMTW, symbol(""), :STPOLSEL2, Float64)
 sources[part(:electron, :mtw)] = Source(:eleMTW, symbol(""), :STPOLSEL2, Float64)

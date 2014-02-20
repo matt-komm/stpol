@@ -40,7 +40,21 @@ Tbar_t_mass175_5 /TBarToLeptons_t-channel_mass175_5_8TeV-powheg-tauola/Summer12_
 TTJets_mass169_5 /TTJets_mass169_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 TTJets_mass175_5 /TTJets_mass175_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 
+#Old private samples
 #Is really muon, but has a wrong dataset name
 #TToBMuNu_anomWtb-unphys_t-channel_FSIM /TToBENu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
 
 #TToBENu_anomWtb-0100_t-channel_FSIM /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
+
+#new, large stat. (~40M) samples from https://hypernews.cern.ch/HyperNews/CMS/get/top/1805.html
+TTJets_scaleup_v2 /TTJets_MSDecays_scaleup_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TTJets_scaledown_v2 /TTJets_MSDecays_scaledown_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TTJets_matchingdown_v1 /TTJets_MSDecays_matchingdown_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TTJets_matchingdown_v2 /TTJets_MSDecays_matchingdown_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v2/AODSIM
+TTJets_matchingup_v2 /TTJets_MSDecays_matchingup_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TTJets_mass166_5_v2 /TTJets_MSDecays_mass166_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TTJets_mass169_5_v2 /TTJets_MSDecays_mass169_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TTJets_mass175_5_v2 /TTJets_MSDecays_mass175_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TTJets_mass178_5_v2 /TTJets_MSDecays_mass178_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+
+

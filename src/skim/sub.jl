@@ -10,7 +10,7 @@ isdir(ofdir) || mkpath(ofdir)
 flist = Any[]
 
 #input files
-for a in ARGS[2:]
+for a in ARGS[2:length(ARGS)]
     #split the file by lines
     append!(flist, open(readall, a) |> split)
 end
@@ -30,8 +30,9 @@ function submit(infiles, outfile, i::Integer)
     fn = "$ofdir/job.$i"
     ofile = "$ofdir/slurm.out.$i"
     skimoutput = "$ofdir/skim.out.$i"
+    scpath = dirname(Base.source_path())
 
-    subcmd = `sbatch --exclude=./excluded_wns.txt -p prio -J julia_job_test.$i -o $ofile $fn`
+    subcmd = `sbatch --exclude=$scpath/exclude.txt -p prio -J julia_job_test.$i -o $ofile $fn`
     
     #the submit script (indents matter)
     cmd="#!/bin/bash
@@ -42,7 +43,7 @@ RET=\$?
 if [ \$RET -ne 0 ]; then
     echo '/hdfs was not available'
 else
-    ~/.julia/ROOT/julia-basic \$STPOL_DIR/src/skim/skim.jl $ofdir/$outfile $infilelist > $skimoutput
+    ~/.julia/ROOT/julia $scpath/skim.jl $ofdir/$outfile $infilelist > $skimoutput
     RET=\$?
 fi
 echo 'done '\$RET && exit \$RET
@@ -56,6 +57,7 @@ echo 'done '\$RET && exit \$RET
     write(fi, cmd)
     close(fi)
     
+    #run(subcmd)
     while true
         try
             run(subcmd)
@@ -69,19 +71,31 @@ end
 
 maxn = length(flist)
 #either 50 files per job or split to 10 chunks
-perjob = min(50, ceil(maxn/10))
-N = ceil(maxn/perjob)-1
+#perjob = min(100, ceil(maxn/10)) |> int
+empty_flist = deepcopy(flist)
 
-for n=1:N
-    r = (1+(n-1)*perjob):(n*perjob)
+perjob=25
+#N = int(ceil(maxn/perjob)-1)
+
+j = 1
+for n=1:perjob:maxn
+    r = n:(n+perjob-1)
 
     #last chunk
-    if r.start+r.len > maxn
-        r = r.start:maxn-r.start
+    if r.start + r.len > maxn
+        r = r.start:maxn
+        println(r.start, ":", r.len)
     end
 
     #submit
-    println(n, " ", r.start)
-    submit(flist[r], "output_$n", n)
-    sleep(0.1)
+    println(n, " ", r.start, ":", r.start:r.len-1)
+    submit(flist[r], "output_$j", j)
+#    println(flist[r])
+    for x in flist[r]
+        splice!(empty_flist, findfirst(empty_flist, x)) 
+    end
+    j += 1
+    sleep(0.05)
 end
+
+length(empty_flist) ==0 || error("did not submit all jobs: $empty_flist")

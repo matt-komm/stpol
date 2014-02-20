@@ -3,11 +3,6 @@ include("../analysis/base.jl")
 
 println("hostname $(gethostname()) ", "SLURM_JOB_ID" in keys(ENV) ? ENV["SLURM_JOB_ID"] : getpid())
 
-const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
-if NOSKIM
-    println("*** skimming DEACTIVATED")
-end
-
 using JSON
 
 include("../analysis/util.jl")
@@ -16,11 +11,11 @@ include("../skim/jet_cls.jl")
 
 fname = ARGS[1]
 sumfname = ARGS[2]
+workdir = ARGS[3]
 
-include("$(homedir())/.juliarc.jl")
 using DataFrames
 using HDF5, JLD, ROOT
-ofile = ARGS[3]
+ofile = ARGS[4]
 
 flist = split(readall(fname))
 @assert length(flist)>0 "no files specified"
@@ -43,7 +38,9 @@ nf=0
 systs = ASCIIString[]
 
 println("looping over files")
+cd(workdir)
 for fi in flist
+    println("processing $fi")
     nf += 1
 
     acc = accompanying(fi)
@@ -60,8 +57,7 @@ for fi in flist
 
     println("opening dataframe ", acc["df"], " in ROOT mode")
     edf = TreeDataFrame(acc["df"])
-    #println("$fi $acc")
-    #println("reading ", nrow(edf), " rows, ", length(cols), " columns to memory")
+    println(edf) 
     subdf = edf[1:nrow(edf), :]
     
     xsweights = DataArray(Float32, nrow(subdf))
@@ -129,41 +125,29 @@ end
 toc()
 @assert length(dfs)>0 "no DataFrames were produced"
 
-df = rbind(dfs)
+df = vcat(dfs...)
 
 inds = perform_selection(df)
 
-##write output as CSV
 include("../analysis/reweight.jl")
-include("../analysis/split.jl")
 
 println("reweighting")
 reweight(df)
 
-#write(jldopen("$ofile.jld", "w"), "df", df)
-#run(`pbzip2 -f9 $ofile.jld`)
-
 N = nrow(df)
 
-#ch = chunks(50000, N)
-#for _c in ch
-#    sdf = df[_c, :]
-#    _st = _c.start
-#    writedf("$ofile.$(_st).jld", sdf)
-#end
-
-#for (cn, ct) in zip(colnames(df), coltypes(df))
-#    println(cn, " ", ct)
-#end
-
 tic()
-for syst in systs
-    #println("writing systematic $syst")
-    for nt in [0, 1, 2]
-        sdf = df[:((systematic .== $(hash(syst))) .* (ntags .== $nt)), :]
-        #println("writing tag $nt, ", toq())
-        tic()
-        #write(jldopen("$ofile.jld.$(syst).$(nt)T", "w"), "df", sdf)
-        writetree("$ofile.root.$(syst).$(nt)T", sdf)
-    end
-end
+println("writing $ofile.jld")
+write(jldopen("$ofile.jld", "w"), "df", df)
+toc()
+
+#tic()
+#for syst in systs
+#    for nt in [0, 1, 2]
+#        println("writing $ofile.root.$(syst).$(nt)T")
+#        tic()
+#        sdf = df[:((systematic .== $(hash(syst))) .* (ntags .== $nt)), :]
+#        writetree("$ofile.root.$(syst).$(nt)T", sdf)
+#        toc()
+#    end
+#end

@@ -7,8 +7,6 @@ all: train
 
 train: train_bdt_sig_wjets train_bdt_sig_ttjets train_bdt_wjets_ttjets train_bdt_sig_bg 
 
-#train_csvm_wjets_only train_csvt_wjets_only
-
 inputs:
 	find skims/$1/tchan -name "*.root" > input/$2/sig.txt
 	find skims/$1/ttjets -name "*.root" > input/$2/bg.txt
@@ -19,6 +17,9 @@ train_bdt_sig_wjets:
 
 train_bdt_sig_bg:
 	$(ROOTWRAP) && python train.py input/bdt_sig_bg stpol_bdt_sig_bg &> input/bdt_sig_bg/log
+
+train_bdt_sig_bg_tchpt:
+	$(ROOTWRAP) && python train.py input/tchpt/bdt_sig_bg stpol_bdt_sig_bg_tchpt &> input/tchpt/bdt_sig_bg/log
 
 train_bdt_sig_bg_antiw:
 	$(ROOTWRAP) && python train.py input/bdt_sig_bg_antiw stpol_bdt_sig_bg_antiw &> input/bdt_sig_bg_antiw/log

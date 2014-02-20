@@ -58,16 +58,16 @@
 "SingleMu", 1.0
 "SingleEle", 1.0
 
-# (T_t + Tbar_t) / 3 from the inclusive cross sections, equal BR
-"TToBENu_anomWtb-unphys_t-channel", 24.9288
-"TToBMuNu_anomWtb-unphys_t-channel", 24.9288
-"TToBTauNu_anomWtb-unphys_t-channel", 24.9288
-"TToBENu_anomWtb-0100_t-channel", 24.9288
-"TToBMuNu_anomWtb-0100_t-channel", 24.9288
-"TToBTauNu_anomWtb-0100_t-channel", 24.9288
-"TToBENu_t-channel", 24.9288
-"TToBMuNu_t-channel", 24.9288
-"TToBTauNu_t-channel", 24.9288
+# (T_t_ToLeptons + Tbar_t_ToLeptons) / 3 from the exclusive cross sections, equal BR
+"TToBENu_anomWtb-unphys_t-channel", 9.464866666666666
+"TToBMuNu_anomWtb-unphys_t-channel", 9.464866666666666
+"TToBTauNu_anomWtb-unphys_t-channel", 9.464866666666666
+"TToBENu_anomWtb-0100_t-channel", 9.464866666666666
+"TToBMuNu_anomWtb-0100_t-channel", 9.464866666666666
+"TToBTauNu_anomWtb-0100_t-channel", 9.464866666666666
+"TToBENu_t-channel", 9.464866666666666
+"TToBMuNu_t-channel", 9.464866666666666
+"TToBTauNu_t-channel", 9.464866666666666
 
 #exclusive cross sections
 "T_t_ToLeptons_mass166_5", 18.3864 

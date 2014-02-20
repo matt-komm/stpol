@@ -1,124 +1,94 @@
+module Cuts
+    const qcd_mva_wps = {
+        :mu=>0.16,
+        :ele=>0.27
+    }
 
-sample_is(x) = :(sample .== $(hash(x)))
+    is_mu(indata) = (
+        (abs(indata[:lepton_type]) .== 13) & (indata[:n_signal_mu] .== 1) &
+        (indata[:n_signal_ele] .== 0) & (indata[:n_veto_mu] .== 0) &
+        (indata[:n_veto_ele] .== 0) & indata[:hlt_mu]
+    )
 
-const selections = {
-    :mu => :((lepton_type .== 13) .* (n_signal_mu .== 1) .* (n_signal_ele .== 0)),
-    :ele => :((lepton_type .== 11) .* (n_signal_mu .== 0) .* (n_signal_ele .== 1)),
-    :vetolep => :((n_veto_mu .== 0) .* (n_veto_ele .== 0)),
-    :dr => :((ljet_dr .> 0.5) .* (bjet_dr .> 0.5)),
-    :hlt => {:mu=>:(hlt_mu .== true), :ele=>:(hlt_ele .== true)},
-    :iso => :(isolation .== hash("iso")),
-    :aiso => :(isolation .== hash("antiiso")),
-    :ntags => {k=>:(ntags .== $k) for k in [0,1,2]},
-    :njets => {k=>:(njets .== $k) for k in [2,3]},
-    :ljet_rms => :(ljet_rms .< 0.025),
-    :mtw => {k=>:(mtw .> $k) for k in [20, 30, 40, 50, 60, 70]},
-    :met => {k=>:(met .> $k) for k in [20, 30, 40, 45, 50, 55]},
-    :sample => {
-        k=>sample_is(k)
-        for k in [
-            "data_mu", "data_ele", "tchan",
-            "ttjets", "wjets", "dyjets",
-            "diboson", "gjets", "schan",
-            "twchan", "wjets_sherpa"
-        ]
-    },
-    :systematic => {
-        k=>:(systematic .== $(hash(k)))
-        for k in [
-            "unknown", "mass166_5", "mass169_5", "mass175_5", "mass178_5",
-            "UnclusteredEnDown", "UnclusteredEnUp",
-            "nominal",
-            "ResUp", "ResDown",
-            "EnUp", "EnDown",
-            "scaleup", "scaledown", "matchingup", "matchingdown",
-            "wjets_fsim_nominal",
-            "signal_comphep_anomWtb-unphys",
-            "signal_comphep_anomWtb-0100",
-            "signal_comphep_nominal"
-        ]
-    },
-}
+    is_ele(indata) = (
+        (abs(indata[:lepton_type]) .== 11) & (indata[:n_signal_mu] .== 0) &
+        (indata[:n_signal_ele] .== 1) & (indata[:n_veto_mu] .== 0) &
+        (indata[:n_veto_ele] .== 0) & indata[:hlt_ele]
+    )
+    function is_reco_lepton(row, lepton::Symbol)
+        lepton==:mu && return is_mu(row)
+        lepton==:ele && return is_ele(row)
+        return false
+    end
 
-function perform_selection(indata)
+    njets(indata, x) = indata[:njets].==x
+    ntags(indata, x) = indata[:ntags].==x
+    qcd_mva(indata, x::Real) = indata[:bdt_qcd].>x
+    bdt(indata, x::Real) = indata[:bdt_sig_bg].>x
+    qcd_mva_wp(indata, x::Symbol) = qcd_mva(indata, qcd_mva_wps[x])
+    iso(indata) = indata[:isolation] .== hmap_symb_from[:iso] 
+    aiso(indata) = indata[:isolation] .== hmap_symb_from[:antiiso]
+    dr(indata) = (indata[:ljet_dr].>0.5) & (indata[:bjet_dr].>0.5)
+
+    cutbased_etajprime(indata) = (
+        (abs(indata[:ljet_eta]).>2.5) &
+        (indata[:top_mass]<220) &
+        (indata[:top_mass] > 130)
+    )
+
+
+    function truelepton(indata, x::Symbol)
+        x == :mu && return abs(indata[:gen_lepton_id]) .== 13
+        x == :ele && return abs(indata[:gen_lepton_id]) .== 11
+        return false
+    end
+end
+
+if !isdefined(:SELECTION)
+
+using DataFrames
+
+function perform_selection(indata::AbstractDataFrame)
     inds = {
-        :mu => (indata["lepton_type"] .== 13) .* (indata["n_signal_mu"] .== 1) .* (indata["n_signal_ele"] .== 0) .* (indata["n_veto_mu"] .== 0) .* (indata["n_veto_ele"] .== 0),
-        :ele => (indata["lepton_type"] .== 11) .* (indata["n_signal_mu"] .== 0) .* (indata["n_signal_ele"] .== 1) .* (indata["n_veto_mu"] .== 0) .* (indata["n_veto_ele"] .== 0),
-        :ljet_rms =>indata["ljet_rms"] .> 0.025,
-        :mtw =>indata["mtw"] .> 50,
-        :met =>indata["met"] .> 45,
-        :_mtw => x -> indata["mtw"] .> x,
-        :_met => x -> indata["met"] .> x,
-        :_qcd_mva => x -> indata["qcd"] .> x,
-        :qcd_mva027 => indata["qcd"] .> 0.27,
-        :qcd_mva016 => indata["qcd"] .> 0.16,
-        :dr => (indata["ljet_dr"] .> 0.5) .* (indata["bjet_dr"] .> 0.5),
-        :iso => indata["isolation"] .== hash("iso"),
-        :aiso => indata["isolation"] .== hash("antiiso"),
-        :data_mu => indata["sample"] .== hash("data_mu"),
-        :data_ele => indata["sample"] .== hash("data_ele"),
-        :njets => n -> indata["njets"] .== n,
-        :ntags => n -> indata["ntags"] .== n,
-        :hlt => n -> indata["hlt_$n"] .== true,
-        :sample => (x -> indata["sample"] .== hash(x)),
-        :systematic => (x -> indata["systematic"] .== hash(x)),
-        :nominal => ((indata["systematic"] .== hash("nominal")) .+ (indata["systematic"] .== hash("unknown")))
+        :mu => Cuts.is_mu(indata),
+        :ele => Cuts.is_ele(indata),
+        :ljet_rms =>indata[:ljet_rms] .> 0.025,
+        :mtw =>indata[:mtw] .> 50,
+        :met =>indata[:met] .> 45,
+        ##:_mtw => x -> indata[:mtw] .> x,
+        ##:_met => x -> indata[:met] .> x,
+        ##:_qcd_mva => x -> indata[:qcd] .> x,
+        :qcd_mva_027 => indata[:bdt_qcd] .> 0.27,
+        :qcd_mva_016 => indata[:bdt_qcd] .> 0.16,
+        :dr => (indata[:ljet_dr] .> 0.5) & (indata[:bjet_dr] .> 0.5),
+        :iso => (indata[:isolation] .== ("iso"|>hash|>int)),
+        :aiso => (indata[:isolation] .== ("antiiso"|>hash|>int)),
+        :njets => {k=>indata[:njets].==k for k in [2,3]},
+        :ntags => {k=>indata[:ntags].==k for k in [0,1,2]},
+        ##:bdt_grid => {k=>indata[:bdt_sig_bg].>k for k in linspace(-1, 1, 11)},
+        :hlt => {k=>indata[symbol("hlt_$k")] for k in [:mu, :ele]},
+        :sample => {k=>indata[:sample].==(k|>string|>hash|>int) for k in [:data_mu, :data_ele, :tchan, :ttjets, :wjets, :dyjets, :diboson, :gjets, :schan, :twchan, :qcd_mc_mu, :qcd_mc_ele]},
+        :systematic => {k=>indata[:systematic].==(k|>string|>hash|>int) for k in [
+            :nominal, :unknown,
+            :EnUp, :EnDown,
+            :ResUp, :ResDown,
+            :UnclusteredEnUp, :UnclusteredEnDown,
+            symbol("signal_comphep_anomWtb-unphys"),
+            symbol("signal_comphep_anomWtb-0100"),
+            symbol("signal_comphep_nominal")
+        ]},
+        :truelepton => {
+            :mu=>abs(indata[:gen_lepton_id]).==13,
+            :ele=>abs(indata[:gen_lepton_id]).==11
+        }
     }
     
-    samples = ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan"]
-    for s in samples
-        inds[symbol(s)] = indata["sample"] .== hash(s)
-    end
+    inds[:data] = (inds[:sample][:data_mu] | inds[:sample][:data_ele])
+    inds[:mc] = !inds[:data]
+    inds[:qcd_mva] = {:mu=>inds[:qcd_mva_016], :ele=>inds[:qcd_mva_027]}
     return inds
 end
 
-function reformat_selection(_inds)
-    inds = {
-        :mu => _inds[{:sel, :mu}],
-        :ele => _inds[{:sel, :ele}],
-        :ljet_rms => _inds[{:sel, :ljet_rms}],
-        :mtw => _inds[{:sel, :mtw, 50}],
-        :_mtw => x -> _inds[{:sel, :mtw, x}],
-        :_met => x -> _inds[{:sel, :met, x}],
-        :met => _inds[{:sel, :met, 45}],
-        :dr => _inds[{:sel, :dr}],
-        :iso => _inds[{:sel, :iso}],
-        :aiso => _inds[{:sel, :aiso}],
-        #:data_mu => _inds[{:sel, :sample, "data_mu"}]
-        #:data_ele => 
-        :njets => n -> _inds[{:sel, :njets, n}],
-        :ntags => n -> _inds[{:sel, :ntags, n}],
-        :hlt => lep -> _inds[{:sel, :hlt, lep}],
-        :sample => x -> _inds[{:sel, :sample, x}],
-        :systematic => x -> _inds[{:sel, :systematic, x}]
-    }
-    
-    samples = ["data_mu", "data_ele", "tchan", "ttjets", "wjets", "dyjets", "diboson", "gjets", "schan", "twchan"]
-    for s in samples
-        inds[symbol(s)] = _inds[{:sel, :sample, s}]
-    end
-    return inds
-end
+const SELECTION = 1
 
-function load_selection(selfile)
-    _inds = read(jldopen(selfile), "inds");
-    return reformat_selection(_inds)
-end
-
-
-
-function recurse_down(sel::Expr, prev)
-    s = join(prev, "->")
-    #println("Expr: [$s] => $sel")
-    return (prev, sel)
-end
-
-function recurse_down{R <: Any}(sel::AbstractArray{R}, prev)
-    return vcat([recurse_down(x, prev) for x in sel]...)
-end
-
-function recurse_down{A <: Any, B <: Any}(sel::Associative{A, B}, prev)
-    return vcat([recurse_down(v, vcat(prev, k)) for (k, v) in sel]...)
-end
-
-const flatsel = recurse_down(selections, Any[:sel])
+end #if
