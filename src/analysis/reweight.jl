@@ -1,5 +1,5 @@
 if !isdefined(:REWEIGHT)
-const _lumis = JSON.parse(readall("lumis.json"))
+const _lumis = JSON.parse(readall("$BASE/metadata/lumis.json"))
 const lumis = {symbol(k)=>v for (k,v) in _lumis}
 
 const lumis_id = {:13 => lumis[:mu], :11 => lumis[:ele]}
