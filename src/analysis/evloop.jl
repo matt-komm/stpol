@@ -21,6 +21,7 @@ df_base.doget = false
 #load the TTree with the QCD values, xs weights
 const df_added = TreeDataFrame("$infile.added")
 df_added.doget = false
+println(names(df_added))
 
 #create a combined access doorway for both ttrees
 df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
@@ -123,26 +124,27 @@ const TM_hsize = tuple([length(ed) for ed in TM.edges]...)
 #selection function
 sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
 
-function process_df(rows)
+function process_df(rows::AbstractVector{Int64})
     const t0 = time()
-
+    
+    println("mapping across $(length(rows)) rows")
+    
     nproc = 0
-    ret = Dict{HistKey, Any}()
+    
+    const ret = Dict{HistKey, Any}()
      
-    for nrow in rows
-
-        #get current row in TTrees
+    for cur_row::Int64 in rows
+        #println("row=$cur_row")
+        #get entries corresponding to current row in TTrees
         for sdf in df.dfs
-            CMSSW.getentry!(sdf.tree, nrow)
+            CMSSW.getentry!(sdf.tree, cur_row)
         end
 
-        row = DataFrameRow(df, nrow)
+        const row = DataFrameRow(df, cur_row)
         nproc += 1
         nproc%1000==0 && println("$nproc")
         
-        const cur_row = rows[nproc]::Int64
-        
-        is_any_na(row, :sample, :systematic, :isolation)::Bool && continue
+        is_any_na(row, :sample, :systematic, :isolation)::Bool && warn("sample, systematic or isolation were NA")
 
         const sample = hmap_symb_from[row[:sample]::Int64]
         const systematic = hmap_symb_from[row[:systematic]::Int64]
@@ -228,83 +230,109 @@ function process_df(rows)
         ###
         ### pre-bdt
         ###
-        if is_any_na(row, :njets, :ntags, :cos_theta_lj)
-            continue
+        is_any_na(row, :njets, :ntags, :cos_theta_lj, :bdt_sig_bg) && continue
+
+        #cache nominal weight
+        const nw = nominal_weight(row)::Float64
+
+        ###
+        ### QCD rejection
+        ###        
+        if sel(row, 2, 1)
+            for var in [:bdt_qcd, :mtw, :met]
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    var,
+                    row->row[var],
+                    ret,
+
+                    sample,
+                    iso,
+                    systematic,
+                    :preqcd,
+                    :nothing,
+                    lepton,
+                    2, 1 
+                )
+            end
         end
 
-            ###
-            ### QCD rejection
-            ###
-            const nw = nominal_weight(row)::Float64
-            if sel(row, 2, 1)
+        const reco = Cuts.qcd_mva_wp(row, lepton)
+        reco || continue
+        
+        ###
+        ### project BDT templates with full systematics
+        ###
+        for (nj, nt) in [(2, 0), (2,1), (3,2)]
 
-                for var in [:bdt_qcd, :mtw, :met]
-                    fill_histogram(
-                        nw,
-                        row, isdata,
-                        var,
-                        row->row[var],
-                        ret,
+            #pre-bdt selection
+            const _reco = reco & sel(row, nj, nt)::Bool
+            _reco || continue
 
-                        sample,
-                        iso,
-                        systematic,
-                        :preqcd,
-                        :nothing,
-                        lepton,
-                        2, 1 
-                    )
+            for var in [
+                :bdt_sig_bg, :bdt_sig_bg_top_13_001,
+                (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+                :C, :met, :mtw, :shat, :ht, :lepton_pt,
+                :bjet_pt,
+                (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
+                :bjet_mass, :top_mass,
+                ]
+
+                #if a 2-tuple is specified, 2. arg is the function to apply
+                #otherwise, identity
+                if isa(var, Tuple)
+                    var, f = var
+                else
+                    var, f = var, (row::DataFrameRow -> row[var])
                 end
+
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    var,
+                    row -> f(row),
+                    ret,
+                    sample,
+                    iso,
+                    systematic,
+                    :preselection,
+                    :nothing,
+                    lepton,
+                    nj, nt
+                )
             end
+        end
+        
+        #2j1t
+        reco = reco && sel(row)::Bool
+        
+        ###
+        ### cut-based cross-check, 2J1T
+        ###
+        if (reco && Cuts.cutbased_etajprime(row))
+            for var in [:cos_theta_lj]
+                fill_histogram(
+                    nw,
+                    row, isdata,
+                    var,
+                    row->row[var],
+                    ret,
 
-            const reco = Cuts.qcd_mva_wp(row, lepton)
-            reco || continue
-            
-            ###
-            ### project BDT templates with full systematics
-            ###
-            for (nj, nt) in [(2, 0), (2,1), (3,2)]
-
-                #pre-bdt selection
-                const _reco = reco & sel(row, nj, nt)::Bool
-                _reco || continue
-
-                for var in [
-                    :bdt_sig_bg, :bdt_sig_bg_top_13_001,
-                    (:abs_ljet_eta, x->abs(x)),
-                    :C, :met, :mtw, :shat, :ht, :lepton_pt,
-                    :bjet_pt, :bjet_eta, :bjet_mass, :top_mass,
-                    ]
-
-                    #if a 2-tuple is specified, 2. arg is the function to apply
-                    #otherwise, identity
-                    if length(var)==2
-                        var, f = var
-                    else
-                        var, f = var, x->x
-                    fill_histogram(
-                        nw,
-                        row, isdata,
-                        var,
-                        row -> f(row[var]),
-                        ret,
-                        sample,
-                        iso,
-                        systematic,
-                        :preselection,
-                        :nothing,
-                        lepton,
-                        nj, nt
-                    )
-                end
+                    sample,
+                    iso,
+                    systematic,
+                    :cutbased,
+                    :etajprime_topmass_default,
+                    lepton,
+                    2, 1
+                )
             end
-            
-            reco = reco && sel(row)::Bool
-            
-            ###
-            ### cut-based cross-check, 2J1T
-            ###
-            if (reco && Cuts.cutbased_etajprime(row))
+        end
+
+        #final selection by BDT
+        for bdt_cut in bdt_cuts
+            if (reco && Cuts.bdt(row, bdt_cut))
                 for var in [:cos_theta_lj]
                     fill_histogram(
                         nw,
@@ -322,40 +350,18 @@ function process_df(rows)
                         2, 1
                     )
                 end
+            else
+                continue
             end
-
-            for bdt_cut in bdt_cuts
-                if (reco && Cuts.bdt(row, bdt_cut))
-                    for var in [:cos_theta_lj]
-                        fill_histogram(
-                            nw,
-                            row, isdata,
-                            var,
-                            row->row[var],
-                            ret,
-
-                            sample,
-                            iso,
-                            systematic,
-                            :bdt,
-                            bdt_symbs[bdt_cut],
-                            lepton,
-                            2, 1
-                        )
-                    end
-                else
-                    continue
-                end
-            end
-
         end
+    end #event loop
 
-        const t1 = time()
-        println("processing ", rows.start, ":", rows.start+rows.len-1, " (N=$(length(rows))) took $(t1-t0) seconds")
+    const t1 = time()
+    println("processing ", rows.start, ":", rows.start+rows.len-1, " (N=$(length(rows))) took $(t1-t0) seconds")
 
-        return ret
-    end
-end
+    return ret
+
+end #function
 
 tic()
 
