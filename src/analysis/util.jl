@@ -1,5 +1,3 @@
-import Base.+
-
 function accompanying(fn)
     #get all the files in the directory containing this file
     files = readdir(dirname(fn))
@@ -17,12 +15,8 @@ function accompanying(fn)
     end
     return out
 end
-
-# using DataFrames
-# function +(d1::DataFrame, d2::DataFrame)
-#     return vcat(d1, d2)
-# end
-    
+   
+import Base.+ 
 function +(d1::Associative, d2::Associative)
 
     k1 = Set([x for x in keys(d1)]...)
@@ -51,3 +45,5 @@ function +(d1::Associative, d2::Associative)
 
     return ret
 end
+
+export accompanying
