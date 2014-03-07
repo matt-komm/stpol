@@ -31,9 +31,12 @@ require("histogram_defaults.jl")
 const bdt_strings = {bdt=>@sprintf("%.5f", bdt) for bdt in bdt_cuts}
 const bdt_symbs = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in bdt_cuts}
 const lepton_symbs = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau}
-const do_transfer_matrix = true
+
+const do_transfer_matrix = false
 
 print_bdt(bdt_cut) = bdt_strings[bdt_cut]
+
+include("$BASE/src/skim/jet_cls.jl")
 
 function getr{K <: Any, V <: Any}(ret::Dict{K, V}, x::HistKey, k::Symbol)
     const hk = x
@@ -74,6 +77,7 @@ function fill_histogram(
         (isdata && scenario != :unweighted) && continue #only unweighted data
         #(!isdata && scen == :unweighted) && continue #dont care about unweighted MC
         
+
         const kk = HistKey(
             hname,
             sample,
@@ -93,6 +97,31 @@ function fill_histogram(
         (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
         h.bin_contents[bin] += w
         h.bin_entries[bin] += 1
+
+        #fill W+jets jet flavours separately
+        if sample == :wjets
+            for cls in jet_classifications
+                const kk = HistKey(
+                    hname,
+                    symbol("wjets__$(cls)"),
+                    iso,
+                    systematic,
+                    scenario,
+                    selection_major,
+                    selection_minor,
+                    lepton,
+                    njets,
+                    ntags,
+                )
+
+                h = getr(ret, kk, hname)::Histogram
+
+                const w = wfunc(nw, row)::Union(NAtype, Float64)
+                (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
+                h.bin_contents[bin] += w
+                h.bin_entries[bin] += 1
+            end
+        end
     end
 end
 
@@ -368,16 +397,19 @@ tic()
 ret = process_df(1:nrow(df))
 
 q=toc()
-println("projected $(length(ret)) objects")
 
+tempf = mktemp()[1]
 rfile = string(splitext(outfile)[1], ".root") 
 println("saving to $rfile")
 mkpath(dirname(rfile))
-tf = TFile(rfile, "RECREATE")
+tf = TFile(tempf, "RECREATE")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
     println(k)
 	toroot(tf, tostr(k), v)
 end
+println("projected $(length(ret)) objects in $q seconds")
 write(tf.p)
 close(tf)
+cp(tempf, outfile)
+rm(tempf)
