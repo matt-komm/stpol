@@ -394,3 +394,5 @@ function write_hmap(fname)
         )
     )
 end
+
+export cross_sections, hmap_symb_from, hmap_symb_to

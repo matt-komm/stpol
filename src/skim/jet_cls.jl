@@ -24,6 +24,9 @@ function jet_cls_from_number(i::Integer)
     i>0 && i<=length(jet_classifications) ? jet_classifications[i] : :unknown
 end
 
+import DataFrames: NAtype
+jet_cls_from_number(n::NAtype) = :unknown
+
 function jet_cls_heavy_light(s::Symbol)
     if s in [:bb, :cc, :bX, :cX, :bc]
         return :heavy

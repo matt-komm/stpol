@@ -2,8 +2,7 @@
 include("$(homedir())/.juliarc.jl")
 using DataFrames, JSON
 
-include("../analysis/util.jl")
-include("../skim/xs.jl")
+include("../analysis/base.jl")
 
 fname = ARGS[1]
 ofile = ARGS[2]

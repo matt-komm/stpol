@@ -30,6 +30,7 @@ conv2root:
 add-mva:
 	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/adder.py bdt_sig_bg $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} )" mva.sig_bg
 	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/qcd_mva_adder.py {} )" mva.qcd
+	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/qcd_mva_adder2.py {} )" mva.qcd2
 	find $(DIR) -name "*.root" | xargs -n5 | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/top_13_001_mva_adder.py {} )" mva.top_13_001
 
 	#$(ROOTWRAP) && ( find $(DIR) -name "*.root" | sort | ~/parallel $(PAROPTS) -j500 -n5 srun -p prio python ../mva/adder.py bdt_sig_bg  $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} ) > $(DIR)/mva_bdt_sig_bg.out
