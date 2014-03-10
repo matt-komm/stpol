@@ -8,8 +8,6 @@ println("loading base.jl...")
 
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
 
-t0 = time()
-
 using DataArrays, DataFrames
 using JSON
 using HDF5, JLD
@@ -103,7 +101,6 @@ const systematic_processings = Symbol[
 include("$BASE/src/analysis/util.jl")
 include("$BASE/src/analysis/selection.jl")
 include("$BASE/src/fraction_fit/hists.jl")
-#include("$BASE/src/analysis/hplot.jl");
 include("$BASE/src/skim/xs.jl");
 include("$BASE/src/analysis/varnames.jl")
 include("$BASE/src/analysis/df_extensions.jl")
@@ -152,9 +149,6 @@ const FITRESULTS = {
     :ele=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/ele/merged/fit.json")
 }
 
-t1 = time()
-println("done loading base in $(t1-t0) seconds")
-
 #if the hash function has changed, we need to load the old hashmap
 hmap_table = readtable("$BASE/src/skim/hmap.csv")
 
@@ -181,3 +175,6 @@ using SingleTopBase
 
 include("$BASE/src/analysis/reweight.jl")
 using Reweight
+
+t1 = time()
+println("done loading base")
