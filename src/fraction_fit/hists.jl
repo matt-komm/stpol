@@ -109,6 +109,10 @@ function todf(d::Associative)
     return tot_df
 end
 
+function fromdf(df::DataFrame)
+    return Histogram(df[3], df[2], df[1])
+end
+
 function reweight_to_fitres(frd, indata, inds)
     indata["fitweight"] = 1.0
     for (lep, fr) in frd
