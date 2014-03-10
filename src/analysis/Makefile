@@ -23,15 +23,18 @@ merge:
 
 merge-data:
 	find $(DIR) -name "*.root" | $(PARCMD) -n10 -j32 $(JULIA_ROOT_DIR)/julia mergedf.jl $(DIR)/merged/md.txt {}
-	#echo "run OOM adjuster: echo -16 > /proc/X/oom_adj"
-	#julia -F mergedf.jl /scratch/joosep/feb15 $(DIR)/merged/md.txt /scratch/joosep/feb15_2/output*.jld
-	#echo "merge is done" | sendmail joosep.pata@cern.ch
 
 merge-mva:
 	$(JULIA_ROOT_DIR)/julia -F mvamerge.jl /scratch/joosep/mva.root /scratch/joosep/skim_jan31_2/output*.jld
 
 submit-scan:
 	find input/bdt_scan/cards/*.json | ~/parallel --delay 0.1 sbatch -p prio --exclude=../skim/exclude.txt parrun.sh {}
+
+project-nominal:
+	find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_nominal.jl {} {}.nominal  
+
+project-tchan:
+	find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_tchan.jl {} {}.tchan  
 
 test-merge:
 	$(JULIA_ROOT_DIR)/julia mergedf.jl test $(DIR)/merged/md.txt $(DIR)/output_1.jld  $(DIR)/output_2.jld
@@ -46,6 +49,8 @@ recursive-hadd:
 	mkdir -p hadd/step2
 	$(ROOTWRAP) && ( find hadd/step1 -name "merged_*.root" | $(PARCMD) -n5 hadd hadd/step2/merged_{#}.root {} )
 	$(ROOTWRAP) && hadd hadd/merged.root hadd/step2/merged_*.root
+	rm -Rf hadd/step1
+	rm -Rf hadd/step2
 
 convert-hists:
 	rm -Rf output/bdt_scan
