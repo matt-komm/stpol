@@ -221,7 +221,7 @@ flatten(h::Histogram) = reshape(h, prod(size(h)))
 function rebin(h::Histogram, k::Integer)
     @assert((nbins(h)) % k == 0, "number of bins $(nbins(h))+1 is not divisible by k=$k")
 
-    new_entries = Int64[]
+    new_entries = Float64[]
     new_contents = Float64[]
     new_edges = Float64[]
     for i=1:k:nbins(h)
