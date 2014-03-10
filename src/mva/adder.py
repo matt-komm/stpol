@@ -38,7 +38,7 @@ def main():
 
         ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
 
-        ofile = open(ofn, "w")
+        ofile = open(ofn, "w", 1)
         ofile.write("# filename=%s\n" % infn)
         ofile.write("bdt\n")
 
