@@ -7,7 +7,7 @@ require("base.jl")
 using CMSSW
 
 PARS = JSON.parse(readall(jsfile))
-println(PARS)
+#println(PARS)
 
 require("hroot.jl")
 
@@ -21,7 +21,7 @@ df_base.doget = false
 #load the TTree with the QCD values, xs weights
 const df_added = TreeDataFrame("$infile.added")
 df_added.doget = false
-println(names(df_added))
+#println(names(df_added))
 
 #create a combined access doorway for both ttrees
 df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
@@ -32,7 +32,7 @@ const bdt_strings = {bdt=>@sprintf("%.5f", bdt) for bdt in bdt_cuts}
 const bdt_symbs = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in bdt_cuts}
 const lepton_symbs = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau}
 
-const do_transfer_matrix = false
+const do_transfer_matrix = true
 
 print_bdt(bdt_cut) = bdt_strings[bdt_cut]
 
@@ -69,21 +69,25 @@ function fill_histogram(
 
     const bin = findbin(defaults[hname]::Histogram, x)::Int64
 
-    for (scenario::Symbol, wfunc::Function) in weight_scenarios
+    for (scname, scenario::Scenario) in scenarios
+       
+        const w_scenario = scenario.weight_scenario
         
-        hists_nominal_only && !(scenario==:nominal || scenario==:unweighted) && continue
-        #in case of the systematically variated sample, we only want to use the nominal weight
-        (!isdata && systematic != :nominal && scenario != :nominal) && continue
-        (isdata && scenario != :unweighted) && continue #only unweighted data
-        #(!isdata && scen == :unweighted) && continue #dont care about unweighted MC
+        sample != scenario.sample && continue 
+        systematic != scenario.systematic && continue 
+        hists_nominal_only && !(w_scenario==:nominal || w_scenario==:unweighted) && continue
         
-
+        if haskey(SingleTopBase.SYSTEMATICS_TABLE, w_scenario)
+            const wname = SingleTopBase.SYSTEMATICS_TABLE[w_scenario]
+        else
+            const wname = w_scenario
+        end
         const kk = HistKey(
             hname,
             sample,
             iso,
             systematic,
-            scenario,
+            wname, 
             selection_major,
             selection_minor,
             lepton,
@@ -93,8 +97,9 @@ function fill_histogram(
 
         h = getr(ret, kk, hname)::Histogram
 
-        const w = wfunc(nw, row)::Union(NAtype, Float64)
-        (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
+        const w = scenario.weight(nw, row)::Union(NAtype, Float64)
+        (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])")
+
         h.bin_contents[bin] += w
         h.bin_entries[bin] += 1
 
@@ -106,7 +111,7 @@ function fill_histogram(
                     symbol("wjets__$(cls)"),
                     iso,
                     systematic,
-                    scenario,
+                    w_scenario,
                     selection_major,
                     selection_minor,
                     lepton,
@@ -116,7 +121,8 @@ function fill_histogram(
 
                 h = getr(ret, kk, hname)::Histogram
 
-                const w = wfunc(nw, row)::Union(NAtype, Float64)
+                const w = scenario.weight(nw, row)::Union(NAtype, Float64)
+       
                 (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
                 h.bin_contents[bin] += w
                 h.bin_entries[bin] += 1
@@ -171,7 +177,7 @@ function process_df(rows::AbstractVector{Int64})
 
         const row = DataFrameRow(df, cur_row)
         nproc += 1
-        nproc%1000==0 && println("$nproc")
+        nproc%10000==0 && println("$nproc")
         
         is_any_na(row, :sample, :systematic, :isolation)::Bool && warn("sample, systematic or isolation were NA")
 
@@ -400,16 +406,31 @@ q=toc()
 
 tempf = mktemp()[1]
 rfile = string(splitext(outfile)[1], ".root") 
-println("saving to $rfile")
+println("saving to $rfile, temp file $tempf")
 mkpath(dirname(rfile))
 tf = TFile(tempf, "RECREATE")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    println(k)
+    println(k, " ", @sprintf("%.2f", integral(v)))
 	toroot(tf, tostr(k), v)
 end
 println("projected $(length(ret)) objects in $q seconds")
-write(tf.p)
+print("writing...");write(tf.p);println("done")
 close(tf)
-cp(tempf, outfile)
-rm(tempf)
+
+for i=1:5
+    try
+        println("cleaning $outfile...");isfile(outfile) && rm(outfile)
+        println("copying...");cp(tempf, outfile)
+        s = stat(outfile)
+        #run(`sync`)
+        s.size == 0 && error("file corrupted")
+        break
+    catch err
+        println("$err: retrying")
+        sleep(5)
+    end
+end
+
+println("cleaning $tempf...");rm(tempf)
+#print(readall(`du $outfile`))
