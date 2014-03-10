@@ -1,17 +1,14 @@
 using JSON
 
-infiles = readall(`find /home/joosep/singletop/output/skims/feb19 -name "*.root"` |> `sort`)|>split
-infile(i) = "/home/joosep/singletop/output/skims/feb19/output_$i.root"
-
-#bdtpoints = vcat(-1.0, [-0.2:0.01:1.0])
-bdtpoints = vcat(-1.0, 0.35, 0.4, 0.45, 0.85)
+infiles = readall(`find /hdfs/local/joosep/stpol/skims/feb27/split/feb19/ -name "*.root"` |> `sort`)|>split
+infile(i) = "/hdfs/local/joosep/stpol/skims/feb27/split/feb19/output_$i.root"
 
 binning=vcat(-Inf, linspace(-1, 1, 11), Inf)
 
 function card(infile, n)
     return {
         "infile"=>infile,
-        "outfile"=>"/home/joosep/singletop/output/bdt_scan/$n.root",
+        "outfile"=>"/hdfs/local/joosep/stpol/hists/$n.root",
         "tm_nominal_only" => false, 
     }
 end
