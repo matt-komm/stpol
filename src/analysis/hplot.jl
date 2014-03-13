@@ -72,7 +72,7 @@ function hplot(ax::PyObject, h::NHistogram, do_transpose=true, do_labels=false;k
         h = transpose(h)
     end
 
-    nd = ndim(h)
+    nd = ndims(h)
     nd != 2 && error("hplot not implemented for NHistogram with N!=2")
 
     nc = contents(h)
