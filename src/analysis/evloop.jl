@@ -106,9 +106,14 @@ function fill_histogram(
         #fill W+jets jet flavours separately
         if sample == :wjets
             for cls in jet_classifications
+                ev_cls = row[:jet_cls] |> jet_cls_from_number
+                ev_cls == cls || continue
+
+                ev_cls = jet_cls_heavy_light(ev_cls)
+
                 const kk = HistKey(
                     hname,
-                    symbol("wjets__$(cls)"),
+                    symbol("wjets__$(ev_cls)"),
                     iso,
                     systematic,
                     w_scenario,
