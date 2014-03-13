@@ -8,6 +8,8 @@ println("loading base.jl...")
 
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
 
+t0 = time()
+
 using DataArrays, DataFrames
 using JSON
 using HDF5, JLD
@@ -68,11 +70,12 @@ function nominal_weight(df::DataFrameRow)
         const lepton_weight__id = get_no_na(df, :lepton_weight__id, float32(1))::WT
         const lepton_weight__iso = get_no_na(df, :lepton_weight__iso, float32(1))::WT
         const lepton_weight__trigger = get_no_na(df, :lepton_weight__trigger, float32(1))::WT
+        const wjets_shape_weight = df[:wjets_ct_shape_weight]
 
-        const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id * lepton_weight__iso * lepton_weight__trigger
+        const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id *
+            lepton_weight__iso * lepton_weight__trigger * wjets_shape_weight
+        
         w::Float64
-
-#        (isna(w) || isnan(w)) && error("w=$w, $(df[:xsweight]) $b_weight, $pu_weight, $lepton_weight__id, $lepton_weight__iso, $lepton_weight__trigger")
         
         return w
     else
@@ -98,9 +101,15 @@ const systematic_processings = Symbol[
    :unknown
 ]
 
+const comphep_processings = Symbol[
+    symbol("signal_comphep_anomWtb-0100"),
+    symbol("signal_comphep_anomWtb-unphys"),
+    symbol("signal_comphep_nominal")
+]
+
 include("$BASE/src/analysis/util.jl")
-include("$BASE/src/analysis/selection.jl")
 include("$BASE/src/fraction_fit/hists.jl")
+#include("$BASE/src/analysis/hplot.jl");
 include("$BASE/src/skim/xs.jl");
 include("$BASE/src/analysis/varnames.jl")
 include("$BASE/src/analysis/df_extensions.jl")
@@ -149,6 +158,9 @@ const FITRESULTS = {
     :ele=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/ele/merged/fit.json")
 }
 
+t1 = time()
+println("done loading base in $(t1-t0) seconds")
+
 #if the hash function has changed, we need to load the old hashmap
 hmap_table = readtable("$BASE/src/skim/hmap.csv")
 
@@ -163,7 +175,6 @@ export infb, chunk, chunks, flatten, FITRESULTS, hmap, writedf, readdf, systemat
 export procs, mcsamples, TOTAL_SAMPLES
 export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
 export Hist
-
 end
 
 using DataArrays, DataFrames
@@ -175,6 +186,4 @@ using SingleTopBase
 
 include("$BASE/src/analysis/reweight.jl")
 using Reweight
-
-t1 = time()
-println("done loading base")
+include("$BASE/src/analysis/selection.jl")
