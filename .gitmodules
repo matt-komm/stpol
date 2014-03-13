@@ -7,3 +7,6 @@
 [submodule "CMSSW/src/QScaleISRWeightProducer"]
 	path = CMSSW/src/QScaleISRWeightProducer
 	url = git@github.com:jpata/QScaleISRWeightProducer.git
+[submodule "CMSSW/src/AnalysisModules"]
+	path = CMSSW/src/AnalysisModules
+	url = https://github.com/jpata/AnalysisModules
