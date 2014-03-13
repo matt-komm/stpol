@@ -146,7 +146,7 @@ end
 
 
 function /{T <: Real}(h1::Histogram, x::T)
-    return h1 * (1.0/x)
+    return h1 * (1.0 / x)
 end
 
 #err / C = sqrt((err1/C1)^2 + (err2/C2)^2) 
@@ -154,7 +154,7 @@ function /(h1::Histogram, h2::Histogram)
     @assert(h1.bin_edges == h2.bin_edges, "bin edges must be the same for both histograms")
     
     conts = h1.bin_contents ./ h2.bin_contents
-    ents = 1.0 / (1.0 ./ entries(h1) + 1.0 ./ entries(h2))
+    ents = 1.0 ./ (1.0 ./ entries(h1) + 1.0 ./ entries(h2))
 
     conts[isnan(conts)] = 0.0
     ents[isnan(ents)] = 0.0
@@ -271,7 +271,9 @@ end
 
 nbins(h::NHistogram) = prod([length(e) for e in h.edges])
 nbins(h::NHistogram, nd::Integer) = length(h.edges[nd])
-ndim(h::NHistogram) = length(h.edges)
+
+size(h::NHistogram) = length(h.edges)
+ndims(h::NHistogram) = length(size(h))
 
 errors(h::NHistogram) = reshape(errors(h.baseh), Int64[length(e) for e in h.edges]...)
 nentries(h::NHistogram) = nentries(h.baseh)
@@ -288,6 +290,11 @@ end
 
 function *{T <: Real}(x::T, h::NHistogram)
     return h * x
+end
+
+function /(h1::NHistogram, h2::NHistogram)
+    @assert h1.edges == h2.edges
+    return NHistogram(h1.baseh / h2.baseh, h1.edges)
 end
 
 
@@ -316,7 +323,7 @@ Base.size(h::NHistogram) = tuple([length(e) for e in h.edges]...)
 
 function findbin_nd(h::NHistogram, v)
     const nd = length(v)
-    @assert ndim(h)==nd
+    @assert ndims(h)==nd
     const idxs = Int64[-1 for i=1:nd]
     for i=1:nd
         const x = v[i]
@@ -409,7 +416,7 @@ export rebin
 export cumulative
 export writecsv
 export test_ks
-export NHistogram, findbin_nd, ndim, asarr, readhist
+export NHistogram, findbin_nd, ndims, asarr, readhist
 export contents, entries
 export makehist_2d, fromarr
 export project_x, project_y
