@@ -210,7 +210,7 @@ def JetSetup(process, conf):
         effB, effC, effL = Calibrations.getEffFiles(conf.subChannel)
         logger.info("using the following efficiency files for channel %s (b, c, l): %s" % (conf.subChannel, str((effB, effC, effL))))
 
-        process.bTagWeightProducerNoCut = cms.EDProducer('BTagSystematicsWeightProducer',
+        process.bTagWeightProducerNoCut = cms.EDProducer('TwoDimBTagSystematicsWeightProducer',
             src=cms.InputTag("goodJets"),
             nJetSrc=cms.InputTag("goodJetCount"),
             nTagSrc=cms.InputTag("bJetCount"),
@@ -220,9 +220,34 @@ def JetSetup(process, conf):
             algo=cms.string(conf.Jets.bTagWorkingPoint)
         )
 
+        process.bTagWeightProducerNoCutTCHPT = cms.EDProducer('TwoDimBTagSystematicsWeightProducer',
+            src=cms.InputTag("goodJets"),
+            nJetSrc=cms.InputTag("goodJetCount"),
+            nTagSrc=cms.InputTag("bJetCount"),
+            efficiencyFileB=cms.FileInPath("data/b_eff_hists__tchpt/nocut/%s.root" % effB),
+            efficiencyFileC=cms.FileInPath("data/b_eff_hists__tchpt/nocut/%s.root" % effC),
+            efficiencyFileL=cms.FileInPath("data/b_eff_hists__tchpt/nocut/%s.root" % effL),
+            algo=cms.string(conf.Jets.bTagWorkingPoint)
+        )
+
+        process.bTagWeightProducerNoCutSimple = cms.EDProducer('SimpleBTagSystematicsWeightProducer',
+            src=cms.InputTag("goodJets"),
+            nJetSrc=cms.InputTag("goodJetCount"),
+            nTagSrc=cms.InputTag("bJetCount"),
+            algo=cms.string(conf.Jets.bTagWorkingPoint),
+            effB2J =    cms.double(0.0),
+            effC2J =    cms.double(0.0),
+            effL2J =    cms.double(0.0),
+            effB3J =    cms.double(0.0),
+            effC3J =    cms.double(0.0),
+            effL3J =    cms.double(0.0),
+        )
+
         process.bEffSequence = cms.Sequence(
        #     process.bTagWeightProducerMtwMtop *
-            process.bTagWeightProducerNoCut
+            process.bTagWeightProducerNoCut *
+            process.bTagWeightProducerNoCutTCHPT *
+            process.bTagWeightProducerNoCutSimple
         )
 
     process.jetSequence = cms.Sequence()

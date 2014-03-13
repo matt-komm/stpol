@@ -1,7 +1,7 @@
 test: test_step2
 
 STEP1CFG=$(CMSSW_BASE)/src/SingleTopPolarization/Analysis/python/runconfs/step1/step1.py
-STEP2CFG=$(CMSSW_BASE)/src/SingleTopPolarization/Analysis/python/runconfs/step2/step2.py
+STEP2CFG=$(CMSSW_BASE)/src/SingleTopPolarization/Analysis/python/runconfs/step2/step2.py maxEvents=10000
 
 #step1
 infile_step1_tchan_nominal=/hdfs/cms/store/mc/Summer12_DR53X/TToLeptons_t-channel_8TeV-powheg-tauola/AODSIM/PU_S10_START53_V7A-v1/0000/0034258A-D7DE-E111-BEE3-00261834B529.root

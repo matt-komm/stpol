@@ -546,7 +546,6 @@ def SingleTopStep2():
             'keep float_*__STPOLSEL2',
             'keep double_*_*_STPOLSEL2',
             'keep float_*_*_STPOLSEL2',
-            'keep *_bTagWeightProducerNJMT_*_STPOLSEL2',
             'keep int_*__STPOLSEL2',
             'keep int_*_*_STPOLSEL2',
             'keep int_*_*_*',

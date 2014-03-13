@@ -59,12 +59,16 @@ public:
     enum BTagAlgo
     {
         CSVM,
+        CSVT,
         TCHPT
     };
     explicit BTagSystematicsWeightProducer(const edm::ParameterSet &);
     ~BTagSystematicsWeightProducer();
 
     static void fillDescriptions(edm::ConfigurationDescriptions &descriptions);
+
+protected: 
+    virtual double eff_func(const pat::Jet jet, const BTagSystematicsWeightProducer::Flavour flavour, const int nJets_ev) = 0;
 
 private:
     virtual void beginJob() ;
@@ -84,12 +88,22 @@ private:
     Combinations combs;
     double scaleFactor(BTagSystematicsWeightProducer::Flavour flavour, BTagSystematicsWeightProducer::BTagAlgo algo, double pt, double eta, double &sfUp, double &sfDown);
     double piecewise(double x, const std::vector<double> &bin_low, const std::vector<double> &bin_val);
-
+    
     //Hard-coded look-up tables for the errors of the SFb for various algos
     static const std::vector<double> SFb_ptBins;
     static const std::vector<double> SFb_CSVM_Err;
+    static const std::vector<double> SFb_CSVT_Err;
     static const std::vector<double> SFb_TCHPT_Err;
 
+    BTagSystematicsWeightProducer::BTagAlgo bTagAlgo;
+};
+    
+
+class TwoDimBTagSystematicsWeightProducer : public BTagSystematicsWeightProducer
+{
+
+public:
+    TwoDimBTagSystematicsWeightProducer(const edm::ParameterSet &iConfig);  
     std::map<BTagSystematicsWeightProducer::Flavour, TH2D *> effHists_2J;
     std::map<BTagSystematicsWeightProducer::Flavour, TH2D *> effHists_3J;
     edm::FileInPath effFileB;
@@ -99,9 +113,10 @@ private:
     TFile *effTFileC;
     TFile *effTFileL;
 
-    BTagSystematicsWeightProducer::BTagAlgo bTagAlgo;
+protected:
+    
+    virtual double eff_func(const pat::Jet jet, const BTagSystematicsWeightProducer::Flavour flavour, const int nJets_ev);
 };
-
 
 const std::vector<double> BTagSystematicsWeightProducer::SFb_ptBins (
 {
@@ -143,6 +158,26 @@ const std::vector<double> BTagSystematicsWeightProducer::SFb_CSVM_Err (
   0.0415417,
   0.0740446,
   0.0596716
+});
+
+const std::vector<double> BTagSystematicsWeightProducer::SFb_CSVT_Err (
+{
+    0.0515703,
+    0.0264008,
+    0.0272757,
+    0.0275565,
+    0.0248745,
+    0.0218456,
+    0.0253845,
+    0.0239588,
+    0.0271791,
+    0.0273912,
+    0.0379822,
+    0.0411624,
+    0.0786307,
+    0.0866832,
+    0.0942053,
+    0.102403
 });
 
 //bin-by-bin(pt) variation for TCHPT for QCD-derived scale factors
@@ -235,6 +270,12 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
         double x = pt;
         return (0.938887 + (0.00017124 * x)) + (-2.76366e-07 * (x * x));
     };
+    
+    auto sfB_CSVT = [&pt] ()
+    {
+        double x = pt;
+        return (0.927563+(1.55479e-05*x))+(-1.90666e-07*(x*x));
+    };
 
     //Tagger: TCHPT within 20 < pt < 800 GeV, abs(eta) < 2.4, x = pt
     auto sfB_TCHPT = [&pt] ()
@@ -273,6 +314,22 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
             return TMath::QuietNaN();
         }
     };
+    auto sfL_CSVT = [&eta, &pt, &sfUp, &sfDown] ()
+    {
+        double x = pt;
+        if (eta >= 0.0 && eta < 2.4)
+        {
+            sfUp = ((1.16361+(0.00464695*x))+(-1.09467e-05*(x*x)))+(7.21896e-09*(x*(x*x)));
+            sfDown = ((0.845757+(0.00186422*x))+(-4.6133e-06*(x*x)))+(3.21723e-09*(x*(x*x)));
+            return ((1.00462+(0.00325971*x))+(-7.79184e-06*(x*x)))+(5.22506e-09*(x*(x*x)));
+        }
+        else   //jet eta overflow
+        {
+            sfUp = TMath::QuietNaN();
+            sfDown = TMath::QuietNaN();
+            return TMath::QuietNaN();
+        }
+    };
     auto sfL_TCHPT = [&eta, &pt, &sfUp, &sfDown] ()
     {
         double x = pt;
@@ -299,6 +356,14 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
             sf = sfB_CSVM();
             //double sfErr = 0;
             double sfErr = piecewise(pt, SFb_ptBins, SFb_CSVM_Err);
+            if (ptOverFlow || ptUnderFlow)
+                sfErr = 2 * sfErr;
+            SFerr(sfErr);
+        }
+        else if ( algo == BTagSystematicsWeightProducer::CSVT )
+        {
+            sf = sfB_CSVT();
+            double sfErr = piecewise(pt, SFb_ptBins, SFb_CSVT_Err);
             if (ptOverFlow || ptUnderFlow)
                 sfErr = 2 * sfErr;
             SFerr(sfErr);
@@ -330,6 +395,16 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
             SFerr(sfErr);
 
         }
+        else if (algo == BTagSystematicsWeightProducer::CSVT)
+        {
+            sf = sfB_CSVT();
+            double sfErr = piecewise(pt, BTagSystematicsWeightProducer::SFb_ptBins, BTagSystematicsWeightProducer::SFb_CSVT_Err);
+            sfErr = 2 * sfErr;
+            if (ptOverFlow || ptUnderFlow)
+                sfErr = 2 * sfErr;
+            SFerr(sfErr);
+
+        }
         else if (algo == BTagSystematicsWeightProducer::TCHPT)
         {
             sf = sfB_TCHPT();
@@ -349,6 +424,8 @@ double BTagSystematicsWeightProducer::scaleFactor(BTagSystematicsWeightProducer:
     {
         if (algo == BTagSystematicsWeightProducer::CSVM)
             sf = sfL_CSVM();
+        else if (algo == BTagSystematicsWeightProducer::CSVT)
+            sf = sfL_CSVT();
         else if (algo == BTagSystematicsWeightProducer::TCHPT)
             sf = sfL_TCHPT();
         else
@@ -367,14 +444,15 @@ BTagSystematicsWeightProducer::BTagSystematicsWeightProducer(const edm::Paramete
     : jetSrc(iConfig.getParameter<edm::InputTag>("src"))
     , nJetSrc(iConfig.getParameter<edm::InputTag>("nJetSrc"))
     , nTagSrc(iConfig.getParameter<edm::InputTag>("nTagSrc"))
-    , effFileB(iConfig.getParameter<edm::FileInPath>("efficiencyFileB"))
-    , effFileC(iConfig.getParameter<edm::FileInPath>("efficiencyFileC"))
-    , effFileL(iConfig.getParameter<edm::FileInPath>("efficiencyFileL"))
 {
     const std::string algo = iConfig.getParameter<std::string>("algo");
     if (algo.compare("CSVM") == 0)
     {
         bTagAlgo = BTagSystematicsWeightProducer::CSVM;
+    }
+    else if (algo.compare("CSVT") == 0)
+    {
+        bTagAlgo = BTagSystematicsWeightProducer::CSVT;
     }
     else if (algo.compare("TCHPT") == 0)
     {
@@ -382,10 +460,25 @@ BTagSystematicsWeightProducer::BTagSystematicsWeightProducer(const edm::Paramete
     }
     else
     {
-        //throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
-        edm::LogInfo("scaleFactor") << "algo " << algo << " not implemented";
+        edm::LogError("scaleFactor") << "algo " << algo << " not implemented";
+        throw cms::Exception("scaleFactor") << "algo " << algo << " not implemented";
     }
 
+    produces<float>("bTagWeight");
+    produces<float>("bTagWeightSystBCUp");
+    produces<float>("bTagWeightSystBCDown");
+    produces<float>("bTagWeightSystLUp");
+    produces<float>("bTagWeightSystLDown");
+
+    produces<std::vector<float>>("scaleFactors");
+}
+
+TwoDimBTagSystematicsWeightProducer::TwoDimBTagSystematicsWeightProducer(const edm::ParameterSet &iConfig)  
+    : BTagSystematicsWeightProducer(iConfig) 
+    , effFileB(iConfig.getParameter<edm::FileInPath>("efficiencyFileB"))
+    , effFileC(iConfig.getParameter<edm::FileInPath>("efficiencyFileC"))
+    , effFileL(iConfig.getParameter<edm::FileInPath>("efficiencyFileL"))
+{
     edm::LogInfo("constructor") << "Using efficency files: b=" << effFileB.fullPath()
                                 << " c=" << effFileC.fullPath() << " l=" << effFileL.fullPath();
     effTFileB = new TFile(effFileB.fullPath().c_str());
@@ -399,14 +492,6 @@ BTagSystematicsWeightProducer::BTagSystematicsWeightProducer(const edm::Paramete
     effHists_3J[BTagSystematicsWeightProducer::b] = (TH2D *)effTFileB->Get("3J/eff_b");
     effHists_3J[BTagSystematicsWeightProducer::c] = (TH2D *)effTFileC->Get("3J/eff_c");
     effHists_3J[BTagSystematicsWeightProducer::l] = (TH2D *)effTFileL->Get("3J/eff_l");
-
-    produces<float>("bTagWeight");
-    produces<float>("bTagWeightSystBCUp");
-    produces<float>("bTagWeightSystBCDown");
-    produces<float>("bTagWeightSystLUp");
-    produces<float>("bTagWeightSystLDown");
-
-    produces<std::vector<float>>("scaleFactors");
 }
 
 /*
@@ -441,12 +526,6 @@ BTagSystematicsWeightProducer::~BTagSystematicsWeightProducer()
 {
 }
 
-
-//
-// member functions
-//
-
-// ------------ method called to produce the data  ------------
 void
 BTagSystematicsWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup &iSetup)
 {
@@ -548,28 +627,8 @@ BTagSystematicsWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup
 
                 //The probability associated with a jet is eff if the jet is in the combination of b-tagged jets, (1-eff) otherwise
                 double eff_val = TMath::QuietNaN();
-
-                auto get_hist_eff = [&jet] (TH2D * hist)
-                {
-                    return hist->GetBinContent(hist->FindBin(jet.pt(), std::fabs(jet.eta())));
-                };
-
-                if (nJets_ev == 2)
-                {
-                    eff_val = get_hist_eff(effHists_2J[flavour]);
-                    LogDebug("jetLoop") << "2J eff = " << eff_val;
-                    //eff_val = (*effs_in2J)[flavour];
-                }
-                else if (nJets_ev > 2)
-                {
-                    eff_val = get_hist_eff(effHists_3J[flavour]);
-                    LogDebug("jetLoop") << "2+J eff = " << eff_val;
-                    //eff_val = (*effs_in3J)[flavour];
-                }
-                else
-                {
-                    edm::LogInfo("jetLoop") << "Don't know what efficiency to take for NJ=" << nJets_ev;
-                }
+               
+                eff_val = eff_func(jet, flavour, nJets_ev);
 
                 LogDebug("jetLoop") << "\t\teff_val=" << eff_val;
                 //double e = eff(eff_val, inComb);
@@ -663,6 +722,37 @@ BTagSystematicsWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup
 
 }
 
+
+double TwoDimBTagSystematicsWeightProducer::eff_func(const pat::Jet jet, const BTagSystematicsWeightProducer::Flavour flavour, const int nJets_ev) {
+    double eff_val = 0.0; 
+    auto get_hist_eff = [&jet] (TH2D * hist)
+    {
+        return hist->GetBinContent(
+            hist->FindBin(
+                jet.pt(),
+                std::fabs(jet.eta())
+            )
+        );
+    };
+
+    if (nJets_ev == 2)
+    {
+        eff_val = get_hist_eff(effHists_2J[flavour]);
+        LogDebug("jetLoop") << "2J eff = " << eff_val;
+    }
+    else if (nJets_ev > 2)
+    {
+        eff_val = get_hist_eff(effHists_3J[flavour]);
+        LogDebug("jetLoop") << "2+J eff = " << eff_val;
+    }
+    else
+    {
+        eff_val = TMath::QuietNaN();
+        edm::LogInfo("jetLoop") << "Don't know what efficiency to take for NJ=" << nJets_ev;
+    }
+    return eff_val;
+}
+
 // ------------ method called once each job just before starting event loop  ------------
 void
 BTagSystematicsWeightProducer::beginJob()
@@ -710,5 +800,57 @@ BTagSystematicsWeightProducer::fillDescriptions(edm::ConfigurationDescriptions &
     descriptions.addDefault(desc);
 }
 
+
+class SimpleBTagSystematicsWeightProducer : public BTagSystematicsWeightProducer {
+    public:
+        SimpleBTagSystematicsWeightProducer(const edm::ParameterSet &p) :
+        
+        BTagSystematicsWeightProducer(p),
+        
+        eff_b_2j(p.getParameter<double>("effB2J")),
+        eff_c_2j(p.getParameter<double>("effC2J")),
+        eff_l_2j(p.getParameter<double>("effL2J")),
+        
+        eff_b_3j(p.getParameter<double>("effB3J")),
+        eff_c_3j(p.getParameter<double>("effC3J")),
+        eff_l_3j(p.getParameter<double>("effL3J")) { };
+
+    protected:
+        double eff_func(const pat::Jet jet, const BTagSystematicsWeightProducer::Flavour flavour, const int nJets_ev);
+
+        const float eff_b_2j;
+        const float eff_c_2j;
+        const float eff_l_2j;
+        
+        const float eff_b_3j;
+        const float eff_c_3j;
+        const float eff_l_3j;
+};
+
+double SimpleBTagSystematicsWeightProducer::eff_func(const pat::Jet jet, const BTagSystematicsWeightProducer::Flavour flavour, const int nJets_ev) {
+    if (nJets_ev == 2) {
+        if (flavour == BTagSystematicsWeightProducer::Flavour::b)
+            return eff_b_2j;
+        if (flavour == BTagSystematicsWeightProducer::Flavour::c)
+            return eff_c_2j;
+        if (flavour == BTagSystematicsWeightProducer::Flavour::l)
+            return eff_l_2j;
+
+        return TMath::QuietNaN();
+    }
+    else if (nJets_ev > 2) {
+        if (flavour == BTagSystematicsWeightProducer::Flavour::b)
+            return eff_b_3j;
+        if (flavour == BTagSystematicsWeightProducer::Flavour::c)
+            return eff_c_3j;
+        if (flavour == BTagSystematicsWeightProducer::Flavour::l)
+            return eff_l_3j;
+        return TMath::QuietNaN();
+    } else {
+        return TMath::QuietNaN();
+    }
+}
+
 //define this as a plug-in
-DEFINE_FWK_MODULE(BTagSystematicsWeightProducer);
+DEFINE_FWK_MODULE(TwoDimBTagSystematicsWeightProducer);
+DEFINE_FWK_MODULE(SimpleBTagSystematicsWeightProducer);
