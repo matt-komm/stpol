@@ -59,6 +59,8 @@ sources[weight(:pu, :up)] = Source(:puWeightProducer, :PUWeightNtrueUp, :STPOLSE
 sources[weight(:pu, :down)] = Source(:puWeightProducer, :PUWeightNtrueDown, :STPOLSEL2, Float64)
 
 sources[weight(:btag)] = Source(:bTagWeightProducerNoCut, :bTagWeight, :STPOLSEL2, Float32)
+sources[weight(:btag, :tchpt)] = Source(:bTagWeightProducerNoCutTCHPT, :bTagWeight, :STPOLSEL2, Float32)
+sources[weight(:btag, :simple)] = Source(:bTagWeightProducerNoCutSimple, :bTagWeight, :STPOLSEL2, Float32)
 sources[weight(:btag, :bc, :up)] = Source(:bTagWeightProducerNoCut, :bTagWeightSystBCUp, :STPOLSEL2, Float32)
 sources[weight(:btag, :bc, :down)] = Source(:bTagWeightProducerNoCut, :bTagWeightSystBCDown, :STPOLSEL2, Float32)
 sources[weight(:btag, :l, :up)] = Source(:bTagWeightProducerNoCut, :bTagWeightSystLUp, :STPOLSEL2, Float32)

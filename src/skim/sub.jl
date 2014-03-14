@@ -43,7 +43,7 @@ RET=\$?
 if [ \$RET -ne 0 ]; then
     echo '/hdfs was not available'
 else
-    ~/.julia/ROOT/julia $scpath/skim.jl $ofdir/$outfile $infilelist > $skimoutput
+    ~/.julia/CMSSW/julia $scpath/skim.jl $ofdir/$outfile $infilelist > $skimoutput
     RET=\$?
 fi
 echo 'done '\$RET && exit \$RET
@@ -63,7 +63,7 @@ echo 'done '\$RET && exit \$RET
             run(subcmd)
             break
         catch e
-            println(e)
+            #println(e)
             sleep(1)
         end
     end
@@ -84,13 +84,13 @@ for n=1:perjob:maxn
     #last chunk
     if r.start + r.len > maxn
         r = r.start:maxn
-        println(r.start, ":", r.len)
+        #println(r.start, ":", r.len)
     end
 
     #submit
-    println(n, " ", r.start, ":", r.start:r.len-1)
+    #println(n, " ", r.start, ":", r.start:r.len-1)
     submit(flist[r], "output_$j", j)
-#    println(flist[r])
+    #println(flist[r])
     for x in flist[r]
         splice!(empty_flist, findfirst(empty_flist, x)) 
     end

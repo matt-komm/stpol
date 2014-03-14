@@ -1,24 +1,11 @@
-#!/home/joosep/.julia/ROOT/julia
+#!/home/joosep/.julia/CMSSW/julia
 println("running skim.jl")
 tstart = time()
 println("hostname $(gethostname()) ", "SLURM_JOB_ID" in keys(ENV) ? ENV["SLURM_JOB_ID"] : getpid())
 
-using ROOT
-using DataFrames
-using HDF5
-using JLD
-using HEP
+using CMSSW, DataFrames, HEP
 
 include("../analysis/base.jl")
-
-const NOSKIM = ("STPOL_NOSKIM" in keys(ENV) && ENV["STPOL_NOSKIM"]=="1")
-if NOSKIM
-    println("*** skimming DEACTIVATED")
-end
-const DEBUG=("DEBUG" in keys(ENV) && int(ENV["DEBUG"])==1)
-if DEBUG
-    println("*** DEBUG mode activated")
-end
 
 output_file = ARGS[1]
 
@@ -30,18 +17,6 @@ for i=1:length(flist)
         flist[i] = string("file:",flist[i])
     end
 end
-#nflist = Any[]
-#rflist = Any[]
-#for fi in flist
-#    ev = Events([fi])
-#    println("EVL ", fi, " ", length(ev))
-#    if length(ev) > 0
-#        push!(nflist, fi)
-#    else
-#        push!(rflist, fi)
-#        println("removing empty file $fi from list")
-#    end
-#end
 
 flistd = {f=>i for (f, i) in zip(flist, 1:length(flist))}
 
@@ -126,6 +101,8 @@ df = similar(
             top_weight__down=Float32[],
 
             b_weight=Float32[],
+            b_weight_old=Float32[],
+            b_weight_simple=Float32[],
             b_weight__bc__up=Float32[],
             b_weight__bc__down=Float32[],
             b_weight__l__up=Float32[],
@@ -162,10 +139,10 @@ prfiles = similar(
 
 i = 1
 for fi in flist
-    x = ROOT.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
+    x = CMSSW.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
     prfiles[i, :files] = fi
     prfiles[i, :total_processed] = x
-    prfiles[i, :cls] = sample_type(fi)
+    prfiles[i, :cls] = SingleTopBase.sample_type(fi)
     i += 1
 end
 
@@ -194,12 +171,6 @@ timeelapsed = @elapsed for i=1:maxev
     end
     
     to!(events, i)
-    #println("EV $(time_ns()) $i ", where_file(events))
-    
-    if DEBUG
-        run, lumi, event = where(events)
-        println("EV $i ev=", int(run), ":", int(lumi), ":", int(event))
-    end
 
     for cn in DF_SYMBS
         df[i, cn] = NA
@@ -240,6 +211,9 @@ timeelapsed = @elapsed for i=1:maxev
     
 
     df[i, :b_weight] = events[sources[weight(:btag)]]
+    df[i, :b_weight_old] = events[sources[weight(:btag, :tchpt)]]|>ifpresent
+    df[i, :b_weight_simple] = events[sources[weight(:btag, :simple)]]|>ifpresent
+    
     df[i, :b_weight__bc__up] = events[sources[weight(:btag, :bc, :up)]]
     df[i, :b_weight__bc__down] = events[sources[weight(:btag, :bc, :down)]]
     df[i, :b_weight__l__up] = events[sources[weight(:btag, :l, :up)]]
@@ -262,17 +236,8 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :systematic] = int(hash(string(cls[:systematic])))
     df[i, :processing_tag] = int(hash(string(cls[:tag])))
 
-    if DEBUG
-        println("EV $i $genstring_mu $genstring_ele")
-    end
-   
     nmu = events[sources[:nsignalmu]]
     nele = events[sources[:nsignalele]]
-    
-    if DEBUG
-        println("EV $i nmu=", events[sources[:nsignalmu]])
-        println("EV $i nele=", events[sources[:nsignalele]])
-    end
     
     df[i, :n_signal_mu] = nmu 
     df[i, :n_signal_ele] = nele
@@ -297,10 +262,6 @@ timeelapsed = @elapsed for i=1:maxev
     nveto_mu = events[sources[vetolepton(:mu)]]
     nveto_ele = events[sources[vetolepton(:ele)]]
 
-    if DEBUG
-        println("EV $i nvetomu=", events[sources[vetolepton(:mu)]])
-        println("EV $i nvetoele=", events[sources[vetolepton(:ele)]])
-    end
     df[i, :n_veto_mu] = nveto_mu
     df[i, :n_veto_ele] = nveto_ele
 
@@ -309,10 +270,6 @@ timeelapsed = @elapsed for i=1:maxev
         continue
     end
     
-    if DEBUG
-        println("EV $i lepton_type = ", lepton_type)
-    end
-
     if lepton_type == :muon || lepton_type == :electron
         df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
         df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
@@ -325,20 +282,6 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :met] = events[sources[:met]] |> ifpresent
     df[i, :met_phi] = events[sources[(:met, :phi)]] |> ifpresent
-    
-  
-    ##event had no MET
-    #if (isna(df[i, :met]) || isna(df[i, :mtw]) || df[i, :met] < 00)
-    #    fails[:met] += 1
-    #    continue
-    #end
-
-#    #check for muon/electron and mtw/met
-#    if  (lepton_type == :muon && df[i, :mtw] < 10.0) ||
-#        (lepton_type == :electron && df[i, :met] < 10.0)
-#        fails[:met] += 1
-#        continue
-#    end
     
     #get jet, tag
     df[i, :njets] = events[sources[:njets]]
@@ -482,20 +425,6 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :shat] = l(totvec)
     df[i, :ht] = df[i, :bjet_pt] + df[i, :ljet_pt]
-   
-    if DEBUG
-        println("SEL EV fi=", df[i, :fileindex], " f=", prfiles[df[i, :fileindex], :files],
-            " ev=", int(df[i, :run]), ":", int(df[i, :lumi]), ":", int(df[i, :event]),
-            " s=", sample, " p=", get_process(sample),
-            " hm=", int(df[i, :hlt_mu]), " he=", int(df[i, :hlt_ele]),
-            " nsm=", df[i, :n_signal_mu], " nse=", df[i, :n_signal_ele],
-            " nvm=", df[i, :n_veto_mu], " nve=", df[i, :n_veto_ele],
-            " nj=", df[i, :njets], " nt=", df[i, :ntags],
-            " mtw=", df[i, :mtw],
-            " met=", df[i, :met],
-            " rms=", df[i, :ljet_rms],
-        )
-    end
 
     df[i, :passes] = true
 end
@@ -508,10 +437,7 @@ println("processed $(nproc/timeelapsed) events/second")
 pass = (df[:passes]) | (df[:sample] .== int(hash("tchan")))
 
 #Select only the events that actually pass
-mydf = NOSKIM ? df : df[pass, :]
-#println(mydf)
-
-println("NOSKIM=$NOSKIM, df=$(nrow(df)), my_df=$(nrow(mydf))")
+mydf = df[pass, :]
 
 for cn in names(mydf)
     if all(isna(mydf[cn]))
