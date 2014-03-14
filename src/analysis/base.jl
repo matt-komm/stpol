@@ -1,4 +1,8 @@
-if !isdefined(:BASE)
+#if !isdefined(:BASE)
+
+include("histo.jl")
+
+module SingleTopBase
 
 println("loading base.jl...")
 
@@ -9,6 +13,7 @@ t0 = time()
 using DataArrays, DataFrames
 using JSON
 using HDF5, JLD
+using Hist
 
 #paths to be added here
 if ENV["USER"] == "joosep"
@@ -59,16 +64,18 @@ function nominal_weight(df::DataFrameRow)
     const sample = df[:sample]::Int64
 
     if is_mc(sample)::Bool
+        const top_weight = get_no_na(df, :top_weight, float32(1))::WT
         const b_weight = get_no_na(df, :b_weight, float32(1))::WT
         const pu_weight = get_no_na(df, :pu_weight, float32(1))::WT
         const lepton_weight__id = get_no_na(df, :lepton_weight__id, float32(1))::WT
         const lepton_weight__iso = get_no_na(df, :lepton_weight__iso, float32(1))::WT
         const lepton_weight__trigger = get_no_na(df, :lepton_weight__trigger, float32(1))::WT
+        const wjets_shape_weight = df[:wjets_ct_shape_weight]
 
-        const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id * lepton_weight__iso * lepton_weight__trigger
+        const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id *
+            lepton_weight__iso * lepton_weight__trigger * wjets_shape_weight
+        
         w::Float64
-
-#        (isna(w) || isnan(w)) && error("w=$w, $(df[:xsweight]) $b_weight, $pu_weight, $lepton_weight__id, $lepton_weight__iso, $lepton_weight__trigger")
         
         return w
     else
@@ -94,18 +101,20 @@ const systematic_processings = Symbol[
    :unknown
 ]
 
+const comphep_processings = Symbol[
+    symbol("signal_comphep_anomWtb-0100"),
+    symbol("signal_comphep_anomWtb-unphys"),
+    symbol("signal_comphep_nominal")
+]
+
 include("$BASE/src/analysis/util.jl")
-include("$BASE/src/analysis/selection.jl");
-include("$BASE/src/analysis/histo.jl");
-using Hist
-include("$BASE/src/fraction_fit/hists.jl");
+include("$BASE/src/fraction_fit/hists.jl")
 #include("$BASE/src/analysis/hplot.jl");
 include("$BASE/src/skim/xs.jl");
 include("$BASE/src/analysis/varnames.jl")
 include("$BASE/src/analysis/df_extensions.jl")
 include("$BASE/src/analysis/systematic.jl")
 include("$BASE/src/analysis/qcd.jl")
-include("$BASE/src/analysis/reweight.jl")
 include("$BASE/src/analysis/fit.jl")
 
 const PDIR = "output/plots"
@@ -152,4 +161,29 @@ const FITRESULTS = {
 t1 = time()
 println("done loading base in $(t1-t0) seconds")
 
+#if the hash function has changed, we need to load the old hashmap
+hmap_table = readtable("$BASE/src/skim/hmap.csv")
+
+for r=1:nrow(hmap_table)
+   row = DataFrameRow(hmap_table, r)
+   hmap[:from][row[2]] = row[1]
+   hmap[:to][row[1]] = row[2]
 end
+
+export BASE
+export infb, chunk, chunks, flatten, FITRESULTS, hmap, writedf, readdf, systematic_processings
+export procs, mcsamples, TOTAL_SAMPLES
+export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
+export Hist
+end
+
+using DataArrays, DataFrames
+using JSON
+using HDF5, JLD
+using Hist
+using PyCall
+using SingleTopBase
+
+include("$BASE/src/analysis/reweight.jl")
+using Reweight
+include("$BASE/src/analysis/selection.jl")

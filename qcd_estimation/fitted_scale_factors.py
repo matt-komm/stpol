@@ -434,5 +434,18 @@ for channel in ["mu", "ele"]:
             scale_factors[channel][jt][var] = scale_factors_spec[channel][jt][var]["added_21_02"]["reversecut"]
 
 mva_cuts = {}
-mva_cuts["ele"] = 0.55
-mva_cuts["mu"] = 0.4
+mva_cuts["ele"] = 0.10
+mva_cuts["mu"] = 0.05
+
+mva_name = "qcdBDT"
+
+#just so that it's not always necessary to fiddle with the python path to import this file
+import json
+def to_json(fname):
+    fi = open(fname, "w")
+    s = json.dumps(scale_factors, indent=4)
+    fi.write(s)
+    fi.close()
+
+#mva_cuts["ele"] = 0.55
+#mva_cuts["mu"] = 0.4

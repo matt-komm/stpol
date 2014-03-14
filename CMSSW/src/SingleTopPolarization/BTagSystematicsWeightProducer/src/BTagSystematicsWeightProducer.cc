@@ -570,6 +570,7 @@ BTagSystematicsWeightProducer::produce(edm::Event &iEvent, const edm::EventSetup
                 {
                     edm::LogInfo("jetLoop") << "Don't know what efficiency to take for NJ=" << nJets_ev;
                 }
+
                 LogDebug("jetLoop") << "\t\teff_val=" << eff_val;
                 //double e = eff(eff_val, inComb);
 

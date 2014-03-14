@@ -11,7 +11,7 @@
 #include <FWCore/FWLite/interface/AutoLibraryLoader.h>
 
 #include <SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h>
-#include <DataFormats/MuonReco/interface/Muon.h>
+#include <DataFormats/PatCandidates/interface/Muon.h>
 #include <PhysicsTools/FWLite/interface/TFileService.h>
 #include <FWCore/ParameterSet/interface/ProcessDesc.h>
 #include <FWCore/PythonParameterSet/interface/PythonProcessDesc.h>

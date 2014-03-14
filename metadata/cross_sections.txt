@@ -1,0 +1,119 @@
+"sample", "xs"
+#Cross-sections from AN2012-273-v7, page 4
+"T_t", 56.4
+"T_t_ToLeptons", 18.3864
+"Tbar_t", 30.7
+"Tbar_t_ToLeptons", 10.0082
+"T_s", 3.79
+"Tbar_s", 1.76
+"T_tW", 11.1
+"Tbar_tW", 11.1
+#inclusive
+"TTJets_MassiveBinDECAY", 245.8
+#30400.0 LO
+"WJets_inclusive", 37509
+
+#FIXME: ttbar branching ratio [arxiv:1303.6254]
+"TTJets_SemiLept", 108.3368416
+"TTJets_FullLept", 26.1226408
+
+#exclusive sample branching ratios, same as PREP
+"W1Jets_exclusive", 6662.7828947368425
+"W2Jets_exclusive", 2159.2351973684213
+"W3Jets_exclusive", 640.3674671052631
+"W4Jets_exclusive", 264.04361842105266
+
+#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=WJets_0p1_1p2_2p10_3p20_4p20_5p20_CT10_8TeV-sherpa
+"WJets_sherpa", 104592.84641774505
+
+#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=*GJets_HT-*_8TeV-madgraph*
+#200To400
+"GJets1", 960.5
+#400ToInf
+"GJets2", 107.5
+
+"DYJets", 3503.71
+"WW", 54.838
+"WZ", 33.21
+"ZZ", 8.059
+"QCDMu", 134680
+
+#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=QCD_Pt_*_*_EMEnriched_TuneZ2star_8TeV_pythia6*
+"QCD_Pt_20_30_EMEnriched", 2.91486e6
+"QCD_Pt_30_80_EMEnriched", 4.615893e6
+"QCD_Pt_80_170_EMEnriched", 183294.9
+"QCD_Pt_170_250_EMEnriched", 4586.52
+"QCD_Pt_250_350_EMEnriched", 556.75
+"QCD_Pt_350_EMEnriched", 89.1
+
+#http://cms.cern.ch/iCMS/prep/requestmanagement?dsn=QCD_Pt_*_*_BCtoE_TuneZ2star_8TeV_pythia6*
+"QCD_Pt_20_30_BCtoE", 167388.0
+"QCD_Pt_30_80_BCtoE", 167040.0
+"QCD_Pt_80_170_BCtoE", 12981.9
+"QCD_Pt_170_250_BCtoE", 631.992
+"QCD_Pt_250_350_BCtoE", 103.275
+"QCD_Pt_350_BCtoE", 23.9245
+
+#These are here for convenience (no effect)
+"SingleMu", 1.0
+"SingleEle", 1.0
+
+# (T_t_ToLeptons + Tbar_t_ToLeptons) / 3 from the exclusive cross sections, equal BR
+"TToBENu_anomWtb-unphys_t-channel", 9.464866666666666
+"TToBMuNu_anomWtb-unphys_t-channel", 9.464866666666666
+"TToBTauNu_anomWtb-unphys_t-channel", 9.464866666666666
+"TToBENu_anomWtb-0100_t-channel", 9.464866666666666
+"TToBMuNu_anomWtb-0100_t-channel", 9.464866666666666
+"TToBTauNu_anomWtb-0100_t-channel", 9.464866666666666
+"TToBENu_t-channel", 9.464866666666666
+"TToBMuNu_t-channel", 9.464866666666666
+"TToBTauNu_t-channel", 9.464866666666666
+
+#exclusive cross sections
+"T_t_ToLeptons_mass166_5", 18.3864 
+"T_t_ToLeptons_mass169_5", 18.3864 
+"Tbar_t_ToLeptons_mass166_5", 10.0082 
+"Tbar_t_ToLeptons_mass169_5", 10.0082 
+
+"T_t_ToLeptons_mass175_5", 18.3864 
+"T_t_ToLeptons_mass178_5", 18.3864 
+"Tbar_t_ToLeptons_mass175_5", 10.0082 
+"Tbar_t_ToLeptons_mass178_5", 10.0082 
+
+"T_t_ToLeptons_scaleup", 18.3864 
+"Tbar_t_ToLeptons_scaleup", 10.0082 
+
+"T_t_ToLeptons_scaledown", 18.3864 
+"Tbar_t_ToLeptons_scaledown", 10.0082 
+
+#inclusive
+"TTJets_matchingdown", 245.8
+"TTJets_matchingup", 245.8
+"TTJets_scaledown", 245.8
+"TTJets_scaleup", 245.8
+"TTJets_mass166_5", 245.8
+"TTJets_mass169_5", 245.8
+"TTJets_mass175_5", 245.8
+"TTJets_mass178_5", 245.8
+
+#exclusive xs-s from above
+"W1JetsToLNu", 6662.7828947368425
+"W1JetsToLNu_matchingdown", 6662.7828947368425
+"W1JetsToLNu_matchingup", 6662.7828947368425
+"W1JetsToLNu_scaleup", 6662.7828947368425
+"W1JetsToLNu_scaledown", 6662.7828947368425
+"W2JetsToLNu", 2159.2351973684213
+"W2JetsToLNu_matchingdown", 2159.2351973684213
+"W2JetsToLNu_matchingup", 2159.2351973684213
+"W2JetsToLNu_scaleup", 2159.2351973684213
+"W2JetsToLNu_scaledown", 2159.2351973684213
+"W3JetsToLNu", 640.3674671052631
+"W3JetsToLNu_matchingdown", 640.3674671052631
+"W3JetsToLNu_matchingup", 640.3674671052631
+"W3JetsToLNu_scaleup", 640.3674671052631
+"W3JetsToLNu_scaledown", 640.3674671052631
+"W4JetsToLNu", 264.04361842105266
+"W4JetsToLNu_matchingdown", 264.04361842105266
+"W4JetsToLNu_matchingup", 264.04361842105266
+"W4JetsToLNu_scaleup", 264.04361842105266
+"W4JetsToLNu_scaledown", 264.04361842105266

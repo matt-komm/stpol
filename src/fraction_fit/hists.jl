@@ -109,6 +109,10 @@ function todf(d::Associative)
     return tot_df
 end
 
+function fromdf(df::DataFrame)
+    return Histogram(df[3], df[2], df[1])
+end
+
 function reweight_to_fitres(frd, indata, inds)
     indata["fitweight"] = 1.0
     for (lep, fr) in frd
@@ -122,12 +126,12 @@ function reweight_to_fitres(frd, indata, inds)
 end
 
 function reweight_hists_to_fitres(fr, hists)
-    means = {k=>v for (k,v) in zip(fr.names, fr.means)}
+    #means = {k=>v for (k,v) in zip(fr.names, fr.means)}
 
     function weightall(a, b)
         for k in keys(hists)
-            if contains(k, a)
-                hists[k] = hists[k] * means[b]
+            if contains(string(k), a)
+                hists[k] = hists[k] * fr[b]
             end
         end
     end

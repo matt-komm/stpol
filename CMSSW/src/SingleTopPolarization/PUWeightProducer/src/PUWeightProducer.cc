@@ -13,6 +13,8 @@
     The class reads the addPileupInfo structure from the EDM event and the number of _true_ vertices
     is accessed via PileupSummaryInfo::getTrueNumInteractions.
     Implemented as in https://twiki.cern.ch/twiki/bin/view/CMS/PileupMCReweightingUtilities
+
+    Pile-up root files are calculated using util/calcDataPUHist.sh
 */
 //
 // Original Author:  Joosep Pata

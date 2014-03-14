@@ -209,15 +209,7 @@ def JetSetup(process, conf):
     if conf.isMC:
         effB, effC, effL = Calibrations.getEffFiles(conf.subChannel)
         logger.info("using the following efficiency files for channel %s (b, c, l): %s" % (conf.subChannel, str((effB, effC, effL))))
-       # process.bTagWeightProducerMtwMtop = cms.EDProducer('BTagSystematicsWeightProducer',
-       #     src=cms.InputTag("goodJets"),
-       #     nJetSrc=cms.InputTag("goodJetCount"),
-       #     nTagSrc=cms.InputTag("bJetCount"),
-       #     efficiencyFileB=cms.FileInPath("data/b_eff_hists/MtwMtop/%s.root" % effB),
-       #     efficiencyFileC=cms.FileInPath("data/b_eff_hists/MtwMtop/%s.root" % effC),
-       #     efficiencyFileL=cms.FileInPath("data/b_eff_hists/MtwMtop/%s.root" % effL),
-       #     algo=cms.string(conf.Jets.bTagWorkingPoint)
-       # )
+
         process.bTagWeightProducerNoCut = cms.EDProducer('BTagSystematicsWeightProducer',
             src=cms.InputTag("goodJets"),
             nJetSrc=cms.InputTag("goodJetCount"),

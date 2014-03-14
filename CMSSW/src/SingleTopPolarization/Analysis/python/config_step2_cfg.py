@@ -74,7 +74,7 @@ class Config(C):
 
         class BTagDiscriminant:
             TCHP = "trackCountingHighPurBJetTags"
-            CSV_MVA = "combinedSecondaryVertexMVABJetTags" #somehow now working any more (gives -1000)
+            CSV_MVA = "combinedSecondaryVertexMVABJetTags" #somehow not working any more (gives -1000)
             CSV = "combinedSecondaryVertexBJetTags"
         class BTagWorkingPoint:
             TCHPT = "TCHPT"

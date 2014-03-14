@@ -12,8 +12,8 @@ def main():
     print infiles
 
     mvas = dict()
-    mvas[13] = setup_mva(mvaname, "../qcd_mva/weights/anti_QCD_MVA_10_01_qcdBDT_mu.weights.xml")
-    mvas[11] = setup_mva(mvaname, "../qcd_mva/weights/anti_QCD_MVA_10_01_qcdBDT_ele.weights.xml")
+    mvas[13] = setup_mva(mvaname, "../qcd_mva/weights/anti_QCD_MVA_20_02_grad_with2j0t_qcdBDTGrad_mu.weights.xml")
+    mvas[11] = setup_mva(mvaname, "../qcd_mva/weights/anti_QCD_MVA_20_02_grad_with2j0t_qcdBDTGrad_ele.weights.xml")
 
     varmaps = dict()
     varmaps[13] = {"mu_mtw":"mtw", "c":"C"}

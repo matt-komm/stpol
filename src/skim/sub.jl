@@ -74,7 +74,7 @@ maxn = length(flist)
 #perjob = min(100, ceil(maxn/10)) |> int
 empty_flist = deepcopy(flist)
 
-perjob=25
+perjob=200
 #N = int(ceil(maxn/perjob)-1)
 
 j = 1

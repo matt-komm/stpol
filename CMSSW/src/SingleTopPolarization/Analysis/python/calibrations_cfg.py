@@ -100,20 +100,31 @@ def getEfficiencies(nJets, sample):
 
 #The first column is logical, the second may change in the future
 fnames = dict()
-fnames["T_t"] = "T_t"
-fnames["TTbar"] = "TTbar"
-fnames["WJets"] = "WJets"
+fnames["T_t"] = "tchan"
+fnames["TTbar"] = "ttjets"
+fnames["WJets"] = "wjets"
 
 def getEffFiles(channel):
     """
     Returns the filenames to use for a particular process/channel for
     the effiencies of tagging b, c, l jets (in that order)
     """
-    if channel in ["T_t", "Tbar_t"] or re.match("T_t_.*", channel) or re.match("Tbar_t_.*", channel) or re.match("TToB.*Nu_.*", channel):
+
+    #t-channel
+    if  (channel in ["T_t", "Tbar_t"] or
+        re.match("T_t_.*", channel) or
+        re.match("Tbar_t_.*", channel) or
+        re.match("TToB.*Nu_.*", channel)):
         return fnames["T_t"], fnames["WJets"], fnames["T_t"]
-    elif re.match("W[0-9]*Jets", channel) or re.match("WJets.*", channel) or channel in ["WW", "WZ", "ZZ", "DYJets"] or channel.startswith("GJets") or channel.startswith("QCD"):
+
+    elif    (re.match("W[0-9]*Jets", channel) or
+            re.match("WJets.*", channel) or
+            channel in ["WW", "WZ", "ZZ", "DYJets"] or
+            channel.startswith("GJets") or
+            channel.startswith("QCD")):
         return fnames["T_t"], fnames["WJets"], fnames["WJets"]
-    elif channel in ["TTbar", "T_tW", "T_s", "Tbar_tW", "Tbar_s"] or channel.startswith("TTJets"):
+    elif    (channel in ["TTbar", "T_tW", "T_s", "Tbar_tW", "Tbar_s"] or
+            channel.startswith("TTJets")):
         return fnames["T_t"], fnames["WJets"], fnames["TTbar"]
     else:
         raise ValueError("Undefined efficiencies for channel: %s" % channel)
