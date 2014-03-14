@@ -230,17 +230,20 @@ def JetSetup(process, conf):
             algo=cms.string(conf.Jets.bTagWorkingPoint)
         )
 
+        effs_2j = Calibrations.getEffValues(conf.subChannel, 2)
+        effs_3j = Calibrations.getEffValues(conf.subChannel, 3)
+
         process.bTagWeightProducerNoCutSimple = cms.EDProducer('SimpleBTagSystematicsWeightProducer',
             src=cms.InputTag("goodJets"),
             nJetSrc=cms.InputTag("goodJetCount"),
             nTagSrc=cms.InputTag("bJetCount"),
             algo=cms.string(conf.Jets.bTagWorkingPoint),
-            effB2J =    cms.double(0.0),
-            effC2J =    cms.double(0.0),
-            effL2J =    cms.double(0.0),
-            effB3J =    cms.double(0.0),
-            effC3J =    cms.double(0.0),
-            effL3J =    cms.double(0.0),
+            effB2J = cms.double(effs_2j[0]),
+            effC2J = cms.double(effs_2j[1]),
+            effL2J = cms.double(effs_2j[2]),
+            effB3J = cms.double(effs_3j[0]),
+            effC3J = cms.double(effs_3j[1]),
+            effL3J = cms.double(effs_3j[2]),
         )
 
         process.bEffSequence = cms.Sequence(

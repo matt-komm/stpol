@@ -128,3 +128,35 @@ def getEffFiles(channel):
         return fnames["T_t"], fnames["WJets"], fnames["TTbar"]
     else:
         raise ValueError("Undefined efficiencies for channel: %s" % channel)
+
+
+def getEffValues(channel, nj):
+
+    tchan = dict()
+    wjets = dict()
+    ttjets = dict()
+
+    tchan[2] =   0.5141908500291184, 0.03635166011403635, 0.0008879103427117359
+    tchan[3] =   0.5052057415529658, 0.03959857324224654, 0.0010671791702078343
+    wjets[2] =   0.43178070257319767, 0.04885875658409663, 0.0010322006882183294
+    wjets[3] =   0.4382905563060297, 0.04720073489179923, 0.0009952634841694024
+    ttjets[2] =   0.5064446183858446, 0.05218024632341335, 0.0032313570594282304
+    ttjets[3] =   0.5091655025990486, 0.047553757345577534, 0.00217895091350927
+
+    #t-channel
+    if  (channel in ["T_t", "Tbar_t"] or
+        re.match("T_t_.*", channel) or
+        re.match("Tbar_t_.*", channel) or
+        re.match("TToB.*Nu_.*", channel)):
+        return tchan[nj][0], wjets[nj][1], tchan[nj][2]
+    elif    (re.match("W[0-9]*Jets", channel) or
+            re.match("WJets.*", channel) or
+            channel in ["WW", "WZ", "ZZ", "DYJets"] or
+            channel.startswith("GJets") or
+            channel.startswith("QCD")):
+        return tchan[nj][0], wjets[nj][1], wjets[nj][2]
+    elif    (channel in ["TTbar", "T_tW", "T_s", "Tbar_tW", "Tbar_s"] or
+            channel.startswith("TTJets")):
+        return tchan[nj][0], wjets[nj][1], ttjets[nj][2]
+    else:
+        raise ValueError("Undefined efficiencies for channel: %s" % channel)
