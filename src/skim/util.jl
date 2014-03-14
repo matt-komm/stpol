@@ -25,3 +25,5 @@ function either(a, b, n::Integer=1)
         return (NA, :neither)
     end
 end
+
+export part, ifpresent, ispresent, either

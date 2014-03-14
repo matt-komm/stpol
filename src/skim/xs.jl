@@ -220,8 +220,8 @@ function test_cls(inf)
     for f in flist
         st = sample_type(f)
         samp = string(st[:sample])
-        proc = get_process(samp)
-        xs = samp in keys(cross_sections) ? cross_sections[samp] : -1.0
+        proc = SingleTopBase.get_process(samp)
+        xs = samp in keys(SingleTopBase.cross_sections) ? SingleTopBase.cross_sections[samp] : -1.0
         println("$f $st $proc $xs")
     end
 end
@@ -395,4 +395,4 @@ function write_hmap(fname)
     )
 end
 
-export cross_sections, hmap_symb_from, hmap_symb_to
+export cross_sections, hmap_symb_from, hmap_symb_to, get_process, sample_type
