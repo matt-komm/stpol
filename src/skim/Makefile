@@ -1,6 +1,6 @@
 include ../analysis/Makefile.options
 
-INF=input/jan31.rand.txt
+INF=input/mar17.txt.rand
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
 
