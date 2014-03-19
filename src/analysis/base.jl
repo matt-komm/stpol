@@ -170,6 +170,16 @@ for r=1:nrow(hmap_table)
    hmap[:to][row[1]] = row[2]
 end
 
+const hmap_symb_to = Dict()
+for k in hmap[:to]|>keys
+    hmap_symb_to[symbol(k)] = hmap[:to][k]
+end
+
+const hmap_symb_from= Dict()
+for k in hmap[:from]|>keys
+    hmap_symb_from[k] = hmap[:from][k]|>symbol
+end
+
 export BASE
 export infb, chunk, chunks, flatten, FITRESULTS, hmap, writedf, readdf, systematic_processings
 export procs, mcsamples, TOTAL_SAMPLES
