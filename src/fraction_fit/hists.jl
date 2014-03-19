@@ -131,6 +131,7 @@ function reweight_hists_to_fitres(fr, hists)
     function weightall(a, b)
         for k in keys(hists)
             if contains(string(k), a)
+                #println("weighting $k by $(fr[b])")
                 hists[k] = hists[k] * fr[b]
             end
         end
@@ -143,6 +144,8 @@ function reweight_hists_to_fitres(fr, hists)
     for s in ["ttjets", "twchan", "schan"]
         weightall(s, "ttjets")
     end
+
+    weightall("tchan", "beta_signal")
     #weightall("qcd", "qcd")
 end
 
