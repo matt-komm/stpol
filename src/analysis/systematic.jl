@@ -245,7 +245,7 @@ scenarios[(:unweighted, :tchan)] =
     Scenario(:nominal, :tchan, (nw::Float64, row::DataFrameRow)->1.0, :unweighted)
 
 for k in SingleTopBase.comphep_processings
-    scenarios[(k, :tchan)] = Scenario(k, :tchan, (nw::Float64, row::DataFrameRow)->1.0, :unweighted) 
+    scenarios[(k, :tchan)] = Scenario(k, :tchan, (nw::Float64, row::DataFrameRow)->nw, :nominal) 
 end
 
 #scenarios relevant for signal
