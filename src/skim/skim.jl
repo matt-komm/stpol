@@ -29,6 +29,14 @@ const do_specjets = true
 maxev = length(events) 
 println("running over $maxev events")
 
+gen_parent(s::NAtype) = NA
+
+function gen_parent(s::ASCIIString)
+    arr = map(x->int(split(x, ":")[1]), map(x->strip(x)[2:end], split(s, ",")))
+    idx = findfirst(x-> !(abs(x) in [11,13]), arr)
+    return (idx > 0 && idx<= length(arr)) ? arr[idx] : NA
+end
+
 #events
 df = similar(
         DataFrame(
@@ -95,6 +103,7 @@ df = similar(
             
             gen_weight=Float32[],
             gen_lepton_id=Int32[],
+            gen_parent_id=Int32[],
 
             top_weight=Float32[],
             top_weight__up=Float32[],
@@ -251,9 +260,13 @@ timeelapsed = @elapsed for i=1:maxev
     if nmu==1 && nele==0
         lepton_type = :muon
         df[i, :lepton_type] = 13
+        genparent = gen_parent(events[sources[(:muon, :geninfo)]])
+        df[i, :gen_parent_id] = genparent 
     elseif nele==1 && nmu==0
         lepton_type = :electron
         df[i, :lepton_type] = 11
+        genparent = gen_parent(events[sources[(:electron, :geninfo)]])
+        df[i, :gen_parent_id] = genparent 
     else
         fails[:lepton] += 1
         continue
