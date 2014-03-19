@@ -27,8 +27,10 @@ function submit(infiles, outfile, i::Integer)
     #join the file list into one line
     infilelist = join(infiles, " ")
 
-    fn = "$ofdir/job.$i"
-    ofile = "$ofdir/slurm.out.$i"
+    #fn = "$ofdir/job.$i"
+    #ofile = "$ofdir/slurm.out.$i"
+    fn = "/home/joosep/singletop/output/skims/output/job.$i"
+    ofile = "/home/joosep/singletop/output/skims/output/slurm.out.$i"
     skimoutput = "$ofdir/skim.out.$i"
     scpath = dirname(Base.source_path())
 
