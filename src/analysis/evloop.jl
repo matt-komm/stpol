@@ -141,10 +141,10 @@ function pass_selection(reco::Bool, bdt_cut::Float64, row::DataFrameRow)
 
         reco = reco && sel(row)::Bool && Cuts.bdt(row, bdt_cut)::Bool
 
-        if reco && Cuts.truelepton(row, :mu)::Bool
-            reco = reco && Cuts.qcd_mva_wp(row, :mu)::Bool && Cuts.is_reco_lepton(row, :mu)::Bool
-        elseif reco && Cuts.truelepton(row, :ele)::Bool
-            reco = reco && Cuts.qcd_mva_wp(row, :ele)::Bool && Cuts.is_reco_lepton(row, :ele)::Bool
+        if reco && Cuts.is_reco_lepton(row, :mu)::Bool # && Cuts.truelepton(row, :mu)::Bool
+            reco = reco && Cuts.qcd_mva_wp(row, :mu)::Bool
+        elseif reco && Cuts.is_reco_lepton(row, :ele)::Bool # && Cuts.truelepton(row, :ele)::Bool
+            reco = reco && Cuts.qcd_mva_wp(row, :ele)::Bool
         else
             reco = false
         end
