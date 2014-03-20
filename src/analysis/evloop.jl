@@ -136,25 +136,6 @@ function fill_histogram(
     end
 end
 
-function pass_selection(reco::Bool, bdt_cut::Float64, row::DataFrameRow)
-    if reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
-
-        reco = reco && sel(row)::Bool && Cuts.bdt(row, bdt_cut)::Bool
-
-        if reco && Cuts.is_reco_lepton(row, :mu)::Bool # && Cuts.truelepton(row, :mu)::Bool
-            reco = reco && Cuts.qcd_mva_wp(row, :mu)::Bool
-        elseif reco && Cuts.is_reco_lepton(row, :ele)::Bool # && Cuts.truelepton(row, :ele)::Bool
-            reco = reco && Cuts.qcd_mva_wp(row, :ele)::Bool
-        else
-            reco = false
-        end
-    else
-        reco = false
-    end
-    return reco
-end
-
-
 #default transfer matrix shortcut
 const TM = defaults[:transfer_matrix]
 
@@ -166,7 +147,8 @@ sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) 
 
 function process_df(rows::AbstractVector{Int64})
     const t0 = time()
-    
+    tprev = time()
+
     println("mapping across $(length(rows)) rows")
     
     nproc = 0
@@ -182,8 +164,11 @@ function process_df(rows::AbstractVector{Int64})
 
         const row = DataFrameRow(df, cur_row)
         nproc += 1
-        nproc%10000==0 && println("$nproc")
-        
+        if nproc % 10000==0
+            dt = time() - tprev
+            println("$nproc $dt")
+            tprev = time()
+        end
         is_any_na(row, :sample, :systematic, :isolation)::Bool && warn("sample, systematic or isolation were NA")
 
         const sample = hmap_symb_from[row[:sample]::Int64]
@@ -201,11 +186,14 @@ function process_df(rows::AbstractVector{Int64})
         ###
         ### transfer matrices
         ###
+
+        transfer_matrix_reco = Dict()
         if do_transfer_matrix && sample==:tchan && iso==:iso
 
             const x = row[:cos_theta_lj_gen]::Float32
             const y = row[:cos_theta_lj]::Union(Float32, NAtype)
-           
+            const ny_ = searchsortedfirst(TM.edges[2], y)
+            
             #did event pass reconstruction ?
             local reco = true 
             
@@ -213,41 +201,52 @@ function process_df(rows::AbstractVector{Int64})
             const nx = (isna(x)||isnan(x)) ? 1 : searchsortedfirst(TM.edges[1], x)-1
 
             const nw = nominal_weight(row)::Float64
-
-            for bdt_cut::Float64 in bdt_cuts::Vector{Float64}
-                reco = pass_selection(reco, bdt_cut, row)::Bool
-	           
-                #need to get the reco-axis index here, it will depend on passing the BDT cut
-                const ny = (isna(y)||isnan(y)||!reco) ? 1 : searchsortedfirst(TM.edges[2], y)-1
+            
+            for reco_lep in Symbol[:ele, :mu]
                 
-                #get transfer matrix linear index from 2D index
-                const linind = sub2ind(TM_hsize, nx, ny)
+                reco = reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
+                reco = reco && Cuts.is_reco_lepton(row, reco_lep)
+                reco = reco && Cuts.qcd_mva_wp(row, reco_lep)
                 
-                (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
-                    error("incorrect index $linind for $nx,$ny $x,$y")
+                const lep_symb = symbol("gen_$(lepton_symbs[true_lep])__reco_$(reco_lep)")
 
                 for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
-                    tm_nominal_only && scen_name[1]!=:nominal && continue
-                    
-                    const k2 = HistKey(
-                        :transfer_matrix,
-                        sample,
-                        iso,
-                        systematic,
-                        scen_name[1],
-                        :bdt,
-                        bdt_symbs[bdt_cut],
-                        lepton_symbs[true_lep],
-                        2, 1
-                    )
-
-                    const h = getr(ret, k2, :transfer_matrix)::NHistogram
-                   
+                    (tm_nominal_only && scen_name[1]!=:nominal) && continue
+                        
                     const w = scen.weight(nw, row)::Float64
                     (isnan(w) || isna(w)) && error("$k2: w=$w $(df[row.row, :])")
+                    
+                    #assumes BDT cut points are sorted
+                    for bdt_cut::Float64 in bdt_cuts::Vector{Float64}
+                        reco = reco && Cuts.bdt(row, bdt_cut)
+    
+                        #need to get the reco-axis index here, it will depend on passing the BDT cut
+                        #unreconstructed events are put to underflow bin
+                        const ny = (isna(y)||isnan(y)||!reco) ? 1 : ny_ - 1
+                        
+                        #get transfer matrix linear index from 2D index
+                        const linind = sub2ind(TM_hsize, nx, ny)
+                        
+                        (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
+                            error("incorrect index $linind for $nx,$ny $x,$y")
+                        
+                        const k2 = HistKey(
+                            :transfer_matrix,
+                            sample,
+                            iso,
+                            systematic,
+                            scen_name[1],
+                            :bdt,
+                            bdt_symbs[bdt_cut],
+                            lep_symb,
+                            2, 1
+                        )
 
-                    h.baseh.bin_contents[linind] += w
-                    h.baseh.bin_entries[linind] += 1.0
+                        const h = getr(ret, k2, :transfer_matrix)::NHistogram
+
+                        h.baseh.bin_contents[linind] += w
+                        h.baseh.bin_entries[linind] += 1.0
+                    end
                 end
             end
         end
@@ -372,6 +371,9 @@ function process_df(rows::AbstractVector{Int64})
 
         #final selection by BDT
         for bdt_cut in bdt_cuts
+            if sample == :tchan
+                #(transfer_matrix_reco[bdt_cut] == (reco && Cuts.bdt(row, bdt_cut))) || error("transfer matrix reco != signal reco, $row")
+            end
             if (reco && Cuts.bdt(row, bdt_cut))
                 for var in [:cos_theta_lj]
                     fill_histogram(
