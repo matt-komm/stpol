@@ -8,7 +8,8 @@ binning=vcat(-Inf, linspace(-1, 1, 11), Inf)
 function card(infile, n)
     return {
         "infile"=>infile,
-        "outfile"=>"/hdfs/local/joosep/stpol/hists/$n.root",
+        "outfile"=>"/home/joosep/singletop/output/hists2/$n.root",
+        #"outfile"=>"/hdfs/local/joosep/stpol/hists/$n.root",
         "tm_nominal_only" => false, 
     }
 end
