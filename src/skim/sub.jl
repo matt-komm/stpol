@@ -34,7 +34,7 @@ function submit(infiles, outfile, i::Integer)
     skimoutput = "$ofdir/skim.out.$i"
     scpath = dirname(Base.source_path())
 
-    subcmd = `sbatch --exclude=$scpath/exclude.txt -p prio -J julia_job_test.$i -o $ofile $fn`
+    subcmd = `sbatch --exclude=$scpath/exclude.txt -J julia_skim -o $ofile $fn`
     
     #the submit script (indents matter)
     cmd="#!/bin/bash
@@ -76,7 +76,7 @@ maxn = length(flist)
 #perjob = min(100, ceil(maxn/10)) |> int
 empty_flist = deepcopy(flist)
 
-perjob=200
+perjob=50
 #N = int(ceil(maxn/perjob)-1)
 
 j = 1
