@@ -464,7 +464,26 @@ println("failure reasons: $fails")
 
 #save output
 writetable("$(output_file)_processed.csv", prfiles)
-println("root...");writetree("$(output_file).root", mydf)
+
+println("root...")
+tempf = mktemp()[1]
+outfile = "$(output_file).root"
+println("writing to temporary file $(tempf)")
+writetree(tempf, mydf)
+for i=1:5
+    try
+        println("cleaning $outfile...");isfile(outfile) && rm(outfile)
+        println("copying...");cp(tempf, outfile)
+        s = stat(outfile)
+        s.size == 0 && error("file corrupted")
+        break
+    catch err
+        println("$err: retrying")
+        sleep(5)
+    end
+end
+
+
 
 #println("JLD...");
 #ofi = jldopen("$(output_file).jld", "w")
