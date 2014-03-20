@@ -1,4 +1,5 @@
 module Cuts
+
     const qcd_mva_wps = {
         :mu=>0.16,
         :ele=>0.27
@@ -91,4 +92,20 @@ end
 
 const SELECTION = 1
 
-end #if
+end
+
+function pass_selection(reco::Bool, bdt_cut::Float64, reco_lepton::Symbol, row::DataFrameRow)
+    if reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
+
+        reco = reco && sel(row) && Cuts.bdt(row, bdt_cut)
+
+        if reco && Cuts.is_reco_lepton(row, reco_lepton) # && Cuts.truelepton(row, :mu)::Bool
+            reco = reco && Cuts.qcd_mva_wp(row, reco_lepton)
+        else
+            reco = false
+        end
+    else
+        reco = false
+    end
+    return reco
+end
