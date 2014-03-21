@@ -194,8 +194,6 @@ function process_df(rows::AbstractVector{Int64})
             const y = row[:cos_theta_lj]::Union(Float32, NAtype)
             const ny_ = searchsortedfirst(TM.edges[2], y)
             
-            #did event pass reconstruction ?
-            local reco = true 
             
             #can get gen-level index here
             const nx = (isna(x)||isnan(x)) ? 1 : searchsortedfirst(TM.edges[1], x)-1
@@ -204,10 +202,13 @@ function process_df(rows::AbstractVector{Int64})
             
             for reco_lep in Symbol[:ele, :mu]
                 
+                #did event pass reconstruction ?
+                #need to reinitialize for each new cut-tree "branch"
+                local reco = true 
                 reco = reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
                 reco = reco && Cuts.is_reco_lepton(row, reco_lep)
                 reco = reco && Cuts.qcd_mva_wp(row, reco_lep)
-                
+
                 const lep_symb = symbol("gen_$(lepton_symbs[true_lep])__reco_$(reco_lep)")
 
                 for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
@@ -216,19 +217,22 @@ function process_df(rows::AbstractVector{Int64})
                     const w = scen.weight(nw, row)::Float64
                     (isnan(w) || isna(w)) && error("$k2: w=$w $(df[row.row, :])")
                     
-                    #assumes BDT cut points are sorted
+                    #assumes BDT cut points are sorted ascending
                     for bdt_cut::Float64 in bdt_cuts::Vector{Float64}
                         reco = reco && Cuts.bdt(row, bdt_cut)
-    
+                        
+
                         #need to get the reco-axis index here, it will depend on passing the BDT cut
                         #unreconstructed events are put to underflow bin
                         const ny = (isna(y)||isnan(y)||!reco) ? 1 : ny_ - 1
-                        
+
                         #get transfer matrix linear index from 2D index
                         const linind = sub2ind(TM_hsize, nx, ny)
                         
                         (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
                             error("incorrect index $linind for $nx,$ny $x,$y")
+                        
+                        #reco && println("reco=$reco $(row.row) $true_lep $reco_lep $nx:$ny $x:$y $linind $(h.baseh.bin_contents[linind])")
                         
                         const k2 = HistKey(
                             :transfer_matrix,
@@ -418,9 +422,14 @@ mkpath(dirname(rfile))
 tf = TFile(tempf, "RECREATE")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    println(k, " ", @sprintf("%.2f", integral(v)))
-	toroot(tf, tostr(k), v)
+    print(k, " ", @sprintf("%.2f", integral(v)))
+    isa(v, NHistogram) && print(" ", sum(sum(entries(v), 1)[2:end]), " ", sum(sum(entries(v), 2)[2:end]))
+    println()
+    #isa(v, NHistogram) && println(entries(v)) 
+    #isa(v, NHistogram) && println(contents(v)) 
+    toroot(tf, tostr(k), v)
 end
+
 println("projected $(length(ret)) objects in $q seconds")
 print("writing...");write(tf.p);println("done")
 close(tf)
