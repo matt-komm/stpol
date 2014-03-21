@@ -31,7 +31,8 @@ submit-scan:
 	find input/bdt_scan/cards/*.json | ~/parallel --delay 0.1 sbatch -p prio --exclude=../skim/exclude.txt parrun.sh {}
 
 project-nominal:
-	find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_nominal.jl {} {}.nominal  
+	#find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_nominal.jl {} {}.nominal  
+	find $(DIR) -name "output*.root" | ~/parallel -j25 $(JULIA_ROOT_DIR)/julia project_nominal.jl {} {}.nominal  
 
 project-tchan:
 	find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_tchan.jl {} {}.tchan  
