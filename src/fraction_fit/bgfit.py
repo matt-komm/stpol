@@ -3,6 +3,9 @@ from glob import glob
 
 infiles = sys.argv[3:]
 outfile = sys.argv[2]
+print("outfile=", outfile)
+print("infiles=", infiles)
+
 signal = 'tchan' #name of signal process/histogram
 
 def is_nominal(hname):
@@ -81,17 +84,31 @@ for process in result[signal]:
         values[process] = fitresults[process][0]
         errors[process] = fitresults[process][1]
 
+for p in ["qcd"]:
+    if p not in values.keys():
+        values[p] = 1.0
+    if p not in errors.keys():
+        errors[p] = 0.0
+
 pars = sorted(model.get_parameters([signal]))
 n = len(pars)
 
 cov = result[signal]['__cov'][0]
 
 corr = numpy.zeros((n, n), dtype=numpy.float32)
+
+covfi = ROOT.TFile(outfile+"_cov.root", "RECREATE")
+covmat = ROOT.TH2D("covariance", "covariance", 0, n-1, n, 0, n-1, n)
+covmat.SetDirectory(covfi)
 for i in range(n):
    for j in range(n):
        corr[i][j] = cov[i][j] / (errors[pars[i]] * errors[pars[j]])
+       covmat.SetBinContent(i, j, cov[i][j])
+       covmat.SetBinError(i, j, 0.0)
        # if i==j:
        #     print("diag corr = ", corr[i][j])
+covfi.Write()
+covfi.Close()
 
 report.write_html('report')
 
@@ -106,6 +123,11 @@ out = {
 }
 
 import json
-of = open(outfile, "w")
+of = open(outfile+".json", "w")
 of.write(json.dumps(out) + "\n")
 of.close()
+
+of2 = open(outfile+".txt", "w")
+for p in sorted(values.keys()):
+    of2.write("%s %f %f\n" % (p, values[p], errors[p]))
+of2.close()
