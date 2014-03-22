@@ -46,6 +46,14 @@ function getr{K <: Any, V <: Any}(ret::Dict{K, V}, x::HistKey, k::Symbol)
     return ret[hk]::Union(Histogram, NHistogram)
 end
 
+
+function print_ev(row)
+    println("hlt=", row[:hlt], " Nj=", row[:njets], " Nt=", row[:ntags], " nsigmu=", row[:n_signal_mu], " nsigele=", row[:n_signal_ele],
+        " nvetomu=", row[:n_veto_mu], " nvetoele=", row[:n_veto_ele], " bdt_qcd=", row[:bdt_qcd], " bdt_sig_bg=", row[:bdt_sig_bg],
+        " ljet_dr=", row[:ljet_dr], " bjet_dr=", row[:bjet_dr], 
+    )
+end
+
 function fill_histogram(
     nw::Float64,
     row::DataFrameRow,
@@ -65,7 +73,7 @@ function fill_histogram(
 
     )
 
-    const x = hex(row)::Union(Float64, Float32)
+    const x = hex(row)::Real
 
     const bin = findbin(defaults[hname]::Histogram, x)::Int64
 
@@ -82,6 +90,7 @@ function fill_histogram(
         else
             const wname = w_scenario
         end
+
         const kk = HistKey(
             hname,
             sample,
@@ -187,13 +196,16 @@ function process_df(rows::AbstractVector{Int64})
         ### transfer matrices
         ###
 
-        transfer_matrix_reco = Dict()
+        const transfer_matrix_reco = {
+            :mu=>{k=>false for k in bdt_cuts},
+            :ele=>{k=>false for k in bdt_cuts}
+        }
+
         if do_transfer_matrix && sample==:tchan && iso==:iso
 
             const x = row[:cos_theta_lj_gen]::Float32
             const y = row[:cos_theta_lj]::Union(Float32, NAtype)
             const ny_ = searchsortedfirst(TM.edges[2], y)
-            
             
             #can get gen-level index here
             const nx = (isna(x)||isnan(x)) ? 1 : searchsortedfirst(TM.edges[1], x)-1
@@ -206,6 +218,7 @@ function process_df(rows::AbstractVector{Int64})
                 #need to reinitialize for each new cut-tree "branch"
                 local reco = true 
                 reco = reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
+                reco = reco && sel(row)
                 reco = reco && Cuts.is_reco_lepton(row, reco_lep)
                 reco = reco && Cuts.qcd_mva_wp(row, reco_lep)
 
@@ -219,12 +232,15 @@ function process_df(rows::AbstractVector{Int64})
                     
                     #assumes BDT cut points are sorted ascending
                     for bdt_cut::Float64 in bdt_cuts::Vector{Float64}
-                        reco = reco && Cuts.bdt(row, bdt_cut)
+                        const _reco = reco && Cuts.bdt(row, bdt_cut)
                         
+                        #if scen_name[1] == :nominal
+                        #    transfer_matrix_reco[reco_lep][bdt_cut] = reco
+                        #end
 
                         #need to get the reco-axis index here, it will depend on passing the BDT cut
                         #unreconstructed events are put to underflow bin
-                        const ny = (isna(y)||isnan(y)||!reco) ? 1 : ny_ - 1
+                        const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
 
                         #get transfer matrix linear index from 2D index
                         const linind = sub2ind(TM_hsize, nx, ny)
@@ -232,7 +248,6 @@ function process_df(rows::AbstractVector{Int64})
                         (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
                             error("incorrect index $linind for $nx,$ny $x,$y")
                         
-                        #reco && println("reco=$reco $(row.row) $true_lep $reco_lep $nx:$ny $x:$y $linind $(h.baseh.bin_contents[linind])")
                         
                         const k2 = HistKey(
                             :transfer_matrix,
@@ -247,6 +262,8 @@ function process_df(rows::AbstractVector{Int64})
                         )
 
                         const h = getr(ret, k2, :transfer_matrix)::NHistogram
+                        
+                        #println("reco=$reco $(row.row) $true_lep $reco_lep $nx:$ny $x:$y $linind $(h.baseh.bin_contents[linind]) $(transfer_matrix_reco[reco_lep][bdt_cut]) ")
 
                         h.baseh.bin_contents[linind] += w
                         h.baseh.bin_entries[linind] += 1.0
@@ -258,7 +275,7 @@ function process_df(rows::AbstractVector{Int64})
         ###
         ### lepton reco
         ###
-        if is_any_na(row, :n_signal_mu, :n_signal_ele)
+        if is_any_na(row, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)
             continue
         end
 
@@ -278,10 +295,12 @@ function process_df(rows::AbstractVector{Int64})
         #cache nominal weight
         const nw = nominal_weight(row)::Float64
 
-        ###
-        ### QCD rejection
-        ###        
-        if sel(row, 2, 1)
+        #pre-qcd plots
+        for (nj, nt) in [(2, 0), (2, 1), (3, 2)]
+            #pre-bdt selection
+            const _reco = sel(row, nj, nt)::Bool
+            _reco || continue
+            
             for var in [:bdt_qcd, :mtw, :met]
                 fill_histogram(
                     nw,
@@ -296,11 +315,14 @@ function process_df(rows::AbstractVector{Int64})
                     :preqcd,
                     :nothing,
                     lepton,
-                    2, 1 
+                    nj, nt 
                 )
             end
         end
 
+        ###
+        ### QCD rejection
+        ###        
         const reco = Cuts.qcd_mva_wp(row, lepton)
         reco || continue
         
@@ -320,6 +342,7 @@ function process_df(rows::AbstractVector{Int64})
                 :bjet_pt,
                 (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
                 :bjet_mass, :top_mass,
+                :top_pt, :n_good_vertices
                 ]
 
                 #if a 2-tuple is specified, 2. arg is the function to apply
@@ -375,9 +398,23 @@ function process_df(rows::AbstractVector{Int64})
 
         #final selection by BDT
         for bdt_cut in bdt_cuts
-            if sample == :tchan
-                #(transfer_matrix_reco[bdt_cut] == (reco && Cuts.bdt(row, bdt_cut))) || error("transfer matrix reco != signal reco, $row")
-            end
+            
+            #const sreco = reco && Cuts.bdt(row, bdt_cut) 
+            #const tmreco = transfer_matrix_reco[lepton][bdt_cut]
+            #local tmreco2 = true 
+            #tmreco2 = tmreco2 && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
+            #tmreco2 = tmreco2 && sel(row)
+            #tmreco2 = tmreco2 && Cuts.is_reco_lepton(row, lepton)
+            #tmreco2 = tmreco2 && Cuts.qcd_mva_wp(row, lepton)
+            #
+            #if sample == :tchan && systematic == :nominal && iso == :iso
+            #    if (tmreco != sreco)
+            #        print("lepton=$lepton tmreco2=$tmreco2 ")
+            #        print_ev(row)
+            #        error("bdt_cut=$bdt_cut transfer matrix reco $tmreco != signal reco $sreco, $(row.row)")
+            #    end
+            #end
+            
             if (reco && Cuts.bdt(row, bdt_cut))
                 for var in [:cos_theta_lj]
                     fill_histogram(
@@ -422,11 +459,9 @@ mkpath(dirname(rfile))
 tf = TFile(tempf, "RECREATE")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    print(k, " ", @sprintf("%.2f", integral(v)))
+    print(k, " $(sum(entries(v))) ", @sprintf("%.2f", integral(v)))
     isa(v, NHistogram) && print(" ", sum(sum(entries(v), 1)[2:end]), " ", sum(sum(entries(v), 2)[2:end]))
     println()
-    #isa(v, NHistogram) && println(entries(v)) 
-    #isa(v, NHistogram) && println(contents(v)) 
     toroot(tf, tostr(k), v)
 end
 
