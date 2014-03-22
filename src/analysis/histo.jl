@@ -1,7 +1,7 @@
 module Hist
 using DataArrays, DataFrames
 
-import Base.+, Base.-, Base.*, Base./, Base.==
+import Base.+, Base.-, Base.*, Base./, Base.==, Base.ndims
 import Base.show
 import Base.getindex
 import Base.size, Base.transpose
