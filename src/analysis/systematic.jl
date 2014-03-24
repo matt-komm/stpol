@@ -38,9 +38,9 @@ const SYSTEMATICS_TABLE = {
     :b_weight__l__up => :btag_l__up,
     :b_weight__l__down => :btag_l__down,
 
-    :wjets_shape_unweighted => :wjets_shape_unweighted,
-    :wjets_shape_up => :wjets_shape__up,
-    :wjets_shape_down => :wjets_shape__down,
+    :wjets_shape__unweighted => :wjets_shape__unweighted,
+    :wjets_shape__up => :wjets_shape__up,
+    :wjets_shape__down => :wjets_shape__down,
 
     symbol("signal_comphep_anomWtb-unphys") => :comphep_anom_unphys,
     symbol("signal_comphep_anomWtb-0100") => :comphep_anom_0100,
@@ -210,7 +210,7 @@ for proc in [:data_mu, :data_ele]
 
 end
 
-scenarios[(:wjets_shape_unweighted, :wjets)] = Scenario(
+scenarios[(:wjets_shape__unweighted, :wjets)] = Scenario(
     :nominal,
     :wjets, 
     (nw::Float64, row::DataFrameRow) -> nw / row[:wjets_ct_shape_weight],
