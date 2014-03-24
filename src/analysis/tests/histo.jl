@@ -66,7 +66,7 @@ h = Histogram([1,2],[3,4],[1,2])
 
 nh = NHistogram({[-1, 0, 1], [-1, 0, 1]})
 @test nbins(nh)==9
-@test ndim(nh)==2
+@test ndims(nh)==2
 @test findbin_nd(nh, [0.1, 0.1]) == [2,2]
 @test findbin_nd(nh, [1.1, 0.1]) == [3,2]
 @test findbin_nd(nh, [0.1, 1.1]) == [2,3]
