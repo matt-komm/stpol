@@ -18,8 +18,15 @@ n = 0
 res = Dict()
 for fi in flist
     acc = accompanying(fi)
-    md = readtable(acc["processed"], allowcomments=true)
     
+    md = nothing
+
+    try
+        md = readtable(acc["processed"], allowcomments=true)
+    catch err
+        error("could not read table with processed=$(acc["processed"])")
+        throw(err)
+    end
     println(fi," ", acc["processed"])
 
     for i=1:nrow(md)
