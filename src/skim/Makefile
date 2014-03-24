@@ -1,6 +1,7 @@
 include ../analysis/Makefile.options
 
-INF=input/mar17.txt.rand
+#INF=input/mar17.txt.rand
+INF=input/tchpt.txt.rand
 WEIGHTSDIR=../mva/weights/
 ENVSCRIPT=../../setenv.sh
 
@@ -22,7 +23,7 @@ comphep:
 	mkdir -p comphep/merged
 	$(ROOTWRAP) && python ../mva/adder.py bdt_sig_bg $(WEIGHTSDIR)/stpol_bdt_sig_bg_lepton_flavour.weights.xml comphep/*.root 
 	find comphep -name "*.root" > comphep/merged/files.txt
-	julia metahadd.jl comphep/merged/files.txt comphep/merged/md.txt
+	julia metahadd.jl comphep/merged/files.txt comphep/merged/md.txt $(INF)
 
 conv2root:
 	find $(DIR) -name "*.jld" | sort | ~/parallel $(PAROPTS) -j60 -n1 ~/.julia/ROOT/julia conv2root.jl {} {.}.root
@@ -45,8 +46,8 @@ add-mva:
 
 metahadd:
 	mkdir -p $(DIR)/merged
-	find $(DIR) -name "*.root" > $(DIR)/merged/files.txt
-	julia metahadd.jl $(DIR)/merged/files.txt $(DIR)/merged/md.txt $(INF) > $(DIR)/merged/metahadd.out
+	find $(DIR) -name "*.root" > ~/singletop/output/files.txt
+	julia metahadd.jl ~/singletop/output/files.txt $(DIR)/merged/md.txt $(INF) > $(DIR)/merged/metahadd.out
 
 parhadd:
 	mkdir -p $(DIR)/merged
