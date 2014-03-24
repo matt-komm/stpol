@@ -2,6 +2,8 @@ module Hist
 using DataArrays, DataFrames
 
 import Base.+, Base.-, Base.*, Base./, Base.==, Base.ndims
+import Base.sum
+
 import Base.show
 import Base.getindex
 import Base.size, Base.transpose
@@ -38,6 +40,7 @@ Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
 nbins(h::Histogram) = length(h.bin_contents)
 
 contents(h::Histogram) = h.bin_contents
+edges(h::Histogram) = h.bin_edges
 
 function subhist(h::Histogram, bins)
     entries = Int64[]
@@ -406,6 +409,12 @@ project_y(nh::NHistogram) = Histogram(sum(nh|>entries, 2)[:], sum(nh|>contents, 
 
 Base.show(io::IO, h::Histogram) = show(io, hcat(h.bin_edges, h.bin_contents, h.bin_entries))
 
+function Base.sum(hs::AbstractArray{Histogram})
+    fh = first(hs)
+    reduce(+, Histogram(edges(fh)), hs)
+end
+
+
 export Histogram, hfill!
 export integral, nentries, normed, errors, findbin, nbins
 export +, -, *, /, ==
@@ -417,7 +426,7 @@ export cumulative
 export writecsv
 export test_ks
 export NHistogram, findbin_nd, ndims, asarr, readhist
-export contents, entries
+export contents, entries, edges
 export makehist_2d, fromarr
 export project_x, project_y
 end #module
