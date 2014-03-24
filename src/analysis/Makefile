@@ -46,10 +46,11 @@ test-evloop:
 recursive-hadd:
 	rm -Rf hadd/*
 	mkdir -p hadd/step1
-	$(ROOTWRAP) && ( cat files.txt | $(PARCMD) -n10 hadd hadd/step1/merged_{#}.root {} )
+	#$(ROOTWRAP) && ( cat files.txt | $(PARCMD) -n10 hadd hadd/step1/merged_{#}.root {} )
+	cat files.txt | $(PARCMD) -n10 hadd hadd/step1/merged_{#}.root {}
 	mkdir -p hadd/step2
-	$(ROOTWRAP) && ( find hadd/step1 -name "merged_*.root" | $(PARCMD) -n5 hadd hadd/step2/merged_{#}.root {} )
-	$(ROOTWRAP) && hadd hadd/merged.root hadd/step2/merged_*.root
+	find hadd/step1 -name "merged_*.root" | $(PARCMD) -n5 hadd hadd/step2/merged_{#}.root {}
+	hadd hadd/merged.root hadd/step2/merged_*.root
 	rm -Rf hadd/step1
 	rm -Rf hadd/step2
 
