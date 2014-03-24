@@ -1,6 +1,3 @@
-using CMSSW
-import CMSSW.writetree
-
 function accompanying(fn)
     #get all the files in the directory containing this file
     files = readdir(dirname(fn))
@@ -49,23 +46,4 @@ function +(d1::Associative, d2::Associative)
     return ret
 end
 
-function writetree_temp(outfile, df::DataFrame)
-    tempf = mktemp()[1]
-    print("writing to $tempf...");CMSSW.writetree(tempf, df);println("done")
-    
-    for i=1:5
-        try
-            println("cleaning $outfile...");isfile(outfile) && rm(outfile)
-            println("copying...");cp(tempf, outfile)
-            s = stat(outfile)
-            s.size == 0 && error("file corrupted")
-            break
-        catch err
-            warn("$err: retrying after sleep")
-            sleep(5)
-        end
-    end
-end
-
 export accompanying
-export writetree_temp
