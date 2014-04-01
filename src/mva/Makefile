@@ -58,3 +58,10 @@ eff_csvt:
 
 update_results:
 	rsync -r cms.hep.kbfi.ee:~/singletop/stpol2/src/mva/input ./
+
+
+CUT_STR='(hlt==1) && (njets==2) && (ntags==1) && ((((n_signal_mu==1) && (n_signal_ele==0) && (n_veto_mu==0)&&(n_veto_ele==0) && (mtw > 45))) || (((n_signal_mu==0) && (n_signal_ele==1) && (n_veto_mu==0)&&(n_veto_ele==0) && (met > 50))))'
+
+nevents:
+	python ../analysis/filesum.py $(CUT_STR) `cat input/bdt_sig_bg/sig.txt`
+	python ../analysis/filesum.py $(CUT_STR) `cat input/bdt_sig_bg/bg.txt`
