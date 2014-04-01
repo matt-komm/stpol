@@ -15,15 +15,10 @@ using JSON
 using HDF5, JLD
 using Hist
 
-#paths to be added here
-if ENV["USER"] == "joosep"
-    BASE = joinpath(ENV["HOME"], "Dropbox/kbfi/top/stpol")
-else
-    error("undefined BASE")
-end
+include("basedir.jl")
 
 #add qcd estimation modules to pythonpath
-ENV["PYTHONPATH"]="$BASE/qcd_estimation"
+ENV["PYTHONPATH"] = ("PYTHONPATH" in keys(ENV)) ? string("$BASE/qcd_estimation:", ENV["PYTHONPATH"]) : "$BASE/qcd_estimation"
 
 println("PYTHONPATH before doing 'using PyCall':\n\t", ENV["PYTHONPATH"])
 using PyCall
@@ -154,8 +149,10 @@ flatten(a)=a
 
 #load the fit results
 const FITRESULTS = {
-    :mu=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/mu/merged/fit.json"),
-    :ele=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/ele/merged/fit.json")
+    #:mu=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/mu/merged/fit.json"),
+    #:ele=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/ele/merged/fit.json")
+    :mu=>FitResult("$BASE/results/fits/mar25/bdt/mu.json"),
+    :ele=>FitResult("$BASE/results/fits/mar25/bdt/ele.json")
 }
 
 t1 = time()
