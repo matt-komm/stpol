@@ -1,50 +1,50 @@
-function makehists(
-    data::AbstractDataFrame, inds,
-    sel, dsel,
-    var::Symbol, binning::AbstractVector{Float64},
-    weight_ex=nominal_weight, qcdweight_ex=qcd_weight
-  )
+# function makehists(
+#     data::AbstractDataFrame, inds,
+#     sel, dsel,
+#     var::Symbol, binning::AbstractVector{Float64},
+#     weight_ex=nominal_weight, qcdweight_ex=qcd_weight
+#   )
 
-    hists = Dict()
+#     hists = Dict()
 
-    for k in procs
-        df = sub(data, inds[:sample][k] & inds[:iso] & sel)
-        hists[k] = makehist_1d(df, var, binning, weight_ex)
-    end
+#     for k in procs
+#         df = sub(data, inds[:sample][k] & inds[:iso] & sel)
+#         hists[k] = makehist_1d(df, var, binning, weight_ex)
+#     end
 
-    aiso_mc = {
-        p=>makehist_1d(sub(data, inds[:sample][p] & inds[:aiso] & sel), var, binning, qcdweight_ex)
-        for p in mcsamples
-    }
-    sum_aiso_mc = aiso_mc |> values |> collect |> sum
+#     aiso_mc = {
+#         p=>makehist_1d(sub(data, inds[:sample][p] & inds[:aiso] & sel), var, binning, qcdweight_ex)
+#         for p in mcsamples
+#     }
+#     sum_aiso_mc = aiso_mc |> values |> collect |> sum
     
-    df = sub(data, inds[:data] & inds[:aiso] & sel & dsel)
-    hists[(:antiiso, :mc)] = sum_aiso_mc
-    hists[(:antiiso, :data)] = makehist_1d(df, var, binning, (df::DataFrameRow)->df[:qcd_weight])
-    hists[:qcd] = hists[(:antiiso, :data)] - hists[(:antiiso, :mc)]
+#     df = sub(data, inds[:data] & inds[:aiso] & sel & dsel)
+#     hists[(:antiiso, :mc)] = sum_aiso_mc
+#     hists[(:antiiso, :data)] = makehist_1d(df, var, binning, (df::DataFrameRow)->df[:qcd_weight])
+#     hists[:qcd] = hists[(:antiiso, :data)] - hists[(:antiiso, :mc)]
 
-    hists[:DATA] = makehist_1d(
-        sub(data, inds[:data] & inds[:iso] & sel & dsel), 
-        var, binning, (df::DataFrameRow)->1.0);
+#     hists[:DATA] = makehist_1d(
+#         sub(data, inds[:data] & inds[:iso] & sel & dsel), 
+#         var, binning, (df::DataFrameRow)->1.0);
 
-    all([h.bin_edges==hists[:DATA].bin_edges for h in values(hists)]) ||
-        (error("not all histograms have the same binning:\n --- \n $hists \n --- \n"))
+#     all([h.bin_edges==hists[:DATA].bin_edges for h in values(hists)]) ||
+#         (error("not all histograms have the same binning:\n --- \n $hists \n --- \n"))
 
-    return {string(k)=>v for (k,v) in hists}
-end
+#     return {string(k)=>v for (k,v) in hists}
+# end
 
-function makehist_1d(df::AbstractDataFrame, var::Symbol, binning::AbstractVector{Float64}, weight_f::Function)
-    hi = Histogram(binning)
-    sumw = 0.0
-    for row in eachrow(df)
-        const x = row[var]
-        const w = weight_f(row)
-        hfill!(hi, x, w)
-        sumw += w
-    end
-    #println("meanw = $(sumw/nrow(df))")
-    return hi
-end
+# # function makehist_1d(df::AbstractDataFrame, var::Symbol, binning::AbstractVector{Float64}, weight_f::Function)
+# #     hi = Histogram(binning)
+# #     sumw = 0.0
+# #     for row in eachrow(df)
+# #         const x = row[var]
+# #         const w = weight_f(row)
+# #         hfill!(hi, x, w)
+# #         sumw += w
+# #     end
+# #     #println("meanw = $(sumw/nrow(df))")
+# #     return hi
+# # end
 
 function mergehists_4comp(hists)
     out = Dict()
@@ -85,29 +85,29 @@ end
 #     );
 # end
 
-todf(h::Histogram) = DataFrame(
-    bin_edges=h.bin_edges,
-    bin_contents=contents(h),
-    bin_entries=entries(h),
-    bin_errors=errors(h),
-)
+# todf(h::Histogram) = DataFrame(
+#     bin_edges=h.bin_edges,
+#     bin_contents=contents(h),
+#     bin_entries=entries(h),
+#     bin_errors=errors(h),
+# )
 
-function todf(h::NHistogram)
-    hist = todf(h.baseh)
-    return {:hist=>hist, :edges=>[DataFrame(e) for e in h.edges]}
-end
+# function todf(h::NHistogram)
+#     hist = todf(h.baseh)
+#     return {:hist=>hist, :edges=>[DataFrame(e) for e in h.edges]}
+# end
 
-function todf(d::Associative)
-    tot_df = DataFrame()
-    for (k, v) in d
-        df = todf(v)
-        for cn in names(df)
-            rename!(df, symbol(cn), symbol("$(cn)__$(k)"))
-        end
-        tot_df = hcat(tot_df, df)
-    end
-    return tot_df
-end
+# function todf(d::Associative)
+#     tot_df = DataFrame()
+#     for (k, v) in d
+#         df = todf(v)
+#         for cn in names(df)
+#             rename!(df, symbol(cn), symbol("$(cn)__$(k)"))
+#         end
+#         tot_df = hcat(tot_df, df)
+#     end
+#     return tot_df
+# end
 
 function fromdf(df::DataFrame)
     return Histogram(df[3], df[2], df[1])
@@ -125,9 +125,21 @@ function reweight_to_fitres(frd, indata, inds)
     end
 end
 
+function hists_varname(hists::Associative)
+    if haskey(hists, "DATA")
+        return nothing
+    else
+        hd = first(filter(x->contains(x, "DATA"), keys(hists)))
+        return split(hd, "__")[1]
+    end
+end
+
 function reweight_hists_to_fitres(fr, hists)
     #means = {k=>v for (k,v) in zip(fr.names, fr.means)}
 
+    vname = hists_varname(hists)
+    vname_s = vname == nothing ? "" : "$(vname)__"
+    println(vname_s)
     function weightall(a, b)
         for k in keys(hists)
             if contains(string(k), a)
@@ -137,15 +149,31 @@ function reweight_hists_to_fitres(fr, hists)
         end
     end
 
+
+    function weightsyst(a, b)
+        idx = findfirst(fr.names, b)
+        for k in keys(hists)
+            if k == "$(vname_s)$(a)"
+                #println("weighting $k by ", (fr.means[idx] + fr.sigmas[idx]), " instead of ", fr.means[idx], " to get $(k)__$(b)__up")
+                #println("weighting $k by ", (fr.means[idx] - fr.sigmas[idx]), " instead of ", fr.means[idx], " to get $(k)__$(b)__down")
+                hists["$(k)__$(b)__up"] = hists[k] * (fr.means[idx] + fr.sigmas[idx])/(fr.means[idx])
+                hists["$(k)__$(b)__down"] = hists[k] * (fr.means[idx] - fr.sigmas[idx])/(fr.means[idx])
+            end
+        end
+    end
+
     for s in ["wjets", "gjets", "dyjets", "diboson"]
         weightall(s, "wzjets")
+        weightsyst(s, "wzjets")
     end
 
     for s in ["ttjets", "twchan", "schan"]
         weightall(s, "ttjets")
+        weightsyst(s, "ttjets")
     end
 
     weightall("tchan", "beta_signal")
+    weightsyst("tchan", "beta_signal")
     #weightall("qcd", "qcd")
 end
 
@@ -180,59 +208,69 @@ end
 
 #plots a comparison of the ele and mu channels, stacked format
 
-function writehists(ofname, hists)
-    println("writing histograms to $ofname")
+# function writehists(ofname, hists)
+#     println("writing histograms to $ofname")
 
-    writetable("$ofname.csv.mu", todf(mergehists_4comp(hists[:mu])); separator=',')
-    writetable("$ofname.csv.ele", todf(mergehists_4comp(hists[:ele])); separator=',')
-end
+#     writetable("$ofname.csv.mu", todf(mergehists_4comp(hists[:mu])); separator=',')
+#     writetable("$ofname.csv.ele", todf(mergehists_4comp(hists[:ele])); separator=',')
+# end
 
-function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
+# function yields{T <: Any, K <: Any}(h::Dict{T, K}; kwd...)
 
-    #copy the input histogram collection to keep it unmodified
-    h = deepcopy(h)
+#     #copy the input histogram collection to keep it unmodified
+#     h = deepcopy(h)
 
-    #create the total-MC histogram
-    hmc = nothing 
-    for (k, v) in h
-        if k != "DATA"
-            hmc = hmc == nothing ? v : hmc+v
-        end
-    end
-    h["MC"] = hmc
+#     #create the total-MC histogram
+#     hmc = nothing 
+#     for (k, v) in h
+#         if k != "DATA"
+#             hmc = hmc == nothing ? v : hmc+v
+#         end
+#     end
+#     h["MC"] = hmc
     
-    #order by name
-    hc = sort(collect(h), by=x->x[1])
+#     #order by name
+#     hc = sort(collect(h), by=x->x[1])
 
-    #create the total yield table
-    yi = DataFrame(
-        ds=ASCIIString[x for (x,y) in hc], #process name
-        uy=Int64[int(sum(y.bin_entries)) for (x,y) in hc], #unweighted raw events
-        y=Float64[integral(y) for (x,y) in hc], #events after xs weight, other weights
-    )
-    return yi
+#     #create the total yield table
+#     yi = DataFrame(
+#         ds=ASCIIString[x for (x,y) in hc], #process name
+#         uy=Int64[int(sum(y.bin_entries)) for (x,y) in hc], #unweighted raw events
+#         y=Float64[integral(y) for (x,y) in hc], #events after xs weight, other weights
+#     )
+#     return yi
+# end
+
+# #based on a dataset(with cut) and a data cut, draw the yield table
+# function yields(indata, data_cut; kwargs...)
+#     h = makehists(indata, data_cut, {:ljet_eta}, {linspace(-5, 5, 10)}; kwargs...)
+#     return yields(h;kwargs...)
+# end
+
+# function read_hists(fn)
+#    t = readtable(fn);
+#    hists = Dict()
+#    for i=1:3:length(t)
+#        cn = names(t)
+#        sname = split(string(cn[i]), "__")[2]
+#        binscol, errscol, edgescol = cn[i:i+2];
+#        #println(binscol, " ", errscol, " ", edgescol)
+#        sub = t[:, [edgescol, errscol, binscol]];
+#        hist = fromdf(sub;entries=:poissonerrors)
+#        hists[sname] = hist
+#    end
+#    return hists
+# end
+
+function remove_prefix(hd::Associative)
+    ret = Dict()
+    for (k, v) in hd
+        k = join(split(k, "__")[2:end], "__")
+        ret[k] = v
+    end
+    ret
 end
 
-#based on a dataset(with cut) and a data cut, draw the yield table
-function yields(indata, data_cut; kwargs...)
-    h = makehists(indata, data_cut, {:ljet_eta}, {linspace(-5, 5, 10)}; kwargs...)
-    return yields(h;kwargs...)
-end
-
-function read_hists(fn)
-   t = readtable(fn);
-   hists = Dict()
-   for i=1:3:length(t)
-       cn = names(t)
-       sname = split(string(cn[i]), "__")[2]
-       binscol, errscol, edgescol = cn[i:i+2];
-       #println(binscol, " ", errscol, " ", edgescol)
-       sub = t[:, [edgescol, errscol, binscol]];
-       hist = fromdf(sub;entries=:poissonerrors)
-       hists[sname] = hist
-   end
-   return hists
-end
 #
 #function toroot{T <: Any, H <: Histogram}(hd::Associative{T, H}, fn)
 #    tn = tempname()
