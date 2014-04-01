@@ -83,9 +83,6 @@ function data_cls(fn)
     return nothing
 end
 
-#fpath = joinpath(
-#    dirname(base.source_path()), "cross_sections.txt"
-#)
 fpath = joinpath(
     BASE, "metadata", "cross_sections.txt"
 )
