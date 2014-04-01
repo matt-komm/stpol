@@ -24,11 +24,17 @@ merge:
 merge-data:
 	find $(DIR) -name "*.root" | $(PARCMD) -n10 -j32 $(JULIA_ROOT_DIR)/julia mergedf.jl $(DIR)/merged/md.txt {}
 
+merge-tchpt:
+	find /hdfs/local/joosep/stpol/skims/input/tchpt -name "*.root" | $(PARCMD) -n10 -j32 $(JULIA_ROOT_DIR)/julia mergedf.jl ../skim/md.tchpt.txt {}
+
+merge-csvt:
+	find /hdfs/local/joosep/stpol/skims/input/csvt1 -name "*.root" | $(PARCMD) -n10 -j32 $(JULIA_ROOT_DIR)/julia mergedf.jl ../skim/md.csvt.txt {}
+
 merge-mva:
 	$(JULIA_ROOT_DIR)/julia -F mvamerge.jl /scratch/joosep/mva.root /scratch/joosep/skim_jan31_2/output*.jld
 
 submit-scan:
-	find input/bdt_scan/cards/*.json | ~/parallel --delay 0.1 sbatch -p prio --exclude=../skim/exclude.txt parrun.sh {}
+	find input/hists -name "*.json" | ~/parallel --delay 0.1 sbatch --exclude=../skim/exclude.txt parrun.sh {}
 
 project-nominal:
 	#find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_nominal.jl {} {}.nominal  
@@ -47,10 +53,10 @@ recursive-hadd:
 	rm -Rf hadd/*
 	mkdir -p hadd/step1
 	#$(ROOTWRAP) && ( cat files.txt | $(PARCMD) -n10 hadd hadd/step1/merged_{#}.root {} )
-	cat files.txt | $(PARCMD) -n10 hadd hadd/step1/merged_{#}.root {}
+	$(ENVSCRIPT) && ( cat files.txt | $(PARCMD) -n10 hadd hadd/step1/merged_{#}.root {} )
 	mkdir -p hadd/step2
-	find hadd/step1 -name "merged_*.root" | $(PARCMD) -n5 hadd hadd/step2/merged_{#}.root {}
-	hadd hadd/merged.root hadd/step2/merged_*.root
+	$(ENVSCRIPT) && ( find hadd/step1 -name "merged_*.root" | $(PARCMD) -n5 hadd hadd/step2/merged_{#}.root {} )
+	$(ENVSCRIPT) && hadd hadd/merged.root hadd/step2/merged_*.root
 	rm -Rf hadd/step1
 	rm -Rf hadd/step2
 
