@@ -96,6 +96,11 @@
 "TTJets_mass175_5", 245.8
 "TTJets_mass178_5", 245.8
 
+"WJetsToLNu_matchingup", 37509
+"WJetsToLNu_matchingdown", 37509
+"WJetsToLNu_scaleup", 37509
+"WJetsToLNu_scaledown", 37509
+
 #exclusive xs-s from above
 "W1JetsToLNu", 6662.7828947368425
 "W1JetsToLNu_matchingdown", 6662.7828947368425
