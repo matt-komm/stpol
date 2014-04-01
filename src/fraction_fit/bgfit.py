@@ -97,6 +97,7 @@ cov = result[signal]['__cov'][0]
 
 corr = numpy.zeros((n, n), dtype=numpy.float32)
 
+print("writing covariance file")
 covfi = ROOT.TFile(outfile+"_cov.root", "RECREATE")
 covmat = ROOT.TH2D("covariance", "covariance", 0, n-1, n, 0, n-1, n)
 covmat.SetDirectory(covfi)
@@ -110,7 +111,7 @@ for i in range(n):
 covfi.Write()
 covfi.Close()
 
-report.write_html('report')
+#report.write_html('report')
 
 out = {
     "names": [p for p in pars],
@@ -122,12 +123,16 @@ out = {
     "nbins": nbins
 }
 
+print("writing json file")
 import json
 of = open(outfile+".json", "w")
 of.write(json.dumps(out) + "\n")
 of.close()
 
+print("writing txt file")
 of2 = open(outfile+".txt", "w")
 for p in sorted(values.keys()):
     of2.write("%s %f %f\n" % (p, values[p], errors[p]))
 of2.close()
+
+print("all done!")
