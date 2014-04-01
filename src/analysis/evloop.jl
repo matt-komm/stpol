@@ -1,18 +1,16 @@
 using JSON
 
-jsfile = ARGS[1]
-PARS = JSON.parse(readall(jsfile))
-
-require("base.jl")
+const sp = dirname(Base.source_path())
+require("$sp/base.jl")
 using CMSSW
 
-PARS = JSON.parse(readall(jsfile))
-#println(PARS)
+require("$sp/hroot.jl")
 
-require("hroot.jl")
+const infile = ARGS[1]
+const outfile = ARGS[2]
+const PARS = JSON.parse(readall(ARGS[3]))
+const qcd_cut_type = symbol(PARS["qcd_cut"])
 
-const infile = PARS["infile"]
-const outfile = PARS["outfile"]
 println("loading dataframe...");
 
 const df_base = TreeDataFrame(infile)
@@ -21,12 +19,11 @@ df_base.doget = false
 #load the TTree with the QCD values, xs weights
 const df_added = TreeDataFrame("$infile.added")
 df_added.doget = false
-#println(names(df_added))
 
 #create a combined access doorway for both ttrees
 df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
 
-require("histogram_defaults.jl")
+require("$sp/histogram_defaults.jl")
 
 const bdt_strings = {bdt=>@sprintf("%.5f", bdt) for bdt in bdt_cuts}
 const bdt_symbs = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in bdt_cuts}
@@ -45,7 +42,6 @@ function getr{K <: Any, V <: Any}(ret::Dict{K, V}, x::HistKey, k::Symbol)
     end
     return ret[hk]::Union(Histogram, NHistogram)
 end
-
 
 function print_ev(row)
     println("hlt=", row[:hlt], " Nj=", row[:njets], " Nt=", row[:ntags], " nsigmu=", row[:n_signal_mu], " nsigele=", row[:n_signal_ele],
@@ -220,7 +216,7 @@ function process_df(rows::AbstractVector{Int64})
                 reco = reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
                 reco = reco && sel(row)
                 reco = reco && Cuts.is_reco_lepton(row, reco_lep)
-                reco = reco && Cuts.qcd_mva_wp(row, reco_lep)
+                reco = reco && Cuts.qcd_cut(row, qcd_cut_type, reco_lep)
 
                 const lep_symb = symbol("gen_$(lepton_symbs[true_lep])__reco_$(reco_lep)")
 
@@ -323,7 +319,7 @@ function process_df(rows::AbstractVector{Int64})
         ###
         ### QCD rejection
         ###        
-        const reco = Cuts.qcd_mva_wp(row, lepton)
+        const reco = Cuts.qcd_cut(row, qcd_cut_type, lepton)
         reco || continue
         
         ###
@@ -336,13 +332,15 @@ function process_df(rows::AbstractVector{Int64})
             _reco || continue
 
             for var in [
-                :bdt_sig_bg, :bdt_sig_bg_top_13_001,
+                :bdt_sig_bg,
                 (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
                 :C, :met, :mtw, :shat, :ht, :lepton_pt,
                 :bjet_pt,
                 (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
+                :ljet_eta, :bjet_eta,
                 :bjet_mass, :top_mass,
-                :top_pt, :n_good_vertices
+                :top_pt, :n_good_vertices,
+                :cos_theta_lj, :cos_theta_bl
                 ]
 
                 #if a 2-tuple is specified, 2. arg is the function to apply
@@ -459,9 +457,9 @@ mkpath(dirname(rfile))
 tf = TFile(tempf, "RECREATE")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    print(k, " $(sum(entries(v))) ", @sprintf("%.2f", integral(v)))
-    isa(v, NHistogram) && print(" ", sum(sum(entries(v), 1)[2:end]), " ", sum(sum(entries(v), 2)[2:end]))
-    println()
+#    print(k, " $(sum(entries(v))) ", @sprintf("%.2f", integral(v)))
+#    isa(v, NHistogram) && print(" ", sum(sum(entries(v), 1)[2:end]), " ", sum(sum(entries(v), 2)[2:end]))
+#    println()
     toroot(tf, tostr(k), v)
 end
 
@@ -472,6 +470,7 @@ close(tf)
 for i=1:5
     try
         println("cleaning $outfile...");isfile(outfile) && rm(outfile)
+        mkpath(dirname(outfile))
         println("copying...");cp(tempf, outfile)
         s = stat(outfile)
         #run(`sync`)
