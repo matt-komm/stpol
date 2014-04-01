@@ -3,7 +3,7 @@ import ROOT
 from ROOT import TMVA
 import numpy as np
 
-from adder import setup_mva, rv, zero_buffers, treename, mva_loop_lepton_separate
+from adder import setup_mva, rv, zero_buffers, treename, mva_loop_lepton_separate, STPOL_DIR
 
 mvaname = "bdt_sig_bg_top_13_001"
 def main():
@@ -11,8 +11,8 @@ def main():
     print infiles
 
     mvas = dict()
-    mvas[13] = setup_mva(mvaname, "../../mvatools/weights/stop_mu_BDT.weights.xml")
-    mvas[11] = setup_mva(mvaname, "../../mvatools/weights/stop_ele_BDT.weights.xml")
+    mvas[13] = setup_mva(mvaname, STPOL_DIR + "/mvatools/weights/stop_mu_BDT.weights.xml")
+    mvas[11] = setup_mva(mvaname, STPOL_DIR + "/mvatools/weights/stop_ele_BDT.weights.xml")
 
     varmaps = dict()
 

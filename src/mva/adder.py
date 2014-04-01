@@ -9,6 +9,7 @@ import numpy as np
 import time
 
 from xml.dom import minidom
+from path import STPOL_DIR
 
 treename = "dataframe"
 
