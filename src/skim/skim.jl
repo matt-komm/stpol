@@ -12,16 +12,32 @@ output_file = ARGS[1]
 flist = Any[]
 append!(flist, ARGS[2:length(ARGS)])
 
+good_filelist = ASCIIString[]
 for i=1:length(flist)
+    #isfile(flist[i]) || (warn("file does not exist: $(flist[i])");continue) 
     if !beginswith(flist[i], "file:")
         flist[i] = string("file:",flist[i])
     end
+    
+    try
+        println("trying to open file $(flist[i])")
+        ev = Events([flist[i]])
+        if length(ev)>0
+            println("adding good file $(flist[i])")
+            push!(good_filelist, flist[i])
+        else
+            warn("file was empty: $(flist[i])")
+        end
+    catch err
+        warn("could not open events from $(flist[i]): $err")
+    end
 end
 
-flistd = {f=>i for (f, i) in zip(flist, 1:length(flist))}
+println("opening files from $good_filelist")
+flistd = {f=>i for (f, i) in zip(good_filelist, 1:length(good_filelist))}
 
 #try to load the Events 
-events = Events(convert(Vector{ASCIIString}, flist))
+events = Events(convert(Vector{ASCIIString}, good_filelist))
 
 #save information on spectator jets
 const do_specjets = true
@@ -143,11 +159,11 @@ prfiles = similar(
         total_processed=Int64[],
         cls=Any[]
     ),
-    length(flist)
+    length(good_filelist)
 )
 
 i = 1
-for fi in flist
+for fi in good_filelist 
     x = CMSSW.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
     prfiles[i, :files] = fi
     prfiles[i, :total_processed] = x
@@ -155,7 +171,7 @@ for fi in flist
     i += 1
 end
 
-all(prfiles[:files] .== flist) || error("mismatch in input files")
+all(prfiles[:files] .== good_filelist) || error("mismatch in input files")
 
 #Loop over the events
 println("Beginning event loop")
@@ -450,7 +466,8 @@ println("processed $(nproc/timeelapsed) events/second")
 pass = (df[:passes]) | (df[:sample] .== int(hash("tchan")))
 
 #Select only the events that actually pass
-mydf = df[pass, :]
+#mydf = df[pass, :]
+mydf = df
 
 for cn in names(mydf)
     if all(isna(mydf[cn]))
@@ -463,19 +480,43 @@ println("total rows = $(nrow(mydf))")
 println("failure reasons: $fails")
 
 #save output
-writetable("$(output_file)_processed.csv", prfiles)
+prfile = "$(output_file)_processed.csv"
+isfile(prfile) && rm(prfile)
+writetable(prfile, prfiles)
+if nrow(prfiles)>0
+    sleep(1)
+    run(`timeout 60 sync`)
+    isfile(prfile) || error("processed file not created")
+    
+    if nrow(mydf)>0
+        c = readall(prfile)
+        if (length(c) > 0)
+            if !(all(nrow(readtable(prfile)) == nrow(prfiles)))
+                error("problem writing processed files to $prfile")
+            end
+        else
+            warn("$prfile was empty, while nrow(prfiles)=$(nrow(prfiles))")
+        end
+    end
+end
 
 println("root...")
 tempf = mktemp()[1]
 outfile = "$(output_file).root"
 println("writing to temporary file $(tempf)")
 writetree(tempf, mydf)
+sleep(1)
 for i=1:5
     try
         println("cleaning $outfile...");isfile(outfile) && rm(outfile)
         println("copying...");cp(tempf, outfile)
+        sleep(1)
+        run(`timeout 60 sync`)
         s = stat(outfile)
-        s.size == 0 && error("file corrupted")
+        s.size == 0 && error("file corrupted: size=0")
+        tdf = TreeDataFrame(outfile)
+        nrow(tdf) == nrow(mydf) || error("file corrupted, $(nrow(tdf))!=$(nrow(mydf))")
+
         break
     catch err
         println("$err: retrying")
