@@ -24,8 +24,8 @@ for fi in flist
     try
         md = readtable(acc["processed"], allowcomments=true)
     catch err
-        error("could not read table with processed=$(acc["processed"])")
-        throw(err)
+        warn("could not read table with processed=$(acc["processed"])")
+        continue 
     end
     println(fi," ", acc["processed"])
 
@@ -49,13 +49,9 @@ for fi in flist
     end
 end
 
-length(infiles)==0 || error("incomplete processing: \n$infiles")
-
+length(infiles)==0 || warn("incomplete processing, some files in input file but not in root: \n$infiles")
 
 of = open(ofile, "w")
 write(of, json(res))
 close(of)
 
-#for (k,v) in sort(collect(res), by=x->x[1])
-#    println(k, " ", v)
-#end
