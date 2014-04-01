@@ -1,8 +1,8 @@
 module Cuts
 
     const qcd_mva_wps = {
-        :mu=>0.16,
-        :ele=>0.27
+        :mu=>0.4,
+        :ele=>0.55
     }
 
     is_mu(indata) = (
@@ -26,7 +26,19 @@ module Cuts
     ntags(indata, x) = indata[:ntags].==x
     qcd_mva(indata, x::Real) = indata[:bdt_qcd].>x
     bdt(indata, x::Real) = indata[:bdt_sig_bg].>x
+
+    function qcd_cut(indata, cut_type::Symbol, lepton::Symbol)
+        cut_type == :mva_nominal && return qcd_mva_wp(indata, lepton)
+        cut_type == :metmtw_nominal && return qcd_met_mtw(indata, lepton)
+    end
+
     qcd_mva_wp(indata, x::Symbol) = qcd_mva(indata, qcd_mva_wps[x])
+    
+    function qcd_met_mtw(indata, x::Symbol)
+        x == :mu && return indata[:mtw] .> 50  
+        x == :ele && return indata[:met] .> 45
+    end
+
     iso(indata) = indata[:isolation] .== hmap_symb_from[:iso] 
     aiso(indata) = indata[:isolation] .== hmap_symb_from[:antiiso]
     dr(indata) = (indata[:ljet_dr].>0.5) & (indata[:bjet_dr].>0.5)
@@ -59,8 +71,8 @@ function perform_selection(indata::AbstractDataFrame)
         ##:_mtw => x -> indata[:mtw] .> x,
         ##:_met => x -> indata[:met] .> x,
         ##:_qcd_mva => x -> indata[:qcd] .> x,
-        :qcd_mva_027 => indata[:bdt_qcd] .> 0.27,
-        :qcd_mva_016 => indata[:bdt_qcd] .> 0.16,
+        :qcd_mva_mu => indata[:bdt_qcd] .> 0.4,
+        :qcd_mva_ele => indata[:bdt_qcd] .> 0.55,
         :dr => (indata[:ljet_dr] .> 0.5) & (indata[:bjet_dr] .> 0.5),
         :iso => (indata[:isolation] .== ("iso"|>hash|>int)),
         :aiso => (indata[:isolation] .== ("antiiso"|>hash|>int)),
@@ -86,7 +98,6 @@ function perform_selection(indata::AbstractDataFrame)
     
     inds[:data] = (inds[:sample][:data_mu] | inds[:sample][:data_ele])
     inds[:mc] = !inds[:data]
-    inds[:qcd_mva] = {:mu=>inds[:qcd_mva_016], :ele=>inds[:qcd_mva_027]}
     return inds
 end
 
