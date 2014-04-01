@@ -1,2 +1,6 @@
-#!/bin/bash
-DYLD_LIBRARY_PATH=../../theta/lib ./rootwrap.sh ../../theta/utils2/theta-auto.py $@
+#!/bin/sh
+echo "running theta wrapper";
+DYLD_LIBRARY_PATH=../../theta/lib ./rootwrap.sh ../../theta/utils2/theta-auto.py $@;
+echo "theta wrapper is done";
+exit 0;
+
