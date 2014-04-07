@@ -1,5 +1,14 @@
 #if !isdefined(:SYSTEMATICS)
 
+try
+    import ..B_WEIGHT_NOMINAL
+catch err
+end
+if !isdefined(:B_WEIGHT_NOMINAL)
+    global B_WEIGHT_NOMINAL
+    B_WEIGHT_NOMINAL = :b_weight
+end
+
 const SYSTEMATICS_TABLE = {
     :mass175_5=>:mass__up,
     :mass169_5=>:mass__down,
@@ -134,10 +143,10 @@ const nominal_weights = {
     :lepton_weight__iso__up => :lepton_weight__iso,
     :lepton_weight__iso__down => :lepton_weight__iso,
 
-    :b_weight__bc__up => :b_weight,
-    :b_weight__bc__down => :b_weight,
-    :b_weight__l__up => :b_weight,
-    :b_weight__l__down => :b_weight,
+    :b_weight__bc__up => B_WEIGHT_NOMINAL,
+    :b_weight__bc__down => B_WEIGHT_NOMINAL, 
+    :b_weight__l__up => B_WEIGHT_NOMINAL,
+    :b_weight__l__down => B_WEIGHT_NOMINAL, 
     
     :top_weight__up => :top_weight,
     :top_weight__down => :top_weight,

@@ -1,18 +1,25 @@
 using JSON
 
+const infile = ARGS[1]
+const outfile = ARGS[2]
+const PARS = JSON.parse(readall(ARGS[3]))
+
+#how to cut on QCD?
+const qcd_cut_type = symbol(PARS["qcd_cut"])
+
+#FIXME: currently this is different for TCHPT and CSVT
+const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
+
 const sp = dirname(Base.source_path())
 require("$sp/base.jl")
+
 using CMSSW
 
 require("$sp/hroot.jl")
 
-const infile = ARGS[1]
-const outfile = ARGS[2]
-const PARS = JSON.parse(readall(ARGS[3]))
-const qcd_cut_type = symbol(PARS["qcd_cut"])
-
 println("loading dataframe...");
 
+#Load the main event TTree
 const df_base = TreeDataFrame(infile)
 df_base.doget = false
 
@@ -20,18 +27,15 @@ df_base.doget = false
 const df_added = TreeDataFrame("$infile.added")
 df_added.doget = false
 
-#create a combined access doorway for both ttrees
+#create a combined view of both ttrees
 df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
 
 require("$sp/histogram_defaults.jl")
 
-const bdt_strings = {bdt=>@sprintf("%.5f", bdt) for bdt in bdt_cuts}
-const bdt_symbs = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in bdt_cuts}
-const lepton_symbs = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau}
+const BDT_SYMBOLS = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in bdt_cuts}
+const LEPTON_SYMBOLS = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau}
 
 const do_transfer_matrix = true
-
-print_bdt(bdt_cut) = bdt_strings[bdt_cut]
 
 include("$BASE/src/skim/jet_cls.jl")
 
@@ -148,7 +152,11 @@ const TM = defaults[:transfer_matrix]
 const TM_hsize = tuple([length(ed) for ed in TM.edges]...)
 
 #selection function
-sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
+if PARS["do_delta_r"]
+    sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
+else
+    sel(row::DataFrameRow, nj=2, nt=1) = Cuts.njets(row, nj) & Cuts.ntags(row, nt)
+end
 
 function process_df(rows::AbstractVector{Int64})
     const t0 = time()
@@ -218,7 +226,7 @@ function process_df(rows::AbstractVector{Int64})
                 reco = reco && Cuts.is_reco_lepton(row, reco_lep)
                 reco = reco && Cuts.qcd_cut(row, qcd_cut_type, reco_lep)
 
-                const lep_symb = symbol("gen_$(lepton_symbs[true_lep])__reco_$(reco_lep)")
+                const lep_symb = symbol("gen_$(LEPTON_SYMBOLS[true_lep])__reco_$(reco_lep)")
 
                 for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
                     (tm_nominal_only && scen_name[1]!=:nominal) && continue
@@ -252,7 +260,7 @@ function process_df(rows::AbstractVector{Int64})
                             systematic,
                             scen_name[1],
                             :bdt,
-                            bdt_symbs[bdt_cut],
+                            BDT_SYMBOLS[bdt_cut],
                             lep_symb,
                             2, 1
                         )
@@ -333,6 +341,7 @@ function process_df(rows::AbstractVector{Int64})
 
             for var in [
                 :bdt_sig_bg,
+                :bdt_sig_bg_top_13_001,
                 (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
                 :C, :met, :mtw, :shat, :ht, :lepton_pt,
                 :bjet_pt,
@@ -394,45 +403,31 @@ function process_df(rows::AbstractVector{Int64})
             end
         end
 
-        #final selection by BDT
-        for bdt_cut in bdt_cuts
-            
-            #const sreco = reco && Cuts.bdt(row, bdt_cut) 
-            #const tmreco = transfer_matrix_reco[lepton][bdt_cut]
-            #local tmreco2 = true 
-            #tmreco2 = tmreco2 && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
-            #tmreco2 = tmreco2 && sel(row)
-            #tmreco2 = tmreco2 && Cuts.is_reco_lepton(row, lepton)
-            #tmreco2 = tmreco2 && Cuts.qcd_mva_wp(row, lepton)
-            #
-            #if sample == :tchan && systematic == :nominal && iso == :iso
-            #    if (tmreco != sreco)
-            #        print("lepton=$lepton tmreco2=$tmreco2 ")
-            #        print_ev(row)
-            #        error("bdt_cut=$bdt_cut transfer matrix reco $tmreco != signal reco $sreco, $(row.row)")
-            #    end
-            #end
-            
-            if (reco && Cuts.bdt(row, bdt_cut))
-                for var in [:cos_theta_lj]
-                    fill_histogram(
-                        nw,
-                        row, isdata,
-                        var,
-                        row->row[var],
-                        ret,
+        for (nj, nt) in [(2, 0), (2, 1), (3, 2)]
+            #final selection by BDT
+            for bdt_cut in bdt_cuts
+                
+                if (reco && Cuts.bdt(row, bdt_cut))
+                    for var in [:cos_theta_lj]
+                        fill_histogram(
+                            nw,
+                            row, isdata,
+                            var,
+                            row->row[var],
+                            ret,
 
-                        sample,
-                        iso,
-                        systematic,
-                        :bdt,
-                        bdt_symbs[bdt_cut],
-                        lepton,
-                        2, 1
-                    )
+                            sample,
+                            iso,
+                            systematic,
+                            :bdt,
+                            BDT_SYMBOLS[bdt_cut],
+                            lepton,
+                            nj, nt 
+                        )
+                    end
+                else
+                    continue
                 end
-            else
-                continue
             end
         end
     end #event loop
@@ -457,9 +452,9 @@ mkpath(dirname(rfile))
 tf = TFile(tempf, "RECREATE")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-#    print(k, " $(sum(entries(v))) ", @sprintf("%.2f", integral(v)))
-#    isa(v, NHistogram) && print(" ", sum(sum(entries(v), 1)[2:end]), " ", sum(sum(entries(v), 2)[2:end]))
-#    println()
+    print(k, " $(sum(entries(v))) ", @sprintf("%.2f", integral(v)))
+    isa(v, NHistogram) && print(" ", sum(sum(entries(v), 1)[2:end]), " ", sum(sum(entries(v), 2)[2:end]))
+    println()
     toroot(tf, tostr(k), v)
 end
 
