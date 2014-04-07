@@ -1,4 +1,7 @@
+
 module Cuts
+    using DataFrames
+    import DataFrames.isna
 
     const qcd_mva_wps = {
         :mu=>0.4,
@@ -6,12 +9,16 @@ module Cuts
     }
 
     is_mu(indata) = (
-        (abs(indata[:lepton_type]) .== 13) & (indata[:n_signal_mu] .== 1) &
-        (indata[:n_signal_ele] .== 0) & (indata[:n_veto_mu] .== 0) &
-        (indata[:n_veto_ele] .== 0) & indata[:hlt_mu]
+        !(isna(indata[:n_veto_mu])) &
+        !(isna(indata[:n_veto_ele])) &
+        (abs(indata[:lepton_type]) .== 13) & (indata[:n_signal_mu] .== int32(1)) &
+        (indata[:n_signal_ele] .== int32(0)) & (indata[:n_veto_mu] .== int32(0)) &
+        (indata[:n_veto_ele] .== int32(0)) & indata[:hlt_mu]
     )
 
     is_ele(indata) = (
+        !(isna(indata[:n_veto_mu])) &
+        !(isna(indata[:n_veto_ele])) &
         (abs(indata[:lepton_type]) .== 11) & (indata[:n_signal_mu] .== 0) &
         (indata[:n_signal_ele] .== 1) & (indata[:n_veto_mu] .== 0) &
         (indata[:n_veto_ele] .== 0) & indata[:hlt_ele]
@@ -19,7 +26,7 @@ module Cuts
     function is_reco_lepton(row, lepton::Symbol)
         lepton==:mu && return is_mu(row)
         lepton==:ele && return is_ele(row)
-        return false
+        error("unecognized lepton=$lepton") 
     end
 
     njets(indata, x) = indata[:njets].==x
@@ -30,13 +37,14 @@ module Cuts
     function qcd_cut(indata, cut_type::Symbol, lepton::Symbol)
         cut_type == :mva_nominal && return qcd_mva_wp(indata, lepton)
         cut_type == :metmtw_nominal && return qcd_met_mtw(indata, lepton)
+        error("unrecognized cut_type=$cut_type")
     end
 
     qcd_mva_wp(indata, x::Symbol) = qcd_mva(indata, qcd_mva_wps[x])
     
     function qcd_met_mtw(indata, x::Symbol)
-        x == :mu && return indata[:mtw] .> 50  
-        x == :ele && return indata[:met] .> 45
+        x == :mu && return ((!isna(indata[:mtw])) & (indata[:mtw] .> 50))  
+        x == :ele && return ((!isna(indata[:met])) & (indata[:met] .> 45))
     end
 
     iso(indata) = indata[:isolation] .== hmap_symb_from[:iso] 
@@ -49,11 +57,15 @@ module Cuts
         (indata[:top_mass] > 130)
     )
 
-
     function truelepton(indata, x::Symbol)
         x == :mu && return abs(indata[:gen_lepton_id]) .== 13
         x == :ele && return abs(indata[:gen_lepton_id]) .== 11
         return false
+    end
+
+    function selection(indata, selection_major, selection_minor)
+        selection_major == :bdt && return bdt(indata, selection_minor)
+        error("unrecognized selection_major=$selection_major")
     end
 end
 
