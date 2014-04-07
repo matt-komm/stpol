@@ -13,7 +13,7 @@ t0 = time()
 using DataArrays, DataFrames
 using JSON
 using HDF5, JLD
-using Hist
+using Histograms
 
 include("basedir.jl")
 
@@ -179,13 +179,13 @@ export BASE
 export infb, chunk, chunks, flatten, FITRESULTS, hmap, writedf, readdf, systematic_processings
 export procs, mcsamples, TOTAL_SAMPLES
 export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
-export Hist
+export Histograms
 end
 
 using DataArrays, DataFrames
 using JSON
 using HDF5, JLD
-using Hist
+using Histograms
 using PyCall
 using SingleTopBase
 

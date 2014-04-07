@@ -3,7 +3,7 @@ module Reweight
     using JSON#import JSON: parse
     import SingleTopBase: BASE, fromdf
     import DataFrames: isna, DataFrameRow
-    import Hist: findbin
+    import Histograms: findbin
 
     const _lumis = JSON.parse(readall("$BASE/metadata/lumis.json"))
     include("$BASE/src/skim/jet_cls.jl")
