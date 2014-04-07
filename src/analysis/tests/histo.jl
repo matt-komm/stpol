@@ -62,6 +62,7 @@ h = Histogram([1,2],[3,4],[1,2])
 
 @test_approx_eq_eps(test_ks(h, h), 0.0, 0.00001)
 @test_approx_eq_eps(test_ks(h, 3.3*h), 0.0, 0.00001)
+@test_approx_eq_eps(ks_pvalue(h, h), 0.0, 0.5)
 
 
 nh = NHistogram({[-1, 0, 1], [-1, 0, 1]})

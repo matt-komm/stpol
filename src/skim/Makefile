@@ -41,11 +41,12 @@ add-mva2:
 	cat input/combined | julia createscript.jl "$(ROOTWRAP) && ( python ../mva/top_13_001_mva_adder.py {} )" mva.top_13_001
 
 metahadd-csvt:
-	find /hdfs/local/joosep/stpol/skims/2014-*/skims_step2/csvt/ -name "*.root" > csvt.txt
+	find /hdfs/local/joosep/stpol/skims/Apr04/step3/csvt/ -name "*.root" > csvt.txt
 	julia metahadd.jl csvt.txt md.csvt.json input/mar17.txt &> md.csvt.out
 
 metahadd-tchpt:
-	julia metahadd.jl input/skimmed.tchpt md.tchpt.txt input/tchpt.txt &> md.tchpt.out
+	find /hdfs/local/joosep/stpol/skims/Apr04/step3/tchpt/ -name "*.root" > tchpt.txt
+	julia metahadd.jl tchpt.txt md.tchpt.json input/tchpt.txt &> md.tchpt.out
 
 metahadd:
 	mkdir -p $(DIR)/merged
