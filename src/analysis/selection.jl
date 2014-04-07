@@ -2,6 +2,7 @@
 module Cuts
     using DataFrames
     import DataFrames.isna
+    import SingleTopBase: hmap_symb_from, hmap_symb_to
 
     const qcd_mva_wps = {
         :mu=>0.4,
@@ -47,9 +48,9 @@ module Cuts
         x == :ele && return ((!isna(indata[:met])) & (indata[:met] .> 45))
     end
 
-    iso(indata) = indata[:isolation] .== hmap_symb_from[:iso] 
-    aiso(indata) = indata[:isolation] .== hmap_symb_from[:antiiso]
-    dr(indata) = (indata[:ljet_dr].>0.5) & (indata[:bjet_dr].>0.5)
+    iso(indata) = indata[:isolation] .== hmap_symb_to[:iso] 
+    aiso(indata) = indata[:isolation] .== hmap_symb_to[:antiiso]
+    dr(indata) = (aiso(indata) & (indata[:ljet_dr].>0.5) & (indata[:bjet_dr].>0.5)) | iso(indata)
 
     cutbased_etajprime(indata) = (
         (abs(indata[:ljet_eta]).>2.5) &
