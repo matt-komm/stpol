@@ -33,10 +33,10 @@ is_any_na(row::DataFrameRow, symbs...) =
 #replaces NA and NaN with a default value
 
 function get_no_na{R <: Real}(row::DataFrameRow, s::Symbol, d::R=1.0)
-    const rs = row[s]::Union(R, NAtype)
+    const rs = row[s]
     isna(rs) && return d
-    isnan(rs::R) && return d
-    return rs::R
+    isnan(rs) && return d
+    return rs
 end
 
 # function get_no_na{R <: Real}(row::DataFrameRow, s::Symbol, d::R=1.0)
@@ -59,18 +59,16 @@ function nominal_weight(df::DataFrameRow)
     const sample = df[:sample]::Int64
 
     if is_mc(sample)::Bool
-        const top_weight = get_no_na(df, :top_weight, float32(1))::WT
-        const b_weight = get_no_na(df, :b_weight, float32(1))::WT
-        const pu_weight = get_no_na(df, :pu_weight, float32(1))::WT
-        const lepton_weight__id = get_no_na(df, :lepton_weight__id, float32(1))::WT
-        const lepton_weight__iso = get_no_na(df, :lepton_weight__iso, float32(1))::WT
-        const lepton_weight__trigger = get_no_na(df, :lepton_weight__trigger, float32(1))::WT
+        const top_weight = get_no_na(df, :top_weight, float32(1))
+        const b_weight = get_no_na(df, :b_weight, float32(1))
+        const pu_weight = get_no_na(df, :pu_weight, float32(1))
+        const lepton_weight__id = get_no_na(df, :lepton_weight__id, float32(1))
+        const lepton_weight__iso = get_no_na(df, :lepton_weight__iso, float32(1))
+        const lepton_weight__trigger = get_no_na(df, :lepton_weight__trigger, float32(1))
         const wjets_shape_weight = df[:wjets_ct_shape_weight]
 
         const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id *
             lepton_weight__iso * lepton_weight__trigger * wjets_shape_weight
-        
-        w::Float64
         
         return w
     else
