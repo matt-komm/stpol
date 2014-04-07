@@ -33,18 +33,20 @@
 #     return {string(k)=>v for (k,v) in hists}
 # end
 
-# # function makehist_1d(df::AbstractDataFrame, var::Symbol, binning::AbstractVector{Float64}, weight_f::Function)
-# #     hi = Histogram(binning)
-# #     sumw = 0.0
-# #     for row in eachrow(df)
-# #         const x = row[var]
-# #         const w = weight_f(row)
-# #         hfill!(hi, x, w)
-# #         sumw += w
-# #     end
-# #     #println("meanw = $(sumw/nrow(df))")
-# #     return hi
-# # end
+makehist_1d(df::AbstractDataFrame, var::Symbol, binning::AbstractVector{Float64}, weight_f::Function=row->1.0) =
+    makehist_1d(df, row->row[var], binning, weight_f)
+
+function makehist_1d(df::AbstractDataFrame, f::Function, binning::AbstractVector{Float64}, weight_f::Function=row->1.0)
+    hi = Histogram(binning)
+    sumw = 0.0
+    for row in eachrow(df)
+        const x = f(row)
+        const w = weight_f(row)
+        hfill!(hi, x, w)
+        sumw += w
+    end
+    return hi
+end
 
 function mergehists_4comp(hists)
     out = Dict()
