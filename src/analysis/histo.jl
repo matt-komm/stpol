@@ -28,10 +28,11 @@ immutable Histogram
     end
 end
 
-Histogram{R<:Real}(a::Vector{R}) = Histogram(
-    Float64[0.0 for i=1:length(a)],
-    Float64[0.0 for i=1:length(a)],
-    a
+#create empty histogram
+Histogram{R<:Real}(edges::Vector{R}) = Histogram(
+    Float64[0.0 for i=1:length(edges)],
+    Float64[0.0 for i=1:length(edges)],
+    edges
 )
 
 Histogram(h::Histogram) = Histogram(h.bin_entries, h.bin_contents, h.bin_edges)
@@ -42,7 +43,7 @@ nbins(h::Histogram) = length(h.bin_contents)
 contents(h::Histogram) = h.bin_contents
 edges(h::Histogram) = h.bin_edges
 
-function subhist(h::Histogram, bins)
+function subhist(h::Histogram, bins::AbstractArray)
     entries = Int64[]
     contents = Float64[]
     edges = Float64[]
@@ -62,7 +63,7 @@ function errors(h::Histogram, replacenan=true, replace0=true, replaceval=0.0)
             errs[i] = replaceval
         end
 
-        #in case of zero bins, put error 1.0
+        #in case of zero bins, put error to replaceval
         if replace0 && errs[i] < eps(T)
             errs[i] = replaceval
         end
@@ -152,10 +153,10 @@ function /{T <: Real}(h1::Histogram, x::T)
     return h1 * (1.0 / x)
 end
 
-#err / C = sqrt((err1/C1)^2 + (err2/C2)^2) 
+#err / C = sqrt((err1/C1)^2 + (err2/C2)^2)
 function /(h1::Histogram, h2::Histogram)
     @assert(h1.bin_edges == h2.bin_edges, "bin edges must be the same for both histograms")
-    
+
     conts = h1.bin_contents ./ h2.bin_contents
     ents = 1.0 ./ (1.0 ./ entries(h1) + 1.0 ./ entries(h2))
 
@@ -201,7 +202,7 @@ end
 #     ent = df[2].data
 #     cont = df[3].data
 
-#     #entries column reflects poisson errors of the contents column 
+#     #entries column reflects poisson errors of the contents column
 #     if entries == :poissonerrors
 #         ent = (cont ./ ent ) .^ 2
 #         ent = Float64[x > 0 ? x : 0 for x in ent]
@@ -247,6 +248,22 @@ function cumulative(h::Histogram)
     return Histogram(ent, cont, h.bin_edges)
 end
 
+#dices from the number of entries in the histogram
+function sample_hist(h::Histogram, n=1000)
+    pois = Any[e>0 ? Poisson(e) : Poisson(1) for e in h.bin_entries]
+
+    #ratio between Nentries, Nweighted
+    wr = sum(h.bin_contents) / sum(h.bin_entries)
+    hists = Any[]
+
+    for i=1:n
+        bins = map(rand, pois)
+        push!(hists, Histogram(bins, bins./wr, h.bin_edges))
+    end
+    hists
+end
+
+#returns the chi2 test statistics
 function test_ks(h1::Histogram, h2::Histogram)
     ch1 = cumulative(h1)
     ch2 = cumulative(h2)
@@ -254,6 +271,19 @@ function test_ks(h1::Histogram, h2::Histogram)
     ch2 = ch2 / integral(h2)
     return maximum(abs(ch1.bin_contents - ch2.bin_contents))
 end
+
+#dices the two histograms and returns the fraction(p-value) of ks-test values that are greater than between h1, h2
+function ks_pvalue(h1::Histogram, h2::Histogram, n)
+    const ks = test_ks(h1, h2)
+    hs1 = sample_hist(h1, n)
+    hs2 = sample_hist(h2, n)
+    kss = Any[]
+    for (_h1, _h2) in zip(hs1, hs2)
+        push!(kss, test_ks(_h1, _h2))
+    end
+    return count(x -> x > ks, kss) / length(kss)
+end
+
 
 type NHistogram
     baseh::Histogram
@@ -353,55 +383,10 @@ function hfill!{K <: NAtype}(h::NHistogram, v, w::K)
     #b[xb...] += 1
 end
 
-# function writecsv(fn, h::NHistogram)
-#     dfs = todf(h)
-#     writetable("$fn.hist", dfs[:hist];separator=',')
-#     dd = {:hist=>"$fn.hist", :edges=>Any[]}
-#     j = 1
-#     for e in dfs[:edges]
-#         writetable("$fn.edges.$j", e; separator=',')
-#         push!(dd[:edges], "$fn.edges.$j")
-#         j += 1
-#     end
-#     of = open("$fn.json", "w")
-#     write(of, JSON.json(dd))
-#     close(of)
-# end
-
-# function readhist(fn)
-#     js = JSON.parse(readall("$fn.json"))
-#     hist = readtable(js["hist"])
-#     edges = [readtable(e) for e in js["edges"]]
-#     nd = length(edges)
-#     evec = [edges[i][1] for i=1:nd]
-#     NHistogram(fromdf(hist), evec)
-# end
-
 function Base.getindex(nh::NHistogram, args...)
     a, b = asarr(nh)
     return a[args...]#, b[args...]
 end
-
-# function makehist_2d(df::AbstractDataFrame, bins::AbstractVector)
-#     hi = NHistogram(bins)
-#     @assert ncol(df)==2
-#     cont, ent = asarr(hi)
-#     for i=1:nrow(df)
-#         x = df[i,1]
-#         y = df[i,2]
-#         nx = isna(x)||isnan(x) ? 1 : searchsortedfirst(hi.edges[1], x)-1
-#         ny = isna(y)||isnan(y) ? 1 : searchsortedfirst(hi.edges[2], y)-1
-#         cont[nx, ny] += 1
-#         ent[nx, ny] += 1
-#     end
-#     return hi
-# end
-
-# project_n(nh::NHistogram, n) = NHistogram(
-#     sum(nh|>entries, n)[:],
-#     sum(nh|>contents, n)[:],
-#     nh.edges[2]
-# )
 
 
 project_x(nh::NHistogram) = Histogram(sum(nh|>entries, 1)[:], sum(nh|>contents, 1)[:], nh.edges[2])
