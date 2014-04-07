@@ -152,11 +152,7 @@ const TM = defaults[:transfer_matrix]
 const TM_hsize = tuple([length(ed) for ed in TM.edges]...)
 
 #selection function
-if PARS["do_delta_r"]
-    sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
-else
-    sel(row::DataFrameRow, nj=2, nt=1) = Cuts.njets(row, nj) & Cuts.ntags(row, nt)
-end
+sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
 
 function process_df(rows::AbstractVector{Int64})
     const t0 = time()
@@ -266,8 +262,35 @@ function process_df(rows::AbstractVector{Int64})
                         )
 
                         const h = getr(ret, k2, :transfer_matrix)::NHistogram
+
+                        h.baseh.bin_contents[linind] += w
+                        h.baseh.bin_entries[linind] += 1.0
+                    end
+                    
+                    #assumes BDT cut points are sorted ascending
+                    for (cut_major, cut_minor, cutfn) in {
+                            (:cutbased, :etajprime, Cuts.cutbased_etajprime)
+                        } 
+                        const _reco = reco && cutfn(row)
+                        const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
+                        const linind = sub2ind(TM_hsize, nx, ny)
                         
-                        #println("reco=$reco $(row.row) $true_lep $reco_lep $nx:$ny $x:$y $linind $(h.baseh.bin_contents[linind]) $(transfer_matrix_reco[reco_lep][bdt_cut]) ")
+                        (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
+                            error("incorrect index $linind for $nx,$ny $x,$y")
+                        
+                        const k2 = HistKey(
+                            :transfer_matrix,
+                            sample,
+                            iso,
+                            systematic,
+                            scen_name[1],
+                            cut_major,
+                            cut_minor,
+                            lep_symb,
+                            2, 1
+                        )
+
+                        const h = getr(ret, k2, :transfer_matrix)::NHistogram
 
                         h.baseh.bin_contents[linind] += w
                         h.baseh.bin_entries[linind] += 1.0
@@ -383,23 +406,42 @@ function process_df(rows::AbstractVector{Int64})
         ###
         ### cut-based cross-check, 2J1T
         ###
-        if (reco && Cuts.cutbased_etajprime(row))
-            for var in [:cos_theta_lj]
-                fill_histogram(
-                    nw,
-                    row, isdata,
-                    var,
-                    row->row[var],
-                    ret,
-
-                    sample,
-                    iso,
-                    systematic,
-                    :cutbased,
-                    :etajprime_topmass_default,
-                    lepton,
-                    2, 1
-                )
+        for (nj, nt) in [(2, 0), (2, 1), (3, 2)]
+            if (reco && Cuts.cutbased_etajprime(row))
+                for var in [
+                        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+                        :C, :met, :mtw, :shat, :ht, :lepton_pt,
+                        :bjet_pt,
+                        (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
+                        :ljet_eta, :bjet_eta,
+                        :bjet_mass, :top_mass,
+                        :top_pt, :n_good_vertices,
+                        :cos_theta_lj, :cos_theta_bl
+                    ]
+                    
+                    #if a 2-tuple is specified, 2. arg is the function to apply
+                    #otherwise, identity
+                    if isa(var, Tuple)
+                        var, f = var
+                    else
+                        var, f = var, (row::DataFrameRow -> row[var])
+                    end
+                    
+                    fill_histogram(
+                        nw,
+                        row, isdata,
+                        var,
+                        f,
+                        ret,
+                        sample,
+                        iso,
+                        systematic,
+                        :cutbased,
+                        :etajprime_topmass_default,
+                        lepton,
+                        nj, nt 
+                    )
+                end
             end
         end
 
@@ -408,14 +450,31 @@ function process_df(rows::AbstractVector{Int64})
             for bdt_cut in bdt_cuts
                 
                 if (reco && Cuts.bdt(row, bdt_cut))
-                    for var in [:cos_theta_lj]
+                    for var in [
+                            (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+                            :C, :met, :mtw, :shat, :ht, :lepton_pt,
+                            :bjet_pt,
+                            (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
+                            :ljet_eta, :bjet_eta,
+                            :bjet_mass, :top_mass,
+                            :top_pt, :n_good_vertices,
+                            :cos_theta_lj, :cos_theta_bl
+                        ]
+                        #if a 2-tuple is specified, 2. arg is the function to apply
+                        #otherwise, identity
+                        if isa(var, Tuple)
+                            var, f = var
+                        else
+                            var, f = var, (row::DataFrameRow -> row[var])
+                        end
+                
+
                         fill_histogram(
                             nw,
                             row, isdata,
                             var,
-                            row->row[var],
+                            f,
                             ret,
-
                             sample,
                             iso,
                             systematic,
