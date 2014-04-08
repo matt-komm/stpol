@@ -4,17 +4,17 @@ process = cms.Process("TEST3")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-        'file:/hdfs/cms/store/user/jpata/TTJets_MassiveBinDECAY_TuneZ2star_8TeV-madgraph-tauola/stpol_Feb8_FastSimValidation_v2_FSIM/243fe90abe1b1cf7bc2119dc7c0b2e28/output_Skim_noSlim_99_2_aN4.root'
+        '/store/user/joosep/TToLeptons_t-channel_8TeV-powheg-tauola/Jul8_51f69b/e6cee8f160cb239f414a74aa40d88ea9/output_noSkim_1_1_YzB.root'
     )
 )
 
 process.PDFweigts = cms.EDProducer('PDFweightsProducer',
-	PDFSets				=	cms.vstring('cteq66.LHgrid','MSTW2008nlo68cl.LHgrid') #ok
+	PDFSets	= cms.vstring('cteq66.LHgrid','MSTW2008nlo68cl.LHgrid')
 )
 
 process.p = cms.Path( process.PDFweigts )
