@@ -35,7 +35,7 @@ test-merge:
 	$(JULIA_ROOT_DIR)/julia mergedf.jl test $(DIR)/merged/md.txt $(DIR)/output_1.jld  $(DIR)/output_2.jld
 
 test-evloop:
-	julia evloop.jl input/bdt_scan/test.json
+	$(JULIA_ROOT_DIR)/julia evloop.jl /hdfs/local/joosep/stpol/skims/Apr04/step3/csvt/Mar13/iso/nominal/T_t_ToLeptons/844/output.root out infile.json 
 
 recursive-hadd:
 	rm -Rf hadd/*
@@ -60,30 +60,16 @@ merge:
 	rm -Rf output
 
 	mkdir -p results/csvt/qcd__metmtw_nominal
-	python histmerge.py ../../results/hists/apr03/hists/csvt/qcd__metmtw_nominal/merged.root
+	python histmerge.py ../../results/hists/apr08/csvt_metmtw.root
 	mv output/bdt_scan/* results/csvt/qcd__metmtw_nominal
 
 	mkdir -p results/csvt/qcd__mva_nominal
-	python histmerge.py ../../results/hists/apr03/hists/csvt/qcd__mva_nominal/merged.root
+	python histmerge.py ../../results/hists/apr08/csvt_mva.root
 	mv output/bdt_scan/* results/csvt/qcd__mva_nominal
-
-	mkdir -p results/tchpt/qcd__metmtw_nominal
-	python histmerge.py ../../results/hists/apr03/hists/tchpt/qcd__metmtw_nominal/merged.root
-	mv output/bdt_scan/* results/tchpt/qcd__metmtw_nominal
-
-	mkdir -p results/tchpt/qcd__mva_nominal
-	python histmerge.py ../../results/hists/apr03/hists/tchpt/qcd__mva_nominal/merged.root
-	mv output/bdt_scan/* results/tchpt/qcd__mva_nominal
 
 recursive-hadd: recursive-hadd-1 recursive-hadd-2 recursive-hadd-3 recursive-hadd-4
 recursive-hadd-1:
-	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr02_B/qcd__metmtw_nominal/skims_step3/apr1/csvt/ /scratch/joosep/hists/csvt/qcd__metmtw_nominal
+	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr07_C/qcd__mva_nominal/csvt/ /scratch/joosep/hists/csvt/mva_nominal
 
 recursive-hadd-2:
-	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr02_B/qcd__mva_nominal/skims_step3/apr1/csvt/ /scratch/joosep/hists/csvt/qcd__mva_nominal
-
-recursive-hadd-3:
-	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr02_B/qcd__metmtw_nominal/skims_step3/apr1/tchpt/ /scratch/joosep/hists/tchpt/qcd__metmtw_nominal
-
-recursive-hadd-4:
-	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr02_B/qcd__mva_nominal/skims_step3/apr1/tchpt/ /scratch/joosep/hists/tchpt/qcd__mva_nominal
+	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr07_C/qcd__metmtw_nominal/csvt/ /scratch/joosep/hists/csvt/metmtw_nominal
