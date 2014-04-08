@@ -4,7 +4,7 @@ include("histo.jl")
 
 module SingleTopBase
 
-println("loading base.jl...")
+#println("loading base.jl...")
 
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
 
@@ -19,8 +19,8 @@ include("basedir.jl")
 
 #add qcd estimation modules to pythonpath
 ENV["PYTHONPATH"] = ("PYTHONPATH" in keys(ENV)) ? string("$BASE/qcd_estimation:", ENV["PYTHONPATH"]) : "$BASE/qcd_estimation"
+#println("PYTHONPATH before doing 'using PyCall':\n\t", ENV["PYTHONPATH"])
 
-println("PYTHONPATH before doing 'using PyCall':\n\t", ENV["PYTHONPATH"])
 using PyCall
 
 const DH1 = int(hash("data_mu"))
@@ -157,13 +157,13 @@ t1 = time()
 println("done loading base in $(t1-t0) seconds")
 
 #if the hash function has changed, we need to load the old hashmap
-hmap_table = readtable("$BASE/src/skim/hmap.csv")
-
-for r=1:nrow(hmap_table)
-   row = DataFrameRow(hmap_table, r)
-   hmap[:from][row[2]] = row[1]
-   hmap[:to][row[1]] = row[2]
-end
+#hmap_table = readtable("$BASE/src/skim/hmap.csv")
+#
+#for r=1:nrow(hmap_table)
+#   row = DataFrameRow(hmap_table, r)
+#   hmap[:from][row[2]] = row[1]
+#   hmap[:to][row[1]] = row[2]
+#end
 
 const hmap_symb_to = Dict()
 for k in hmap[:to]|>keys
