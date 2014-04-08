@@ -48,9 +48,11 @@ module Cuts
         x == :ele && return ((!isna(indata[:met])) & (indata[:met] .> 45))
     end
 
-    iso(indata) = indata[:isolation] .== hmap_symb_to[:iso] 
-    aiso(indata) = indata[:isolation] .== hmap_symb_to[:antiiso]
-    dr(indata) = (aiso(indata) & (indata[:ljet_dr].>0.5) & (indata[:bjet_dr].>0.5)) | iso(indata)
+    iso(indata) = int(indata[:isolation]) .== hmap_symb_to[:iso] 
+    aiso(indata) = int(indata[:isolation]) .== hmap_symb_to[:antiiso]
+    dr(indata) = (
+        aiso(indata) & (indata[:ljet_dr].>0.5) & (indata[:bjet_dr].>0.5)
+    ) | iso(indata)
 
     cutbased_etajprime(indata) = (
         (abs(indata[:ljet_eta]).>2.5) &
