@@ -72,8 +72,9 @@ function fill_histogram(
     ntags::Int64,
 
     )
-
-    const x = hex(row)::Real
+    
+    #value to be filled to histogram
+    const x = hex(row)
 
     const bin = findbin(defaults[hname]::Histogram, x)::Int64
 
@@ -162,6 +163,8 @@ function process_df(rows::AbstractVector{Int64})
     
     nproc = 0
     
+    nfsel = 0
+
     const ret = Dict{HistKey, Any}()
      
     for cur_row::Int64 in rows
@@ -175,7 +178,7 @@ function process_df(rows::AbstractVector{Int64})
         nproc += 1
         if nproc % 10000==0
             dt = time() - tprev
-            println("$nproc $dt")
+            println("$nproc $dt $nfsel")
             tprev = time()
         end
         is_any_na(row, :sample, :systematic, :isolation)::Bool && warn("sample, systematic or isolation were NA")
@@ -323,12 +326,12 @@ function process_df(rows::AbstractVector{Int64})
         const nw = nominal_weight(row)::Float64
 
         #pre-qcd plots
-        for (nj, nt) in [(2, 0), (2, 1), (3, 2)]
+        for (nj, nt) in [(2, 0), (2, 1), (3, 1), (3, 2)]
             #pre-bdt selection
             const _reco = sel(row, nj, nt)::Bool
             _reco || continue
             
-            for var in [:bdt_qcd, :mtw, :met]
+            for var in [:bdt_qcd, :mtw, :met, :met_phi]
                 fill_histogram(
                     nw,
                     row, isdata,
@@ -356,7 +359,7 @@ function process_df(rows::AbstractVector{Int64})
         ###
         ### project BDT templates with full systematics
         ###
-        for (nj, nt) in [(2, 0), (2,1), (3,2)]
+        for (nj, nt) in [(2, 0), (2,1), (3, 1), (3,2)]
 
             #pre-bdt selection
             const _reco = reco & sel(row, nj, nt)::Bool
@@ -372,7 +375,9 @@ function process_df(rows::AbstractVector{Int64})
                 :ljet_eta, :bjet_eta,
                 :bjet_mass, :top_mass,
                 :top_pt, :n_good_vertices,
-                :cos_theta_lj, :cos_theta_bl
+                :ljet_dr, :bjet_dr, :lepton_iso,
+                :cos_theta_lj, :cos_theta_bl,
+                :cos_theta_lj_gen, :cos_theta_bl_gen
                 ]
 
                 #if a 2-tuple is specified, 2. arg is the function to apply
@@ -406,7 +411,7 @@ function process_df(rows::AbstractVector{Int64})
         ###
         ### cut-based cross-check, 2J1T
         ###
-        for (nj, nt) in [(2, 0), (2, 1), (3, 2)]
+        for (nj, nt) in [(2, 0), (2, 1), (3, 1), (3, 2)]
             if (reco && Cuts.cutbased_etajprime(row))
                 for var in [
                         (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
@@ -416,7 +421,10 @@ function process_df(rows::AbstractVector{Int64})
                         :ljet_eta, :bjet_eta,
                         :bjet_mass, :top_mass,
                         :top_pt, :n_good_vertices,
-                        :cos_theta_lj, :cos_theta_bl
+                        :ljet_dr, :bjet_dr, :lepton_iso,
+                        :met_phi,
+                        :cos_theta_lj, :cos_theta_bl,
+                        :cos_theta_lj_gen, :cos_theta_bl_gen
                     ]
                     
                     #if a 2-tuple is specified, 2. arg is the function to apply
@@ -445,7 +453,7 @@ function process_df(rows::AbstractVector{Int64})
             end
         end
 
-        for (nj, nt) in [(2, 0), (2, 1), (3, 2)]
+        for (nj, nt) in [(2, 0), (2, 1), (3, 1), (3, 2)]
             #final selection by BDT
             for bdt_cut in bdt_cuts
                 
@@ -458,7 +466,9 @@ function process_df(rows::AbstractVector{Int64})
                             :ljet_eta, :bjet_eta,
                             :bjet_mass, :top_mass,
                             :top_pt, :n_good_vertices,
-                            :cos_theta_lj, :cos_theta_bl
+                            :met_phi,
+                            :cos_theta_lj, :cos_theta_bl,
+                            :cos_theta_lj_gen, :cos_theta_bl_gen
                         ]
                         #if a 2-tuple is specified, 2. arg is the function to apply
                         #otherwise, identity
@@ -468,6 +478,7 @@ function process_df(rows::AbstractVector{Int64})
                             var, f = var, (row::DataFrameRow -> row[var])
                         end
                 
+                        nfsel += 1
 
                         fill_histogram(
                             nw,
@@ -492,7 +503,7 @@ function process_df(rows::AbstractVector{Int64})
     end #event loop
 
     const t1 = time()
-    println("processing ", rows.start, ":", rows.start+rows.len-1, " (N=$(length(rows))) took $(t1-t0) seconds")
+    println("processing ", rows.start, ":", rows.start+rows.len-1, " (N=$(length(rows))) took $(t1-t0) seconds, nfsel=$nfsel")
 
     return ret
 
