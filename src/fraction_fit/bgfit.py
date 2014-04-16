@@ -8,7 +8,15 @@ print("infiles=", infiles)
 
 signal = 'tchan' #name of signal process/histogram
 
-def is_nominal(hname):
+def hfilter(hname):
+    spl = hname.split("__")
+
+    if len(spl)!=2:
+        return False
+
+    if "qcd" in hname:
+        return False
+
     if '__up' in hname or '__down' in hname:
         return False
     return True
@@ -21,13 +29,16 @@ def get_model(infile):
         # http://www.pp.rhul.ac.uk/~cowan/stat/mcml.pdf
         # http://atlas.physics.arizona.edu/~kjohns/teaching/phys586/s06/barlow.pdf
         include_mc_uncertainties = True,
-        histogram_filter = is_nominal
+        histogram_filter = hfilter
     )
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
 
-    add_normal_unc(model, "wzjets", mean=1.0, unc=3.0)
-    add_normal_unc(model, "ttjets", unc=0.5)
+    add_normal_unc(model, "wzjets", mean=1.0, unc=inf)
+    add_normal_unc(model, "ttjets", unc=0.2)
+
+    #for old PAS histograms
+    add_normal_unc(model, "other", unc=0.2)
     #add_normal_unc(model, "qcd", unc=0.000001)
     return model
 
@@ -73,7 +84,7 @@ options.set("global", "debug", "true")
 
 #print "options=", options
 
-result = mle(model, input = 'data', n=1, with_covariance = True, options=options, chi2=True, ks=True)
+result = mle(model, input = 'data', n=1, with_covariance=True, options=options, chi2=True, ks=True)
 print "result=", result
 fitresults = {}
 values = {}
@@ -141,6 +152,7 @@ of.close()
 print("writing txt file")
 of2 = open(outfile+".txt", "w")
 for p in sorted(values.keys()):
+    print("%s %f %f" % (p, values[p], errors[p]))
     of2.write("%s %f %f\n" % (p, values[p], errors[p]))
 of2.close()
 
