@@ -28,6 +28,10 @@ test_step2_tchan_mass:
 test_step2_tchan_scale:
 	cmsRun $(STEP2CFG) inputFiles=file:$(infile_step2_tchan_scale) subChannel=T_t_ToLeptons_scaleup srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD outputFile=tests/step2/tchan/scale.root  
 
+test_step2_metphi:
+	cmsRun step2_csvt_metshift_off.py inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons outputFile=tests/step2/tchan/metphi_off.root
+	cmsRun step2_csvt_metshift_on.py inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons outputFile=tests/step2/tchan/metphi_on.root
+
 ###   all: update step2_ntuple
 ###   .PHONY: setup
 ###   
