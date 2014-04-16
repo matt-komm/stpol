@@ -46,6 +46,7 @@ end
 for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
     sources[v] = Source(:eventShapeVars, v, :STPOLSEL2, Float64)
 end
+sources[:C_with_nu] = Source(:eventShapeVarsWithNu, :C, :STPOLSEL2, Float64)
 
 sources[:wjets_cls] = Source(:flavourAnalyzer, :simpleClass, :STPOLSEL2, Uint32)
 

@@ -1,7 +1,10 @@
 #!/home/joosep/.julia/CMSSW/julia
 println("running skim.jl")
 tstart = time()
-println("hostname $(gethostname()) ", "SLURM_JOB_ID" in keys(ENV) ? ENV["SLURM_JOB_ID"] : getpid())
+println(
+    "hostname $(gethostname()) ",
+    "SLURM_JOB_ID" in keys(ENV) ? ENV["SLURM_JOB_ID"] : getpid()
+)
 
 using CMSSW, DataFrames, HEP
 
@@ -12,13 +15,14 @@ output_file = ARGS[1]
 flist = Any[]
 append!(flist, ARGS[2:length(ARGS)])
 
+#check input files
 good_filelist = ASCIIString[]
 for i=1:length(flist)
-    #isfile(flist[i]) || (warn("file does not exist: $(flist[i])");continue) 
+
     if !beginswith(flist[i], "file:")
         flist[i] = string("file:",flist[i])
     end
-    
+
     try
         println("trying to open file $(flist[i])")
         ev = Events([flist[i]])
@@ -36,17 +40,17 @@ end
 println("opening files from $good_filelist")
 flistd = {f=>i for (f, i) in zip(good_filelist, 1:length(good_filelist))}
 
-#try to load the Events 
+#try to load the Events
 events = Events(convert(Vector{ASCIIString}, good_filelist))
 
 #save information on spectator jets
 const do_specjets = true
 
-maxev = length(events) 
+maxev = length(events)
 println("running over $maxev events")
 
+#processes the decay tree string to get the generated parent of the lepton
 gen_parent(s::NAtype) = NA
-
 function gen_parent(s::ASCIIString)
     arr = map(x->int(split(x, ":")[1]), map(x->strip(x)[2:end], split(s, ",")))
     idx = findfirst(x-> !(abs(x) in [11,13]), arr)
@@ -54,11 +58,11 @@ function gen_parent(s::ASCIIString)
 end
 
 #events
-df = similar(
+df = similar(#Data frame as big as the input
         DataFrame(
             hlt=Bool[],
             hlt_mu=Bool[], hlt_ele=Bool[],
-            
+
             lepton_pt=Float32[], lepton_eta=Float32[],
             lepton_iso=Float32[], lepton_phi=Float32[],
             lepton_type=Float32[],
@@ -81,23 +85,24 @@ df = similar(
             ljet_pumva=Float32[],
 #
 ##spectator jets
-            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], 
-            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], 
+            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[],
+            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[],
 
 #event-level characteristics
-            cos_theta_lj=Float32[], 
-            cos_theta_bl=Float32[], 
-            cos_theta_lj_gen=Float32[], 
-            cos_theta_bl_gen=Float32[], 
+            cos_theta_lj=Float32[],
+            cos_theta_bl=Float32[],
+            cos_theta_lj_gen=Float32[],
+            cos_theta_bl_gen=Float32[],
             met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
             met_phi=Float32[],
 
-            C=Float32[], D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],  
+            C=Float32[], D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],
+            C_with_nu=Float32[],
             top_mass=Float32[], top_eta=Float32[], top_phi=Float32[], top_pt=Float32[],
             #wjets_cls=Int32[],
             jet_cls=Int32[],
             ht=Float32[], shat=Float32[],
-            
+
             nu_soltype=Int32[],
             n_signal_mu=Int32[], n_signal_ele=Int32[],
             n_veto_mu=Int32[], n_veto_ele=Int32[],
@@ -106,7 +111,7 @@ df = similar(
             pu_weight=Float32[],
             pu_weight__up=Float32[],
             pu_weight__down=Float32[],
-            
+
             lepton_weight__id=Float32[],
             lepton_weight__id__up=Float32[],
             lepton_weight__id__down=Float32[],
@@ -116,7 +121,7 @@ df = similar(
             lepton_weight__trigger=Float32[],
             lepton_weight__trigger__up=Float32[],
             lepton_weight__trigger__down=Float32[],
-            
+
             gen_weight=Float32[],
             gen_lepton_id=Int32[],
             gen_parent_id=Int32[],
@@ -152,7 +157,6 @@ df = similar(
 
 include("stpol.jl")
 
-#Loop over the lumi sections, get the total processed event count
 prfiles = similar(
     DataFrame(
         files=ASCIIString[],
@@ -163,20 +167,26 @@ prfiles = similar(
 )
 
 i = 1
-for fi in good_filelist 
-    x = CMSSW.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
+
+#Get the number of processed events from all files
+for fi in good_filelist
+    #filename
     prfiles[i, :files] = fi
+
+    #total number of processed (generated) events
+    x = CMSSW.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
     prfiles[i, :total_processed] = x
+
+    #classify sample according to file name
     prfiles[i, :cls] = SingleTopBase.sample_type(fi)
     i += 1
 end
 
 all(prfiles[:files] .== good_filelist) || error("mismatch in input files")
 
-#Loop over the events
-println("Beginning event loop")
 nproc = 0
 
+#keep track of the reasons why an event was not further processed
 fails = {
     :lepton => 0,
     :met => 0,
@@ -184,44 +194,45 @@ fails = {
 }
 
 tic()
+
+#keep track of the previously processed file
 prevfile = ""
 
-const DF_SYMBS = map(symbol, names(df))
+#Loop over the events
+println("Beginning event loop")
 timeelapsed = @elapsed for i=1:maxev
     nproc += 1
+
+    #progress printout
     if maxev>1000 && nproc%(ceil(maxev/20)) == 0
         println("$nproc ($(ceil(nproc/maxev*100.0))%) events processed")
         toc()
         tic()
     end
-    
+
     to!(events, i)
 
-    for cn in DF_SYMBS
-        df[i, cn] = NA
-    end
-
     df[i, :passes] = false
-    
+
     df[i, :gen_lepton_id] = events[sources[(:lepton, :gen, :id)]]
-    
-    #string representations of the feynman diagrams 
+
+    #string representations of the feynman diagrams
     #genstring_mu = events[sources[(:muon, :geninfo)]]
     #genstring_ele = events[sources[(:electron, :geninfo)]]
 
-    df[i, :hlt] = passes_hlt(events, hlts) 
-    df[i, :hlt_mu] = passes_hlt(events, HLTS[:mu]) 
-    df[i, :hlt_ele] = passes_hlt(events, HLTS[:ele]) 
-    
+    df[i, :hlt] = passes_hlt(events, hlts)
+    df[i, :hlt_mu] = passes_hlt(events, HLTS[:mu])
+    df[i, :hlt_ele] = passes_hlt(events, HLTS[:ele])
+
     #println(gen_id, " '", genstring_mu, "' '", genstring_ele, "'")
 
-    
+
     df[i, :cos_theta_lj_gen] = events[sources[:cos_theta_lj_gen]] |> ifpresent
     df[i, :cos_theta_bl_gen] = events[sources[:cos_theta_bl_gen]] |> ifpresent
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
     fn = string("file:", get_current_file_name(events))
-    
+
     if fn != prevfile
         println("$i switching to $fn")
         prevfile = fn
@@ -229,30 +240,30 @@ timeelapsed = @elapsed for i=1:maxev
 
     findex = flistd[fn]
     df[i, :fileindex] = findex
-        
+
     if fn != prfiles[findex, :files]
         error("incorrect file: $fn $(prfiles[findex, :files])")
     end
-    
+
 
     df[i, :b_weight] = events[sources[weight(:btag)]]
     df[i, :b_weight_old] = events[sources[weight(:btag, :tchpt)]]|>ifpresent
     df[i, :b_weight_simple] = events[sources[weight(:btag, :simple)]]|>ifpresent
-    
+
     df[i, :b_weight__bc__up] = events[sources[weight(:btag, :bc, :up)]]
     df[i, :b_weight__bc__down] = events[sources[weight(:btag, :bc, :down)]]
     df[i, :b_weight__l__up] = events[sources[weight(:btag, :l, :up)]]
     df[i, :b_weight__l__down] = events[sources[weight(:btag, :l, :down)]]
-    
+
     df[i, :top_weight] = events[sources[weight(:top)]]
     df[i, :top_weight__up] = df[i, :top_weight]^2
     df[i, :top_weight__down] = 1.0
 
     df[i, :gen_weight] = events[sources[weight(:gen)]]
-    
+
     cls = prfiles[findex, :cls]
     sample = cls[:sample]
-   
+
     df[i, :subsample] = int(hash(string(sample)))
     df[i, :sample] = int(hash(string(get_process(sample))))
     df[i, :fname] = int(hash(fn))
@@ -263,31 +274,31 @@ timeelapsed = @elapsed for i=1:maxev
 
     nmu = events[sources[:nsignalmu]]
     nele = events[sources[:nsignalele]]
-    
-    df[i, :n_signal_mu] = nmu 
+
+    df[i, :n_signal_mu] = nmu
     df[i, :n_signal_ele] = nele
 
     if isna(nmu) || isna(nele)
         fails[:lepton] += 1
         continue
     end
-    
+
     lepton_type = NA
     if nmu==1 && nele==0
         lepton_type = :muon
         df[i, :lepton_type] = 13
         genparent = gen_parent(events[sources[(:muon, :geninfo)]])
-        df[i, :gen_parent_id] = genparent 
+        df[i, :gen_parent_id] = genparent
     elseif nele==1 && nmu==0
         lepton_type = :electron
         df[i, :lepton_type] = 11
         genparent = gen_parent(events[sources[(:electron, :geninfo)]])
-        df[i, :gen_parent_id] = genparent 
+        df[i, :gen_parent_id] = genparent
     else
         fails[:lepton] += 1
         continue
     end
-    
+
     nveto_mu = events[sources[vetolepton(:mu)]]
     nveto_ele = events[sources[vetolepton(:ele)]]
 
@@ -298,7 +309,7 @@ timeelapsed = @elapsed for i=1:maxev
         fails[:lepton] += 1
         continue
     end
-    
+
     if lepton_type == :muon || lepton_type == :electron
         df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
         df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
@@ -311,11 +322,11 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :met] = events[sources[:met]] |> ifpresent
     df[i, :met_phi] = events[sources[(:met, :phi)]] |> ifpresent
-    
+
     #get jet, tag
     df[i, :njets] = events[sources[:njets]]
     df[i, :ntags] = events[sources[:ntags]]
-    
+
     #check for 2 jets
     if !(df[i, :njets] >= 2 && df[i, :ntags] >= 0)
         fails[:jet] += 1
@@ -342,24 +353,24 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_phi] = events[sources[:ljet_Phi]] |> ifpresent
     df[i, :ljet_dr] = events[sources[:ljet_deltaR]] |> ifpresent
     df[i, :ljet_pumva] = events[sources[:ljet_puMva]] |> ifpresent
-    
-    df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id])) 
+
+    df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id]))
     df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]] |> ifpresent
     df[i, :cos_theta_bl] = events[sources[:cos_theta_bl]] |> ifpresent
-    
+
     df[i, :n_good_vertices] = events[sources[:n_good_vertices]] |> ifpresent
-    
+
     df[i, :pu_weight] = events[sources[weight(:pu)]]
     df[i, :pu_weight__up] = events[sources[weight(:pu, :up)]]
     df[i, :pu_weight__down] = events[sources[weight(:pu, :down)]]
-    
+
     df[i, :lepton_weight__id] = events[sources[weight(lepton_type, :id)]]
     df[i, :lepton_weight__id__up] = events[sources[weight(lepton_type, :id, :up)]]
     df[i, :lepton_weight__id__down] = events[sources[weight(lepton_type, :id, :down)]]
     df[i, :lepton_weight__trigger] = events[sources[weight(lepton_type, :trigger)]]
     df[i, :lepton_weight__trigger__up] = events[sources[weight(lepton_type, :trigger, :up)]]
     df[i, :lepton_weight__trigger__down] = events[sources[weight(lepton_type, :trigger, :down)]]
-    
+
     if lepton_type == :muon
         df[i, :lepton_weight__iso] = events[sources[weight(lepton_type, :iso)]]
         df[i, :lepton_weight__iso__up] = events[sources[weight(lepton_type, :iso, :up)]]
@@ -369,9 +380,9 @@ timeelapsed = @elapsed for i=1:maxev
         df[i, :lepton_weight__iso__up] = 1.0
         df[i, :lepton_weight__iso__down] = 1.0
     end
-   
+
     if do_specjets
-        
+
         #get all jets
         jet_pts = events[sources[part(:jets, :Pt)]]
         if !ispresent(jet_pts) || length(jet_pts)==0
@@ -380,7 +391,7 @@ timeelapsed = @elapsed for i=1:maxev
         jet_etas = events[sources[part(:jets, :Eta)]]
         jet_ids  = events[sources[part(:jets, :partonFlavour)]]
         jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
-        
+
         if all(map(ispresent, Any[jet_pts, jet_etas, jet_ids, jet_bds]))
             #get the indices of the b-tagged jet and the light jet by comparing with pt
             indb = find(x -> abs(x-df[i, :bjet_pt])<eps(x), jet_pts)[1]
@@ -407,7 +418,7 @@ timeelapsed = @elapsed for i=1:maxev
                     df[i, symbol("sjet$(j)_eta")] = eta
                     df[i, symbol("sjet$(j)_id")] = id
                     df[i, symbol("sjet$(j)_bd")] = bd
-                    
+
                     #up to two
                     if j==2
                         break
@@ -422,6 +433,7 @@ timeelapsed = @elapsed for i=1:maxev
     for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
         df[i, v] = events[sources[v]]
     end
+    df[i, :C_with_nu] = events[sources[:C_with_nu]]
 
     #df[i, :wjets_cls] = events[sources[:wjets_cls]] |> ifpresent
     for k in [:Pt, :Eta, :Phi, :Mass]
@@ -463,10 +475,11 @@ println("processed $(nproc/timeelapsed) events/second")
 #println(df)
 
 #skim only non-signal events
-pass = (df[:passes]) | (df[:sample] .== int(hash("tchan")))
-
+#pass = (df[:passes]) | (df[:sample] .== int(hash("tchan")))
 #Select only the events that actually pass
 #mydf = df[pass, :]
+
+#keep all rows
 mydf = df
 
 for cn in names(mydf)
@@ -479,6 +492,10 @@ end
 println("total rows = $(nrow(mydf))")
 println("failure reasons: $fails")
 
+###
+### write metadata
+###
+
 #save output
 prfile = "$(output_file)_processed.csv"
 isfile(prfile) && rm(prfile)
@@ -487,7 +504,7 @@ if nrow(prfiles)>0
     sleep(1)
     run(`timeout 60 sync`)
     isfile(prfile) || error("processed file not created")
-    
+
     if nrow(mydf)>0
         c = readall(prfile)
         if (length(c) > 0)
@@ -500,6 +517,10 @@ if nrow(prfiles)>0
     end
 end
 
+
+###
+### ROOT output
+###
 println("root...")
 tempf = mktemp()[1]
 outfile = "$(output_file).root"
@@ -523,14 +544,6 @@ for i=1:5
         sleep(5)
     end
 end
-
-
-
-#println("JLD...");
-#ofi = jldopen("$(output_file).jld", "w")
-#write(ofi, "df/names", names(mydf))
-#write(ofi, "df/values", values(mydf))
-#close(ofi)
 
 tend = time()
 ttot = tend-tstart
