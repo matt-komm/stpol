@@ -208,13 +208,32 @@ def SingleTopStep2():
          minOut=cms.uint32(0),
          logErrors=cms.bool(False)
     )
+
+    process.allEventObjectsWithNu = cms.EDProducer(
+         'CandRefCombiner',
+         sources=cms.vstring([
+             "goodJets", "goodSignalLeptons",
+             Config.metSource, "recoNuProducer"
+         ]),
+         maxOut=cms.uint32(9999),
+         minOut=cms.uint32(0),
+         logErrors=cms.bool(False)
+    )
+
     process.eventShapeVars = cms.EDProducer(
         'EventShapeVarsProducer',
         src = cms.InputTag("allEventObjects")
     )
+
+    process.eventShapeVarsWithNu = cms.EDProducer(
+        'EventShapeVarsProducer',
+        src = cms.InputTag("allEventObjectsWithNu")
+    )
     process.eventShapeSequence = cms.Sequence(
         process.allEventObjects
         * process.eventShapeVars
+        * process.allEventObjectsWithNu
+        * process.eventShapeVarsWithNu
     )
 
     #-----------------------------------------------
