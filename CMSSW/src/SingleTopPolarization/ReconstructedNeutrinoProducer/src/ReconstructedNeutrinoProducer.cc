@@ -2,16 +2,21 @@
 //
 // Package:    ReconstructedNeutrinoProducer
 // Class:      ReconstructedNeutrinoProducer
-// 
+//
 /**\class ReconstructedNeutrinoProducer ReconstructedNeutrinoProducer.cc SingleTopPolarization/ReconstructedNeutrinoProducer/src/ReconstructedNeutrinoProducer.cc
 
  Description: Reconstructs the neutrino 4-momentum in the decay W->lepton, neutrino using the W mass constraint.
 
  Implementation:
     The z-momentum ambiguity can be solved in various ways, here the rescaling of the W mass or solving for new (p_nu, p_nu_y) using the on-shell constraint is used.
+solType = 0: real solution
+solType = 1: complex solution
+
+solStrategy = 1: use real solution or variate MET by cubic variation
+
 */
 //
-// Original Author:  
+// Original Author:
 //         Created:  Wed Sep 26 16:21:03 EEST 2012
 // $Id$
 //
@@ -34,7 +39,7 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include <DataFormats/PatCandidates/interface/Muon.h>
-#include <DataFormats/Candidate/interface/Candidate.h> 
+#include <DataFormats/Candidate/interface/Candidate.h>
 #include <DataFormats/RecoCandidate/interface/RecoCandidate.h>
 #include <DataFormats/Candidate/interface/CompositeCandidate.h>
 
@@ -63,7 +68,7 @@ class ReconstructedNeutrinoProducer : public edm::EDProducer {
       virtual void beginJob() ;
       virtual void produce(edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
-      
+
       virtual void beginRun(edm::Run&, edm::EventSetup const&);
       virtual void endRun(edm::Run&, edm::EventSetup const&);
       virtual void beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
@@ -109,14 +114,14 @@ ReconstructedNeutrinoProducer<solStrategy>::ReconstructedNeutrinoProducer(const 
   produces<std::vector<reco::CompositeCandidate> >(outName);
   produces<double>("Delta");
   produces<int>("solType");
-  
+
 }
 
 
 template <const int solStrategy>
 ReconstructedNeutrinoProducer<solStrategy>::~ReconstructedNeutrinoProducer()
 {
- 
+
    // do anything here that needs to be done at desctruction time
    // (e.g. close files, deallocate resources etc.)
 
@@ -127,7 +132,7 @@ float ReconstructedNeutrinoProducer<solStrategy>::p_Nu_z(const reco::Candidate& 
 
   const auto& lp4 = chLepton.p4();
   const auto& metp4 = met.p4();
-  
+
   float Lambda = std::pow(ReconstructedNeutrinoProducer<solStrategy>::mW, 2) / 2 + lp4.px()*metp4.px() + lp4.py()*metp4.py();
   LogDebug("p_Nu_z() MET kinematics") << "MET: px (" << metp4.Px() << ") py (" << metp4.Py() << ") pt (" << metp4.Pt() << ")";
   LogDebug("p_Nu_z() lepton kinematics") << "lepton: px (" << lp4.Px() << ") py (" << lp4.Py() << ") pz (" << lp4.Pz() << ") E (" << lp4.E() << ")";
@@ -138,7 +143,7 @@ float ReconstructedNeutrinoProducer<solStrategy>::p_Nu_z(const reco::Candidate& 
     float r = TMath::Sqrt(Delta);
     float A = (Lambda*lp4.Pz() + r)/ std::pow(lp4.Pt(), 2);
     float B = (Lambda*lp4.Pz() - r)/ std::pow(lp4.Pt(), 2);
- 
+
     //Choose root with minimal absolute value
     if (fabs(A) < fabs(B)) {
         p_nu_z = A;
@@ -174,7 +179,7 @@ template <const int solStrategy>
 const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solStrategy>::nuMomentum_complex_cubic(const reco::Candidate& chLepton, const reco::Candidate& met, double& Delta_) {
   LogDebug("p_Nu_z_complex_cubic()") << "Solving complex root problem with cubic equation";
   /*
-   * 
+   *
         double EquationA = 1;
         double EquationB = -3 * pylep * mW / (ptlep);
         double EquationC = mW * mW * (2 * pylep * pylep) / (ptlep * ptlep) + mW * mW - 4 * pxlep * pxlep * pxlep * metpx / (ptlep * ptlep) - 4 * pxlep * pxlep * pylep * metpy / (ptlep * ptlep);
@@ -188,11 +193,11 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
   long double metPy = met.p4().Py();
   long double metPt = met.p4().Pt();
   const long double & mW = ReconstructedNeutrinoProducer<solStrategy>::mW;
- 
+
   long double b = -3.0*lepPy*mW / lepPt;
-  //long double c = 2.0*std::pow(mW*lepPy, (long double)2) / std::pow(lepPt, (long double)2) + std::pow(mW, (long double)2) - 
+  //long double c = 2.0*std::pow(mW*lepPy, (long double)2) / std::pow(lepPt, (long double)2) + std::pow(mW, (long double)2) -
   //(long double)4.0* std::pow(lepPx, (long double)3)*metPx/std::pow(lepPt, (long double)2) - (long double)4.0*std::pow(lepPx, (long double)2)*lepPy*metPy/std::pow(lepPt, (long double)2);
-  long double c = (std::pow(mW, 2.0) * (lepPx*lepPx + 3*lepPy*lepPy) - 4.0*std::pow(lepPx, 2.0) * (metPx*lepPx + metPy*lepPy)) / std::pow(lepPt, 2.0); 
+  long double c = (std::pow(mW, 2.0) * (lepPx*lepPx + 3*lepPy*lepPy) - 4.0*std::pow(lepPx, 2.0) * (metPx*lepPx + metPy*lepPy)) / std::pow(lepPt, 2.0);
   long double d = (4.0*mW*metPy*std::pow(lepPx, 2.0) - lepPy*std::pow(mW, 3.0))/lepPt;
   //long double d = (long double)(4.0)*std::pow(lepPx, (long double)2.0)*metPy*mW / lepPt - lepPy*std::pow(mW, (long double)3.0) / lepPt;
 
@@ -217,7 +222,7 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
       long double py = (std::pow(mW, 2.0)*lepPy + 2.0*lepPx*lepPy*px + eqSign*mW*lepPt*sol) / (2.0 * std::pow(lepPx, 2.0));
       *(_px) = (double)px;
       *(_py) = (double)py;
-      LogDebug("p_Nu_z_complex_cubic():nuMomenta") << "New momentum corresponding to solution (" << COMP(_sol) << "): " << px << " " << py; 
+      LogDebug("p_Nu_z_complex_cubic():nuMomenta") << "New momentum corresponding to solution (" << COMP(_sol) << "): " << px << " " << py;
       //return;
   };
 
@@ -248,7 +253,7 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
   }
 
   auto compare = [](const std::array<double, 3> & a, const std::array<double, 3> & b) {
-      return bool(a[2]<b[2]); 
+      return bool(a[2]<b[2]);
   };
 
   std::sort(newMomenta.begin(), newMomenta.end(), compare);
@@ -257,7 +262,7 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
       LogDebug("p_Nu_z_complex_cubic()") << "sorted p_nu_x, p_nu_y: " << arr[0] << " " << arr[1] << " -> D = " << arr[2];
   }
   LogDebug("p_Nu_z_complex_cubic()") << "Best guess for new (p_nu_x, p_nu_y) is (" << newMomenta[0][0] << ", " << newMomenta[0][1] << ") with old MET (" << metPx << ", " << metPy << ")";
-  
+
   double& newPx = newMomenta[0][0];
   double& newPy = newMomenta[0][1];
   double newPt = TMath::Sqrt(newPx*newPx+newPy*newPy);
@@ -299,7 +304,7 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
  //   whichSol = 1;
  // }
  //
-  
+
   //Always use complex solution
   if(solStrategy == 2) {
     nuVec = nuMomentum_complex_cubic(chLepton, met, Delta);
@@ -308,9 +313,9 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
 
   //Use real+complex solution
   else if(solStrategy==1 || solStrategy==0) {
- 
+
     float p_nu_z = p_Nu_z(chLepton, met);
-  
+
     if (p_nu_z==p_nu_z) { //real root
       nuVec.SetPx(met.p4().Px());
       nuVec.SetPy(met.p4().Py());
@@ -380,7 +385,7 @@ ReconstructedNeutrinoProducer<solStrategy>::produce(edm::Event& iEvent, const ed
    Handle<ExampleData> pIn;
    iEvent.getByLabel("example",pIn);
 
-   //Use the ExampleData to create an ExampleData2 which 
+   //Use the ExampleData to create an ExampleData2 which
    // is put into the Event
    std::auto_ptr<ExampleData2> pOut(new ExampleData2(*pIn));
    iEvent.put(pOut);
@@ -391,46 +396,46 @@ ReconstructedNeutrinoProducer<solStrategy>::produce(edm::Event& iEvent, const ed
    ESHandle<SetupData> pSetup;
    iSetup.get<SetupRecord>().get(pSetup);
 */
- 
+
 }
 
 // ------------ method called once each job just before starting event loop  ------------
 template <const int solStrategy>
-void 
+void
 ReconstructedNeutrinoProducer<solStrategy>::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 template <const int solStrategy>
-void 
+void
 ReconstructedNeutrinoProducer<solStrategy>::endJob() {
 }
 
 // ------------ method called when starting to processes a run  ------------
 template <const int solStrategy>
-void 
+void
 ReconstructedNeutrinoProducer<solStrategy>::beginRun(edm::Run&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a run  ------------
 template <const int solStrategy>
-void 
+void
 ReconstructedNeutrinoProducer<solStrategy>::endRun(edm::Run&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when starting to processes a luminosity block  ------------
 template <const int solStrategy>
-void 
+void
 ReconstructedNeutrinoProducer<solStrategy>::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 template <const int solStrategy>
-void 
+void
 ReconstructedNeutrinoProducer<solStrategy>::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
 }
