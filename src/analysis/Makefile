@@ -15,12 +15,6 @@ hists-jobfiles:
 	find $(INDIR) -name "*.root" | ../skim/createscript.jl "./evloop.jl {} $(OFDIR)/hists/hist.{#}.jld" hists-evloop
 	sh hists-evloop.submit.sh
 
-merge-data:
-	find $(DIR) -name "*.root" | $(PARCMD) -n10 -j32 $(JULIA_ROOT_DIR)/julia mergedf.jl $(DIR)/merged/md.txt {}
-
-merge-mva:
-	$(JULIA_ROOT_DIR)/julia -F mvamerge.jl /scratch/joosep/mva.root /scratch/joosep/skim_jan31_2/output*.jld
-
 submit-scan:
 	find input/hists -name "*.json" | ~/parallel --delay 0.1 sbatch --exclude=../skim/exclude.txt parrun.sh {}
 
@@ -31,41 +25,19 @@ project-nominal:
 project-tchan:
 	find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_tchan.jl {} {}.tchan
 
-test-merge:
-	$(JULIA_ROOT_DIR)/julia mergedf.jl test $(DIR)/merged/md.txt $(DIR)/output_1.jld  $(DIR)/output_2.jld
-
 test-evloop:
 	$(JULIA_ROOT_DIR)/julia evloop.jl /hdfs/local/joosep/stpol/skims/Apr04/step3/csvt/Mar13/iso/nominal/T_t_ToLeptons/844/output.root out infile.json 
-
-recursive-hadd:
-	rm -Rf hadd/*
-	mkdir -p hadd/step1
-	#$(ROOTWRAP) && ( cat files.txt | $(PARCMD) -n10 hadd hadd/step1/merged_{#}.root {} )
-	$(ENVSCRIPT) &
-	mkdir -p hadd/step2
-	$(ENVSCRIPT) && ( find hadd/step1 -name "merged_*.root" | $(PARCMD) -n5 hadd hadd/step2/merged_{#}.root {} )
-	$(ENVSCRIPT) && hadd hadd/merged.root hadd/step2/merged_*.root
-	rm -Rf hadd/step1
-	rm -Rf hadd/step2
-
-convert-hists:
-	rm -Rf output/bdt_scan
-	$(ROOTWRAP) && python histmerge.py hadd/merged.root
-
-conv2root:
-	find ~/singletop/output/skims/skim_merged -name "*.jld" | ~/parallel $(JULIA_ROOT_DIR)/julia ../skim/conv2root.jl {} ~/singletop/output/skims/skim_root/{/.}.root
-
 
 merge:
 	rm -Rf output
 
-	mkdir -p results/csvt/qcd__metmtw_nominal
-	python histmerge.py ../../results/hists/apr08/csvt_metmtw.root
-	mv output/bdt_scan/* results/csvt/qcd__metmtw_nominal
-
-	mkdir -p results/csvt/qcd__mva_nominal
-	python histmerge.py ../../results/hists/apr08/csvt_mva.root
-	mv output/bdt_scan/* results/csvt/qcd__mva_nominal
+	mkdir -p results/hists/qcd__metmtw_nominal/soltype__real/bdt__bdt_sig_bg/csvt/
+	python histmerge.py /Users/joosep/Dropbox/kbfi/top/stpol/results/hists/qcd__metmtw_nominal/soltype__real/bdt__bdt_sig_bg/csvt/merged.root
+	mv output/bdt_scan/* results/hists/qcd__metmtw_nominal/soltype__real/bdt__bdt_sig_bg/csvt/
+	
+	mkdir -p results/hists/qcd__metmtw_nominal/soltype__cplx/bdt__bdt_sig_bg/csvt/
+	python histmerge.py /Users/joosep/Dropbox/kbfi/top/stpol/results/hists/qcd__metmtw_nominal/soltype__cplx/bdt__bdt_sig_bg/csvt/merged.root
+	mv output/bdt_scan/* results/hists/qcd__metmtw_nominal/soltype__cplx/bdt__bdt_sig_bg/csvt/
 
 recursive-hadd: recursive-hadd-1 recursive-hadd-2 recursive-hadd-3 recursive-hadd-4
 recursive-hadd-1:
