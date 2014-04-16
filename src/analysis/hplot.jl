@@ -2,8 +2,14 @@ println("hplot.jl")
 using PyCall, PyPlot
 
 function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
-    
+
     @assert nbins(h)==nbins(prevhist) "Histograms have different bins: $(nbins(h)) != $(nbins(prevhist))"
+
+    @assert integral(h) >= 0
+    @assert all(entries(h) .>= 0)
+    #@assert all(edges(h) .> -Inf)
+    #@assert all(edges(h) .< Inf)
+
     kwargsd = {k=>v for (k, v) in kwargs}
 
     #in case of log scale, low bins must be \eps; otherwise 0,0,0,...,0 or lower
@@ -13,7 +19,12 @@ function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
         prevbins = prevhist.bin_contents
     end
 
-    ax[:bar](lowedge(h.bin_edges), h.bin_contents[1:nbins(h)-1], widths(h.bin_edges), prevbins[1:nbins(h)-1]; kwargs...)
+    ax[:bar](
+        lowedge(h.bin_edges),
+        h.bin_contents[1:nbins(h)-1],
+        widths(h.bin_edges),
+        prevbins[1:nbins(h)-1]; kwargs...
+    )
 end
 
 function hplot{T <: Number}(ax::PyObject, h::Histogram, prevval::T;kwargs...)
@@ -35,7 +46,7 @@ function hplot(ax::PyObject, hists::Vector{Histogram}, args=Dict[]; common_args=
     for i=1:length(hists)
 
         h = hists[i]
-        
+
         arg = i <= length(args) ? args[i] : Dict()
         argd = {k=>v for (k, v) in merge(arg, common_args, kwd)}
 
@@ -45,7 +56,7 @@ function hplot(ax::PyObject, hists::Vector{Histogram}, args=Dict[]; common_args=
 
         prevh = i>1 ? sum(hists[1:i-1]) : 0.0
         r = hplot(ax, h, prevh; argd...)
-        
+
         push!(ret, r)
     end
     return ret
