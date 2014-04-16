@@ -11,8 +11,10 @@ def main():
     print infiles
 
     mvas = dict()
-    mvas[13] = setup_mva(mvaname, STPOL_DIR + "/mvatools/weights/stop_mu_BDT.weights.xml")
-    mvas[11] = setup_mva(mvaname, STPOL_DIR + "/mvatools/weights/stop_ele_BDT.weights.xml")
+#    mvas[13] = setup_mva(mvaname, STPOL_DIR + "/mvatools/weights/stop_mu_BDT.weights.xml")
+#    mvas[11] = setup_mva(mvaname, STPOL_DIR + "/mvatools/weights/stop_ele_BDT.weights.xml")
+    mvas[13] = setup_mva(mvaname, STPOL_DIR + "/mvatools/weights/stop_mu_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj.weights.xml")
+    mvas[11] = setup_mva(mvaname, STPOL_DIR + "/mvatools/weights/stop_ele_BDT_with_top_mass_C_eta_lj_el_pt_mt_el_pt_bj_mass_bj_met_mass_lj.weights.xml")
 
     varmaps = dict()
 
