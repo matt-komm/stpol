@@ -14,28 +14,28 @@ const SYSTEMATICS_TABLE = {
     :mass169_5=>:mass__down,
     :nominal=>:nominal,
     :unweighted=>:unweighted,
-    
+
     :EnUp=>:jes__up,
     :EnDown=>:jes__down,
-    
+
     :UnclusteredEnUp=>:met__up,
     :UnclusteredEnDown=>:met__down,
-    
+
     :ResUp=>:jer__up,
     :ResDown=>:jer__down,
-    
+
     :scaleup=>:scale__up,
     :scaledown=>:scale__down,
 
     :matchingup=>:matching__up,
     :matchingdown=>:matching__down,
-    
+
     :pu_weight__up => :pu__up,
     :pu_weight__down => :pu__down,
-    
+
     :top_weight__up => :top_weight__up,
     :top_weight__down => :top_weight__down,
-    
+
     :lepton_weight__id__up => :lepton_id__up,
     :lepton_weight__id__down => :lepton_id__down,
     :lepton_weight__iso__up => :lepton_iso__up,
@@ -56,6 +56,7 @@ const SYSTEMATICS_TABLE = {
     symbol("signal_comphep_nominal") => :comphep_nominal,
 }
 
+const REV_SYSTEMATICS_TABLE = {v=>k for (k, v) in SYSTEMATICS_TABLE};
 
 #loop over systematically variated datasets
 #these use the nominal weight
@@ -144,10 +145,10 @@ const nominal_weights = {
     :lepton_weight__iso__down => :lepton_weight__iso,
 
     :b_weight__bc__up => B_WEIGHT_NOMINAL,
-    :b_weight__bc__down => B_WEIGHT_NOMINAL, 
+    :b_weight__bc__down => B_WEIGHT_NOMINAL,
     :b_weight__l__up => B_WEIGHT_NOMINAL,
-    :b_weight__l__down => B_WEIGHT_NOMINAL, 
-    
+    :b_weight__l__down => B_WEIGHT_NOMINAL,
+
     :top_weight__up => :top_weight,
     :top_weight__down => :top_weight,
 }
@@ -160,7 +161,7 @@ for weight in [
         :lepton_weight__id__up, :lepton_weight__id__down,
         :lepton_weight__iso__up, :lepton_weight__iso__down,
         :lepton_weight__trigger__up, :lepton_weight__trigger__down,
-        :b_weight__bc__up, :b_weight__bc__down, 
+        :b_weight__bc__up, :b_weight__bc__down,
         :b_weight__l__up, :b_weight__l__down,
     ]
 
@@ -168,8 +169,8 @@ for weight in [
 
     weight_scenarios[SYSTEMATICS_TABLE[weight]] = (
         (nw::Float64, row::DataFrameRow) -> syst_weight(nw, row, weight, nomw)
-    ) 
-    
+    )
+
     for samp in [:ttjets, :tchan, :wjets]
         scenarios[(SYSTEMATICS_TABLE[weight], samp)] = Scenario(
             :nominal,
@@ -189,56 +190,63 @@ for weight in [:top_weight__up, :top_weight__down]
         :ttjets,
         (nw::Float64, row::DataFrameRow) -> syst_weight(nw, row, weight, nomw),
         weight
-    ) 
+    )
 end
 
 for proc in vcat(mcsamples, :data_mu, :data_ele)
     scenarios[(:nominal, proc)] = Scenario(
         :nominal,
-        proc, 
+        proc,
         (nw::Float64, row::DataFrameRow) -> nw,
-        :nominal 
-    ) 
+        :nominal
+    )
 
     scenarios[(:unweighted, proc)] = Scenario(
         :nominal,
-        proc, 
+        proc,
         (nw::Float64, row::DataFrameRow) -> 1.0,
-        :unweighted 
-    ) 
+        :unweighted
+    )
 end
 
 for proc in [:data_mu, :data_ele]
 
     scenarios[(:unweighted, proc)] = Scenario(
         :unknown,
-        proc, 
+        proc,
         (nw::Float64, row::DataFrameRow) -> 1.0,
-        :unweighted 
+        :unweighted
     )
 
 end
 
 scenarios[(:wjets_shape__unweighted, :wjets)] = Scenario(
     :nominal,
-    :wjets, 
+    :wjets,
     (nw::Float64, row::DataFrameRow) -> nw / row[:wjets_ct_shape_weight],
-    :wjets_shape__unweighted 
-) 
+    :wjets_shape__unweighted
+)
+
+scenarios[(:nominal, :wjets_sherpa)] = Scenario(
+    :nominal,
+    :wjets_sherpa,
+    (nw::Float64, row::DataFrameRow) -> nw,
+    :nominal
+)
 
 scenarios[(:wjets_shape__up, :wjets)] = Scenario(
     :nominal,
-    :wjets, 
+    :wjets,
     (nw::Float64, row::DataFrameRow) -> nw / row[:wjets_ct_shape_weight] * row[:wjets_ct_shape_weight__up],
     :wjets_shape__up
-) 
+)
 
 scenarios[(:wjets_shape__down, :wjets)] = Scenario(
     :nominal,
-    :wjets, 
+    :wjets,
     (nw::Float64, row::DataFrameRow) -> nw / row[:wjets_ct_shape_weight] * row[:wjets_ct_shape_weight__down],
     :wjets_shape__down
-) 
+)
 
 #remove unnecessary scenarios
 pop!(scenarios, (:mass__up, :wjets))
@@ -254,7 +262,7 @@ scenarios[(:unweighted, :tchan)] =
     Scenario(:nominal, :tchan, (nw::Float64, row::DataFrameRow)->1.0, :unweighted)
 
 for k in SingleTopBase.comphep_processings
-    scenarios[(k, :tchan)] = Scenario(k, :tchan, (nw::Float64, row::DataFrameRow)->nw, :nominal) 
+    scenarios[(SYSTEMATICS_TABLE[k], :tchan)] = Scenario(k, :tchan, (nw::Float64, row::DataFrameRow)->nw, :nominal)
 end
 
 #scenarios relevant for signal
@@ -288,6 +296,5 @@ function systematics_to_json(fname::ASCIIString)
     close(of)
 end
 
+export SYSTEMATICS_TABLE, REV_SYSTEMATICS_TABLE
 export weight_scenarios, scenarios, scens_gr, Scenario
-
-
