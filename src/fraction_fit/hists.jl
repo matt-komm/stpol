@@ -17,14 +17,14 @@
 #         for p in mcsamples
 #     }
 #     sum_aiso_mc = aiso_mc |> values |> collect |> sum
-    
+
 #     df = sub(data, inds[:data] & inds[:aiso] & sel & dsel)
 #     hists[(:antiiso, :mc)] = sum_aiso_mc
 #     hists[(:antiiso, :data)] = makehist_1d(df, var, binning, (df::DataFrameRow)->df[:qcd_weight])
 #     hists[:qcd] = hists[(:antiiso, :data)] - hists[(:antiiso, :mc)]
 
 #     hists[:DATA] = makehist_1d(
-#         sub(data, inds[:data] & inds[:iso] & sel & dsel), 
+#         sub(data, inds[:data] & inds[:iso] & sel & dsel),
 #         var, binning, (df::DataFrameRow)->1.0);
 
 #     all([h.bin_edges==hists[:DATA].bin_edges for h in values(hists)]) ||
@@ -55,7 +55,7 @@ function mergehists_4comp(hists)
 
     out["qcd"] = hists["qcd"]
 
-    out["tchan"] = hists["tchan"] 
+    out["tchan"] = hists["tchan"]
     out["DATA"] = hists["DATA"]
     return out
 end
@@ -65,7 +65,7 @@ function mergehists_3comp(hists)
     out["wzjets"] = hists["wjets"] + hists["gjets"] + hists["dyjets"] + hists["diboson"]
     out["ttjets"] = hists["ttjets"] + hists["schan"] + hists["twchan"] + hists["qcd"]
 
-    out["tchan"] = hists["tchan"] 
+    out["tchan"] = hists["tchan"]
     out["DATA"] = hists["DATA"]
     return out
 end
@@ -74,12 +74,12 @@ end
 #     DataFrame(bins=bins, errs=errs, edges=edges);
 
 # function todf(h::Histogram)
-#     errs = (sqrt(h.bin_entries) ./ h.bin_entries .* h.bin_contents) 
+#     errs = (sqrt(h.bin_entries) ./ h.bin_entries .* h.bin_contents)
 #     for i=1:length(errs)
 #         if !(errs[i] > 0)
 #             errs[i] = 0.0
 #         end
-#     end 
+#     end
 #     return DataFrame(
 #         bins=h.bin_contents,
 #         errs=errs,
@@ -136,49 +136,6 @@ function hists_varname(hists::Associative)
     end
 end
 
-function reweight_hists_to_fitres(fr, hists)
-    #means = {k=>v for (k,v) in zip(fr.names, fr.means)}
-
-    vname = hists_varname(hists)
-    vname_s = vname == nothing ? "" : "$(vname)__"
-    println(vname_s)
-    function weightall(a, b)
-        for k in keys(hists)
-            if contains(string(k), a)
-                #println("weighting $k by $(fr[b])")
-                hists[k] = hists[k] * fr[b]
-            end
-        end
-    end
-
-
-    function weightsyst(a, b)
-        idx = findfirst(fr.names, b)
-        for k in keys(hists)
-            if k == "$(vname_s)$(a)"
-                #println("weighting $k by ", (fr.means[idx] + fr.sigmas[idx]), " instead of ", fr.means[idx], " to get $(k)__$(b)__up")
-                #println("weighting $k by ", (fr.means[idx] - fr.sigmas[idx]), " instead of ", fr.means[idx], " to get $(k)__$(b)__down")
-                hists["$(k)__$(b)__up"] = hists[k] * (fr.means[idx] + fr.sigmas[idx])/(fr.means[idx])
-                hists["$(k)__$(b)__down"] = hists[k] * (fr.means[idx] - fr.sigmas[idx])/(fr.means[idx])
-            end
-        end
-    end
-
-    for s in ["wjets", "gjets", "dyjets", "diboson"]
-        weightall(s, "wzjets")
-        weightsyst(s, "wzjets")
-    end
-
-    for s in ["ttjets", "twchan", "schan"]
-        weightall(s, "ttjets")
-        weightsyst(s, "ttjets")
-    end
-
-    weightall("tchan", "beta_signal")
-    weightsyst("tchan", "beta_signal")
-    #weightall("qcd", "qcd")
-end
-
 #@pyimport scipy.stats.kde as KDE
 #@pyimport matplotlib.cm as cmap
 #function kde_contour(arr, X, Y, n=6; kwargs...)
@@ -223,14 +180,14 @@ end
 #     h = deepcopy(h)
 
 #     #create the total-MC histogram
-#     hmc = nothing 
+#     hmc = nothing
 #     for (k, v) in h
 #         if k != "DATA"
 #             hmc = hmc == nothing ? v : hmc+v
 #         end
 #     end
 #     h["MC"] = hmc
-    
+
 #     #order by name
 #     hc = sort(collect(h), by=x->x[1])
 
