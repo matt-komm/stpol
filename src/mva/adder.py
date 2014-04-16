@@ -201,10 +201,10 @@ def mva_loop_lepton_separate(mvaname, infiles, mvas, varmaps):
 
             ofile.write(str(x) + "\n")
             nproc += 1
+        ofile.write("# ntree=%d nproc=%d\n" % (tree.GetEntries(), nproc))
+        ofile.close()
         if nproc!=int(tree.GetEntries()):
             raise Exception("incorrect amount of MVA evaluations")
-        ofile.write("# ntree=%d nproc=%d\n" % (tree.GetEntries(), nproc))
         inf.Close()
-        ofile.close()
 if __name__=="__main__":
     main()
