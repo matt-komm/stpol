@@ -69,7 +69,7 @@ function nominal_weight(df::DataFrameRow)
 
         const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id *
             lepton_weight__iso * lepton_weight__trigger * wjets_shape_weight
-        
+
         return w
     else
         return 1.0
@@ -134,7 +134,7 @@ function writedf(fn, df)
     close(f)
 end
 
-infb(a::Vector{Float64}) = vcat(-Inf, a, Inf)
+infb(a::AbstractVector) = vcat(-Inf, a, Inf)
 
 chunk(n, c, maxn) = sum([n]*(c-1))+1:min(n*c, maxn)
 chunks(csize, nmax) = [chunk(csize, i, nmax) for i=1:convert(Int64, ceil(nmax/csize))]
@@ -154,7 +154,6 @@ const FITRESULTS = {
 }
 
 t1 = time()
-println("done loading base in $(t1-t0) seconds")
 
 #if the hash function has changed, we need to load the old hashmap
 #hmap_table = readtable("$BASE/src/skim/hmap.csv")
