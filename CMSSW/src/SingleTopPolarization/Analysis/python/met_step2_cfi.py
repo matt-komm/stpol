@@ -10,6 +10,7 @@ def metSequence(process, conf, prefix, met_src, lepton_src):
         ),
         cut=cms.string("pt>%f" % conf.Leptons.transverseMassDef)
     )
+    print("goodMETs=", goodMETs)
 
     MTW = cms.EDProducer(
         'CandTransverseMassProducer',
