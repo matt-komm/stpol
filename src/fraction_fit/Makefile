@@ -15,8 +15,11 @@ fit_separate: fit_mu_2j1t fit_ele_2j1t fit_mu_3j2t fit_ele_3j2t
 #HISTDIR=../../results/hists/apr03/merged/tchpt/qcd__mva_nominal/hists/preselection
 #OUTDIR=results/tchpt/qcd__mva_nominal
 
-HISTDIR=../../results/hists/apr03/merged/tchpt/qcd__metmtw_nominal/hists/preselection
-OUTDIR=results/tchpt/qcd__metmtw_nominal
+#HISTDIR=../../results/hists/apr03/merged/tchpt/qcd__metmtw_nominal/hists/preselection
+#OUTDIR=results/tchpt/qcd__metmtw_nominal
+
+HISTDIR=../analysis/results/csvt/qcd__mva_nominal/hists/preselection/
+OUTDIR=results2/csvt/qcd__mva_nominal
 
 fit_ele_2j1t:
 	./runtheta.sh bgfit.py $(OUTDIR)/bdt_2j_1t/ele $(HISTDIR)/2j_1t/ele/merged/bdt_sig_bg.root
