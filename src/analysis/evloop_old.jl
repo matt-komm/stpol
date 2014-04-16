@@ -10,6 +10,9 @@ const qcd_cut_type = symbol(PARS["qcd_cut"])
 #FIXME: currently this is different for TCHPT and CSVT
 const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
+#should a the histograms be split according to the neutrino solution type?
+const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
+
 const sp = dirname(Base.source_path())
 require("$sp/base.jl")
 
@@ -34,8 +37,22 @@ require("$sp/histogram_defaults.jl")
 
 const BDT_SYMBOLS = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in bdt_cuts}
 const LEPTON_SYMBOLS = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau}
-
 const do_transfer_matrix = true
+const JET_TAGS = [(2, 0), (2, 1), (3, 0), (3, 1), (3, 2)]
+
+
+const crosscheck_vars = [
+    (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+    :C, :met, :mtw, :shat, :ht, :lepton_pt,
+    :bjet_pt,
+    (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
+    :ljet_eta, :bjet_eta,
+    :bjet_mass, :top_mass,
+    :top_pt, :n_good_vertices,
+    :met_phi,
+    :cos_theta_lj, :cos_theta_bl,
+    :cos_theta_lj_gen, :cos_theta_bl_gen
+]
 
 include("$BASE/src/skim/jet_cls.jl")
 
@@ -50,7 +67,7 @@ end
 function print_ev(row)
     println("hlt=", row[:hlt], " Nj=", row[:njets], " Nt=", row[:ntags], " nsigmu=", row[:n_signal_mu], " nsigele=", row[:n_signal_ele],
         " nvetomu=", row[:n_veto_mu], " nvetoele=", row[:n_veto_ele], " bdt_qcd=", row[:bdt_qcd], " bdt_sig_bg=", row[:bdt_sig_bg],
-        " ljet_dr=", row[:ljet_dr], " bjet_dr=", row[:bjet_dr], 
+        " ljet_dr=", row[:ljet_dr], " bjet_dr=", row[:bjet_dr],
     )
 end
 
@@ -72,20 +89,20 @@ function fill_histogram(
     ntags::Int64,
 
     )
-    
+
     #value to be filled to histogram
     const x = hex(row)
 
     const bin = findbin(defaults[hname]::Histogram, x)::Int64
 
     for (scname, scenario::Scenario) in scenarios
-       
+
         const w_scenario = scenario.weight_scenario
-        
-        sample != scenario.sample && continue 
-        systematic != scenario.systematic && continue 
+
+        sample != scenario.sample && continue
+        systematic != scenario.systematic && continue
         hists_nominal_only && !(w_scenario==:nominal || w_scenario==:unweighted) && continue
-        
+
         if haskey(SingleTopBase.SYSTEMATICS_TABLE, w_scenario)
             const wname = SingleTopBase.SYSTEMATICS_TABLE[w_scenario]
         else
@@ -97,7 +114,7 @@ function fill_histogram(
             sample,
             iso,
             systematic,
-            wname, 
+            wname,
             selection_major,
             selection_minor,
             lepton,
@@ -137,8 +154,8 @@ function fill_histogram(
                 h = getr(ret, kk, hname)::Histogram
 
                 const w = scenario.weight(nw, row)::Union(NAtype, Float64)
-       
-                (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])") 
+
+                (isnan(w) || isna(w)) && error("$kk: w=$w $(df[row.row, :])")
                 h.bin_contents[bin] += w
                 h.bin_entries[bin] += 1
             end
@@ -160,13 +177,13 @@ function process_df(rows::AbstractVector{Int64})
     tprev = time()
 
     println("mapping across $(length(rows)) rows")
-    
+
     nproc = 0
-    
+
     nfsel = 0
 
     const ret = Dict{HistKey, Any}()
-     
+
     for cur_row::Int64 in rows
         #println("row=$cur_row")
         #get entries corresponding to current row in TTrees
@@ -181,7 +198,8 @@ function process_df(rows::AbstractVector{Int64})
             println("$nproc $dt $nfsel")
             tprev = time()
         end
-        is_any_na(row, :sample, :systematic, :isolation)::Bool && warn("sample, systematic or isolation were NA")
+        is_any_na(row, :sample, :systematic, :isolation)::Bool &&
+            warn("sample, systematic or isolation were NA")
 
         const sample = hmap_symb_from[row[:sample]::Int64]
         const systematic = hmap_symb_from[row[:systematic]::Int64]
@@ -209,17 +227,17 @@ function process_df(rows::AbstractVector{Int64})
             const x = row[:cos_theta_lj_gen]::Float32
             const y = row[:cos_theta_lj]::Union(Float32, NAtype)
             const ny_ = searchsortedfirst(TM.edges[2], y)
-            
+
             #can get gen-level index here
             const nx = (isna(x)||isnan(x)) ? 1 : searchsortedfirst(TM.edges[1], x)-1
 
             const nw = nominal_weight(row)::Float64
-            
+
             for reco_lep in Symbol[:ele, :mu]
-                
+
                 #did event pass reconstruction ?
                 #need to reinitialize for each new cut-tree "branch"
-                local reco = true 
+                local reco = true
                 reco = reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
                 reco = reco && sel(row)
                 reco = reco && Cuts.is_reco_lepton(row, reco_lep)
@@ -229,14 +247,14 @@ function process_df(rows::AbstractVector{Int64})
 
                 for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
                     (tm_nominal_only && scen_name[1]!=:nominal) && continue
-                        
+
                     const w = scen.weight(nw, row)::Float64
                     (isnan(w) || isna(w)) && error("$k2: w=$w $(df[row.row, :])")
-                    
+
                     #assumes BDT cut points are sorted ascending
                     for bdt_cut::Float64 in bdt_cuts::Vector{Float64}
                         const _reco = reco && Cuts.bdt(row, bdt_cut)
-                        
+
                         #if scen_name[1] == :nominal
                         #    transfer_matrix_reco[reco_lep][bdt_cut] = reco
                         #end
@@ -247,11 +265,11 @@ function process_df(rows::AbstractVector{Int64})
 
                         #get transfer matrix linear index from 2D index
                         const linind = sub2ind(TM_hsize, nx, ny)
-                        
+
                         (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
                             error("incorrect index $linind for $nx,$ny $x,$y")
-                        
-                        
+
+
                         const k2 = HistKey(
                             :transfer_matrix,
                             sample,
@@ -269,18 +287,18 @@ function process_df(rows::AbstractVector{Int64})
                         h.baseh.bin_contents[linind] += w
                         h.baseh.bin_entries[linind] += 1.0
                     end
-                    
+
                     #assumes BDT cut points are sorted ascending
                     for (cut_major, cut_minor, cutfn) in {
                             (:cutbased, :etajprime, Cuts.cutbased_etajprime)
-                        } 
+                        }
                         const _reco = reco && cutfn(row)
                         const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
                         const linind = sub2ind(TM_hsize, nx, ny)
-                        
+
                         (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
                             error("incorrect index $linind for $nx,$ny $x,$y")
-                        
+
                         const k2 = HistKey(
                             :transfer_matrix,
                             sample,
@@ -326,11 +344,11 @@ function process_df(rows::AbstractVector{Int64})
         const nw = nominal_weight(row)::Float64
 
         #pre-qcd plots
-        for (nj, nt) in [(2, 0), (2, 1), (3, 1), (3, 2)]
+        for (nj, nt) in JET_TAGS
             #pre-bdt selection
             const _reco = sel(row, nj, nt)::Bool
             _reco || continue
-            
+
             for var in [:bdt_qcd, :mtw, :met, :met_phi]
                 fill_histogram(
                     nw,
@@ -345,40 +363,27 @@ function process_df(rows::AbstractVector{Int64})
                     :preqcd,
                     :nothing,
                     lepton,
-                    nj, nt 
+                    nj, nt
                 )
             end
         end
 
         ###
         ### QCD rejection
-        ###        
+        ###
         const reco = Cuts.qcd_cut(row, qcd_cut_type, lepton)
         reco || continue
-        
+
         ###
         ### project BDT templates with full systematics
         ###
-        for (nj, nt) in [(2, 0), (2,1), (3, 1), (3,2)]
+        for (nj, nt) in JET_TAGS
 
             #pre-bdt selection
             const _reco = reco & sel(row, nj, nt)::Bool
             _reco || continue
 
-            for var in [
-                :bdt_sig_bg,
-                :bdt_sig_bg_top_13_001,
-                (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
-                :C, :met, :mtw, :shat, :ht, :lepton_pt,
-                :bjet_pt,
-                (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
-                :ljet_eta, :bjet_eta,
-                :bjet_mass, :top_mass,
-                :top_pt, :n_good_vertices,
-                :ljet_dr, :bjet_dr, :lepton_iso,
-                :cos_theta_lj, :cos_theta_bl,
-                :cos_theta_lj_gen, :cos_theta_bl_gen
-                ]
+            for var in crosscheck_vars
 
                 #if a 2-tuple is specified, 2. arg is the function to apply
                 #otherwise, identity
@@ -404,29 +409,17 @@ function process_df(rows::AbstractVector{Int64})
                 )
             end
         end
-        
+
         #2j1t
         reco = reco && sel(row)::Bool
-        
+
         ###
         ### cut-based cross-check, 2J1T
         ###
-        for (nj, nt) in [(2, 0), (2, 1), (3, 1), (3, 2)]
+        for (nj, nt) in JET_TAGS
             if (reco && Cuts.cutbased_etajprime(row))
-                for var in [
-                        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
-                        :C, :met, :mtw, :shat, :ht, :lepton_pt,
-                        :bjet_pt,
-                        (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
-                        :ljet_eta, :bjet_eta,
-                        :bjet_mass, :top_mass,
-                        :top_pt, :n_good_vertices,
-                        :ljet_dr, :bjet_dr, :lepton_iso,
-                        :met_phi,
-                        :cos_theta_lj, :cos_theta_bl,
-                        :cos_theta_lj_gen, :cos_theta_bl_gen
-                    ]
-                    
+                for var in crosscheck_vars
+
                     #if a 2-tuple is specified, 2. arg is the function to apply
                     #otherwise, identity
                     if isa(var, Tuple)
@@ -434,7 +427,7 @@ function process_df(rows::AbstractVector{Int64})
                     else
                         var, f = var, (row::DataFrameRow -> row[var])
                     end
-                    
+
                     fill_histogram(
                         nw,
                         row, isdata,
@@ -447,29 +440,18 @@ function process_df(rows::AbstractVector{Int64})
                         :cutbased,
                         :etajprime_topmass_default,
                         lepton,
-                        nj, nt 
+                        nj, nt
                     )
                 end
             end
         end
 
-        for (nj, nt) in [(2, 0), (2, 1), (3, 1), (3, 2)]
+        for (nj, nt) in JET_TAGS
             #final selection by BDT
             for bdt_cut in bdt_cuts
-                
+
                 if (reco && Cuts.bdt(row, bdt_cut))
-                    for var in [
-                            (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
-                            :C, :met, :mtw, :shat, :ht, :lepton_pt,
-                            :bjet_pt,
-                            (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
-                            :ljet_eta, :bjet_eta,
-                            :bjet_mass, :top_mass,
-                            :top_pt, :n_good_vertices,
-                            :met_phi,
-                            :cos_theta_lj, :cos_theta_bl,
-                            :cos_theta_lj_gen, :cos_theta_bl_gen
-                        ]
+                    for var in crosscheck_vars
                         #if a 2-tuple is specified, 2. arg is the function to apply
                         #otherwise, identity
                         if isa(var, Tuple)
@@ -477,7 +459,7 @@ function process_df(rows::AbstractVector{Int64})
                         else
                             var, f = var, (row::DataFrameRow -> row[var])
                         end
-                
+
                         nfsel += 1
 
                         fill_histogram(
@@ -492,7 +474,7 @@ function process_df(rows::AbstractVector{Int64})
                             :bdt,
                             BDT_SYMBOLS[bdt_cut],
                             lepton,
-                            nj, nt 
+                            nj, nt
                         )
                     end
                 else
@@ -503,7 +485,10 @@ function process_df(rows::AbstractVector{Int64})
     end #event loop
 
     const t1 = time()
-    println("processing ", rows.start, ":", rows.start+rows.len-1, " (N=$(length(rows))) took $(t1-t0) seconds, nfsel=$nfsel")
+    println(
+        "processing ", first(rows), ":", last(rows),
+        " (N=$(length(rows))) took $(t1-t0) seconds, nfsel=$nfsel"
+    )
 
     return ret
 
@@ -511,20 +496,27 @@ end #function
 
 tic()
 
-ret = process_df(1:nrow(df))
+ret = process_df(1:20000)
+#ret = process_df(1:10^4)
 
 q=toc()
 
 tempf = mktemp()[1]
-rfile = string(splitext(outfile)[1], ".root") 
+rfile = string(splitext(outfile)[1], ".root")
 println("saving to $rfile, temp file $tempf")
 mkpath(dirname(rfile))
 tf = TFile(tempf, "RECREATE")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    print(k, " $(sum(entries(v))) ", @sprintf("%.2f", integral(v)))
-    isa(v, NHistogram) && print(" ", sum(sum(entries(v), 1)[2:end]), " ", sum(sum(entries(v), 2)[2:end]))
-    println()
+    println(
+        k, " sument=$(sum(entries(v))) ",
+        @sprintf(" int=%.2f", integral(v)),
+        @sprintf(" sumerr=%.2f", sum(errors(v)))
+    )
+    isa(v, Histogram) && println(v)
+    #hdf = htodf(v)
+    #writetable("hists/$(tostr(k)).csv", hdf)
+
     toroot(tf, tostr(k), v)
 end
 
