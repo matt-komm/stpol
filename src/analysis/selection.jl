@@ -27,13 +27,13 @@ module Cuts
     function is_reco_lepton(row, lepton::Symbol)
         lepton==:mu && return is_mu(row)
         lepton==:ele && return is_ele(row)
-        error("unecognized lepton=$lepton") 
+        error("unecognized lepton=$lepton")
     end
 
     njets(indata, x) = indata[:njets].==x
     ntags(indata, x) = indata[:ntags].==x
     qcd_mva(indata, x::Real) = indata[:bdt_qcd].>x
-    bdt(indata, x::Real) = indata[:bdt_sig_bg].>x
+    bdt(indata, x::Real, bdtvar=:bdt_sig_bg) = indata[bdtvar].>x
 
     function qcd_cut(indata, cut_type::Symbol, lepton::Symbol)
         cut_type == :mva_nominal && return qcd_mva_wp(indata, lepton)
@@ -42,21 +42,21 @@ module Cuts
     end
 
     qcd_mva_wp(indata, x::Symbol) = qcd_mva(indata, qcd_mva_wps[x])
-    
+
     function qcd_met_mtw(indata, x::Symbol)
-        x == :mu && return ((!isna(indata[:mtw])) & (indata[:mtw] .> 50))  
+        x == :mu && return ((!isna(indata[:mtw])) & (indata[:mtw] .> 50))
         x == :ele && return ((!isna(indata[:met])) & (indata[:met] .> 45))
     end
 
-    iso(indata) = int(indata[:isolation]) .== hmap_symb_to[:iso] 
+    iso(indata) = int(indata[:isolation]) .== hmap_symb_to[:iso]
     aiso(indata) = int(indata[:isolation]) .== hmap_symb_to[:antiiso]
     dr(indata) = (
-        aiso(indata) & (indata[:ljet_dr].>0.5) & (indata[:bjet_dr].>0.5)
+        aiso(indata) & (indata[:ljet_dr] .> 0.3) & (indata[:bjet_dr] .> 0.3)
     ) | iso(indata)
 
     cutbased_etajprime(indata) = (
-        (abs(indata[:ljet_eta]).>2.5) &
-        (indata[:top_mass]<220) &
+        (abs(indata[:ljet_eta]) .> 2.5) &
+        (indata[:top_mass] < 220) &
         (indata[:top_mass] > 130)
     )
 
@@ -68,8 +68,16 @@ module Cuts
 
     function selection(indata, selection_major, selection_minor)
         selection_major == :bdt && return bdt(indata, selection_minor)
-        error("unrecognized selection_major=$selection_major")
+        error("unrecognized selection_major = $selection_major")
     end
+
+    function nu_soltype(indata, soltype::Symbol)
+        soltype == :real && return indata[:nu_soltype] .== 0
+        soltype == :cplx && return indata[:nu_soltype] .== 1
+        soltype == :none && return true
+        error("unrecognized soltype=$soltype")
+    end
+
 end
 
 if !isdefined(:SELECTION)
@@ -110,7 +118,7 @@ function perform_selection(indata::AbstractDataFrame)
             :ele=>abs(indata[:gen_lepton_id]).==11
         }
     }
-    
+
     inds[:data] = (inds[:sample][:data_mu] | inds[:sample][:data_ele])
     inds[:mc] = !inds[:data]
     return inds
