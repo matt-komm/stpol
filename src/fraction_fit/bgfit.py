@@ -35,10 +35,10 @@ def get_model(infile):
     model.set_signal_processes(signal)
 
     add_normal_unc(model, "wzjets", mean=1.0, unc=inf)
-    add_normal_unc(model, "ttjets", unc=0.2)
+    add_normal_unc(model, "ttjets", unc=0.5)
 
     #for old PAS histograms
-    add_normal_unc(model, "other", unc=0.2)
+    #add_normal_unc(model, "other", unc=0.2)
     #add_normal_unc(model, "qcd", unc=0.000001)
     return model
 
