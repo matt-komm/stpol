@@ -39,9 +39,9 @@ merge:
 	python histmerge.py /Users/joosep/Dropbox/kbfi/top/stpol/results/hists/qcd__metmtw_nominal/soltype__cplx/bdt__bdt_sig_bg/csvt/merged.root
 	mv output/bdt_scan/* results/hists/qcd__metmtw_nominal/soltype__cplx/bdt__bdt_sig_bg/csvt/
 
-recursive-hadd: recursive-hadd-1 recursive-hadd-2 recursive-hadd-3 recursive-hadd-4
+recursive-hadd: recursive-hadd-1 recursive-hadd-2
 recursive-hadd-1:
-	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr07_C/qcd__mva_nominal/csvt/ /scratch/joosep/hists/csvt/mva_nominal
+	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr16/qcd__metmtw_nominal/soltype__none/bdt__bdt_sig_bg/csvt/ /scratch/joosep/hists/csvt_metmtw
 
 recursive-hadd-2:
-	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr07_C/qcd__metmtw_nominal/csvt/ /scratch/joosep/hists/csvt/metmtw_nominal
+	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr16/qcd__mva_nominal/soltype__none/bdt__bdt_sig_bg/csvt/ /scratch/joosep/hists/csvt_mva
