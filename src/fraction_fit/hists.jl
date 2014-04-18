@@ -221,15 +221,6 @@ end
 #    return hists
 # end
 
-function remove_prefix(hd::Associative)
-    ret = Dict()
-    for (k, v) in hd
-        k = join(split(k, "__")[2:end], "__")
-        ret[k] = v
-    end
-    ret
-end
-
 #
 #function toroot{T <: Any, H <: Histogram}(hd::Associative{T, H}, fn)
 #    tn = tempname()

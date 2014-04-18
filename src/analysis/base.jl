@@ -174,11 +174,21 @@ for k in hmap[:from]|>keys
     hmap_symb_from[k] = hmap[:from][k]|>symbol
 end
 
+function remove_prefix(hd::Associative)
+    ret = Dict()
+    for (k, v) in hd
+        k = join(split(k, "__")[2:end], "__")
+        ret[k] = v
+    end
+    ret
+end
+
 export BASE
 export infb, chunk, chunks, flatten, FITRESULTS, hmap, writedf, readdf, systematic_processings
 export procs, mcsamples, TOTAL_SAMPLES
 export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
 export Histograms
+export remove_prefix
 end
 
 using DataArrays, DataFrames
