@@ -1,4 +1,3 @@
-println("hplot.jl")
 using PyCall, PyPlot
 
 function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
