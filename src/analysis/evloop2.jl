@@ -6,6 +6,7 @@ const PARS = JSON.parse(readall(ARGS[3]))
 
 #how to cut on QCD?
 const QCD_CUT_TYPE = symbol(PARS["qcd_cut"])
+const DO_LJET_RMS = PARS["do_ljet_rms"]
 
 #FIXME: currently this is different for TCHPT and CSVT
 const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
@@ -42,16 +43,19 @@ const LEPTON_SYMBOLS = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:
 const DO_TRANSFER_MATRIX = true
 const HISTS_NOMINAL_ONLY = false
 const TM_NOMINAL_ONLY = false
-
 const JET_TAGS = [(2, 0), (2, 1), (3, 0), (3, 1), (3, 2)]
 
 const crosscheck_vars = [
     :bdt_sig_bg, :bdt_sig_bg_top_13_001,
-    
+
     (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
     (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
     :C, :shat, :ht,
+    (:C_signalregion, row->row[:C]),
+    (:top_mass_signalregion, row->row[:top_mass]),
+
     :lepton_pt, :lepton_iso, :lepton_eta,
+    (:abs_lepton_eta, r->abs(r[:lepton_eta])),
     :met_phi, :met, :mtw,
     :bjet_pt, :ljet_pt,
     :ljet_eta, :bjet_eta,
@@ -63,7 +67,10 @@ const crosscheck_vars = [
     :n_good_vertices,
     :cos_theta_lj, :cos_theta_bl,
     :cos_theta_lj_gen, :cos_theta_bl_gen,
-    :nu_soltype
+    :nu_soltype,
+    :njets,
+    :ntags,
+    :lepton_charge
 ]
 
 const SOLTYPE = symbol(PARS["soltype"])
@@ -325,7 +332,8 @@ function process_df(rows::AbstractVector{Int64})
                     for (cut_major, cut_minor, cutfn) in {
                             (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime)
                         }
-                        const _reco = reco && cutfn(row)
+                        const _reco = reco && cutfn(row) &&
+                            Cuts.nu_soltype(row, SOLTYPE)
                         const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
                         const linind = sub2ind(TM_hsize, nx, ny)
 
