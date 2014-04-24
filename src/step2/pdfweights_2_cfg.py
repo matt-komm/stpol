@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("OWNPARTICLES")
+process = cms.Process("STPOLPDF")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
