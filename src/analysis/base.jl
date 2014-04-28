@@ -147,10 +147,8 @@ flatten(a)=a
 
 #load the fit results
 const FITRESULTS = {
-    #:mu=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/mu/merged/fit.json"),
-    #:ele=>FitResult("$BASE/results/scanned_hists_feb7/hists/-0.20000/ele/merged/fit.json")
-    :mu=>FitResult("$BASE/results/fits/mar25/bdt/mu.json"),
-    :ele=>FitResult("$BASE/results/fits/mar25/bdt/ele.json")
+    :mu=>FitResult("$BASE/results/fits/apr21/bdt/mu.json"),
+    :ele=>FitResult("$BASE/results/fits/apr21/bdt/ele.json")
 }
 
 t1 = time()
@@ -183,12 +181,28 @@ function remove_prefix(hd::Associative)
     ret
 end
 
+
+function hists_varname(hists::Associative)
+    ks = collect(keys(hists))
+
+    if haskey(hists, "DATA")
+        return nothing
+    else
+        hd = first(filter(
+            x -> contains(string(x), "DATA"),
+            ks)
+        )
+        println(hd)
+        return split(hd, "__")[1]
+    end
+end
+
 export BASE
 export infb, chunk, chunks, flatten, FITRESULTS, hmap, writedf, readdf, systematic_processings
 export procs, mcsamples, TOTAL_SAMPLES
 export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
 export Histograms
-export remove_prefix
+export remove_prefix, hists_varname
 end
 
 using DataArrays, DataFrames

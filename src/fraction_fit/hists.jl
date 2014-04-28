@@ -127,15 +127,6 @@ function reweight_to_fitres(frd, indata, inds)
     end
 end
 
-function hists_varname(hists::Associative)
-    if haskey(hists, "DATA")
-        return nothing
-    else
-        hd = first(filter(x->contains(x, "DATA"), keys(hists)))
-        return split(hd, "__")[1]
-    end
-end
-
 #@pyimport scipy.stats.kde as KDE
 #@pyimport matplotlib.cm as cmap
 #function kde_contour(arr, X, Y, n=6; kwargs...)
