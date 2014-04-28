@@ -28,6 +28,7 @@ println("loading dataframe:$infile");
 
 #Load the main event TTree
 const df_base = TreeDataFrame(infile)
+nrow(df_base)>0 || (warn("$infile was emtpy, exiting");exit(0))
 
 #load the TTree with the QCD values, xs weights
 const df_added = TreeDataFrame("$infile.added")
@@ -49,6 +50,7 @@ const crosscheck_vars = [
     :bdt_sig_bg, :bdt_sig_bg_top_13_001,
 
     (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+    (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
     (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
     :C, :shat, :ht,
     (:C_signalregion, row->row[:C]),
@@ -280,6 +282,11 @@ function process_df(rows::AbstractVector{Int64})
                 reco = reco && sel(row)
                 reco = reco && Cuts.is_reco_lepton(row, reco_lep)
                 reco = reco && Cuts.qcd_cut(row, QCD_CUT_TYPE, reco_lep)
+                reco = reco && Cuts.nu_soltype(row, SOLTYPE)
+
+                if DO_LJET_RMS
+                    reco = reco && Cuts.ljet_rms(row)
+                end
 
                 const lep_symb = symbol("gen_$(LEPTON_SYMBOLS[true_lep])__reco_$(reco_lep)")
 
@@ -292,8 +299,7 @@ function process_df(rows::AbstractVector{Int64})
                     #assumes BDT cut points are sorted ascending
                     for bdt_cut::Float64 in BDT_CUTS::Vector{Float64}
                         const _reco = reco &&
-                            Cuts.bdt(row, bdt_cut, BDT_VAR) &&
-                            Cuts.nu_soltype(row, SOLTYPE)
+                            Cuts.bdt(row, bdt_cut, BDT_VAR)
 
                         #if scen_name[1] == :nominal
                         #    transfer_matrix_reco[reco_lep][bdt_cut] = reco
@@ -332,8 +338,7 @@ function process_df(rows::AbstractVector{Int64})
                     for (cut_major, cut_minor, cutfn) in {
                             (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime)
                         }
-                        const _reco = reco && cutfn(row) &&
-                            Cuts.nu_soltype(row, SOLTYPE)
+                        const _reco = reco && cutfn(row)
                         const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
                         const linind = sub2ind(TM_hsize, nx, ny)
 
@@ -407,6 +412,10 @@ function process_df(rows::AbstractVector{Int64})
                     nj, nt
                 )
             end
+        end
+
+        if DO_LJET_RMS
+            Cuts.ljet_rms(row) || continue
         end
 
         ###
