@@ -23,6 +23,26 @@ const VARS = {
 	:bjet_dr=>"\$\\Delta R_{b,l}\$",
 	:n_good_vertices=>"\$N_{vertices}\$",
 	:bdt_qcd=>"\$BDT_{QCD}\$\ output",
+	:nu_soltype => "\$p_{\\nu, z}\$ quadratic solution type",
+	:met_phi => "\$ \\Phi_{MET} \$",
+	:lepton_eta => "\$ \\eta_{l} \$",
+	:abs_lepton_eta => "\$| \\eta_{l} |\$",
+}
+
+const SAMPLENAMES = {
+	:ttjets => "\$ t \\bar{t} \$",
+	:tchan => "t-channel",
+	:wjets__heavy => "W+jets (bc)",
+	:wjets__light => "W+jets (udsg)",
+	:wjets => "W+jets",
+	:wzjets => "W, DY, \$\\gamma\$-jets"
+}
+
+const SAMPLENAMES_MERGED = {
+	:tchan => "t-channel",
+	:wzjets => "W, DY, \$\\gamma\$-jets",
+	:ttjets => "\$ t \\bar{t} \$, tW, s",
+	:data => "Data"
 }
 
 const titles = {
@@ -33,4 +53,4 @@ const titles = {
 title(nj::Integer, nt::Integer, lepton::Symbol) =
 	string(titles[:lepton][lepton], ", ", titles[:jet](nj, nt))
 
-export VARS, titles
+export VARS, titles, SAMPLENAMES, SAMPLENAMES_MERGED
