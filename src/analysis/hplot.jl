@@ -1,4 +1,27 @@
 using PyCall, PyPlot
+using Histograms
+
+
+function barplot(ax::PyObject, hh::Histogram, color::ASCIIString;kwargs...)
+    xs = zeros(2 * nbins(hh))
+    ys = zeros(2 * nbins(hh))
+
+    for i=1:2*nbins(hh)-1
+        xs[i] = edges(hh)[1 + floor(i/2)]
+        ys[i] = contents(hh)[1 + floor((i-1)/2)]
+    end
+    ax[:plot](xs, ys, color=color; kwargs...)
+    ax[:errorbar](midpoints(edges(hh)), contents(hh)[1:end-1], errors(hh)[1:end-1], fmt=nothing, ecolor=color)
+end
+
+# function barplot(ax, h::Histogram, color; kwargs...)
+#     wh = widths(edges(h)[2:end-1])
+#     wh = vcat(first(wh), wh)
+#     ax[:bar](
+#     edges(h)[1:end-2], contents(h)[1:end-2], wh, yerr=errors(h)[1:end-2] , edgecolor=color,
+#         error_kw={:elinewidth=>1, :ecolor=>color}; kwargs...
+#     )
+# end
 
 function hplot(ax::PyObject, h::Histogram, prevhist::Histogram;kwargs...)
 
