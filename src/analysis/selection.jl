@@ -30,10 +30,10 @@ module Cuts
         error("unecognized lepton=$lepton")
     end
 
-    njets(indata, x) = indata[:njets].==x
-    ntags(indata, x) = indata[:ntags].==x
-    qcd_mva(indata, x::Real) = indata[:bdt_qcd].>x
-    bdt(indata, x::Real, bdtvar=:bdt_sig_bg) = indata[bdtvar].>x
+    njets(indata, x) = indata[:njets] .== x
+    ntags(indata, x) = indata[:ntags] .== x
+    qcd_mva(indata, x::Real) = indata[:bdt_qcd] .> x
+    bdt(indata, x::Real, bdtvar=:bdt_sig_bg) = indata[bdtvar] .> x
 
     function qcd_cut(indata, cut_type::Symbol, lepton::Symbol)
         cut_type == :mva_nominal && return qcd_mva_wp(indata, lepton)
@@ -77,7 +77,7 @@ module Cuts
         soltype == :none && return true
         error("unrecognized soltype=$soltype")
     end
-
+    ljet_rms(indata) = indata[:ljet_rms] .< 0.025
 end
 
 if !isdefined(:SELECTION)
