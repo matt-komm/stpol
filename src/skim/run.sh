@@ -17,7 +17,7 @@ source ~/local-sl6/root/bin/thisroot.sh && ( python $mvapath/qcd_mva_adder2.py $
 source ~/local-sl6/root/bin/thisroot.sh && ( python $mvapath/top_13_001_mva_adder.py $outfile.root )
 \ls -1 .
 
-p=/hdfs/local/joosep/stpol/skims/Apr04/@DATASETPATH@/@MY_JOBID@
+p=/hdfs/local/joosep/stpol/skims/@DATASETPATH@/@MY_JOBID@
 rm -Rf $p
 mkdir -p $p
 rsync -c output* $p
