@@ -28,6 +28,7 @@ println("loading dataframe:$infile");
 
 #Load the main event TTree
 const df_base = TreeDataFrame(infile)
+df_base.tt == C_NULL && (warn("empty TTree for $infile, exiting");exit(0))
 nrow(df_base)>0 || (warn("$infile was emtpy, exiting");exit(0))
 
 #load the TTree with the QCD values, xs weights
