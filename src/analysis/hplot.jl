@@ -3,6 +3,9 @@ using Histograms
 
 
 function barplot(ax::PyObject, hh::Histogram, color::ASCIIString;kwargs...)
+    kwargsd = {k=>v for (k, v) in kwargs}
+    do_error = pop!(kwargsd, :do_error, true)
+
     xs = zeros(2 * nbins(hh))
     ys = zeros(2 * nbins(hh))
 
@@ -10,8 +13,10 @@ function barplot(ax::PyObject, hh::Histogram, color::ASCIIString;kwargs...)
         xs[i] = edges(hh)[1 + floor(i/2)]
         ys[i] = contents(hh)[1 + floor((i-1)/2)]
     end
-    ax[:plot](xs, ys, color=color; kwargs...)
-    ax[:errorbar](midpoints(edges(hh)), contents(hh)[1:end-1], errors(hh)[1:end-1], fmt=nothing, ecolor=color)
+    ax[:plot](xs, ys, color=color; kwargsd...)
+    do_error && ax[:errorbar](
+        midpoints(edges(hh)), contents(hh)[1:end-1], errors(hh)[1:end-1], fmt=nothing, ecolor=color
+    )
 end
 
 # function barplot(ax, h::Histogram, color; kwargs...)
