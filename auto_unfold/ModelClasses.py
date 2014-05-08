@@ -436,17 +436,22 @@ class RootHistogram(THETAObject):
         
     def setHistoName(self, histoname):
         self._configDict['histoname']=histoname
+        
+    def setNorm(self,norm=1.0):
+        self._configDict['normalize_to']=norm
     
     def toConfigString(self, indentLevel=0):
         retStr=self._indent(self.varname+" = {", indentLevel)
         retStr+=self._indent("type = \"root_histogram\";", indentLevel+1)
         for key in self._configDict.keys():
             if key=="zerobin_fillfactor":
-                retStr+=self._indent(key+" = "+self._configDict[key]+";", indentLevel+1)
+                retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
             elif key=="use_errors":
-                retStr+=self._indent(key+" = "+self._configDict[key]+";", indentLevel+1)
+                retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
+            elif key=="normalize_to":
+                retStr+=self._indent(key+" = "+str(self._configDict[key])+";", indentLevel+1)
             else:
-                retStr+=self._indent(key+" = \""+self._configDict[key]+"\";", indentLevel+1)
+                retStr+=self._indent(key+" = \""+str(self._configDict[key])+"\";", indentLevel+1)
         retStr+=self._indent("zerobin_fillfactor = 0.0001;", indentLevel+1)
         retStr+=self._indent("};", indentLevel)
         return retStr

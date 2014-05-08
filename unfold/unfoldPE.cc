@@ -3,6 +3,9 @@
 
 #include "TApplication.h"
 #include "TCanvas.h"
+#include "TROOT.h"
+#include "TGraph.h"
+#include "TStyle.h"
 #include "TH1D.h"
 #include "TFile.h"
 #include "TTree.h"
@@ -125,10 +128,18 @@ double scanTau(TH2D* response)
     double phalfmax_min_tau=0.0;
     
     
+    
+    
     TH1D* measured =  response->ProjectionY();
     TH1D* truth =  response->ProjectionX();
     int measuredT=measured->GetNbinsX();
     int nbinsT=truth->GetNbinsX();
+    
+    double** rho_avg = new double*[nbinsT];
+    for (int i = 0; i < nbinsT; ++i)
+    {
+        rho_avg[i]=new double[num];
+    }
     
     /*TCanvas* test = new TCanvas("canvas","",800,600);
     test->Divide(2,1);
@@ -177,7 +188,7 @@ double scanTau(TH2D* response)
         tau[cnt]=cnt/(1.0*num)*0.4+0.6;
 
         TUnfoldDensity* tunfold = new TUnfoldDensity(response,TUnfold::kHistMapOutputHoriz,TUnfold::kRegModeCurvature);
-        tau[cnt]=TMath::Power(10.0,1.0*(cnt/(1.0*num)*7.0-6.0));
+        tau[cnt]=TMath::Power(10.0,1.0*(cnt/(1.0*num)*6.0-6.0));
 
         //tau[cnt]=0.0001;
         tunfold->DoUnfold(tau[cnt],histo_input_tunfold);
@@ -206,7 +217,46 @@ double scanTau(TH2D* response)
         
         TMatrixD* cov_matrix = convertHistToMatrix(error);
         TMatrixD inv_cov_matrix=TMatrixD(TMatrixD::kInverted,*cov_matrix);
+        TMatrixD diag_cov_halfs(nbinsT,nbinsT);
+        for (int i=0; i<nbinsT; ++i) {
+            for (int j=0; j<nbinsT; ++j) {
+                if (i==j)
+                {
+                    diag_cov_halfs[i][j]=1.0/TMath::Sqrt((*cov_matrix)[i][j]);
+                }
+                else
+                {
+                    diag_cov_halfs[i][j]=0.0;
+                }
+            }
+        }
+        TMatrixD rho = diag_cov_halfs*(*cov_matrix)*diag_cov_halfs;
         
+        
+        for (int offrow = 1; offrow<nbinsT; ++offrow)
+        {
+            double sum=0.0;
+            for (int entry = 0; entry < nbinsT-offrow; ++entry)
+            {
+                sum+=rho[offrow+entry][entry];
+            }
+            rho_avg[offrow][cnt]=sum/(nbinsT-offrow);
+        }
+        
+        TH2D rho_hist("rho","",nbinsT,0,nbinsT,nbinsT,0,nbinsT);
+        for (int i=0; i<nbinsT; ++i) {
+            for (int j=0; j<nbinsT; ++j) {
+                rho_hist.SetBinContent(i+1,j+1,rho[i][j]);
+            }
+        }
+        
+        if (cnt==0)
+        {
+            TCanvas cv("cv","",800,600);
+            rho_hist.Draw("colz");
+            cv.Print("unfolding_rho.pdf");
+            
+        }
         
         double* p = new double[nbinsT];
         pmean[cnt]=0.0;
@@ -236,17 +286,41 @@ double scanTau(TH2D* response)
 		}
 		
     }
+    TCanvas cv_subway("cv_subway","",800,600);
+    TH2F axes("axes",";tau;correlation",50,tau[0],tau[num-1],50,-1.1,1.1);
+    axes.Draw("AXIS");
+    cv_subway.SetLogx(1);
+    for (int i=1; i<nbinsT; ++i) {
+        //char* graphName= new char[50];
+        //sprintf("graph_%i",i);
+        TGraph* graph = new TGraph(num,tau,rho_avg[i]);
+        graph->SetLineColor(kBlue+2-i);
+        graph->SetLineWidth(nbinsT-i+1);
+        graph->Draw("SameL"); 
+    }
+    TGraph* graph_globalrho_avg = new TGraph(num,tau,pmean);
+    graph_globalrho_avg->SetLineColor(kGreen+1);
+    graph_globalrho_avg->SetLineStyle(2);
+    graph_globalrho_avg->SetLineWidth(2);
+    graph_globalrho_avg->Draw("SameL"); 
+    TGraph* graph_globalrho_max = new TGraph(num,tau,pmax);
+    graph_globalrho_max->SetLineColor(kRed+1);
+    graph_globalrho_max->SetLineWidth(2);
+    graph_globalrho_max->SetLineStyle(2);
+    graph_globalrho_max->Draw("SameL"); 
+    cv_subway.Print("unfolding_scan.pdf");
     
     return pmean_min_tau;
 }
 
 int main( int argc, const char* argv[] )
 {
-    TApplication* rootapp = new TApplication("example",0,0);
+    gStyle->SetOptStat(0);
+    //TApplication* rootapp = new TApplication("example",0,0);
     if (argc<7) {
         printf("Usage:\r\n");
         printf("\tunfold \t[inputFile] [treeName] [branchName] [reponseFile] \r\n");
-        printf("\t\t[reponseMatrixName] [outputFile] [reg]\r\n");
+        printf("\t\t[reponseMatrixName] [outputFile] [reg] [TMUnc]\r\n");
         return -1;
     }
     printf("use: inputFile='%s'\r\n",argv[1]);
@@ -256,7 +330,12 @@ int main( int argc, const char* argv[] )
     printf("use: responseMatrixName='%s'\r\n",argv[5]);
     printf("use: outputFile='%s'\r\n",argv[6]);
     printf("use: regScale='%f'\r\n",atof(argv[7]));
-    
+    bool diceTMUnc=false;
+    if (argc>=9)
+    {
+        diceTMUnc=atoi(argv[8])>0;
+    }
+    printf("use: diceTMUncertainty='%s'\r\n",diceTMUnc ? "true" : "false");
     TFile input(argv[1],"r");
 
     TTree* tree_input = (TTree*)input.Get(argv[2]);
@@ -330,7 +409,20 @@ int main( int argc, const char* argv[] )
         {
              histo_input->SetBinContent(ibin+1,histo_input->GetBinContent(ibin+1)+0.000001);
         }
-        TUnfoldDensity* tunfold = new TUnfoldDensity(response,TUnfold::kHistMapOutputHoriz, TUnfold::kRegModeCurvature);
+        TH2D responseMatrix = TH2D(*response);
+        if (diceTMUnc)
+        {
+            for (unsigned int xbin = 0; xbin < responseMatrix.GetNbinsX()+2; ++xbin)
+            {
+                for (unsigned int ybin = 0; ybin < responseMatrix.GetNbinsY()+2; ++ybin)
+                {
+                    double entry = responseMatrix.GetBinContent(xbin,ybin);
+                    entry = gRandom->Poisson(entry);
+                    responseMatrix.SetBinContent(xbin,ybin,entry);
+                }
+            }
+        }
+        TUnfoldDensity* tunfold = new TUnfoldDensity(&responseMatrix,TUnfold::kHistMapOutputHoriz, TUnfold::kRegModeCurvature);
         //tunfold->SetBias(truth);
         tunfold->DoUnfold(tau,histo_input);
         histo_output_tunfold->Scale(0.0);

@@ -19,6 +19,8 @@ def getHistogram(fileName,histName):
         f.Close()
         return None
     hist.SetDirectory(0)
+    if (hist.Integral()<0.00000001):
+        logging.warning("histogram '"+histName+"' does contain 0 events in file '"+fileName+"'")
     return hist
 
 def plotSysTemplates(fileName,signalSetDict,backgroundSetDict,shapeSysDict,outputFolder):
@@ -152,6 +154,9 @@ def checkHistogramExistence(fileName,histoName,debug=False):
     
     return True
     
+def getHistogramNormalization(filename,histoName):
+    return getHistogram(filename,histoName).Integral()
+    
 def generateModelPE(modelName="mymodel",
                     outputFolder="mymodel",
                     histFile=None,
@@ -170,6 +175,11 @@ def generateModelPE(modelName="mymodel",
         logging.error("no input histfile specified during model generation")
         sys.exit(-1)
     
+    
+    totalSetDict={}
+    totalSetDict.update(signalSetDict)
+    totalSetDict.update(backgroundSetDict)
+    
     file=open(os.path.join(outputFolder,modelName+".cfg"), "w")
     
     sysDistributions=MultiDistribution("sysDist")
@@ -179,10 +189,19 @@ def generateModelPE(modelName="mymodel",
         unc = yieldSysDict[key]["unc"]
         sysDistributions.addParameter(name,mean,unc)
     for key in shapeSysDict.keys():
-        name ="sys_"+key
-        mean =shapeSysDict[key]["mean"]
-        unc=shapeSysDict[key]["unc"]
-        sysDistributions.addParameter(name,mean,unc)
+        if shapeSysDict[key]["independent"]:
+            for histSet in totalSetDict.keys():
+                if histSet=="qcd":
+                    continue
+                name ="sys_"+key+"_"+histSet
+                mean =shapeSysDict[key]["mean"]
+                unc=shapeSysDict[key]["unc"]
+                sysDistributions.addParameter(name,mean,unc)
+        else:
+            name ="sys_"+key
+            mean =shapeSysDict[key]["mean"]
+            unc=shapeSysDict[key]["unc"]
+            sysDistributions.addParameter(name,mean,unc)
     for corr in corrList:
         name1="sys_"+corr["name"][0]
         name2="sys_"+corr["name"][1]
@@ -199,9 +218,7 @@ def generateModelPE(modelName="mymodel",
 
     #yield_lumi=Distribution("beta_LUMI", "gauss", {"mean": "1.0", "width":"0.022", "range":"(\"-inf\",\"inf\")"})
     #file.write(yield_lumi.toConfigString())
-    totalSetDict={}
-    totalSetDict.update(signalSetDict)
-    totalSetDict.update(backgroundSetDict)
+    
     
     obs=Observable(prefix, binning, ranges)
     for histSet in totalSetDict.keys():
@@ -219,6 +236,8 @@ def generateModelPE(modelName="mymodel",
             file.write(hist.toConfigString())
             comp.setNominalHistogram(hist)
             
+            norm = getHistogramNormalization(histFile,histName)
+            
             for sysName in shapeSysDict.keys():
                 if not checkHistogramExistence(histFile,histName+"__"+sysName+"__up"):
                     continue
@@ -231,7 +250,15 @@ def generateModelPE(modelName="mymodel",
                 histDOWN=RootHistogram(histName+"-"+sysName+"-DOWN",{"use_errors":"true"})
                 histDOWN.setFileName(histFile)
                 histDOWN.setHistoName(histName+"__"+sysName+"__down")
-                comp.addUncertaintyHistograms(histUP, histDOWN, sysDistributions,"sys_"+sysName)
+                
+                if (shapeSysDict[sysName]["norm"]):
+                    logging.debug("normalizing: "+histName+"__"+sysName+"__"+" to "+str(norm))
+                    histUP.setNorm(norm)
+                    histDOWN.setNorm(norm)
+                if shapeSysDict[sysName]["independent"]:
+                    comp.addUncertaintyHistograms(histUP, histDOWN, sysDistributions,"sys_"+sysName+"_"+histSet)
+                else:
+                    comp.addUncertaintyHistograms(histUP, histDOWN, sysDistributions,"sys_"+sysName)
                 file.write(histUP.toConfigString())
                 file.write(histDOWN.toConfigString())
             file.write("\n")
@@ -364,7 +391,7 @@ def generateNominalBackground(modelName="mymodel",
             comp.setNominalHistogram(hist)
             
             obs.addComponent(comp)
-           
+            
         
     model.addObservable(obs)
     file.write(model.toConfigString())

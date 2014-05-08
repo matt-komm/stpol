@@ -6,6 +6,7 @@ RESPONSEMATRIX="/home/fynu/mkomm/scanned_hists_feb19/hists/"$folder"/mu/tmatrix_
 FITRESULT="/home/fynu/mkomm/scanned_hists_feb19/fitResultMuon.txt"
 REGSCALE="1.0"
 nice -n 10 python run.py \
+--excludeSys="scale" \
 --output="test" \
 --modelName="total" \
 --histFile=$INPUTHIST \

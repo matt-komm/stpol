@@ -50,10 +50,18 @@ def parseFitResult(inputfile):
                     sys.exit(-1)
                 yieldSysDict[splitted[1]]={"mean":float(splitted[2]),"unc":float(splitted[3])}
             elif splitted[0]=="shape":
-                if len(splitted)!=4:
+                if len(splitted)<4:
                     logging.error("Error while reading the fitresult file: "+line)
                     sys.exit(-1)
-                shapeSysDict[splitted[1]]={"mean":float(splitted[2]),"unc":float(splitted[3])}
+                shapeSysDict[splitted[1]]={"mean":float(splitted[2]),"unc":float(splitted[3]),"norm":False, "independent":False}
+                for i in range(len(splitted)-4):
+                    if splitted[i+4]=="normalize":
+                        shapeSysDict[splitted[1]]["norm"]=True
+                    elif splitted[i+4]=="independent":
+                        shapeSysDict[splitted[1]]["independent"]=True
+                    else:
+                        logging.error("Error while reading the fitresult file: "+line+" | unreconized command")
+                        sys.exit(-1)
             elif splitted[0]=="corr":
                 if len(splitted)!=4:
                     logging.error("Error while reading the fitresult file: "+line)
@@ -93,7 +101,7 @@ def getMeasuredHistogramBinning(histogram):
     rootFile = ROOT.TFile(fileName,"r")
     signalHistogram = rootFile.Get(objectName)
     if (not signalHistogram):
-        logging.error("signal histogram '"+objectName+"' in file '"+fileName+"' could not be read")
+        logging.error("histogram '"+objectName+"' in file '"+fileName+"' could not be read")
         sys.exit(-1)
     nbins = signalHistogram.GetNbinsX()
     binning=numpy.zeros(nbins+1)
@@ -132,6 +140,23 @@ def rebinHistograms(fileName,prefix,binningMeasured,folder):
     treeOut.Write()
     fileOut.Close()
     file.Close()
+    
+def plotThetaHistograms(thetaFile):
+    histo=ROOT.TH1D()
+    inFile = ROOT.TFile(thetaFile)
+    tree=inFile.Get("products")
+    #tree.SetBranchAddress("pd__data_obs_"+prefix, histo)
+    branchList = tree.GetListOfBranches()
+    for index in range(branchList.GetEntries()):
+        if (branchList[index].GetName().startswith("pd__data_obs")):
+            #print branchList[index].GetName()
+            tree.SetBranchAddress(branchList[index].GetName(),histo)
+            tree.GetEntry(0)
+            cv = ROOT.TCanvas("cv"+str(random.random()),"",800,600)
+            histo.Draw()
+            histo.GetYaxis().SetRangeUser(0.0,histo.GetMaximum()*1.1)
+            cv.Print(thetaFile.rsplit(".")[0]+".pdf")
+    inFile.Close()
     
 def testAfterSubtraction(prefix,folder,subtractedFile,signalFile):
     histoSub=ROOT.TH1D()
@@ -264,8 +289,8 @@ def subtrackNominalBackground(fileName,nominalFileName,prefix,binningMeasured,fo
     nUpPost_sig=math.sqrt(nUpPost_sig)
     nDownPre_sig=math.sqrt(nDownPre_sig)
     nDownPost_sig=math.sqrt(nDownPost_sig)
-    logging.debug("asymmtery pre subtraction (analy.): "+str(round((nUpPre-nDownPre)/(nUpPre+nDownPre),4))+" +- "+str(round(calcAsymmetryAnalytic(nUpPre,nUpPre_sig,nDownPre,nDownPre_sig),4)))
-    logging.debug("asymmtery post subtraction (analy.): "+str(round((nUpPost-nDownPost)/(nUpPost+nDownPost),4))+" +- "+str(round(calcAsymmetryAnalytic(nUpPost,nUpPost_sig,nDownPost,nDownPost_sig),4)))
+    #logging.debug("asymmtery pre subtraction (analy.): "+str(round((nUpPre-nDownPre)/(nUpPre+nDownPre),4))+" +- "+str(round(calcAsymmetryAnalytic(nUpPre,nUpPre_sig,nDownPre,nDownPre_sig),4)))
+    #logging.debug("asymmtery post subtraction (analy.): "+str(round((nUpPost-nDownPost)/(nUpPost+nDownPost),4))+" +- "+str(round(calcAsymmetryAnalytic(nUpPost,nUpPost_sig,nDownPost,nDownPost_sig),4)))
     fileOut.Close()
     file2.Close()
     file.Close()
@@ -303,7 +328,7 @@ def writeLogFile(filename,err,cout):
     thetaLog.write(err)
     thetaLog.close()
     
-def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,outputFile,reg=1.0,cwd=""):
+def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,outputFile,reg=1.0,cwd="",diceTMUnc=0):
     return runCommand(["./execute_unfolding.sh",
                         inputFile,
                         treeName,
@@ -311,7 +336,7 @@ def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,out
                         reponseFile,
                         reponseMatrixName,
                         outputFile,
-                        str(reg)],
+                        str(reg),str(diceTMUnc)],
                         False,cwd=cwd)
 
 def calcAsymmetry(histo):
@@ -354,12 +379,19 @@ def closureTest(histoGen,fileName,branchName,histoTreeName,outputName=None):
             chi2=(content-contentNorm)**2/histoBinInfoList[ibin]["rms"]**2
 '''
 
-def closureTest(asymmetryResult,responseMatrix,outputName=None):
-    histoBinInfoList=asymmetryResult["info"]
-    fileName,objectName=options.responseMatrix.rsplit(":",1)
+def getRootObject(name):
+    fileName,objectName=name.rsplit(":",1)
+    
     rootFile = ROOT.TFile(fileName,"r")
-    responseMatrix = rootFile.Get(objectName)
-    truth =  responseMatrix.ProjectionX()
+    obj = rootFile.Get(objectName)
+    obj.SetDirectory(0)
+    logging.debug("get: "+objectName+" from file '"+fileName+"': "+str(obj))
+    rootFile.Close()
+    return obj
+
+def closureTest(asymmetryResult,truth,scale=1.0,outputName=None):
+    histoBinInfoList=asymmetryResult["info"]
+
     canvasDist=ROOT.TCanvas("canvas","",800,600)
     histMean=ROOT.TH1D(truth)
     for ibin in range(truth.GetNbinsX()):
@@ -367,7 +399,9 @@ def closureTest(asymmetryResult,responseMatrix,outputName=None):
         histMean.SetBinError(ibin+1, histoBinInfoList[ibin]["rms"])
     histMean.SetMarkerStyle(21)
     histMean.SetMarkerSize(1.2)
+    histMean.GetYaxis().SetRangeUser(0.0,max(histMean.GetMaximum(),truth.GetMaximum())*1.1)
     histMean.Draw("PE1")
+    truth.Scale(scale)
     truth.SetLineColor(ROOT.kGreen)
     truth.Draw("LSame")
     canvasDist.Print(outputName+"_dist.pdf")
@@ -467,6 +501,7 @@ if __name__=="__main__":
     parser.add_option("--scaleRegularization",action="store", type="float", default=1.0, dest="regScale", help="manipulate the estimated regularization parameter: tau=tau*regScale")
     parser.add_option("--noBackground",action="store_true",default=False, dest="noBackground", help="assumes only signal, background and its subtractions is not considered")
     
+    parser.add_option("--genHist",action="store", type="string", dest="genHist", default=None, help="optional gen histogram")
     
     ### currently not yet supported options
     parser.add_option("--signal",action="store", type="string", dest="signalHistogram", help="input signal sample, e.g. data.root:cos_theta__tchan")
@@ -506,6 +541,9 @@ if __name__=="__main__":
     if options.dataHistogram:
         logging.info("will use '"+options.dataHistogram+"' for data")
         filesToCheck.append(options.dataHistogram.rsplit(":",1)[0]) #removes root path to object within root file
+        
+    if options.genHist:
+        logging.info("optional genHist: "+str(options.genHist))
 
     logging.info("run on data: "+str(options.runOnData))
     if (options.runOnData):
@@ -536,6 +574,7 @@ if __name__=="__main__":
         logging.info("run MC statstics uncertainty: "+str(not options.noMCUncertainty))
         
     logging.info("regularization scale: "+str(options.regScale))
+    
     
     #-----------------------------------------------------------------------------
     logging.info("!!! check if all input files exist !!!")
@@ -573,7 +612,12 @@ if __name__=="__main__":
             shapeSysDict[key]["unc"]=0.0000000001  
         if (key in options.excludedSystematic):
             shapeSysDict[key]["unc"]=0.0000000001
-        logging.info("    "+key+": "+str(shapeSysDict[key]["mean"])+" +- "+str(shapeSysDict[key]["unc"]))
+        msg ="    "+key+": "+str(shapeSysDict[key]["mean"])+" +- "+str(shapeSysDict[key]["unc"])
+        if shapeSysDict[key]["norm"]:
+            msg += ", normalized"
+        if shapeSysDict[key]["independent"]:
+            msg += ", independent"
+        logging.info(msg)
     logging.info("correlations:")
     for corr in corrList:
         if not ((corr["name"][0] in yieldSysDict.keys()) or (corr["name"][0] in shapeSysDict.keys())):
@@ -673,6 +717,7 @@ if __name__=="__main__":
             logging.error(out)
             sys.exit(-1)
         writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
+    plotThetaHistograms(os.path.join(options.output,options.modelName+"_backgroundNominal.root"))
     
     err,out=runCommand(["./execute_theta.sh",options.modelName+"_signalNominal.cfg"],cwd=options.output)
     if not os.path.exists(os.path.join(options.output,options.modelName+"_signalNominal.root")):
@@ -681,7 +726,7 @@ if __name__=="__main__":
         logging.error(out)
         sys.exit(-1)
     writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
-
+    plotThetaHistograms(os.path.join(options.output,options.modelName+"_signalNominal.root"))
     
     
     err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"],cwd=options.output)
@@ -691,7 +736,7 @@ if __name__=="__main__":
         logging.error(out)
         sys.exit(-1)
     writeLogFile(os.path.join(options.output,"theta_"+options.modelName),err,out)
-        
+    plotThetaHistograms(os.path.join(options.output,options.modelName+".root"))
     #-----------------------------------------------------------------------------
     logging.info("!!! run subtract !!!")
     #change for data the nominal model name!
@@ -710,7 +755,7 @@ if __name__=="__main__":
     logging.info("!!! run unfolding !!!")
     responseMatrixFile,responseMatrixName=options.responseMatrix.split(":",1)
     shutil.copy("execute_unfolding.sh", os.path.join(options.output,"execute_unfolding.sh"))  
-    err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=options.regScale,cwd=options.output)
+    err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=options.regScale,diceTMUnc=1,cwd=options.output)
     if not os.path.exists(os.path.join(options.output,"unfolded_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
@@ -721,10 +766,18 @@ if __name__=="__main__":
     logging.info("!!! calculate asymmetry !!!")
     
     asymmetryResult = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",outputName=os.path.join(options.output,options.modelName))
-    closureTest(asymmetryResult,options.responseMatrix,outputName=os.path.join(options.output,options.modelName))
+    if options.genHist:
+        closureTest(asymmetryResult,getRootObject(options.genHist),scale=1.0,outputName=os.path.join(options.output,options.modelName))
+    else:
+        closureTest(asymmetryResult,getRootObject(options.responseMatrix).ProjectionX(),scale=1.0,outputName=os.path.join(options.output,options.modelName))
     logging.info("final asymmetry: mean="+str(asymmetryResult["mean"])+", rms="+str(asymmetryResult["rms"]))
+
     file=open(os.path.join(options.output,"asymmetry.txt"),"w")
     file.write("mean, "+str(round(asymmetryResult["mean"],7))+"\n")
     file.write("rms, "+str(round(asymmetryResult["rms"],7))+"\n")
+    if options.genHist:
+        file.write("gen, "+str(round(calcAsymmetry(getRootObject(options.genHist)),7))+"\n") 
+    else:
+        file.write("gen, "+str(round(calcAsymmetry(getRootObject(options.responseMatrix).ProjectionX()),7))+"\n") 
     file.close()
     
