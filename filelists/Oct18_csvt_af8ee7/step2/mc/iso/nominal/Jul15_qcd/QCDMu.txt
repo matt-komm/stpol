@@ -1,0 +1,15 @@
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_1_1_SBm.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_2_1_qUL.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_3_1_7bP.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_4_1_xWK.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_5_1_ZNZ.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_6_1_v8l.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_7_1_Psp.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_8_1_TtJ.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_9_1_ZG8.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_10_1_LAN.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_11_1_Kk5.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_12_1_BgW.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_13_1_uGV.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_14_1_SqP.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCDMu/output_15_1_UQW.root

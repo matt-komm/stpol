@@ -1,0 +1,8 @@
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_250_350_BCtoE/output_1_1_Wll.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_250_350_BCtoE/output_2_1_sde.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_250_350_BCtoE/output_3_1_mAV.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_250_350_BCtoE/output_4_1_46A.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_250_350_BCtoE/output_5_1_qbt.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_250_350_BCtoE/output_6_1_tko.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_250_350_BCtoE/output_7_1_7YU.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/nominal/QCD_Pt_250_350_BCtoE/output_8_1_ire.root

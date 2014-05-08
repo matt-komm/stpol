@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_scaleup/output_1_2_Ptj.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_scaleup/output_2_2_CCo.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_scaleup/output_3_2_Gxg.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_scaleup/output_4_2_mXa.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_scaleup/output_5_2_Oav.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_scaleup/output_6_2_mH7.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/Tbar_t_ToLeptons_scaleup/output_7_2_Hg4.root

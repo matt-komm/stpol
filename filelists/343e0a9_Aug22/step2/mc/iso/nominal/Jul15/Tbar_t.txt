@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/Tbar_t/output_1_1_nIb.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/Tbar_t/output_2_1_Pto.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/Tbar_t/output_3_1_qM4.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/Tbar_t/output_4_1_6QG.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/Tbar_t/output_5_1_77F.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/Tbar_t/output_6_1_DDy.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/Tbar_t/output_7_1_6Sb.root

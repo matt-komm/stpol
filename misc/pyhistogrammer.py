@@ -60,12 +60,14 @@ cos_theta = Histo(
     ("double", ("cosTheta", "cosThetaLightJet")),
     None, "cos_theta", "cos_theta", 50, -1, 1
 )
+
 histos.append(cos_theta)
-#rms_lj = Histo(
-#    ("float", ("cosTheta", "cosThetaLightJet")),
-#    None, "rms_lj", "rms_lj", 50, 0, 0.5
-#)
-#histos.append(rms_lj)
+
+ttbar_weight = Histo(
+    ("double", ("ttbarTopWeight", "weight")),
+    None, "ttbar_weight", "ttbar_weight", 50, 0, 2
+)
+histos.append(ttbar_weight)
 
 nEv = 0
 t0 = time.time()

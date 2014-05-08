@@ -25,10 +25,17 @@ parser.add_argument(
 )
 parser.add_argument(
    "-c",
-   "--channel", type=str, required=True, choices=["mu", "ele"], dest="channel", default=None,
+   "--channel", type=str, required=False, choices=["mu", "ele"], dest="channel", default=None,
    help="the lepton channel to use"
 )
 args = parser.parse_args()
+if not args.channel:
+    if "/mu/" in args.fname:
+        args.channel = "mu"
+    elif "/ele/" in args.fname:
+        args.channel = "ele"
+    else:
+        raise ValueError("channel not specified: %", args.fname)
 
 logger = logging.getLogger('addMVAasFriend.py')
 
@@ -83,7 +90,7 @@ for i in range(t.GetEntries()):
         calc = True
         for v in varlist:
             if not vars[v][0] == vars[v][0]:
-               calc = False 
+               calc = False
         if calc:
             mva[m][0] = reader[m].EvaluateMVA(m)
         else:

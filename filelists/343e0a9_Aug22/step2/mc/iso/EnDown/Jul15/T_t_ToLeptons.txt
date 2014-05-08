@@ -1,0 +1,13 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_1_1_bog.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_2_1_Tbs.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_3_1_7T1.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_4_1_d1n.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_5_1_5gk.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_6_1_mQk.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_7_1_gRh.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_8_1_QNQ.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_9_1_HCv.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_10_1_dlX.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_11_1_GTb.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_12_1_Yv2.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/T_t_ToLeptons/output_13_1_uLe.root

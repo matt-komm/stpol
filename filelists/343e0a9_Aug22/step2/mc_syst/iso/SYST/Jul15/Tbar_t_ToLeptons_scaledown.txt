@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/Tbar_t_ToLeptons_scaledown/output_1_1_CzZ.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/Tbar_t_ToLeptons_scaledown/output_2_1_4IA.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/Tbar_t_ToLeptons_scaledown/output_3_1_iVE.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/SYST/Tbar_t_ToLeptons_scaledown/output_4_1_IAe.root

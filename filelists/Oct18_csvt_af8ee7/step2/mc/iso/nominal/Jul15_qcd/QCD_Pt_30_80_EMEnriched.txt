@@ -1,0 +1,12 @@
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_1_1_K6z.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_2_1_uXG.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_3_1_knF.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_4_1_8Af.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_5_1_7UI.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_6_1_tEZ.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_7_1_ygx.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_8_1_htc.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_9_1_Pbw.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_10_1_LnQ.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_11_1_Kjq.root
+file:/hdfs/cms/store/user/joosep/Oct18_csvt_af8ee7/iso/nominal/QCD_Pt_30_80_EMEnriched/output_12_1_G3w.root

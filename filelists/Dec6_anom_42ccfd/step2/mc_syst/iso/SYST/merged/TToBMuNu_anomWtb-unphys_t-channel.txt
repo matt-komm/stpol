@@ -1,0 +1,12 @@
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_1_1_3m0.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_2_1_KrV.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_3_1_Uvg.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_4_1_X3l.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_5_1_1I8.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_6_1_TOh.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_7_1_E3p.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_8_1_piC.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_9_1_HUZ.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_10_1_6qo.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_11_1_ajf.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBMuNu_anomWtb-unphys_t-channel/output_12_1_mgy.root

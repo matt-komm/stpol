@@ -17,3 +17,6 @@ for p in "${pdfs[@]}"
 do
     lhapdf-getdata $p
 done
+
+#Removing the 'external' directory manually is necessary to prompt a recreation of the symlinks
+echo "LHAPDF installed, you may want to link it to CMSSW by doing 'cd $CMSSW_BASE;rm -Rf external;scram b clean;scram setup lhapdffull;scram b -j20'"

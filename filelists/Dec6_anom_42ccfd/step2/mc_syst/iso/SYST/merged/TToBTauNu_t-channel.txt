@@ -1,0 +1,3 @@
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBTauNu_t-channel/output_1_1_ABz.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBTauNu_t-channel/output_2_1_SlK.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBTauNu_t-channel/output_3_1_s4x.root

@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_EMEnriched/output_1_1_htd.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_EMEnriched/output_2_1_pBv.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_EMEnriched/output_3_1_N92.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_EMEnriched/output_4_1_K4P.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_EMEnriched/output_5_1_GC8.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_EMEnriched/output_6_1_vx9.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/nominal/QCD_Pt_350_EMEnriched/output_7_1_OKK.root

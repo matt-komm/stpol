@@ -1,0 +1,13 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_1_1_LJo.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_2_1_2pb.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_3_1_My4.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_4_1_EsI.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_5_1_eXa.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_6_1_ySe.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_7_1_ZVw.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_8_1_js6.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_9_1_NfL.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_10_1_tOU.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_11_1_fZI.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_12_1_78T.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/ResDown/T_t/output_13_1_5k8.root

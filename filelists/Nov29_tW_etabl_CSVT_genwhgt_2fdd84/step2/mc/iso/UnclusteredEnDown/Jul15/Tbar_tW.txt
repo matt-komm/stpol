@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/UnclusteredEnDown/Tbar_tW/output_1_1_nb4.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/UnclusteredEnDown/Tbar_tW/output_2_1_HSM.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/UnclusteredEnDown/Tbar_tW/output_3_1_90c.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/iso/UnclusteredEnDown/Tbar_tW/output_4_1_1Eh.root

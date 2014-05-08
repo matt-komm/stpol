@@ -10,5 +10,6 @@ if [ -d "$OFDIR" ]; then
 fi
 mkdir -p "$OFDIR"
 echo "Calling ""$CMSSW_BASE"/bin/"$SCRAM_ARCH"/Step3_EventLoop with output to $OFDIR
-head -n5  $TESTFILE |  "$CMSSW_BASE"/bin/"$SCRAM_ARCH"/Step3_EventLoop "$CMSSW_BASE""/src/SingleTopPolarization/Analysis/python/runconfs/step3/test.py" --doControlVars --isMC --outputFile="$OFDIR"/out.root &> "$OFDIR"/log_step3.txt
+#head -n5  $TESTFILE |  $CMSSW_BASE/bin/$SCRAM_ARCH/Step3_EventLoop $CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/test.py --doControlVars --isMC --outputFile=$OFDIR/out.root --generator=powheg &> $OFDIR/log_step3.txt
+echo "/hdfs/cms/store/user/joosep/Sep6_760158_powheg_genparticles/iso/nominal/Tbar_t_ToLeptons/output_2_1_caa.root" | $CMSSW_BASE/bin/$SCRAM_ARCH/Step3_EventLoop $CMSSW_BASE/src/SingleTopPolarization/Analysis/python/runconfs/step3/test.py --doControlVars --isMC --outputFile=$OFDIR/out.root --generator=powheg &> $OFDIR/log_step3.txt
 tail -n10 "$OFDIR"/log_step3.txt

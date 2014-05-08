@@ -1,0 +1,8 @@
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/QCD_Pt_30_80_BCtoE/output_1_1_jFi.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/QCD_Pt_30_80_BCtoE/output_2_1_Jp2.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/QCD_Pt_30_80_BCtoE/output_3_1_f1F.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/QCD_Pt_30_80_BCtoE/output_4_1_MH1.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/QCD_Pt_30_80_BCtoE/output_5_1_mZ2.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/QCD_Pt_30_80_BCtoE/output_6_1_SiE.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/QCD_Pt_30_80_BCtoE/output_7_1_S7j.root
+file:/hdfs/cms/store/user/joosep/Nov29_tW_etabl_CSVT_genwhgt_2fdd84/antiiso/nominal/QCD_Pt_30_80_BCtoE/output_8_1_bo9.root

@@ -1,18 +1,24 @@
+
 import sys, os
 import math
 from fit import *
-#from theta_auto import *
+from theta_auto import *
 import logging
 import ROOT
-#from final_fit.fit_systematics import *
 import argparse
-from plot_fit import plot_fit
+from final_fit.plot_fit import *
 
 logging.basicConfig(level=logging.INFO)
+"""
+Script for final fit
 
-SIGNAL = 'tchan'
-
-
+The fit parameters are specified in fit.py
+The default shape uncertainties are ["__En", "Res", "ttbar_scale", "ttbar_matching", "iso"]  - other do not change the shape.
+The systematics which match in shape with the nominal should not be used for the fit as the fit might not converge. The are absorbed in the rate uncertainties.
+Check with $STPOL_DIR/final_fit/compare_template_shapes.py when adding new systematics-
+As a default, unconstrained prior rate uncertaintes are applied for signal and wzjets while "other" (top+qcd) gets a 20% gaussian uncertainty.
+By default, the output file will also contain the correlation between ("wzjets", "other"). Others can be added as needed.
+"""
 def get_model(infile, fit):
     model = build_model_from_rootfile(infile, include_mc_uncertainties = True, histogram_filter = fit.histofilter, transform_histo = fit.transformHisto)
     model.fill_histogram_zerobins()
@@ -77,26 +83,21 @@ def do_fit(fit, path):
     outfile = "histos_fitted/"+fit.name+"/fitted.root"
     write_histograms_to_rootfile(pred, outfile)
     #FIXME: Secgmentation faults for more than 2 fits...
-    #plot_fit(fit, infile, outfile, result)
+    #plot_final_fit(fit, infile, outfile, result)
 
 if __name__=="__main__":
     if "theta-auto.py" not in sys.argv[0]:
         raise Exception("Must run as `$STPOL_DIR/theta/utils2/theta-auto.py %s`" % (sys.argv[0]))
     try:
-        sys.argv.pop(sys.argv.index("final_fit.py"))
+        sys.argv.pop(sys.argv.index(sys.argv[0]))
     except ValueError:
         pass
-
 
     parser = argparse.ArgumentParser(description='Do the final fit')
     parser.add_argument('--channel', default=None, help="The lepton channel used for the fit")
     parser.add_argument('--path', default="./")
     parser.add_argument('--var', default=None, help="Variable to fit on")
     parser.add_argument('--infile', default=None, help="The input file")
-    #TODO
-    #FIXME: WHY is it necessary for the fitter to know the coupling?
-    #parser.add_argument('--coupling', dest='coupling', choices=["powheg", "comphep", "anomWtb-0100", "anomWtb-unphys"], default="powheg", help="Coupling used for signal sample")
-    #parser.add_argument('--asymmetry', dest='asymmetry', help="Asymmetry to reweight generated distribution to", default=None)
     args = parser.parse_args()
 
     #If the input file is explicitly specified, just run a single fit on it

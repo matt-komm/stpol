@@ -1,0 +1,4 @@
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBTauNu_anomWtb-unphys_t-channel/output_1_1_FSo.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBTauNu_anomWtb-unphys_t-channel/output_2_1_MDw.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBTauNu_anomWtb-unphys_t-channel/output_3_1_gEj.root
+file:/hdfs/cms/store/user/joosep/Dec6_anom_42ccfd/iso/SYST/TToBTauNu_anomWtb-unphys_t-channel/output_4_1_37h.root

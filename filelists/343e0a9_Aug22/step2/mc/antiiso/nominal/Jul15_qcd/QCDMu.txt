@@ -1,0 +1,8 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/QCDMu/output_1_1_zLF.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/QCDMu/output_2_1_LBn.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/QCDMu/output_3_1_0bN.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/QCDMu/output_4_1_Qw3.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/QCDMu/output_5_2_FL9.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/QCDMu/output_6_1_8I9.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/QCDMu/output_7_1_Lhu.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/nominal/QCDMu/output_8_1_oWP.root

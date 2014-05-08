@@ -1,3 +1,45 @@
+Sample: filelists/Oct3_nomvacsv_nopuclean_e224b5, filelists/Oct3.txt
+step2: step2
+parent: datasets/step2/data/Jul15, Aug1, datasets/step2/mc*/Jul15
+Explanation: Removed gen particles, changed b-tagger to CSV
+------
+Sample: /hdfs/local/stpol/step3/Sep6_760158_powheg_genparticles
+step: step3
+parent: filelists/Sep6_760158_powheg_genparticles 
+Explanation: PDF weighting has powheg-specific processing for Q2, genparticles saved @ step2
+-------
+Sample: /hdfs/local/stpol/step3/Sep4_syst_a554579
+step: step3
+parent: filelists/Sep4_syst_a554579, filelists/343e0a9_Aug22 (nominal)
+Explanation: added PDF weighting pdf_id1,2, tbar t scaleup, top mass 3GeV samples
+-------
+Sample: /hdfs/local/stpol/step3/Sep1_wjets_fsim/
+step: step3
+parent: filelists/step2/mc_syst/nominal/wjets_fsim/
+Explanation: WJets fastsim systematic samples, produced without PDF weights, iso only
+-------
+Sample: filelists/step2/mc_syst/nominal/wjets_fsim/
+step: step2
+parent:
+    filelists/Jul10_5a56de/step1/mc/wjets_FSIM_Summer12/
+    /home/joosep/singletop/stpol/crabs/Jul10_5a56de/step1/mc/wjets_FSIM_Summer12/WD_* (UNPUBLISHED DUE TO CRAB ERRORS)
+Explanation: WJets fastsim systematic samples, produced manually, not via crab
+-------
+Sample: /hdfs/local/stpol/step3/37acf5_343e0a9_Aug22/
+step: step3
+luminosity: ??? FIXME@MARIO
+git hash: step2 343e0a9, step3 37acf5
+Explanation: Updated b-tagging SFs to 2013, switched off met phi corrections 
+parent: filelists/343e0a9_Aug22/
+-------
+Sample: /hdfs/local/stpol/step3/Aug4_0eb863_full_with_Jul29_MVA
+step: step3
+luminosity: filelists/Aug4_0eb863_full/step2/data/overview, also in plots/common/cross_sections.py already
+git hash: step2 0eb863, step3 4ed824
+Explanation: Full systematics processing with top pt reweighting, met-phi corrections, 19.7/fb int.lumi.
+Changed default top PT weight to unity, stop aborting on missing file in step3. PDF weights in separate tree (trees/pdf_weights)
+MVA same as previous step3 releases, trained on Jul29th. 
+parent: Aug4_0eb863_full
 -------
 Sample: /hdfs/local/stpol/fit_histograms/09_08_2013_3comp
     /hdfs/local/stpol/unfolding_histograms/09_08_2013_comp
@@ -14,11 +56,12 @@ git hash: ?
 Explanation: Costheta histograms with all available systematics
 parent: /hdfs/local/stpol/step3/Jul26_MVA_multivar_v1/
 -------
-Sample: /hdfs/local/stpol/step3/Aug4_0eb863_full/
+Sample: /home/joosep/singletop/stpol/Aug4_0eb863_full/
 step: step3
 luminosity: filelists/Aug4_0eb863_full/step2/data/overview, also in plots/common/cross_sections.py already 
-git hash: 0eb863
-Explanation: Full systematics processing with top pt reweighting, met-phi corrections, 19.7/fb int.lumi, new MVA (as in Aug4_c6a4b11_puw_Jul29_MVA) 
+git hash: step2 0eb863, step3 4ed824
+Explanation: Full systematics processing with top pt reweighting, met-phi corrections, 19.7/fb int.lumi. No MVA variable was added yet.
+Changed default top PT weight to unity, stop aborting on missing file in step3. PDF weights in separate tree (trees/pdf_weights)
 parent: Aug4_0eb863_full
 -------
 Sample: /hdfs/local/stpol/step3/Aug4_c6a4b11_puw_Jul29_MVA
@@ -30,7 +73,7 @@ Sample: Aug4_0eb863_full
 step: step2
 git hash: 0eb863
 filelist: filelists/Aug4_0eb863_full/
-Explanation: as Aug4_c6a4b11, but with all sustematics.i
+Explanation: as Aug4_c6a4b11, but with all sustematics.
 There was a slight issue with data luminosity, but this was mostly solved by a crab resubmit. There is a very minor overlap between Aug1 and July15/Single*1 which is to be removed. 
 -------
 Sample: Aug4_c6a4b11_puw

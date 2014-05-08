@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/Tbar_t/output_1_1_1ZN.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/Tbar_t/output_2_1_D9R.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/Tbar_t/output_3_1_asK.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/Tbar_t/output_4_1_QG0.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/Tbar_t/output_5_1_uj1.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/Tbar_t/output_6_1_1jR.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/iso/EnDown/Tbar_t/output_7_1_tcI.root

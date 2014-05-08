@@ -1,0 +1,9 @@
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239548.root
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239549.root
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239550.root
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239551.root
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239552.root
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239554.root
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239555.root
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239556.root
+file:/hdfs/local/stpol/step2/wjets_fsim/WD_W4Jets_FSIM_scaleup_Jul10_5a56de/out_4239557.root

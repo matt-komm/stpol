@@ -1,0 +1,7 @@
+rate, tchan, 0.978920, 0.041922
+rate, other, 0.779379, 0.086592
+rate, wzjets, 2.016810, 0.197090
+corr, tchan, other, 0.289989
+corr, wzjets, tchan, -0.378867
+corr, wzjets, other, -0.984823
+mu__mva_BDT_with_top_mass_eta_lj_C_mu_pt_mt_mu_met_mass_bj_pt_bj_mass_lj__no_metphi

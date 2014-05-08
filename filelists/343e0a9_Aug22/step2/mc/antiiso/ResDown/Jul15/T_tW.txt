@@ -1,0 +1,2 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_tW/output_1_1_dMR.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/ResDown/T_tW/output_2_1_PZd.root

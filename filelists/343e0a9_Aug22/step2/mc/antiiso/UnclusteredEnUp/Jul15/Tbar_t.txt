@@ -1,0 +1,7 @@
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/UnclusteredEnUp/Tbar_t/output_1_1_xXg.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/UnclusteredEnUp/Tbar_t/output_2_1_VAM.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/UnclusteredEnUp/Tbar_t/output_3_1_Gq6.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/UnclusteredEnUp/Tbar_t/output_4_1_kWL.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/UnclusteredEnUp/Tbar_t/output_5_1_QPq.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/UnclusteredEnUp/Tbar_t/output_6_1_pcR.root
+file:/hdfs/cms/store/user/mario/343e0a9_Aug22/antiiso/UnclusteredEnUp/Tbar_t/output_7_2_EfE.root
