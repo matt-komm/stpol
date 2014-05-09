@@ -139,19 +139,20 @@ function ratio_hist(hists)
         +, Histogram(hists["DATA"].bin_edges),
         [v for (k,v) in filter(x -> x[1] == "DATA", collect(hists))]
     )
-    
+
     mcs = [(!isna(x) && x>0) ? Poisson(int(round(x))) : Poisson(1) for x in entries(mc)]
     datas = [(!isna(x) && x>0) ? Poisson(int(round(x))) : Poisson(1) for x in entries(data)]
     N = 10000
 
     errs = Array(Float64, (2, length(mcs)))
     means = Array(Float64, length(mcs))
+
     for i=1:length(mcs)
         m = float(rand(mcs[i], N)) * mc.bin_contents[i] / mc.bin_entries[i]
         d = rand(datas[i], N)
         v = (d-m)./d
         v = Float32[isna(_v) || isnan(_v) ? 0 : _v for _v in v]
-        err_up, mean, err_down = quantile(v, 0.99), quantile(v, 0.5), quantile(v, 0.01)
+        err_up, mean, err_down = quantile(v, 0.68), quantile(v, 0.5), quantile(v, 0.32)
         errs[1,i] = abs(mean-err_down)
         errs[2,i] = abs(mean-err_up)
         means[i] = mean
