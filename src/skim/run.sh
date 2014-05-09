@@ -3,6 +3,7 @@ set -e
 RET=$?
 if [ $RET -ne 0 ]; then
     echo '/hdfs was not available'
+    exit 1
 fi
 
 outfile="output"
@@ -21,5 +22,5 @@ p=/hdfs/local/joosep/stpol/skims/@DATASETPATH@/@MY_JOBID@
 rm -Rf $p
 mkdir -p $p
 rsync -c output* $p
-
-\ls -1 $p
+echo $p
+find $p -name "*"
