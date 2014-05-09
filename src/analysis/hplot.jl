@@ -13,10 +13,11 @@ function barplot(ax::PyObject, hh::Histogram, color::ASCIIString;kwargs...)
         xs[i] = edges(hh)[1 + floor(i/2)]
         ys[i] = contents(hh)[1 + floor((i-1)/2)]
     end
-    ax[:plot](xs, ys, color=color; kwargsd...)
+    p = ax[:plot](xs, ys, color=color; kwargsd...)
     do_error && ax[:errorbar](
         midpoints(edges(hh)), contents(hh)[1:end-1], errors(hh)[1:end-1], fmt=nothing, ecolor=color
     )
+    return p
 end
 
 # function barplot(ax, h::Histogram, color; kwargs...)
