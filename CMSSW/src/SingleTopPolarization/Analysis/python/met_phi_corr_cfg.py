@@ -27,9 +27,9 @@ def calculateMetPhiCorrectedMET(process, prefix, conf, src):
     process.load("JetMETCorrections.Type1MET.pfMETsysShiftCorrections_cfi")
 
     if conf.isMC:
-        process.pfMEtSysShiftCorr.parameter = process.pfMEtSysShiftCorrParameters_2012runAvsNvtx_mc
+        process.pfMEtSysShiftCorr.parameter = process.pfMEtSysShiftCorrParameters_2012runABCDvsNvtx_mc
     else:
-        process.pfMEtSysShiftCorr.parameter = process.pfMEtSysShiftCorrParameters_2012runAvsNvtx_data
+        process.pfMEtSysShiftCorr.parameter = process.pfMEtSysShiftCorrParameters_2012runABCDvsNvtx_data
 
     selectedVerticesForMETCorr = process.selectedVerticesForMEtCorr.clone(
         src=cms.InputTag("goodOfflinePrimaryVertices"),

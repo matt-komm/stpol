@@ -12,8 +12,8 @@ const DO_LJET_RMS = PARS["do_ljet_rms"]
 const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
 const BDT_VAR = symbol(PARS["bdt_var"])
-#const BDT_CUTS = vcat(-1.0, [-0.2:0.01:0.8])
-const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
+const BDT_CUTS = [-0.2:0.1:0.8]
+#const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
 
 #PAS
 #const BDT_CUTS = [0.06, 0.13]
@@ -28,6 +28,7 @@ println("loading dataframe:$infile");
 
 #Load the main event TTree
 const df_base = TreeDataFrame(infile)
+df_base.tt == C_NULL && (warn("empty TTree for $infile, exiting");exit(0))
 nrow(df_base)>0 || (warn("$infile was emtpy, exiting");exit(0))
 
 #load the TTree with the QCD values, xs weights

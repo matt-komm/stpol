@@ -261,6 +261,23 @@ pop!(scenarios, (:matching__down, :tchan))
 scenarios[(:unweighted, :tchan)] =
     Scenario(:nominal, :tchan, (nw::Float64, row::DataFrameRow)->1.0, :unweighted)
 
+#t-channel asymmetry re-weighting
+scenarios[(:asym_028, :tchan)] =
+    Scenario(:nominal, :tchan,
+    (nw::Float64, row::DataFrameRow)-> nw * (0.28 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
+    :asym_028
+)
+scenarios[(:asym_008, :tchan)] =
+    Scenario(:nominal, :tchan,
+    (nw::Float64, row::DataFrameRow)-> nw * (0.08 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
+    :asym_008
+)
+scenarios[(:asym_000, :tchan)] =
+    Scenario(:nominal, :tchan,
+    (nw::Float64, row::DataFrameRow)-> nw * (0.00 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
+    :asym_000
+)
+
 for k in SingleTopBase.comphep_processings
     scenarios[(SYSTEMATICS_TABLE[k], :tchan)] = Scenario(k, :tchan, (nw::Float64, row::DataFrameRow)->nw, :nominal)
 end

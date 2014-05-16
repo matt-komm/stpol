@@ -369,7 +369,8 @@ const tomap = ASCIIString[
     "Mar13",
     "Nov29_tW_etabl_CSVT_genwhgt_2fdd84",
     "signal_costheta_systb",
-    "343e0a9_Aug22"
+    "343e0a9_Aug22",
+    "May1_metphi_on"
 ]
 
 #convert all strings to hash, create a two-way dict
