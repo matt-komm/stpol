@@ -5,12 +5,12 @@ fit_C: fit_mu_C fit_ele_C
 fit_abs_ljet_eta: fit_mu_abs_ljet_eta fit_ele_abs_ljet_eta fit_mu_2j1t_abs_ljet_eta fit_ele_2j1t_abs_ljet_eta
 
 fit_separate: fit_mu_2j1t fit_ele_2j1t fit_mu_3j2t fit_ele_3j2t
-#
-# HISTDIR=../../results/hists/apr29/preselection/
-# OUTDIR=results/csvt/qcd__mva_nominal
 
-HISTDIR=../../results/hists/csvt_only/preselection
-OUTDIR=results/csvt/qcd__metmtw_nominal
+HISTDIR=../../results/hists/apr29/preselection/
+OUTDIR=results/csvt/qcd__mva_nominal
+
+# HISTDIR=../../results/hists/csvt_only/preselection
+# OUTDIR=results/csvt/qcd__metmtw_nominal
 #
 # HISTDIR=../../results/hists/apr16/csvt_qcd_metmtw/preselection/
 # OUTDIR=results/csvt/qcd__metmtw_nominal

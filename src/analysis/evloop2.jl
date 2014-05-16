@@ -12,8 +12,8 @@ const DO_LJET_RMS = PARS["do_ljet_rms"]
 const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
 const BDT_VAR = symbol(PARS["bdt_var"])
-#const BDT_CUTS = vcat(-1.0, [-0.2:0.01:0.8])
-const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
+const BDT_CUTS = [-0.2:0.1:0.8]
+#const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
 
 #PAS
 #const BDT_CUTS = [0.06, 0.13]

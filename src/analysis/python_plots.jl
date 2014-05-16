@@ -521,6 +521,7 @@ function combdraw(
     rax[:set_xlabel](VARS[var], fontsize=22)
     rax[:set_ylabel]("\$ \\frac{D - M}{D} \$")
     rslegend(ax)
+    ax[:set_ylim](top=maximum(contents(hists["DATA"])) * 1.3)
 
     return ax, rax, mup, mdown, means[1:end-1]
 end

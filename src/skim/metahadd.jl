@@ -6,14 +6,14 @@ include("../analysis/base.jl")
 
 fname = ARGS[1]
 ofile = ARGS[2]
-infile = ARGS[3]
-infiles = sort(map(x -> convert(ASCIIString, strip(x)), readall(infile)|>split))|>collect
+#infile = ARGS[3]
+#infiles = sort(map(x -> convert(ASCIIString, strip(x)), readall(infile)|>split))|>collect
 processed = ASCIIString[]
 
-flist = sort(map(
-    x -> convert(ASCIIString, strip(x)),
+flist = sort(filter(x->contains(x, ".root"), map(
+    x -> convert(ASCIIString, first(split(strip(x), " "))),
     split(readall(fname))
-))|>collect
+)))|>collect
 
 @assert length(flist)>0 "no files specified"
 
@@ -66,8 +66,8 @@ end
 
 processed = sort(processed)|>collect
 
-((length(infiles) == length(processed)) && (infiles .== processed)) ||
-    warn("incomplete processing, some files in input file but not in root")
+#((length(infiles) == length(processed)) && (infiles .== processed)) ||
+#    warn("incomplete processing, some files in input file but not in root")
 
 of = open(ofile, "w")
 write(of, json(res))
