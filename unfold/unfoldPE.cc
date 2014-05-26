@@ -320,7 +320,7 @@ int main( int argc, const char* argv[] )
     if (argc<7) {
         printf("Usage:\r\n");
         printf("\tunfold \t[inputFile] [treeName] [branchName] [reponseFile] \r\n");
-        printf("\t\t[reponseMatrixName] [outputFile] [reg] [TMUnc]\r\n");
+        printf("\t\t[reponseMatrixName] [outputFile] [reg] [TMUnc] [bootstrap]\r\n");
         return -1;
     }
     printf("use: inputFile='%s'\r\n",argv[1]);
@@ -330,12 +330,25 @@ int main( int argc, const char* argv[] )
     printf("use: responseMatrixName='%s'\r\n",argv[5]);
     printf("use: outputFile='%s'\r\n",argv[6]);
     printf("use: regScale='%f'\r\n",atof(argv[7]));
+    
+    
     bool diceTMUnc=false;
     if (argc>=9)
     {
         diceTMUnc=atoi(argv[8])>0;
     }
     printf("use: diceTMUncertainty='%s'\r\n",diceTMUnc ? "true" : "false");
+    
+    
+    bool use_bootstrap = false;
+    if (argc>=10)
+    {
+        use_bootstrap=atoi(argv[9])>0;
+    }
+    printf("use: bootstrap='%s'\r\n",use_bootstrap ? "true" : "false");
+    
+    
+    
     TFile input(argv[1],"r");
 
     TTree* tree_input = (TTree*)input.Get(argv[2]);
@@ -360,7 +373,7 @@ int main( int argc, const char* argv[] )
 
     TH1D* measured =  response->ProjectionY();
     TH1D* truth =  response->ProjectionX();
-    int measuredT=measured->GetNbinsX();
+    int nbinsM=measured->GetNbinsX();
     int nbinsT=truth->GetNbinsX();
     
     /*TCanvas* test = new TCanvas("canvas","",800,600);
@@ -422,21 +435,60 @@ int main( int argc, const char* argv[] )
                 }
             }
         }
-        TUnfoldDensity* tunfold = new TUnfoldDensity(&responseMatrix,TUnfold::kHistMapOutputHoriz, TUnfold::kRegModeCurvature);
-        //tunfold->SetBias(truth);
-        tunfold->DoUnfold(tau,histo_input);
-        histo_output_tunfold->Scale(0.0);
-        //tunfold->GetOutput(histo_output_tunfold);
-        TH1 *x = tunfold->GetOutput("x","unfolded");
-        if (x->GetNbinsX()!=histo_output_tunfold->GetNbinsX())
+        TH1* result = 0;
+        if (use_bootstrap)
         {
-            cout<<"error - output binning not expected - "<<x->GetNbinsX()<<":"<<histo_output_tunfold->GetNbinsX()<<endl;
+            TH1* unfolded;
+            TH1D* reconstructed=new TH1D(*histo_input);
+            TH1* unfoldedSum;
+            unsigned int Niters=20;
+            for (unsigned int iter=0; iter<Niters; ++iter)
+            {
+                //run unfolding
+                TUnfoldDensity* tunfold = new TUnfoldDensity(&responseMatrix,TUnfold::kHistMapOutputHoriz, TUnfold::kRegModeCurvature);
+                //tunfold->SetBias(truth);
+                tunfold->DoUnfold(tau,reconstructed);
+                unfolded->Scale(0.0);
+                //tunfold->GetOutput(histo_output_tunfold);
+                unfolded = tunfold->GetOutput("x","unfolded");
+                if (iter==0)
+                {
+                    unfoldedSum=new TH1(*unfolded);
+                }
+                else
+                {
+                    unfoldedSum->Add(unfolded);
+                }
+                //fold unfolded result again & sample poisson
+                for (int ibinM=0; ibinM<nbinsM;++ibinM)
+                {
+                    double sum = 0.0;
+                    for (int ibinT=0; ibinT<nbinsT;++ibinT)
+                    {
+                        sum+=responseMatrix.GetBinContent(ibinM+1,ibinT+1)*unfolded->GetBinContent(ibinT+1);
+                    }
+                    reconstructed->SetBinContent(ibinM,gRandom->Poisson(sum));
+                }
+            }
+            //get the bin content mean over all iterations
+            unfoldedSum->Scale(1.0/Niters);
+            result=unfoldedSum;
+        }
+        else
+        {
+            
+        }
+        if (result->GetNbinsX()!=histo_output_tunfold->GetNbinsX())
+        {
+            cout<<"error - output binning not expected - "<<result->GetNbinsX()<<":"<<histo_output_tunfold->GetNbinsX()<<endl;
             return -1;
         }
-        for (int ibin=0; ibin<x->GetNbinsX();++ibin)
+
+        for (int ibin=0; ibin<result->GetNbinsX();++ibin)
         {
-             histo_output_tunfold->SetBinContent(ibin+1,x->GetBinContent(ibin+1));
+            histo_output_tunfold->SetBinContent(ibin+1,result->GetBinContent(ibin+1));
         }
+
         /*
         TCanvas* canvas = new TCanvas("canvas","",800,600);
         //histo_input->Draw();

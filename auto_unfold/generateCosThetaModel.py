@@ -398,16 +398,12 @@ def generateNominalBackground(modelName="mymodel",
     _writeFile(file,outputFolder,modelName,dicePoisson=False,mcUncertainty=False,experiments=1)
     file.close()
     
-'''    
+   
 def generateModelData(modelName="mymodel",
                     outputFolder="mymodel",
                     histFile=None,
                     prefix="cos_theta",
-                    signalSetDict={},
-                    backgroundSetDict={},
-                    yieldSysDict={},
-                    shapeSysDict={},
-                    corrList=[],
+                    dataSetDict={},
                     binning=1,
                     ranges=[-1.0,1.0],
                     dicePoisson=True,
@@ -418,78 +414,31 @@ def generateModelData(modelName="mymodel",
         sys.exit(-1)
     
     file=open(os.path.join(outputFolder,modelName+".cfg"), "w")
-    
-    sysDistributions=MultiDistribution("sysDist")
-    for key in yieldSysDict.keys():
-        name = "sys_"+key
-        mean = yieldSysDict[key]["mean"]
-        unc = yieldSysDict[key]["unc"]
-        sysDistributions.addParameter(name,mean,unc)
-    for key in shapeSysDict.keys():
-        name ="sys_"+key
-        mean =shapeSysDict[key]["mean"]
-        unc=shapeSysDict[key]["unc"]
-        sysDistributions.addParameter(name,mean,unc)
-    for corr in corrList:
-        name1="sys_"+corr["name"][0]
-        name2="sys_"+corr["name"][1]
-        rho=corr["rho"]
-        sysDistributions.setCorrelation(name1,name2,rho)
-    
-    file.write(sysDistributions.toConfigString())
-    
-    
+
     model=Model(modelName)
     if mcUncertainty:
         model=Model(modelName, {"bb_uncertainties":"true"})
-
-    #yield_lumi=Distribution("beta_LUMI", "gauss", {"mean": "1.0", "width":"0.022", "range":"(\"-inf\",\"inf\")"})
-    #file.write(yield_lumi.toConfigString())
-    totalSetDict={}
-    totalSetDict.update(signalSetDict)
-    totalSetDict.update(backgroundSetDict)
     
     obs=Observable(prefix, binning, ranges)
-    for histSet in totalSetDict.keys():
-        for histName in totalSetDict[histSet]:
+    for histSet in dataSetDict.keys():
+        for histName in dataSetDict[histSet]:
             if not checkHistogramExistence(histFile,histName,debug=True):
                 continue
             comp=ObservableComponent(histName)
             coeff=CoefficientMultiplyFunction()
-            coeff.addDistribution(sysDistributions,"sys_"+histSet)
             comp.setCoefficientFunction(coeff)
- 
-            hist=RootHistogram(histName+"-NOMINAL",{"use_errors":"true"})
+            hist=RootHistogram(histName+"-DATA",{"use_errors":"true"})
             hist.setFileName(histFile)
             hist.setHistoName(histName)
             file.write(hist.toConfigString())
             comp.setNominalHistogram(hist)
-            
-            for sysName in shapeSysDict.keys():
-                if not checkHistogramExistence(histFile,histName+"__"+sysName+"__up"):
-                    continue
-                if not checkHistogramExistence(histFile,histName+"__"+sysName+"__down"):
-                    continue
-                histUP=RootHistogram(histName+"-"+sysName+"-UP",{"use_errors":"true"})
-                histUP.setFileName(histFile)
-                histUP.setHistoName(histName+"__"+sysName+"__up")
-                
-                histDOWN=RootHistogram(histName+"-"+sysName+"-DOWN",{"use_errors":"true"})
-                histDOWN.setFileName(histFile)
-                histDOWN.setHistoName(histName+"__"+sysName+"__down")
-                comp.addUncertaintyHistograms(histUP, histDOWN, sysDistributions,"sys_"+sysName)
-                file.write(histUP.toConfigString())
-                file.write(histDOWN.toConfigString())
-            file.write("\n")
-            
             obs.addComponent(comp)
            
-        
     model.addObservable(obs)
     file.write(model.toConfigString())
-    _writeFile(file,outputFolder,modelName,dicePoisson=dicePoisson,mcUncertainty=mcUncertainty)
+    _writeFile(file,outputFolder,modelName,dicePoisson=False,mcUncertainty=False,experiments=1)
     file.close()
-'''             
+            
                     
                     
 def _writeFile(file,outputFolder,modelName,dicePoisson=True,mcUncertainty=True,experiments=10000): 

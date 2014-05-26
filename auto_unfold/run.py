@@ -21,6 +21,7 @@ ROOT.gStyle.SetStatY(0.98)
 def parseFitResult(inputfile):
     signalSetDict={}
     backgroundSetDict={}
+    dataSetDict={}
     yieldSysDict={}
     shapeSysDict={}
     corrList=[]
@@ -42,6 +43,8 @@ def parseFitResult(inputfile):
                     signalSetDict[splitted[2]]=splitted[3:]
                 elif splitted[1]=="background":
                     backgroundSetDict[splitted[2]]=splitted[3:]
+                elif splitted[1]=="data":
+                    dataSetDict[splitted[2]]=splitted[3:]
                 else:
                     logging.warning("type can only be 'signal' or 'background' - found '"+splitted[1]+"' in line "+str(ln))
             elif splitted[0]=="rate":
@@ -75,7 +78,7 @@ def parseFitResult(inputfile):
             logging.error(e.message)
             sys.exit(-1)
     file.close()
-    return signalSetDict,backgroundSetDict,yieldSysDict,shapeSysDict,corrList
+    return signalSetDict,backgroundSetDict,dataSetDict,yieldSysDict,shapeSysDict,corrList
     
 def getResponseMatrixBinning(responseMatrix):
     fileName,objectName=responseMatrix.rsplit(":",1)
@@ -155,7 +158,7 @@ def plotThetaHistograms(thetaFile):
             cv = ROOT.TCanvas("cv"+str(random.random()),"",800,600)
             histo.Draw()
             histo.GetYaxis().SetRangeUser(0.0,histo.GetMaximum()*1.1)
-            cv.Print(thetaFile.rsplit(".")[0]+".pdf")
+            cv.Print(thetaFile.rsplit(".",1)[0]+".pdf")
     inFile.Close()
     
 def testAfterSubtraction(prefix,folder,subtractedFile,signalFile):
@@ -195,11 +198,43 @@ def testAfterSubtraction(prefix,folder,subtractedFile,signalFile):
     cv.cd()
     tree2.GetEntry(0)
     
-    histoNorm.Draw()
+    histoNorm.Draw("hist")
     histoNorm.GetYaxis().Set(500,0.0,histoNorm.GetMaximum()*1.4)
     histoNorm.GetYaxis().SetRangeUser(0.0,histoNorm.GetMaximum()*1.4)
     histSubMean.SetLineColor(ROOT.kGreen+1)
-    histSubMean.Draw("Same PE")
+    histSubMean.Draw("Same hist PE")
+    cv.Update()
+    cv.Print(os.path.join(folder,"subtractedDist.pdf"))
+    file.Close()
+    file2.Close()
+    
+def dataAfterSubtraction(prefix,folder,subtractedFile,signalFile):
+    histoSub=ROOT.TH1D()
+    histoSub.SetName("sub")
+    histoNorm=ROOT.TH1D()
+    histoNorm.SetName("norm")
+    
+    file=ROOT.TFile(os.path.join(folder,subtractedFile))
+    tree=file.Get("subtracted")
+    tree.SetBranchAddress("histos", histoSub)
+    
+    file2=ROOT.TFile(os.path.join(folder,signalFile))
+    tree2=file2.Get("products")
+    tree2.SetBranchAddress("pd__data_obs_"+prefix, histoNorm)
+    
+    tree.GetEntry(0)
+    tree2.GetEntry(0)
+    
+    
+    cv=ROOT.TCanvas("subClos","",800,600)
+    cv.cd()
+    tree2.GetEntry(0)
+    
+    histoNorm.Draw("hist")
+    histoNorm.GetYaxis().Set(500,0.0,histoNorm.GetMaximum()*1.4)
+    histoNorm.GetYaxis().SetRangeUser(0.0,histoNorm.GetMaximum()*1.4)
+    histoSub.SetLineColor(ROOT.kGreen+1)
+    histoSub.Draw("Same hist PE")
     cv.Update()
     cv.Print(os.path.join(folder,"subtractedDist.pdf"))
     file.Close()
@@ -493,7 +528,6 @@ if __name__=="__main__":
     parser.add_option("--prefix",action="store", type="string", default="cos_theta", dest="prefix", help="prefix")
     parser.add_option("-f","--force",action="store_true", default=False, dest="force", help="deletes old output folder")
     parser.add_option("--output",action="store", type="string", default=None, dest="output", help="output directory, default is {modelName}")
-    parser.add_option("--data",action="store", type="string", dest="dataHistogram", help="input data sample, e.g. data.root:cos_theta__DATA")
     parser.add_option("--runOnData",action="store_true", dest="runOnData",default=False, help="should data be unfolded (PEs otherwise)")
     parser.add_option("--noStatUncertainty",action="store_true",default=False, dest="noStatUncertainty", help="turn off statistical uncertainty")
     parser.add_option("--noMCUncertainty",action="store_true",default=False, dest="noMCUncertainty", help="turn off MC statistics uncertainty")
@@ -538,16 +572,13 @@ if __name__=="__main__":
         filesToCheck.append(options.signalHistogram.rsplit(":",1)[0]) #removes root path to object within root file
         logging.error("separate signal histogram not supported yet")
         sys.exit(-1)
-    if options.dataHistogram:
-        logging.info("will use '"+options.dataHistogram+"' for data")
-        filesToCheck.append(options.dataHistogram.rsplit(":",1)[0]) #removes root path to object within root file
-        
+
     if options.genHist:
         logging.info("optional genHist: "+str(options.genHist))
 
     logging.info("run on data: "+str(options.runOnData))
     if (options.runOnData):
-        logging.info("will run on data from '"+options.dataHistogram+"'")
+        logging.info("will run on data")
     else:
         logging.info("will run PE")
   
@@ -587,7 +618,7 @@ if __name__=="__main__":
     #-----------------------------------------------------------------------------
     logging.info("!!! parsing fit result !!!")
     corrListForTheta=[]
-    signalSetDict,backgroundSetDict,yieldSysDict,shapeSysDict,corrList=parseFitResult(options.fitResult)
+    signalSetDict,backgroundSetDict,dataSetDict,yieldSysDict,shapeSysDict,corrList=parseFitResult(options.fitResult)
     
     logging.info("signal sets:")
     for key in signalSetDict.keys():
@@ -648,7 +679,7 @@ if __name__=="__main__":
     #-----------------------------------------------------------------------------
     logging.info("!!! generate theta models !!!")
     
-    if not options.noBackground:
+    if not options.noBackground or options.runOnData:
         generateNominalBackground(
             modelName=options.modelName+"_backgroundNominal",
             outputFolder=options.output,
@@ -665,31 +696,18 @@ if __name__=="__main__":
             mcUncertainty=not options.noMCUncertainty
         )
                     
-                    
-                    
-    '''
     if options.runOnData:
         generateModelData(modelName=options.modelName,
-                    outputFolder=options.output,
-                    dataHist=options.dataHistogram,
-                    binning=len(binningHist)-1,
-                    ranges=[binningHist[0],binningHist[-1]])
-    '''
-    generateNominalSignal(modelName=options.modelName+"_signalNominal",
             outputFolder=options.output,
             histFile=options.histFile,
-            signalSetDict=signalSetDict,
-            backgroundSetDict=backgroundSetDict,
-            yieldSysDict=yieldSysDict,
-            shapeSysDict=shapeSysDict,
-            corrList=corrListForTheta,
+            dataSetDict=dataSetDict,
             prefix=options.prefix,
             binning=len(binningHist)-1,
             ranges=[binningHist[0],binningHist[-1]],
             dicePoisson=not options.noStatUncertainty,
             mcUncertainty=not options.noMCUncertainty)
-
-    generateModelPE(
+    else:
+        generateModelPE(
             modelName=options.modelName,
             outputFolder=options.output,
             histFile=options.histFile,
@@ -705,11 +723,28 @@ if __name__=="__main__":
             mcUncertainty=not options.noMCUncertainty
         )
     
+    generateNominalSignal(modelName=options.modelName+"_signalNominal",
+            outputFolder=options.output,
+            histFile=options.histFile,
+            signalSetDict=signalSetDict,
+            backgroundSetDict=backgroundSetDict,
+            yieldSysDict=yieldSysDict,
+            shapeSysDict=shapeSysDict,
+            corrList=corrListForTheta,
+            prefix=options.prefix,
+            binning=len(binningHist)-1,
+            ranges=[binningHist[0],binningHist[-1]],
+            dicePoisson=not options.noStatUncertainty,
+            mcUncertainty=not options.noMCUncertainty)
+
+    
+
 
     #-----------------------------------------------------------------------------
     logging.info("!!! run theta !!!")
     shutil.copy("execute_theta.sh", os.path.join(options.output,"execute_theta.sh"))    
-    if not options.noBackground:
+    #nominal background
+    if not options.noBackground or options.runOnData:
         err,out=runCommand(["./execute_theta.sh",options.modelName+"_backgroundNominal.cfg"],cwd=options.output)
         if not os.path.exists(os.path.join(options.output,options.modelName+"_backgroundNominal.root")):
             logging.error("theta output was not created")
@@ -719,16 +754,17 @@ if __name__=="__main__":
         writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
     plotThetaHistograms(os.path.join(options.output,options.modelName+"_backgroundNominal.root"))
     
+    #nominal signal
     err,out=runCommand(["./execute_theta.sh",options.modelName+"_signalNominal.cfg"],cwd=options.output)
     if not os.path.exists(os.path.join(options.output,options.modelName+"_signalNominal.root")):
         logging.error("theta output was not created")
         logging.error(err)
         logging.error(out)
         sys.exit(-1)
-    writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_backgroundNominal"),err,out)
+    writeLogFile(os.path.join(options.output,"theta_"+options.modelName+"_signalNominal"),err,out)
     plotThetaHistograms(os.path.join(options.output,options.modelName+"_signalNominal.root"))
     
-    
+    #PEs or data (using same output name)
     err,out=runCommand(["./execute_theta.sh",options.modelName+".cfg"],cwd=options.output)
     if not os.path.exists(os.path.join(options.output,options.modelName+".root")):
         logging.error("theta output was not created")
@@ -737,6 +773,7 @@ if __name__=="__main__":
         sys.exit(-1)
     writeLogFile(os.path.join(options.output,"theta_"+options.modelName),err,out)
     plotThetaHistograms(os.path.join(options.output,options.modelName+".root"))
+    
     #-----------------------------------------------------------------------------
     logging.info("!!! run subtract !!!")
     #change for data the nominal model name!
@@ -744,12 +781,16 @@ if __name__=="__main__":
         rebinHistograms(options.modelName+".root",options.prefix,binningMeasured,options.output)
     else:
         subtrackNominalBackground(options.modelName+".root",options.modelName+"_backgroundNominal.root",options.prefix,binningMeasured,options.output)
+    
     if not os.path.exists(os.path.join(options.output,"subtracted_"+options.modelName+".root")):
         logging.error("unfolding output was not created")
         logging.error(err)
         logging.error(out)
         sys.exit(-1)
-    testAfterSubtraction(options.prefix,options.output,"subtracted_"+options.modelName+".root",options.modelName+"_signalNominal.root")
+    if options.runOnData:
+        dataAfterSubtraction(options.prefix,options.output,"subtracted_"+options.modelName+".root",options.modelName+"_signalNominal.root")
+    else:
+        testAfterSubtraction(options.prefix,options.output,"subtracted_"+options.modelName+".root",options.modelName+"_signalNominal.root")
     
     #-----------------------------------------------------------------------------
     logging.info("!!! run unfolding !!!")
@@ -766,18 +807,20 @@ if __name__=="__main__":
     logging.info("!!! calculate asymmetry !!!")
     
     asymmetryResult = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",outputName=os.path.join(options.output,options.modelName))
-    if options.genHist:
-        closureTest(asymmetryResult,getRootObject(options.genHist),scale=1.0,outputName=os.path.join(options.output,options.modelName))
-    else:
-        closureTest(asymmetryResult,getRootObject(options.responseMatrix).ProjectionX(),scale=1.0,outputName=os.path.join(options.output,options.modelName))
+    if (not options.runOnData):
+        if options.genHist:
+            closureTest(asymmetryResult,getRootObject(options.genHist),scale=1.0,outputName=os.path.join(options.output,options.modelName))
+        else:
+            closureTest(asymmetryResult,getRootObject(options.responseMatrix).ProjectionX(),scale=1.0,outputName=os.path.join(options.output,options.modelName))
     logging.info("final asymmetry: mean="+str(asymmetryResult["mean"])+", rms="+str(asymmetryResult["rms"]))
 
     file=open(os.path.join(options.output,"asymmetry.txt"),"w")
     file.write("mean, "+str(round(asymmetryResult["mean"],7))+"\n")
     file.write("rms, "+str(round(asymmetryResult["rms"],7))+"\n")
-    if options.genHist:
-        file.write("gen, "+str(round(calcAsymmetry(getRootObject(options.genHist)),7))+"\n") 
-    else:
-        file.write("gen, "+str(round(calcAsymmetry(getRootObject(options.responseMatrix).ProjectionX()),7))+"\n") 
+    if (not options.runOnData):
+        if options.genHist:
+            file.write("gen, "+str(round(calcAsymmetry(getRootObject(options.genHist)),7))+"\n") 
+        else:
+            file.write("gen, "+str(round(calcAsymmetry(getRootObject(options.responseMatrix).ProjectionX()),7))+"\n") 
     file.close()
     

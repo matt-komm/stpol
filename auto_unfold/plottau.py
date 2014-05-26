@@ -36,7 +36,7 @@ def setStyle(graph,color):
     
 def getAsymmetry(folder,basefolder=""):
     asymmetryDict ={
-                    "gen":[],"asymmetry":{"mean":[], "rms":[]},"tau":[]
+                    "gen":[],"asymmetry":{"mean":[], "rms":[], "data":[]},"tau":[]
                     }
     
     f = open(os.path.join(basefolder,str(folder),"asymmetry.txt"),"r")
@@ -46,6 +46,10 @@ def getAsymmetry(folder,basefolder=""):
     asymmetryDict["asymmetry"]["mean"].append(result["mean"])
     asymmetryDict["asymmetry"]["rms"].append(result["rms"])
     asymmetryDict["tau"].append(folder)
+    f = open(os.path.join(basefolder,str(folder)+"_data","asymmetry.txt"),"r")
+    result=readKeys(f)
+    f.close()
+    asymmetryDict["asymmetry"]["data"].append(result["mean"])
     return asymmetryDict
     
     
@@ -60,7 +64,7 @@ ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetHistLineWidth(3)
 
 asymmetryDict ={
-    "gen":[],"asymmetry":{"mean":[], "rms":[]},"tau":[]
+    "gen":[],"asymmetry":{"mean":[], "rms":[], "data":[]},"tau":[]
 }
 for folder in folderList:
     try:
@@ -78,6 +82,7 @@ indices=numpy.argsort(asymmetryDict["gen"])
 asymmetryDict["gen"]=numpy.array(asymmetryDict["gen"])[indices]
 asymmetryDict["asymmetry"]["mean"]=numpy.array(asymmetryDict["asymmetry"]["mean"])[indices]
 asymmetryDict["asymmetry"]["rms"]=numpy.array(asymmetryDict["asymmetry"]["rms"])[indices]
+asymmetryDict["asymmetry"]["data"]=numpy.array(asymmetryDict["asymmetry"]["data"])[indices]
 asymmetryDict["tau"]=numpy.array(asymmetryDict["tau"])[indices]
 print asymmetryDict["tau"]
 print asymmetryDict["asymmetry"]
@@ -85,7 +90,7 @@ print asymmetryDict["asymmetry"]
 canvas = ROOT.TCanvas("canvas","",800,600)
 canvas.SetRightMargin(0.23)
 canvas.SetGrid(2,2)
-axis=ROOT.TH2F("axis","; scale/#tau_{global};A_{stat-only}^{MC}",50,0.0005,200.0,50,0.2,0.6)
+axis=ROOT.TH2F("axis","; scale/#tau_{global};A",50,0.0005,200.0,50,0.15,0.6)
 axis.GetYaxis().SetTitleOffset(1.1)
 axis.GetXaxis().SetTitleOffset(1.1)
 axis.Draw("AXIS")
@@ -95,10 +100,18 @@ ROOT.gPad.SetLogx(1)
 graphTotal=ROOT.TGraphErrors(len(asymmetryDict["tau"]),numpy.array(asymmetryDict["tau"]),numpy.array(asymmetryDict["asymmetry"]["mean"]),numpy.zeros(len(asymmetryDict["tau"])),numpy.array(asymmetryDict["asymmetry"]["rms"]))
 setStyle(graphTotal,ROOT.kBlack)
 graphTotal.Draw("LP")
-
+graphData=ROOT.TGraph(len(asymmetryDict["tau"]),numpy.array(asymmetryDict["tau"]),numpy.array(asymmetryDict["asymmetry"]["data"]))
+setStyle(graphData,ROOT.kMagenta)
+graphData.Draw("LP Same")
 
 axis.Draw("Same AXIS")
-
+legend=ROOT.TLegend(0.78,0.95,0.98,0.8)
+legend.SetTextFont(42)
+legend.SetFillColor(ROOT.kWhite)
+legend.SetBorderSize(0)
+legend.AddEntry(graphTotal,"MC PE (stat. only)","LPE")
+legend.AddEntry(graphData,"data","LP")
+legend.Draw("Same")
 
 canvas.Update()
 canvas.Print(os.path.join(basefolder,"tauscan.pdf"))

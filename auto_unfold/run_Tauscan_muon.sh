@@ -4,9 +4,8 @@
 INPUTFOLDERS=""
 
 TAUSCALE="0.001 0.005 0.1 0.5 1.0 2.0 5.0 10.0 50.0 100.0"
-
+#TAUSCALE="1.0"
 FITRESULT="/home/fynu/mkomm/stpol/auto_unfold/fitResultMuon.txt"
-REGSCALE=1.0
 
 for tau in $TAUSCALE
 do
@@ -25,6 +24,16 @@ do
     --fitResult=$FITRESULT \
     --scaleRegularization=$tau \
     -f &> "muon/tauscan/"$tau"_run.log" &
+    nice -n 10 python run.py \
+    --includeSys="" \
+    --output="muon/tauscan/"$tau"_data" \
+    --modelName="tau" \
+    --runOnData \
+    --histFile=$INPUTHIST \
+    --responseMatrix=$RESPONSEMATRIX \
+    --fitResult=$FITRESULT \
+    --scaleRegularization=$tau \
+    -f &> "muon/tauscan/"$tau"_rundata.log" &
     sleep 20s
 
 done
