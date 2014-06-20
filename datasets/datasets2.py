@@ -33,7 +33,8 @@ step2_mc_syst_files = [
 #    "/mc_syst/Apr19",
 #    "/mc_syst/Jul15",
 #    "/mc_syst/Sep4",
-    "/mc_syst/merged",
+#    "/mc_syst/merged",
+     "/mc_syst/Jun16_2014",
 ]
 
 step2_data_files = [
