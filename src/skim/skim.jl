@@ -200,7 +200,12 @@ prevfile = ""
 
 #Loop over the events
 println("Beginning event loop")
-timeelapsed = @elapsed for i=1:maxev
+
+totype(x,t) = isna(x) ? NA : t(x)
+totype_i(x) = totype(x, int)
+
+for i=1:maxev
+    #println(i)
     nproc += 1
 
     #progress printout
@@ -214,7 +219,7 @@ timeelapsed = @elapsed for i=1:maxev
 
     df[i, :passes] = false
 
-    df[i, :gen_lepton_id] = events[sources[(:lepton, :gen, :id)]]
+    df[i, :gen_lepton_id] = events[sources[(:lepton, :gen, :id)]] |> totype_i
 
     #string representations of the feynman diagrams
     #genstring_mu = events[sources[(:muon, :geninfo)]]
@@ -224,7 +229,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :hlt_mu] = passes_hlt(events, HLTS[:mu])
     df[i, :hlt_ele] = passes_hlt(events, HLTS[:ele])
 
-    #println(gen_id, " '", genstring_mu, "' '", genstring_ele, "'")
+    ##println(gen_id, " '", genstring_mu, "' '", genstring_ele, "'")
 
 
     df[i, :cos_theta_lj_gen] = events[sources[:cos_theta_lj_gen]] |> ifpresent
@@ -288,12 +293,12 @@ timeelapsed = @elapsed for i=1:maxev
         lepton_type = :muon
         df[i, :lepton_type] = 13
         genparent = gen_parent(events[sources[(:muon, :geninfo)]])
-        df[i, :gen_parent_id] = genparent
+        df[i, :gen_parent_id] = genparent |> totype_i
     elseif nele==1 && nmu==0
         lepton_type = :electron
         df[i, :lepton_type] = 11
         genparent = gen_parent(events[sources[(:electron, :geninfo)]])
-        df[i, :gen_parent_id] = genparent
+        df[i, :gen_parent_id] = genparent |> totype_i
     else
         fails[:lepton] += 1
         continue
@@ -311,7 +316,7 @@ timeelapsed = @elapsed for i=1:maxev
     end
 
     if lepton_type == :muon || lepton_type == :electron
-        df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent
+        df[i, :lepton_id] = events[sources[part(lepton_type, :genPdgId)]] |> ifpresent |> totype_i
         df[i, :lepton_eta] = events[sources[part(lepton_type, :Eta)]] |> ifpresent
         df[i, :lepton_pt] = events[sources[part(lepton_type, :Pt)]] |> ifpresent
         df[i, :lepton_iso] = events[sources[part(lepton_type, :relIso)]] |> ifpresent
@@ -319,6 +324,8 @@ timeelapsed = @elapsed for i=1:maxev
         df[i, :lepton_phi] = events[sources[part(lepton_type, :Phi)]] |> ifpresent
         df[i, :mtw] = events[sources[part(lepton_type, :mtw)]] |> ifpresent
     end
+    
+    #println("lepton")
 
     df[i, :met] = events[sources[:met]] |> ifpresent
     df[i, :met_phi] = events[sources[(:met, :phi)]] |> ifpresent
@@ -336,7 +343,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :bjet_pt] = events[sources[:bjet_Pt]] |> ifpresent
     df[i, :bjet_eta] = events[sources[:bjet_Eta]] |> ifpresent
     df[i, :bjet_mass] = events[sources[:bjet_Mass]] |> ifpresent
-    df[i, :bjet_id] = events[sources[:bjet_partonFlavour]] |> ifpresent
+    df[i, :bjet_id] = events[sources[:bjet_partonFlavour]] |> ifpresent |> totype_i
     #df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
     df[i, :bjet_phi] = events[sources[:bjet_Phi]] |> ifpresent
@@ -346,13 +353,14 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :ljet_pt] = events[sources[:ljet_Pt]] |> ifpresent
     df[i, :ljet_eta] = events[sources[:ljet_Eta]] |> ifpresent
     df[i, :ljet_mass] = events[sources[:ljet_Mass]] |> ifpresent
-    df[i, :ljet_id] = events[sources[:ljet_partonFlavour]] |> ifpresent
+    df[i, :ljet_id] = events[sources[:ljet_partonFlavour]] |> ifpresent |> totype_i
     #df[i, :ljet_bd_a] = events[sources[:ljet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :ljet_bd_b] = events[sources[:ljet_bDiscriminatorCSV]] |> ifpresent
     df[i, :ljet_rms] = events[sources[:ljet_rms]] |> ifpresent
     df[i, :ljet_phi] = events[sources[:ljet_Phi]] |> ifpresent
     df[i, :ljet_dr] = events[sources[:ljet_deltaR]] |> ifpresent
     df[i, :ljet_pumva] = events[sources[:ljet_puMva]] |> ifpresent
+    #println("jet")
 
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id]))
     df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]] |> ifpresent
@@ -363,7 +371,7 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :pu_weight] = events[sources[weight(:pu)]]
     df[i, :pu_weight__up] = events[sources[weight(:pu, :up)]]
     df[i, :pu_weight__down] = events[sources[weight(:pu, :down)]]
-
+    
     df[i, :lepton_weight__id] = events[sources[weight(lepton_type, :id)]]
     df[i, :lepton_weight__id__up] = events[sources[weight(lepton_type, :id, :up)]]
     df[i, :lepton_weight__id__down] = events[sources[weight(lepton_type, :id, :down)]]
@@ -389,7 +397,7 @@ timeelapsed = @elapsed for i=1:maxev
             continue
         end
         jet_etas = events[sources[part(:jets, :Eta)]]
-        jet_ids  = events[sources[part(:jets, :partonFlavour)]]
+        jet_ids  = map(totype_i, events[sources[part(:jets, :partonFlavour)]])
         jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
 
         if all(map(ispresent, Any[jet_pts, jet_etas, jet_ids, jet_bds]))
@@ -470,17 +478,15 @@ timeelapsed = @elapsed for i=1:maxev
     df[i, :passes] = true
 end
 
-println("processed $(nproc/timeelapsed) events/second")
-
 #println(df)
 
 #skim only non-signal events
-#pass = (df[:passes]) | (df[:sample] .== int(hash("tchan")))
+pass = (df[:passes]) | (df[:sample] .== int(hash("tchan")))
 #Select only the events that actually pass
-#mydf = df[pass, :]
+mydf = df[pass, :]
 
 #keep all rows
-mydf = df
+#mydf = df
 
 for cn in names(mydf)
     if all(isna(mydf[cn]))
