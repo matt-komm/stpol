@@ -12,7 +12,7 @@ const DO_LJET_RMS = PARS["do_ljet_rms"]
 const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
 const BDT_VAR = symbol(PARS["bdt_var"])
-const BDT_CUTS = [-0.2:0.1:0.8]
+const BDT_CUTS = [-0.2:0.1:0.9]
 #const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
 
 #PAS
@@ -40,12 +40,12 @@ df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
 require("$sp/histogram_defaults.jl")
 
 const BDT_SYMBOLS = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in BDT_CUTS}
-const LEPTON_SYMBOLS = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau}
+const LEPTON_SYMBOLS = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau, NA=>NA}
 
 const DO_TRANSFER_MATRIX = true
 const HISTS_NOMINAL_ONLY = false
 const TM_NOMINAL_ONLY = false
-const JET_TAGS = [(2, 0), (2, 1), (3, 0), (3, 1), (3, 2)]
+const JET_TAGS = [(2, 0), (2, 2), (2, 1), (3, 0), (3, 1), (3, 2), (3, 3)]
 
 const crosscheck_vars = [
     :bdt_sig_bg, :bdt_sig_bg_top_13_001,
@@ -246,7 +246,7 @@ function process_df(rows::AbstractVector{Int64})
         const sample = hmap_symb_from[row[:sample]::Int64]
         const systematic = hmap_symb_from[row[:systematic]::Int64]
         const iso = hmap_symb_from[row[:isolation]::Int64]
-        const true_lep = sample==:tchan ? int64(row[:gen_lepton_id]::Int32) : int64(0)
+        const true_lep = sample==:tchan ? row[:gen_lepton_id] : int64(0)
 
         const isdata = ((sample == :data_mu) || (sample == :data_ele))
         if !isdata && HISTS_NOMINAL_ONLY
@@ -265,7 +265,7 @@ function process_df(rows::AbstractVector{Int64})
 
         if DO_TRANSFER_MATRIX && sample==:tchan && iso==:iso
 
-            const x = row[:cos_theta_lj_gen]::Float32
+            const x = row[:cos_theta_lj_gen]::Union(Float32, NAtype)
             const y = row[:cos_theta_lj]::Union(Float32, NAtype)
             const ny_ = searchsortedfirst(TM.edges[2], y)
 
