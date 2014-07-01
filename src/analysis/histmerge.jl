@@ -104,7 +104,7 @@ function select_histograms(
 
             syst = nothing
             try
-                syst = REV_SYSTEMATICS_TABLE[sc[1]]
+                syst = get(REV_SYSTEMATICS_TABLE, sc[1], sc[1])
             catch
                 syst = sc[1]
             end
@@ -112,7 +112,7 @@ function select_histograms(
             _q = query(q, :systematic, scen.systematic) |>
                 z -> query(
                     z, :scenario,
-                    SYSTEMATICS_TABLE[scen.weight_scenario]
+                    get(SYSTEMATICS_TABLE, scen.weight_scenario, scen.weight_scenario)
                 )
             h = length(_q) == 1 ? hd[first(_q)] : (
             warn("ambigous systematic query: $sc, $(length(_q))");
@@ -131,34 +131,44 @@ function select_histograms(
     end
 
     d = query(ks, :sample, ds) |>
-        z -> query(z, :iso, :antiiso) |> collect |> first
-    mcs = query(ks, :iso, :antiiso) |>
-        z->query(z, :scenario, :nominal) |>
-        z->query(z, :systematic, :nominal) |> collect
-    println("aiso mcs $(length(mcs))")
-    mcs = {k.sample => k for k in mcs}
-    println("aiso mcs $(length(mcs)) ")
+        z -> query(z, :iso, :antiiso) |> collect
 
-    sf = sfs[string(lepton)]["$(njets)j$(ntags)t"]["qcd_mva"]
-    hists["qcd"] = hd[d];
-    #println("anti-iso data: ", hists["qcd"])
-    summc = Histogram(hists["qcd"].bin_edges)
-    for k in [:ttjets, :wjets, :tchan, :diboson, :dyjets]
-        if haskey(mcs, k)
-            #println("anti-iso mc $k ", hd[mcs[k]])
-            summc += lumis[lepton] * hd[mcs[k]]
-        else
-            println("anti-iso MC $k not found")
+    if length(d)!=1
+        warn("could not select antiiso data")
+        hists["qcd"] = Histogram(hists["DATA"].bin_edges)
+
+        hists["antiiso_data"] = hists["qcd"]
+        hists["antiiso_mc"] = Dict()
+    else
+        d = first(d)
+        mcs = query(ks, :iso, :antiiso) |>
+            z->query(z, :scenario, :nominal) |>
+            z->query(z, :systematic, :nominal) |> collect
+        #println("aiso mcs $(length(mcs))")
+        mcs = {k.sample => k for k in mcs}
+        #println("aiso mcs $(length(mcs)) ")
+
+        sf = get(sfs[string(lepton)], "$(njets)j$(ntags)t", {"qcd_mva"=>1.0})["qcd_mva"]
+        hists["qcd"] = hd[d];
+        #println("anti-iso data: ", hists["qcd"])
+        summc = Histogram(hists["qcd"].bin_edges)
+        for k in [:ttjets, :wjets, :tchan, :diboson, :dyjets]
+            if haskey(mcs, k)
+                #println("anti-iso mc $k ", hd[mcs[k]])
+                summc += lumis[lepton] * hd[mcs[k]]
+            else
+                println("anti-iso MC $k not found")
+            end
         end
+        #println("anti-iso data before scaling, MC subtraction: \n", hists["qcd"])
+        #println("sumMC: \n", summc)
+
+        hists["qcd"] = hists["qcd"] - summc
+        hists["qcd"] = sf * hists["qcd"]
+
+        hists["antiiso_data"] = hd[d]
+        hists["antiiso_mc"] = {k=>hd[v] for (k,v) in mcs}
     end
-    #println("anti-iso data before scaling, MC subtraction: \n", hists["qcd"])
-    #println("sumMC: \n", summc)
-
-    hists["qcd"] = hists["qcd"] - summc
-    hists["qcd"] = sf * hists["qcd"]
-
-    hists["antiiso_data"] = hd[d]
-    hists["antiiso_mc"] = {k=>hd[v] for (k,v) in mcs}
 
     if dofit
         println("applying fit coefficients: ", join(FITRESULTS[lepton].means, ", "))
