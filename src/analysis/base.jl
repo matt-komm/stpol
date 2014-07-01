@@ -76,8 +76,8 @@ function nominal_weight(df::DataFrameRow)
     end
 end
 
-const procs = Symbol[:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
-const mcsamples = Symbol[:ttjets, :wjets, :tchan, :dyjets, :diboson, :twchan, :schan, :gjets];
+const procs = Symbol[:tchan, :wjets, :ttjets, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
+const mcsamples = Symbol[:tchan, :ttjets, :wjets, :twchan, :schan, :gjets, :dyjets, :diboson];
 const TOTAL_SAMPLES = vcat(mcsamples, :qcd)
 
 #lists the various systematic sample types
@@ -147,8 +147,8 @@ flatten(a)=a
 
 #load the fit results
 const FITRESULTS = {
-    :mu=>FitResult("$BASE/results/fits/apr21/bdt/mu.json"),
-    :ele=>FitResult("$BASE/results/fits/apr21/bdt/ele.json")
+    :mu=>FitResult("$BASE/results/fits/may28_2/nominal/mu.json"),
+    :ele=>FitResult("$BASE/results/fits/may28_2/nominal/ele.json")
 }
 
 t1 = time()
@@ -209,6 +209,7 @@ using DataArrays, DataFrames
 using JSON
 using HDF5, JLD
 using Histograms
+import Histograms.Histogram
 using PyCall
 using SingleTopBase
 
