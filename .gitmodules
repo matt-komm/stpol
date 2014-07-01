@@ -13,3 +13,6 @@
 [submodule "src/stpol-unfold"]
 	path = src/stpol-unfold
 	url = git@github.com:jpata/stpol-unfold.git
+[submodule "CMSSW/src/RecoMET/METAnalyzers"]
+	path = CMSSW/src/RecoMET/METAnalyzers
+	url = git@github.com:cms-analysis/RecoMET-METAnalyzers.git
