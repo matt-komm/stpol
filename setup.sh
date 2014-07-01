@@ -36,6 +36,7 @@ source setenv.sh
 #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideMETRecipe53X#CMSSW_5_3_14_patch1_or_later
 cd $CMSSW_BASE/src
 git cms-addpkg PhysicsTools/PatAlgos # PAT Recipe
+git cms-addpkg PhysicsTools/CandUtils
 git cms-addpkg CommonTools/Utils
 git cms-addpkg PhysicsTools/Configuration
 git cms-addpkg PhysicsTools/PatExamples
@@ -73,6 +74,18 @@ cat download.url | xargs wget
 cd $CMSSW_BASE/..
 git checkout CMSSW
 
+git submodule init
+git submodule update
+
+#submodules already added
+##pull PU jet ID code
+#git submodule add https://github.com/jpata/UserCode-CMG-CMGTools-External CMSSW/src/CMGTools/External
+#
+##pull generically useful analysis modules
+#git submodule add https://github.com/jpata/AnalysisModules CMSSW/src/AnalysisModules
+# MET CSC Halo filter
+#git submodule add git@github.com:cms-analysis/RecoMET-METAnalyzers.git CMSSW/src/RecoMET/METAnalyzers
+
 #cd $CMSSW_BASE/src
 
 #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupJetID
@@ -104,5 +117,5 @@ cd $CMSSW_BASE/src
 eval `scramv1 runtime -sh`
 cd $CMSSW_BASE/..
 
-echo "Ready to compile, run 'cd $CMSSW_BASE/src;scram b -j 16 &> scram.log'
+echo "Ready to compile, run 'cd $CMSSW_BASE/src;scram b -j 16 &> scram.log"
 #scram b -j 8
