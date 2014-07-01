@@ -299,6 +299,9 @@ def SingleTopStep2():
     process.trueNuNTupleProducer = process.recoNuNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueNeutrino", "STPOLSEL2"),
     )
+    process.trueWNTupleProducer = process.recoNuNTupleProducer.clone(
+        src=cms.InputTag("genParticleSelector", "trueWboson", "STPOLSEL2"),
+    )
     if Config.isCompHep:
         process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
             src=cms.InputTag("recoTrueTop"),
@@ -455,6 +458,7 @@ def SingleTopStep2():
         process.recoNuNTupleProducer *
         process.trueTopNTupleProducer *
         process.trueNuNTupleProducer *
+        process.trueWNTupleProducer *
         process.trueLeptonNTupleProducer *
         process.trueLightJetNTupleProducer *
         process.goodJetsNTupleProducer *
@@ -554,7 +558,7 @@ def SingleTopStep2():
              SelectEvents=cms.vstring(["*"])
          ),
         outputCommands=cms.untracked.vstring(
-            'drop *',
+            #'drop *',
             'keep edmMergeableCounter_*__*',
             'keep *_generator__*',
             #'keep *_genParticles__*', #hack for powheg PDF sets
