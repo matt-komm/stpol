@@ -1,7 +1,8 @@
 #!/bin/bash
 #NOTE: you must source this script, not execute it!
-#mv CMSSW_5_3_4_cand1/SingleTopPolarization ./
+
 set -x
+set -xe
 # Sanity check
 if [ "$1" != "--yes" ]
 then
@@ -18,17 +19,18 @@ fi
 [[ ! -z "$CMSVERSION" ]] || CMSVERSION=CMSSW_5_3_18
 #echo "Stashing current working directory, use 'git stash pop' later to retrieve"
 git stash #temporaryily store changes
-rm -Rf $CMSVERSION #remove the source tree for cmsrel to work
+rm -Rf CMSSW #remove the source tree for cmsrel to work
 export SCRAM_ARCH=slc5_amd64_gcc462
-scramv1 project CMSSW $CMSVERSION #Base code
+
+scram project -n CMSSW CMSSW CMSSW_5_3_18
+#scramv1 project CMSSW $CMSVERSION #Base code
 
 #git reset --hard #bring back the source tree
-cd $CMSVERSION 
+cd CMSSW
 
 eval `scramv1 runtime -sh`
 cd $CMSSW_BASE/..
 source setenv.sh
-cd $CMSSW_BASE/src
 
 #From official PAT recipe
 #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideMETRecipe53X#CMSSW_5_3_14_patch1_or_later
@@ -68,8 +70,9 @@ echo "getting electron MVAs "
 cd EgammaAnalysis/ElectronTools/data/
 cat download.url | xargs wget
 cd $CMSSW_BASE/..
+git checkout CMSSW
 
-cd $CMSSW_BASE/src
+#cd $CMSSW_BASE/src
 
 #https://twiki.cern.ch/twiki/bin/viewauth/CMS/PileupJetID
 #cvs co -r V00-03-04 -d CMGTools/External UserCode/CMG/CMGTools/External
@@ -78,7 +81,7 @@ cd $CMSSW_BASE/src
 #addpkg RecoMET/METFilters V00-00-13-01
 #addpkg RecoMET/METAnalyzers V00-00-08
 
-cd $CMSSW_BASE/..
+#cd $CMSSW_BASE/..
 #git checkout CMSSW
 
 #Install external
@@ -98,6 +101,7 @@ cd $CMSSW_BASE/..
 #Compile
 cd $CMSSW_BASE/src
 eval `scramv1 runtime -sh`
+cd $CMSSW_BASE/..
 
 echo "Ready to compile, run 'cd $CMSSW_BASE/src;scram b -j 16 &> scram.log'
 #scram b -j 8
