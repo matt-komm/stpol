@@ -2,11 +2,13 @@ include("../analysis/basedir.jl")
 include("xs.jl")
 
 infile = ARGS[1]
+path = ARGS[2]
 
 d = Dict()
 for inf in split(readall(infile))
     st = sample_type(inf)
-    p = "$infile/$(st[:tag])/$(st[:iso])/$(st[:systematic])/$(st[:sample])"
+    p = "$path/$(st[:tag])/$(st[:iso])/$(st[:systematic])/$(st[:sample])"
+    println(p) 
     if !haskey(d, p)
         d[p] = Any[]
     end
