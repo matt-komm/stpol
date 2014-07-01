@@ -24,13 +24,15 @@ res = Dict()
 
 processed2 = ASCIIString[]
 for fi in flist
+    fi = replace(fi, "file:", "")
     fi in processed2 && error("double processing of $fi")
     push!(processed2, fi)
 
     acc = accompanying(fi)
     md = nothing
 
-    println(fi," ", acc["processed"])
+    println(fi, " ", join(keys(acc), ","))
+
     try
         md = readtable(acc["processed"], allowcomments=true)
     catch err
