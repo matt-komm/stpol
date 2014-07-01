@@ -10,6 +10,7 @@ const VARS = {
 	:bdt_sig_bg=>"\$BDT_{W,t\\bar{t}}\$\ output",
 	:top_mass=>"\$ M_{bl\\nu} \$ [GeV]",
 	:lepton_pt=>"\$ p_{t,l} \$ [GeV]",
+	:lepton_iso=>"\$ I_{rel,l} \$",
 	:ljet_pt=>"\$ p_{t,j'} \$ [GeV]",
 	:bjet_pt=>"\$ p_{t,b} \$ [GeV]",
 	:mtw=>"\$ M_{l,\\nu} \$ [GeV]",
