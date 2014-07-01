@@ -410,7 +410,7 @@ function draw_errband(
     hists::Associative;
     log=false,
     systematics_unnormed::Vector{ASCIIString}=ASCIIString[
-        "ttjets_scale", "wzjets_scale", "tchan_scale"
+        "scale_ttjets", "scale_wjets", "scale_tchan"
     ],
     systematics_normed::Vector{ASCIIString}=[
         "matching",
@@ -473,44 +473,48 @@ cmspaper(ax, x, y, lumi=20; additional_text="") = text(
 function combdraw(
     hists, var::Symbol;
     log=false, plot_title="",
-    loc_paperstring=(:top, :right), titletext=""
+    loc_paperstring=(:top, :right), titletext="", kwargs...
     )
     fig, (ax, rax) = ratio_axes()
 
     draw_data_mc_stackplot(ax, hists;log=log,wjets_split=true);
     ax[:set_ylim](bottom=log?10:0)
     ax[:grid](true, which="both")
-    tot_du, tot_dd = draw_errband(ax, hists;
-        log=log
-    )
-    means, errs = errorbars(rax, hists)
+    kwargsd = {k=>v for (k,v) in kwargs}
+    do_errband = pop!(kwargsd, :do_errorband, true)
+    if do_errband
+        tot_du, tot_dd = draw_errband(ax, hists;
+            log=log
+        )
+        means, errs = errorbars(rax, hists)
 
-    mc = reduce(
-    +, Histogram(hists["DATA"].bin_edges), [
-            hists[k] for k in [
-                "tchan", "ttjets", "wjets",
-                "qcd", "gjets", "twchan",
-                "schan", "diboson", "dyjets"
-            ]
-    ]);
-    #println(hcat(tot_dd, mc.bin_contents[1:end-1], hists["DATA"].bin_contents[1:end-1], tot_du))
+        mc = reduce(
+        +, Histogram(hists["DATA"].bin_edges), [
+                hists[k] for k in [
+                    "tchan", "ttjets", "wjets",
+                    "qcd", "gjets", "twchan",
+                    "schan", "diboson", "dyjets"
+                ]
+        ]);
+        #println(hcat(tot_dd, mc.bin_contents[1:end-1], hists["DATA"].bin_contents[1:end-1], tot_du))
 
-    mup = (hists["DATA"].bin_contents[1:end-1] - (mc.bin_contents[1:end-1] + tot_du)) ./ hists["DATA"].bin_contents[1:end-1]
-    mdown = (hists["DATA"].bin_contents[1:end-1] - (mc.bin_contents[1:end-1] - tot_dd)) ./ hists["DATA"].bin_contents[1:end-1]
+        mup = (hists["DATA"].bin_contents[1:end-1] - (mc.bin_contents[1:end-1] + tot_du)) ./ hists["DATA"].bin_contents[1:end-1]
+        mdown = (hists["DATA"].bin_contents[1:end-1] - (mc.bin_contents[1:end-1] - tot_dd)) ./ hists["DATA"].bin_contents[1:end-1]
 
-    rax[:bar](
-        lowedge(hists["DATA"].bin_edges),
-        mdown - mup,
-        widths(hists["DATA"].bin_edges),
-        mup,
-        edgecolor="grey",
-        color="grey",
-        fill=false,
-        linewidth=0,
-        hatch="///",
-    )
-#     rax[:plot](midpoints(hists["DATA"].bin_edges), mdown, marker=".")
-#     rax[:plot](midpoints(hists["DATA"].bin_edges), mup, marker=".")
+        rax[:bar](
+            lowedge(hists["DATA"].bin_edges),
+            mdown - mup,
+            widths(hists["DATA"].bin_edges),
+            mup,
+            edgecolor="grey",
+            color="grey",
+            fill=false,
+            linewidth=0,
+            hatch="///",
+        )
+    #     rax[:plot](midpoints(hists["DATA"].bin_edges), mdown, marker=".")
+    #     rax[:plot](midpoints(hists["DATA"].bin_edges), mup, marker=".")
+    end
 
     if loc_paperstring == (:top, :right)
         cmspaper(ax, 0.8, 0.97, additional_text=titletext)
@@ -521,9 +525,11 @@ function combdraw(
     rax[:set_xlabel](VARS[var], fontsize=22)
     rax[:set_ylabel]("\$ \\frac{D - M}{D} \$")
     rslegend(ax)
-    ax[:set_ylim](top=maximum(contents(hists["DATA"])) * 1.3)
 
-    return ax, rax, mup, mdown, means[1:end-1]
+    #ax[:set_ylim](top=maximum(contents(hists["DATA"])) * 1.3)
+
+    #return ax, rax, mup, mdown, means[1:end-1]
+    return ax, rax
 end
 
 lepton_string = {:mu=>"\$\\mu^\\pm \$", :ele=>"\$e^\\pm \$"}
