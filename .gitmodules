@@ -3,7 +3,7 @@
 	url = git@github.com:jpata/ntuple.git
 [submodule "CMSSW/src/CMGTools/External"]
 	path = CMSSW/src/CMGTools/External
-	url = https://github.com/latinos/UserCode-CMG-CMGTools-External
+	url = https://github.com/jpata/UserCode-CMG-CMGTools-External
 [submodule "CMSSW/src/QScaleISRWeightProducer"]
 	path = CMSSW/src/QScaleISRWeightProducer
 	url = git@github.com:jpata/QScaleISRWeightProducer.git
