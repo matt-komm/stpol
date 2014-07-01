@@ -26,7 +26,7 @@ project-tchan:
 	find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_tchan.jl {} {}.tchan
 
 test-evloop:
-	julia evloop2.jl /hdfs/local/joosep/stpol/skims/Apr04/step3/csvt/Mar13/iso/nominal/T_t_ToLeptons/844/output.root out infile.json 
+	julia evloop2.jl T_t.root out infile.json 
 
 merge:
 	rm -Rf output
