@@ -34,6 +34,7 @@ source setenv.sh
 
 #From official PAT recipe
 #https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideMETRecipe53X#CMSSW_5_3_14_patch1_or_later
+cd $CMSSW_BASE/src
 git cms-addpkg PhysicsTools/PatAlgos # PAT Recipe
 git cms-addpkg CommonTools/Utils
 git cms-addpkg PhysicsTools/Configuration
