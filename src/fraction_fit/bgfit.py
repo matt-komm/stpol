@@ -1,12 +1,33 @@
 import sys, imp
 from glob import glob
+import tempfile, shutil, os
+import ROOT
+import ConfigParser
+Config = ConfigParser.ConfigParser()
+Config.read(sys.argv[2])
 
-infiles = sys.argv[3:]
-outfile = sys.argv[2]
+infiles = Config.get("input", "filenames").split(" ")
+outfile = Config.get("output", "filename")
 print("outfile=", outfile)
 print("infiles=", infiles)
 
 signal = 'tchan' #name of signal process/histogram
+
+syst = Config.get("systematics", "systematic", "nominal")
+dir = Config.get("systematics", "direction", "none")
+
+means = {}
+means["ttjets"] = Config.get("priors", "ttjets_mean", 1.0)
+means["wzjets"] = Config.get("priors", "wzjets_mean", 1.0)
+means["tchan"] = Config.get("priors", "tchan_mean", 1.0)
+means = {k:float(v) for (k,v) in means.items()}
+
+sigmas = {}
+sigmas["ttjets"] = Config.get("priors", "ttjets_sigma", inf)
+sigmas["wzjets"] = Config.get("priors", "wzjets_sigma", inf)
+sigmas["tchan"] = Config.get("priors", "tchan_sigma", inf)
+sigmas = {k:float(v) for (k,v) in sigmas.items()}
+print(means, sigmas)
 
 def hfilter(hname):
     spl = hname.split("__")
@@ -14,32 +35,53 @@ def hfilter(hname):
     if len(spl)!=2:
         return False
 
-    if "qcd" in hname:
-        return False
+    #if "qcd" in hname:
+    #    return False
 
     if '__up' in hname or '__down' in hname:
         return False
     return True
 
 def get_model(infile):
+
+    (fd, filename) = tempfile.mkstemp()
+    print("temp file", filename)
+    #shutil.copy(infile, filename)
+    tf0 = ROOT.TFile.Open(infile, "READ")
+    tf = ROOT.TFile.Open(filename, "RECREATE")
+    tf.Cd("")
+    for k in tf0.GetListOfKeys():
+        kn = k.GetName()
+        if syst!="nominal" and "%s__%s"%(syst, dir) in kn:
+            _kn = "__".join(kn.split("__")[0:2])
+            print("renaming ", kn, _kn)
+            x = tf0.Get(kn).Clone(_kn)
+            x.SetDirectory(tf)
+            x.Write()
+        if len(kn.split("__"))==2 and not tf.Get(kn):
+            print("cloning", kn)
+            x = tf0.Get(kn).Clone(kn)
+            x.SetDirectory(tf)
+            x.Write()
+    #tf.Write()
+    tf.Close()
+
     model = build_model_from_rootfile(
-        infile,
+        filename,
 
         #This enables the Barlow-Beeston procedure
         # http://www.pp.rhul.ac.uk/~cowan/stat/mcml.pdf
         # http://atlas.physics.arizona.edu/~kjohns/teaching/phys586/s06/barlow.pdf
         include_mc_uncertainties = True,
-        histogram_filter = hfilter
+        histogram_filter = hfilter,
+        #root_hname_to_convention = nameconv
     )
+    os.remove(filename)
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
 
-    add_normal_unc(model, "wzjets", mean=1.0, unc=inf)
-    add_normal_unc(model, "ttjets", mean=1.0, unc=0.2)
-
-    #for old PAS histograms
-    #add_normal_unc(model, "other", unc=0.2)
-    #add_normal_unc(model, "qcd", unc=0.000001)
+    add_normal_unc(model, "wzjets", mean=means["wzjets"], unc=sigmas["wzjets"])
+    add_normal_unc(model, "ttjets", mean=means["ttjets"], unc=sigmas["ttjets"])
     return model
 
 def add_normal_unc(model, par, mean=1.0, unc=1.0):
@@ -78,8 +120,8 @@ nbins = sum([model.get_range_nbins(o)[2] for o in model.get_observables()])
 model_summary(model)
 
 options = Options()
-#options.set("minimizer","strategy","robust")
-options.set("minimizer","strategy","minuit_vanilla")
+options.set("minimizer","strategy","robust")
+#options.set("minimizer","strategy","minuit_vanilla")
 options.set("global", "debug", "true")
 
 #print "options=", options
