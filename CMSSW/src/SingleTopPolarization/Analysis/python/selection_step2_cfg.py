@@ -221,6 +221,14 @@ def SingleTopStep2():
          logErrors=cms.bool(False)
     )
 
+    process.hadronicEventObjects = cms.EDProducer(
+         'CandRefCombiner',
+         sources=cms.vstring(["goodJets"]),
+         maxOut=cms.uint32(9999),
+         minOut=cms.uint32(0),
+         logErrors=cms.bool(False)
+    )
+
     process.allEventObjectsWithNu = cms.EDProducer(
          'CandRefCombiner',
          sources=cms.vstring([
@@ -249,9 +257,9 @@ def SingleTopStep2():
     )
 
     #Hadronic final state
-    #process.ht = cms.EDProducer('SimpleCompositeCandProducer',
-    #    sources=cms.VInputTag(["goodJets"])
-    #)
+    process.ht = cms.EDProducer('SimpleCompositeCandProducer',
+        sources=cms.VInputTag(["hadronicEventObjects"])
+    )
 
     process.shatNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
@@ -275,13 +283,14 @@ def SingleTopStep2():
 
     process.eventShapeSequence = cms.Sequence(
         process.allEventObjects
+        * process.hadronicEventObjects
         * process.eventShapeVars
         * process.allEventObjectsWithNu
         * process.eventShapeVarsWithNu
         * process.shat
-        #* process.ht
+        * process.ht
         * process.shatNTupleProducer
-        #* process.htNTupleProducer
+        * process.htNTupleProducer
     )
 
     #-----------------------------------------------
@@ -599,8 +608,8 @@ def SingleTopStep2():
              SelectEvents=cms.vstring(["*"])
          ),
         outputCommands=cms.untracked.vstring(
-            #'drop *',
-            'keep *',
+            'drop *',
+            #'keep *',
             'keep edmMergeableCounter_*__*',
             'keep *_generator__*',
             #'keep *_genParticles__*', #hack for powheg PDF sets
