@@ -33,8 +33,8 @@ step2_mc_syst_files = [
 #    "/mc_syst/Apr19",
 #    "/mc_syst/Jul15",
 #    "/mc_syst/Sep4",
-#    "/mc_syst/merged",
-     "/mc_syst/Jun16_2014",
+    "/mc_syst/merged", #this should contain all systematics, copy-pasted and curated from other files
+#     "/mc_syst/Jun16_2014",
 ]
 
 step2_data_files = [
@@ -69,6 +69,7 @@ class Dataset:
         out = out.replace("TAG", tag)
         out = out.replace("DATASET", self.ds)
         out = out.replace("WORKDIR", workdir)
+        out = out.replace("PSET", PSET)
 
 
         if self.step=="step1":
@@ -219,8 +220,11 @@ if __name__=="__main__":
         help="A unique tag for publishing")
     parser.add_argument("--email", type=str, required=True, default=EMAIL,
         help="Your CERN e-mail address")
+    parser.add_argument("--pset", type=str, required=True,
+        help="python config")
     args = parser.parse_args()
     EMAIL = args.email
+    PSET = args.pset
 
     dataset_dir = "/".join((os.environ["STPOL_DIR"], "datasets"))
 
