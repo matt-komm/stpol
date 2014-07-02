@@ -32,6 +32,9 @@ TToBENu_anomWtb-0100 /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Sum
 TToBMuNu_anomWtb-0100 /TToBMuNu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 TToBTauNu_anomWtb-0100 /TToBTauNu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 
+#tensor couplings
+TToBENu_anomWtb-Lv2Rt2_LVRT /TToBENu_anomWtb-Lv2Rt2_LVRT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+
 T_t_mass169_5 /TToLeptons_t-channel_mass169_5_8TeV-powheg-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 Tbar_t_mass169_5 /TBarToLeptons_t-channel_mass169_5_8TeV-powheg-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 T_t_mass175_5 /TToLeptons_t-channel_mass175_5_8TeV-powheg-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
@@ -47,6 +50,7 @@ TTJets_mass175_5 /TTJets_mass175_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53
 #TToBENu_anomWtb-0100_t-channel_FSIM /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep-FSIM/mario-Sept02-fastsim-v1-15c664cc8ad440fee37cae04529b1cdc/USER
 
 #new, large stat. (~40M) samples from https://hypernews.cern.ch/HyperNews/CMS/get/top/1805.html
+TTJets_central_v2 /TTJets_MSDecays_central_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM 
 TTJets_scaleup_v2 /TTJets_MSDecays_scaleup_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 TTJets_scaledown_v2 /TTJets_MSDecays_scaledown_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 TTJets_matchingdown_v1 /TTJets_MSDecays_matchingdown_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
