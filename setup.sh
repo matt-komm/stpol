@@ -16,7 +16,7 @@ then
 fi
 
 #Tags for https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuidePATReleaseNotes52X#V08_09_43
-[[ ! -z "$CMSVERSION" ]] || CMSVERSION=CMSSW_5_3_18
+[[ ! -z "$CMSVERSION" ]] || CMSVERSION=CMSSW_5_3_17
 #echo "Stashing current working directory, use 'git stash pop' later to retrieve"
 git stash #temporaryily store changes
 rm -Rf CMSSW #remove the source tree for cmsrel to work
@@ -33,7 +33,6 @@ cd $CMSSW_BASE/..
 source setenv.sh
 
 #From official PAT recipe
-#https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideMETRecipe53X#CMSSW_5_3_14_patch1_or_later
 cd $CMSSW_BASE/src
 git cms-addpkg PhysicsTools/PatAlgos # PAT Recipe
 git cms-addpkg PhysicsTools/CandUtils
@@ -47,6 +46,7 @@ git cms-addpkg RecoBTag/SoftLepton
 git cms-addpkg RecoMET/METFilters
 git cms-merge-topic -u cms-analysis-tools:5_3_13-newJetFlavour
 git cms-merge-topic -u cms-analysis-tools:5_3_13-updatedPATConfigs
+#https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideMETRecipe53X#CMSSW_5_3_14_patch1_or_later
 git cms-merge-topic -u TaiSakuma:53X-met-140217-01
 
 #addpkg DataFormats/PatCandidates V06-05-06-12
