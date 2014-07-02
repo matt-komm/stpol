@@ -23,6 +23,7 @@ const defaults_func = {
     :bdt_sig_bg => () -> Histogram(binnings[:bdt]),
     :bdt_sig_bg_top_13_001 => () -> Histogram(infb(linspace(-1, 1, 21))),
     :bdt_qcd => () -> Histogram(infb(linspace(-1, 1.0, 30))),
+    :bdt_qcd2 => () -> Histogram(infb(linspace(-1, 1.0, 30))),
 
     :C => () -> Histogram(infb(linspace(0, 1, 30))),
     :C_21 => () -> Histogram(infb(linspace(0, 1, 21))),

@@ -26,6 +26,10 @@ def TopRecoSetup(process, conf, leptonSource="goodSignalLeptons", bTagSource="hi
         sources=cms.VInputTag(["recoNu", bTagSource, leptonSource])
     )
 
+    process.recoW = cms.EDProducer('SimpleCompositeCandProducer',
+        sources=cms.VInputTag(["recoNu", leptonSource])
+    )
+
     process.topCount = cms.EDProducer('CollectionSizeProducer<reco::Candidate>',
         src = cms.InputTag('recoTop')
     )
@@ -37,13 +41,23 @@ def TopRecoSetup(process, conf, leptonSource="goodSignalLeptons", bTagSource="hi
         Ecm=cms.double(8000)
     )
 
+    #FIXME: topSrc -> c.o.m. system, jetSrc -> objA, leptonSrc -> objB
+    process.cosThetaWHelicity = cms.EDProducer('CosThetaProducer',
+        topSrc=cms.InputTag("recoW"),
+        jetSrc=cms.InputTag("recoTop"),
+        leptonSrc=cms.InputTag("goodSignalLeptons"),
+        Ecm=cms.double(8000)
+    )
+
     process.topRecoSequenceMu = cms.Sequence(
         process.goodMETs *
         process.recoNuProducerMu *
         process.recoNu *
         process.recoTop *
+        process.recoW *
         process.topCount *
-        process.cosTheta
+        process.cosTheta *
+        process.cosThetaWHelicity
     )
 
     process.topRecoSequenceEle = cms.Sequence(
@@ -51,6 +65,8 @@ def TopRecoSetup(process, conf, leptonSource="goodSignalLeptons", bTagSource="hi
         process.recoNuProducerEle *
         process.recoNu *
         process.recoTop *
+        process.recoW *
         process.topCount *
-        process.cosTheta
+        process.cosTheta *
+        process.cosThetaWHelicity
     )

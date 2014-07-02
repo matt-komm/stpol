@@ -81,7 +81,7 @@ class ReconstructedNeutrinoProducer : public edm::EDProducer {
       const reco::CompositeCandidate::LorentzVector nuMomentum(const reco::Candidate& chLepton, const reco::Candidate& met, edm::Event& iEvent);
       const reco::CompositeCandidate::LorentzVector nuMomentum_complex_cubic(const reco::Candidate& chLepton, const reco::Candidate& met, double& Delta_);
       float p_Nu_z_mW_rescale(const reco::Candidate& chLepton, const reco::Candidate& met);
-      float p_Nu_z(const reco::Candidate& chLepton, const reco::Candidate& met);
+      float p_Nu_z(const reco::Candidate& chLepton, const reco::Candidate& met, float* pz2);
 
       edm::InputTag leptonSrc;
       edm::InputTag metSrc;
@@ -113,6 +113,7 @@ ReconstructedNeutrinoProducer<solStrategy>::ReconstructedNeutrinoProducer(const 
 
   produces<std::vector<reco::CompositeCandidate> >(outName);
   produces<double>("Delta");
+  produces<double>("pz2");
   produces<int>("solType");
 
 }
@@ -128,7 +129,7 @@ ReconstructedNeutrinoProducer<solStrategy>::~ReconstructedNeutrinoProducer()
 }
 
 template <const int solStrategy>
-float ReconstructedNeutrinoProducer<solStrategy>::p_Nu_z(const reco::Candidate& chLepton, const reco::Candidate& met) {
+float ReconstructedNeutrinoProducer<solStrategy>::p_Nu_z(const reco::Candidate& chLepton, const reco::Candidate& met, float* pz_2) {
 
   const auto& lp4 = chLepton.p4();
   const auto& metp4 = met.p4();
@@ -147,9 +148,11 @@ float ReconstructedNeutrinoProducer<solStrategy>::p_Nu_z(const reco::Candidate& 
     //Choose root with minimal absolute value
     if (fabs(A) < fabs(B)) {
         p_nu_z = A;
+        *pz_2 = B;
     }
     else {
         p_nu_z = B;
+        *pz_2 = A;
     }
   }
   else { //Negative discriminant, complex roots (MET resolution effect)
@@ -305,6 +308,9 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
  // }
  //
 
+  //other z momentum solution 
+  float pz2 = TMath::QuietNaN();
+  
   //Always use complex solution
   if(solStrategy == 2) {
     nuVec = nuMomentum_complex_cubic(chLepton, met, Delta);
@@ -314,7 +320,7 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
   //Use real+complex solution
   else if(solStrategy==1 || solStrategy==0) {
 
-    float p_nu_z = p_Nu_z(chLepton, met);
+    float p_nu_z = p_Nu_z(chLepton, met, &pz2);
 
     if (p_nu_z==p_nu_z) { //real root
       nuVec.SetPx(met.p4().Px());
@@ -325,7 +331,7 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
     } else { //Complex root
       if (solStrategy==0) { //mW rescaling
         edm::LogError("nuMomentum()") << "solStrategy==0 is not implemented!";
-        assert(true);
+        assert(true); //FIXME: die better
       }
       else if(solStrategy == 1) { //Cubic equation
         nuVec = nuMomentum_complex_cubic(chLepton, met, Delta);
@@ -334,6 +340,7 @@ const reco::CompositeCandidate::LorentzVector ReconstructedNeutrinoProducer<solS
     }
   }
   iEvent.put(std::auto_ptr<double>(new double(Delta)), "Delta");
+  iEvent.put(std::auto_ptr<double>(new double(pz2)), "pz2");
   iEvent.put(std::auto_ptr<int>(new int(whichSol)), "solType");
   LogDebug("nuMomentum()") << "Finished nu momentum calculation using algo " << whichSol;
 

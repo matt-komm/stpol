@@ -6,7 +6,7 @@ fit_abs_ljet_eta: fit_mu_abs_ljet_eta fit_ele_abs_ljet_eta fit_mu_2j1t_abs_ljet_
 
 fit_separate: fit_mu_2j1t fit_ele_2j1t fit_mu_3j2t fit_ele_3j2t
 
-HISTDIR=../../results/hists/apr29/preselection/
+HISTDIR=../../results/hists/Jun13/preselection
 OUTDIR=results/csvt/qcd__mva_nominal
 
 # HISTDIR=../../results/hists/csvt_only/preselection
@@ -39,8 +39,15 @@ fit_mu_3j2t:
 fit_ele:
 	./runtheta.sh bgfit.py $(OUTDIR)/bdt/ele $(HISTDIR)/2j_1t/ele/merged/bdt_sig_bg.root $(HISTDIR)/3j_2t/ele/merged/bdt_sig_bg.root
 
+#fit_ele:
+#	./runtheta.sh bgfit.py $(OUTDIR)/bdt/ele $(HISTDIR)/2j_1t/ele/merged/bdt_sig_bg.root $(HISTDIR)/3j_2t/ele/merged/bdt_sig_bg.root $(HISTDIR)/2j_0t/ele/merged/bdt_sig_bg.root
+
 fit_mu:
-	./runtheta.sh bgfit.py $(OUTDIR)/bdt/mu $(HISTDIR)/2j_1t/mu/merged/bdt_sig_bg.root $(HISTDIR)/3j_2t/mu/merged/bdt_sig_bg.root
+	./runtheta.sh bgfit.py $(OUTDIR)/bdt/mu $(HISTDIR)/2j_1t/mu/merged/bdt_sig_bg.root $(HISTDIR)/3j_2t/mu/merged/bdt_sig_bg.root $(HISTDIR)/2j_0t/mu/merged/bdt_sig_bg.root
+
+#fit_mu:
+#	./runtheta.sh bgfit.py $(OUTDIR)/bdt/mu $(HISTDIR)/2j_1t/mu/merged/bdt_sig_bg.root $(HISTDIR)/3j_2t/mu/merged/bdt_sig_bg.root $(HISTDIR)/2j_0t/mu/merged/bdt_sig_bg.root
+
 
 fit_ele_C:
 	./runtheta.sh bgfit.py $(OUTDIR)/C/ele $(HISTDIR)/2j_1t/ele/merged/C.root $(HISTDIR)/3j_2t/ele/merged/C.root
@@ -58,3 +65,9 @@ fit_wjets:
 	./runtheta.sh wjets_fit.py $(OUTDIR)/2j0t_cos_theta_lj/mu $(HISTDIR)/2j_0t/mu/cos_theta_lj.root
 	./runtheta.sh wjets_fit.py $(OUTDIR)/2j0t_cos_theta_lj/ele $(HISTDIR)/2j_0t/ele/cos_theta_lj.root
 	./runtheta.sh wjets_fit.py $(OUTDIR)/2j0t_cos_theta_lj/combined $(HISTDIR)/2j_0t/mu/cos_theta_lj.root $(HISTDIR)/2j_0t/ele/cos_theta_lj.root
+
+copies:
+	./copy_cfgs.sh fitconfigs/bdt/mu/nominal.cfg
+	rm -Rf fitconfigs/bdt/ele	
+	cp -R fitconfigs/bdt/mu fitconfigs/bdt/ele
+	sed -i '' 's/mu/ele/g' fitconfigs/bdt/ele/*.cfg
