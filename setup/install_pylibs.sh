@@ -10,7 +10,7 @@ esac
 rm -Rf $STPOL_DIR/local
 mkdir -p $STPOL_DIR/local/lib/python2.6/site-packages/
 mkdir -p $STPOL_DIR/local/lib/python2.7/site-packages/
-
+export PYTHONPATH=/home/joosep/Dropbox/kbfi/top/stpol/local/lib/python2.6/site-packages/:$PYTHONPATH
 cd $STPOL_DIR/local
 set -e
 unset HTTP_PROXY
