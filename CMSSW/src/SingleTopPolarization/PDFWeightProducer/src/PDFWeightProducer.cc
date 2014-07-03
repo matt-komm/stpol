@@ -46,6 +46,9 @@ namespace LHAPDF
     double getQ2max(int nset, int member);
     void extrapolate(bool extrapolate = true);
     int	numberPDF();
+    void setPDFPath (const std::string &path);
+    std::string pdfsetsPath();
+    std::string pdfsetsIndexPath();
 }
 
 class PDFWeightProducer : public edm::EDProducer {
@@ -82,13 +85,17 @@ PDFWeightProducer::PDFWeightProducer(const edm::ParameterSet& iConfig) :
     PDFSets(iConfig.getParameter<std::vector<std::string>>("PDFSets")),
     do_powheg_topmass_fix(iConfig.getParameter<bool>("doPowhegTopMassFix"))
 {
+    LHAPDF::setPDFPath("/home/andres/single_top/stpol_current/stpol/src/step2/pdfsets");
     for( unsigned int i = 0; i < PDFSets.size(); i++ ) {
         
         // make names of PDF sets to be saved
         std::string name = PDFSets[i];
         size_t pos = name.find_first_not_of("ZXCVBNMASDFGHJKLQWERTYUIOPabcdefghijklmnopqrstuvwxyz1234567890");
         std::map<std::string, int> map_name;
-        if (pos!=std::string::npos) name = name.substr(0,pos);
+        while (pos!=std::string::npos){
+            name = name.erase(pos, 1);
+            pos = name.find_first_not_of("ZXCVBNMASDFGHJKLQWERTYUIOPabcdefghijklmnopqrstuvwxyz1234567890");
+        }
         if( map_name.count(name) == 0 ) {
             map_name[name]=0;
             PDFnames.push_back(name);
@@ -99,25 +106,33 @@ PDFWeightProducer::PDFWeightProducer(const edm::ParameterSet& iConfig) :
             ostr << name << "xxx" << map_name[name];
             PDFnames.push_back(ostr.str());
         }
+        std::cout << LHAPDF::pdfsetsPath() << std::endl;
+        std::cout << LHAPDF::pdfsetsIndexPath() << std::endl;
         std::cout << "Initializing PDF set " << i << std::endl;
+        LHAPDF::setPDFPath("/home/andres/single_top/stpol_current/stpol/src/step2/pdfsets");
+        std::cout << LHAPDF::pdfsetsPath() << std::endl;
+        std::cout << LHAPDF::pdfsetsIndexPath() << std::endl;
         LHAPDF::initPDFSet(i+1, PDFSets[i]);
 
-        pdf_vars[std::string("pdf_w0_"+PDFnames[i])] = 0.0;
-        pdf_vars[std::string("pdf_n_"+PDFnames[i])] = 0.0;
+        pdf_vars[std::string("pdf_w0"+PDFnames[i])] = 0.0;
+        pdf_vars[std::string("pdf_n"+PDFnames[i])] = 0.0;
         
         std::cout << "Getting the number of PDF points in set" << std::endl;
         int nPDFSet = LHAPDF::numberPDF(i+1);
         pdf_weights[std::string("pdf_weights_"+PDFnames[i])] = std::vector<float>(nPDFSet);
-        const char* weight_vec_name = std::string("w" + std::to_string(i)).c_str();
+        const char* weight_vec_name = std::string("weights" + PDFnames[i]).c_str();
         std::cout << "weights for " << PDFnames[i] << " as " << weight_vec_name;
+        
+        produces<int>(std::string("n"+PDFnames[i]));
+        produces<float>(std::string("w0"+PDFnames[i]));
 
-        produces<std::vector<float>>(weight_vec_name);
+        produces<std::vector<float>>(std::string("weights"+PDFnames[i]));
     }
     produces<float>("scalePDF");
     produces<float>("x1");
     produces<float>("x2");
-    produces<float>("id1");
-    produces<float>("id2");
+    produces<int>("id1");
+    produces<int>("id2");
 }
 
 
@@ -136,8 +151,8 @@ PDFWeightProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	float pdf_scalePDF = genprod->pdf()->scalePDF;
 	float pdf_x1 = genprod->pdf()->x.first;
 	float pdf_x2 = genprod->pdf()->x.second;
-	float pdf_id1 = genprod->pdf()->id.first;
-	float pdf_id2 = genprod->pdf()->id.second;
+	int pdf_id1 = genprod->pdf()->id.first;
+	int pdf_id2 = genprod->pdf()->id.second;
     
     // Ad-hoc fix for POWHEG
     // POWHEEG stores generator info wrongly, need to get top mass to multiply
@@ -173,21 +188,39 @@ PDFWeightProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
         LHAPDF::usePDFMember(InitNr, 0);
         double	xpdf1 = LHAPDF::xfx(
             InitNr,
-            pdf_vars["pdf_x1"],
-            pdf_vars["pdf_scalePDF"],
+            pdf_x1,//pdf_vars["pdf_x1"],
+            pdf_scalePDF,//pdf_vars["pdf_scalePDF"],
             pdf_id1
         );
         double	xpdf2 = LHAPDF::xfx(
             InitNr,
-            pdf_vars["pdf_x2"],
-            pdf_vars["pdf_scalePDF"],
+            pdf_x2,//pdf_vars["pdf_x2"],
+            pdf_scalePDF,//pdf_vars["pdf_scalePDF"],
             pdf_id2
         );
         double w0 = xpdf1 * xpdf2;
         int	nPDFSet = LHAPDF::numberPDF(InitNr);
+
+        /*
+        std::vector<float>& weights = branch_vars.vars_vfloat[std::string("pdf_weights_"+PDFnames[i])];
+        
+
+        for (int p = 1; p <= nPDFSet; p++)
+        {
+            LHAPDF::usePDFMember(InitNr, p);
+            double xpdf1_new = LHAPDF::xfx(InitNr, branch_vars.vars_float["pdf_x1"], branch_vars.vars_float["pdf_scalePDF"], branch_vars.vars_int["pdf_id1"]);
+            double xpdf2_new = LHAPDF::xfx(InitNr, branch_vars.vars_float["pdf_x2"], branch_vars.vars_float["pdf_scalePDF"], branch_vars.vars_int["pdf_id2"]);
+            double pweight = xpdf1_new * xpdf2_new / w0;
+            weights[p-1] = (float)(pweight);
+        }
+        
+        // save weights
+        branch_vars.vars_float[std::string("pdf_n_"+PDFnames[i])] = nPDFSet;
+        branch_vars.vars_float[std::string("pdf_w0_"+PDFnames[i])] = w0;
+        */
+
         const std::string weight_name("pdf_weights_"+PDFnames[i]);
         std::vector<float>& weights = pdf_weights[weight_name];
-
         //initialize to 0
         for (auto& e : weights) {
             e = 0.0;
@@ -198,33 +231,35 @@ PDFWeightProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
             LHAPDF::usePDFMember(InitNr, p);
             double xpdf1_new = LHAPDF::xfx(
                 InitNr,
-                pdf_vars["pdf_x1"],
-                pdf_vars["pdf_scalePDF"],
+                pdf_x1,//pdf_vars["pdf_x1"],
+                pdf_scalePDF,//pdf_vars["pdf_scalePDF"],
                 pdf_id1
             );
             double xpdf2_new = LHAPDF::xfx(
                 InitNr,
-                pdf_vars["pdf_x2"],
-                pdf_vars["pdf_scalePDF"],
+                pdf_x2,//pdf_vars["pdf_x2"],
+                pdf_scalePDF,//pdf_vars["pdf_scalePDF"],
                 pdf_id2
             );
             double pweight = xpdf1_new * xpdf2_new / w0;
             weights[p-1] = (float)(pweight);
         }
-        pdf_vars[std::string("pdf_n_"+PDFnames[i])] = nPDFSet;
-        pdf_vars[std::string("pdf_w0_"+PDFnames[i])] = w0;
-        const char* weight_vec_name = std::string("w" + std::to_string(i)).c_str();
+        pdf_vars[std::string("pdf_n"+PDFnames[i])] = nPDFSet;
+        iEvent.put(std::auto_ptr<int>(new int(nPDFSet)), std::string("n"+PDFnames[i]));
+        pdf_vars[std::string("pdf_w0"+PDFnames[i])] = w0;
+        iEvent.put(std::auto_ptr<float>(new float(w0)), std::string("w0"+PDFnames[i]));
+        const char* weight_vec_name = std::string("weights" +PDFnames[i]).c_str();
         iEvent.put(
             std::auto_ptr<std::vector<float>>(new std::vector<float>(weights)),
-            weight_vec_name 
+            "weights" + PDFnames[i]
         );
     }
 
     iEvent.put(std::auto_ptr<float>(new float(pdf_scalePDF)), "scalePDF");
     iEvent.put(std::auto_ptr<float>(new float(pdf_x1)), "x1");
     iEvent.put(std::auto_ptr<float>(new float(pdf_x2)), "x2");
-    iEvent.put(std::auto_ptr<float>(new float(pdf_id1)), "id1");
-    iEvent.put(std::auto_ptr<float>(new float(pdf_id2)), "id2");
+    iEvent.put(std::auto_ptr<int>(new int(pdf_id1)), "id1");
+    iEvent.put(std::auto_ptr<int>(new int(pdf_id2)), "id2");
 }
 
 // ------------ method called once each job just before starting event loop  ------------
