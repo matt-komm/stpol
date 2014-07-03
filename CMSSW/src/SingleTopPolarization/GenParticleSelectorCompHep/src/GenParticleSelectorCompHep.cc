@@ -72,6 +72,7 @@ private:
     bool has_mu;
     bool has_nu;
     bool has_b;
+    bool has_w;
     bool has_lj;
 };
 
@@ -177,6 +178,7 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
         has_mu = false;
         has_nu = false;
         has_b = false;
+        has_w = false;
         has_lj = false;
         const GenParticle & p = (*genParticles)[i];
         int id = p.pdgId();
@@ -187,7 +189,7 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
         //int charge = p.charge();
         //int n = p.numberOfDaughters();
         if((abs(id) == 13 || abs(id) == 11 || abs(id) == 15) && st ==3){
-            //LogDebug("") << "P: " << id << " " << st;
+            LogDebug("loop") << "P: " << id << " " << st;
             mom = (GenParticle*)p.mother(0);  //particle has 2 mothers with the same daughters, just select the first one
             for(size_t mi = 0; mi < mom->numberOfDaughters(); ++ mi){
                 dau = (GenParticle*)mom->daughter(mi);
@@ -205,7 +207,7 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
                         bJet = const_cast<reco::GenParticle*>(dau);
                     }
                     else if(abs(dau->pdgId())==5){
-                        //has_b = true;
+                        has_w = true;
                         wBoson = const_cast<reco::GenParticle*>(dau);
                     }
                     else if(abs(dau->pdgId())<5){
@@ -237,8 +239,11 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
                 outLeptons->push_back(*lepton);
                 outNeutrinos->push_back(*neutrino);
                 outBJets->push_back(*bJet);
-                outWbosons->push_back(*wBoson);
                 
+                if (has_w) {
+                    outWbosons->push_back(*wBoson);
+                } 
+
                 if(which_light == 1){
                     outLightJets->push_back(*lj1);
                 }
