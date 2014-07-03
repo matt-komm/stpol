@@ -20,7 +20,16 @@ def WeightSetup(process, conf):
             "TTJets_mass169_5", "TTJets_mass175_5",
             "TTJets_matchingdown", "TTJets_matchingup",
             "TTJets_scaleup", "TTJets_scaledown",
-            "TTJets_MSDecays", #FIXME: make universal or add more
+            "TTJets_MSDecays",
+            "TTJets_MSDecays_mass166_5",
+            "TTJets_MSDecays_mass169_5",
+            "TTJets_MSDecays_mass175_5",
+            "TTJets_MSDecays_mass178_5",
+            "TTJets_MSDecays_matchingdown_v1",
+            "TTJets_MSDecays_matchingdown_v2",
+            "TTJets_MSDecays_matchingup",
+            "TTJets_MSDecays_scaledown",
+            "TTJets_MSDecays_scaleup",
         ]:
             channel[s] = "FullSemiLept"
 
