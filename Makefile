@@ -22,6 +22,12 @@ test_step2: test_step2_tchan_nominal test_step2_tchan_mass test_step2_tchan_scal
 test_step2_tchan_nominal:
 	cmsRun $(STEP2CFG) inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD outputFile=tests/step2/tchan/nominal.root
 
+test_step2_tchan_comphep_anom_tensor:
+	cmsRun $(STEP2CFG) subChannel=TToBENu_anomWtb-Lv2Rt2_LVRT srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD isComphep=True inputFiles=file:/hdfs/cms/store/user/atiko/TToBENu_anomWtb-Lv2Rt2_LVRT_t-channel_TuneZ2star_8TeV-comphep/tensor/572aa3280a64b07f7208c06b702633e8/output_noSkim_1_1_ga4.root outputFile=tests/step2/tchan/comphep_anom_tensor
+
+test_step2_tchan_comphep_anom_vector:
+	cmsRun $(STEP2CFG) subChannel=TToBENu_anomWtb-0100_t-channel srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD isComphep=True inputFiles=file:/hdfs/cms/store/user/joosep/TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Dec3_anom_2b3b43/2a771fe5d008406ebf97c1e21558b199/output_noSkim_1_4_7q1.root outputFile=tests/step2/tchan/comphep_anom_vector
+
 test_step2_tchan_mass:
 	cmsRun $(STEP2CFG) inputFiles=file:$(infile_step2_tchan_mass) subChannel=T_t_ToLeptons_mass166_5 srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD outputFile=tests/step2/tchan/mass.root          
 
@@ -31,6 +37,9 @@ test_step2_tchan_scale:
 test_step2_metphi:
 	cmsRun step2_csvt_metshift_off.py inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons outputFile=tests/step2/tchan/metphi_off.root
 	cmsRun step2_csvt_metshift_on.py inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons outputFile=tests/step2/tchan/metphi_on.root
+
+cmssw_debug:
+	cd CMSSW; scram b -j16 USER_CXXFLAGS="-DEDM_ML_DEBUG"
 
 ###   all: update step2_ntuple
 ###   .PHONY: setup
