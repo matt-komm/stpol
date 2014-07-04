@@ -206,7 +206,7 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
                         has_b = true;
                         bJet = const_cast<reco::GenParticle*>(dau);
                     }
-                    else if(abs(dau->pdgId())==5){
+                    else if(abs(dau->pdgId()) == 24){
                         has_w = true;
                         wBoson = const_cast<reco::GenParticle*>(dau);
                     }
