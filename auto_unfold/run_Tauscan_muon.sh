@@ -4,7 +4,7 @@
 INPUTFOLDERS=""
 
 TAUSCALE="0.001 0.005 0.1 0.5 1.0 2.0 5.0 10.0 50.0 100.0"
-#TAUSCALE="1.0"
+TAUSCALE="1.0"
 FITRESULT="/home/fynu/mkomm/stpol/auto_unfold/fitResultMuon.txt"
 
 for tau in $TAUSCALE
@@ -33,8 +33,7 @@ do
     --responseMatrix=$RESPONSEMATRIX \
     --fitResult=$FITRESULT \
     --scaleRegularization=$tau \
-    -f &> "muon/tauscan/"$tau"_rundata.log" &
-    sleep 20s
+    -f
 
 done
 

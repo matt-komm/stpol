@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "TApplication.h"
 #include "TCanvas.h"
@@ -17,6 +18,9 @@
 #include "TSpline.h"
 #include "TMinuit.h"
 #include "TUnfoldDensity.h"
+
+#include "RooUnfoldResponse.h"
+#include "RooUnfoldBayes.h"
 using namespace std;
 
 
@@ -294,8 +298,9 @@ double scanTau(TH2D* response)
         //char* graphName= new char[50];
         //sprintf("graph_%i",i);
         TGraph* graph = new TGraph(num,tau,rho_avg[i]);
-        graph->SetLineColor(kBlue+2-i);
-        graph->SetLineWidth(nbinsT-i+1);
+        graph->SetLineColor((kBlue+2-i%4));
+        graph->SetLineWidth((4-i)%4);
+        graph->SetLineStyle((4-i)/4+1);
         graph->Draw("SameL"); 
     }
     TGraph* graph_globalrho_avg = new TGraph(num,tau,pmean);
@@ -312,6 +317,73 @@ double scanTau(TH2D* response)
     
     return pmean_min_tau;
 }
+
+void unfoldSVD(TH1** unfolded, double tau, TH2* response, TH1* measured)
+{
+    //run unfolding
+    TUnfoldDensity* tunfold = new TUnfoldDensity(response,TUnfold::kHistMapOutputHoriz, TUnfold::kRegModeCurvature);
+    //tunfold->SetBias(truth);
+    tunfold->DoUnfold(tau,measured);
+    //std::cout<<"do unfold"<<std::endl;
+    //tunfold->GetOutput(histo_output_tunfold);
+    *unfolded = tunfold->GetOutput("x","unfolded");
+}
+
+void refold(TH1* folded, TH2* responseMatrix, TH1* unfolded)
+{
+    TH1D* measured =  responseMatrix->ProjectionY();
+    TH1D* truth =  responseMatrix->ProjectionX();
+    if (measured->Integral()>truth->Integral())
+    {
+        std::cout<<"messed up responsematrix - swapped axes?"<<std::endl;
+        throw "bad responsematrix";
+    }
+    int nbinsM=measured->GetNbinsX();
+    int nbinsT=truth->GetNbinsX();
+    
+    double* efficiencies = new double[nbinsT];
+    double* pnorm = new double[nbinsT];
+    for (int ibinT=0; ibinT<nbinsT;++ibinT)
+    {
+        double sum = 0.0;
+        pnorm[ibinT]=0.0;
+        for (int ibinM=0; ibinM<nbinsM+1;++ibinM)
+        {
+            sum+=responseMatrix->GetBinContent(ibinT+1,ibinM);
+            //0 is underflow -> eff bin, nbinsM+1 is overflow -> empty bin
+            pnorm[ibinT]+=responseMatrix->GetBinContent(ibinT+1,ibinM+1);
+        }
+        efficiencies[ibinT]=1.0-1.0*responseMatrix->GetBinContent(ibinT+1,0)/sum;
+        //std::cout<<"effs: "<<ibinT<<","<<efficiencies[ibinT]<<std::endl;
+    }
+    
+    if (nbinsM<nbinsT)
+    {
+        std::cout<<"messed up responsematrix - wrong bins? nbinsT="<<nbinsT<<",nbinsM="<<nbinsM<<std::endl;
+        throw "bad responsematrix";
+    }
+    for (int ibinM=0; ibinM<nbinsM;++ibinM)
+    {
+        double sum = 0.0;
+        for (int ibinT=0; ibinT<nbinsT;++ibinT)
+        {
+            sum+=responseMatrix->GetBinContent(ibinT+1,ibinM+1)/pnorm[ibinT]*unfolded->GetBinContent(ibinT+1)*efficiencies[ibinT];
+        }
+        //std::cout<<ibinM<<","<<sum<<std::endl;
+        //reconstructed->SetBinContent(ibinM+1,histo_input->GetBinContent(ibinM+1));
+
+        (folded)->SetBinContent(ibinM+1,sum);
+    }
+}
+
+void dicePoisson(TH1* hist)
+{
+    for (int ibin=0; ibin<hist->GetNbinsX()+2; ++ibin)
+    {
+        hist->SetBinContent(ibin,gRandom->Poisson((int)hist->GetBinContent(ibin)));
+    }
+}
+
 
 int main( int argc, const char* argv[] )
 {
@@ -347,7 +419,7 @@ int main( int argc, const char* argv[] )
     }
     printf("use: bootstrap='%s'\r\n",use_bootstrap ? "true" : "false");
     
-    
+    bool use_bayes = true;
     
     TFile input(argv[1],"r");
 
@@ -356,7 +428,7 @@ int main( int argc, const char* argv[] )
     TH1D* histo_input = new TH1D();
     tree_input->SetBranchAddress(argv[3],&histo_input);
     tree_input->GetEntry(0);
-    
+    printf("1");
     /*
     TCanvas* canvas = new TCanvas("canvas","",800,600);  
     histo_input->Draw();
@@ -375,7 +447,7 @@ int main( int argc, const char* argv[] )
     TH1D* truth =  response->ProjectionX();
     int nbinsM=measured->GetNbinsX();
     int nbinsT=truth->GetNbinsX();
-    
+    printf("2");
     /*TCanvas* test = new TCanvas("canvas","",800,600);
     test->Divide(2,1);
     test->cd(1);
@@ -387,97 +459,94 @@ int main( int argc, const char* argv[] )
     test->Update();
     test->WaitPrimitive();*/
     Float_t* binningM = new Float_t[measured->GetNbinsX()+1];
-    for (int cnt=0; cnt<measured->GetNbinsX()+1;++cnt)
+    for (int cnt=0; cnt<nbinsM;++cnt)
     {
-        binningM[cnt]=measured->GetBinLowEdge(cnt+1); 
+        binningM[cnt]=measured->GetXaxis()->GetBinLowEdge(cnt+1); 
     }
-    Float_t* binningT = new Float_t[truth->GetNbinsX()+1];
-    for (int cnt=0; cnt<truth->GetNbinsX()+1;++cnt)
-    {
-        binningT[cnt]=truth->GetBinLowEdge(cnt+1);
-    }
+    binningM[nbinsM]=measured->GetXaxis()->GetBinUpEdge(nbinsM);
     
+    Float_t* binningT = new Float_t[truth->GetNbinsX()+1];
+    for (int cnt=0; cnt<nbinsT;++cnt)
+    {
+        binningT[cnt]=truth->GetXaxis()->GetBinLowEdge(cnt+1);
+    }
+    binningT[nbinsT]=truth->GetXaxis()->GetBinUpEdge(nbinsT);
+    printf("3");
     TH1D* histo_output_tunfold = new TH1D("output","",nbinsT,binningT);
     tree_output->Branch("tunfold",&histo_output_tunfold);
+    printf("3.5");
     gErrorIgnoreLevel = kPrint | kInfo | kWarning;
-    
+    printf("4");
     double tau = scanTau(response);
-    double tauSteffen = minimizeRhoAverage(response, 100, -10, 0);
+    printf("5");
+    //double tauSteffen = minimizeRhoAverage(response, 100, -10, 0);
+    printf("6");
     printf("tau: %e\r\n",tau);
-    printf("tauSteffen: %e\r\n",tauSteffen);
+    //printf("tauSteffen: %e\r\n",tauSteffen);
     int nevents = tree_input->GetEntries();
     //nevents=10000;
     printf("events: %i\r\n",nevents);
     
     tau=tau*atof(argv[7]);
+    
+    //clock_t t = clock();
+    
     for (int cnt=0; cnt<nevents;++cnt) {
         
         tree_input->GetEntry(cnt);
         printf("unfolding...%i \r\n",cnt);
-        if (nevents>200 && cnt%int(nevents/20.0)==0) {
-            printf("unfolding...%i %%\r\n",int(100.0*cnt/nevents));
-        }
+
         //just add a small amount such that the linear system stays well defined and solvable
         for (int ibin=0; ibin<histo_input->GetNbinsX();++ibin)
         {
              histo_input->SetBinContent(ibin+1,histo_input->GetBinContent(ibin+1)+0.000001);
         }
         TH2D responseMatrix = TH2D(*response);
+    	RooUnfoldResponse rooResponseMatrix(measured, truth);
+
         if (diceTMUnc)
         {
-            for (unsigned int xbin = 0; xbin < responseMatrix.GetNbinsX()+2; ++xbin)
+            for (int ibinT=0; ibinT<nbinsT+2;++ibinT)
             {
-                for (unsigned int ybin = 0; ybin < responseMatrix.GetNbinsY()+2; ++ybin)
+                double entry = responseMatrix.GetBinContent(ibinT,0);
+                entry = gRandom->Poisson(entry);
+                responseMatrix.SetBinContent(ibinT,0,entry);
+                rooResponseMatrix.Miss(responseMatrix.GetXaxis()->GetBinCenter(ibinT),entry);
+                for (int ibinM=1; ibinM<nbinsM+2;++ibinM)
                 {
-                    double entry = responseMatrix.GetBinContent(xbin,ybin);
+                    entry = responseMatrix.GetBinContent(ibinT,ibinM);
                     entry = gRandom->Poisson(entry);
-                    responseMatrix.SetBinContent(xbin,ybin,entry);
+                    responseMatrix.SetBinContent(ibinT,ibinM,entry);
+                    rooResponseMatrix.Fill(responseMatrix.GetYaxis()->GetBinCenter(ibinM),responseMatrix.GetXaxis()->GetBinCenter(ibinT),entry);
                 }
             }
         }
+
         TH1* result = 0;
-        if (use_bootstrap)
+        unfoldSVD(&result,tau,&responseMatrix,histo_input);
+        if (use_bootstrap) 
         {
-            TH1* unfolded;
-            TH1D* reconstructed=new TH1D(*histo_input);
-            TH1* unfoldedSum;
-            unsigned int Niters=20;
-            for (unsigned int iter=0; iter<Niters; ++iter)
-            {
-                //run unfolding
-                TUnfoldDensity* tunfold = new TUnfoldDensity(&responseMatrix,TUnfold::kHistMapOutputHoriz, TUnfold::kRegModeCurvature);
-                //tunfold->SetBias(truth);
-                tunfold->DoUnfold(tau,reconstructed);
-                unfolded->Scale(0.0);
-                //tunfold->GetOutput(histo_output_tunfold);
-                unfolded = tunfold->GetOutput("x","unfolded");
-                if (iter==0)
-                {
-                    unfoldedSum=new TH1(*unfolded);
-                }
-                else
-                {
-                    unfoldedSum->Add(unfolded);
-                }
-                //fold unfolded result again & sample poisson
-                for (int ibinM=0; ibinM<nbinsM;++ibinM)
-                {
-                    double sum = 0.0;
-                    for (int ibinT=0; ibinT<nbinsT;++ibinT)
-                    {
-                        sum+=responseMatrix.GetBinContent(ibinM+1,ibinT+1)*unfolded->GetBinContent(ibinT+1);
-                    }
-                    reconstructed->SetBinContent(ibinM,gRandom->Poisson(sum));
-                }
-            }
-            //get the bin content mean over all iterations
-            unfoldedSum->Scale(1.0/Niters);
-            result=unfoldedSum;
-        }
-        else
-        {
+            TH1D* refolded = new TH1D("refolded","",nbinsM,binningM);
             
+            TH1D* summed = new TH1D("summed","",nbinsT,binningT);
+            refold(refolded,&responseMatrix,result);
+            
+            for (int iter=0; iter<10; ++iter)
+            {
+                
+                TH1D smeared=TH1D(*refolded);
+                dicePoisson(&smeared);
+                TH1* iterResult = 0;
+                unfoldSVD(&iterResult,tau,&responseMatrix,&smeared);
+                summed->Add(iterResult);
+                delete iterResult;
+            }
+            summed->Scale(1.0/10.0);
+            delete result;
+            result=summed;
         }
+        
+        
         if (result->GetNbinsX()!=histo_output_tunfold->GetNbinsX())
         {
             cout<<"error - output binning not expected - "<<result->GetNbinsX()<<":"<<histo_output_tunfold->GetNbinsX()<<endl;
@@ -488,7 +557,7 @@ int main( int argc, const char* argv[] )
         {
             histo_output_tunfold->SetBinContent(ibin+1,result->GetBinContent(ibin+1));
         }
-
+        delete result;
         /*
         TCanvas* canvas = new TCanvas("canvas","",800,600);
         //histo_input->Draw();

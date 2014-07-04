@@ -50,7 +50,7 @@ def getAsymmetry(folder,basefolder=""):
     return asymmetryDict
     
     
-basefolder="muon/neyman_cplx"
+basefolder="muon/neyman_w_bootstrap"
 
 
 

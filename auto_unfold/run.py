@@ -16,7 +16,7 @@ logging.basicConfig(format="%(levelname)s - %(message)s",level=logging.DEBUG)
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetStatX(0.4)
 ROOT.gStyle.SetStatY(0.98)
-
+ROOT.gStyle.SetOptStat(0)
 
 def parseFitResult(inputfile):
     signalSetDict={}
@@ -208,6 +208,104 @@ def testAfterSubtraction(prefix,folder,subtractedFile,signalFile):
     file.Close()
     file2.Close()
     
+def run2DUnfolding(peFile,responseMatrixFile,responseMatrixName, outputFile):
+    histoPE=ROOT.TH1D()
+    histoOut=ROOT.TH1D("out","",2,-1.0,1.0)
+    
+    filein=ROOT.TFile(peFile)
+    treein=filein.Get("subtracted")
+    treein.SetBranchAddress("histos", histoPE)
+    
+    fileout=ROOT.TFile(outputFile,"RECREATE")
+    treeout=ROOT.TTree("unfolded","")
+    treeout.Branch("tunfold",histoOut)
+    
+    responseFile = ROOT.TFile(responseMatrixFile)
+    tmRAW = responseFile.Get(responseMatrixName)
+    
+    treeout.SetDirectory(fileout)
+    
+    responseMatrix = [[0.0,0.0],[0.0,0.0]]
+    efficencies=[0.0,0.0]
+    
+    measuredHist=[0.0,0.0]
+    truthHist=[0.0,0.0]
+    
+    rebinnedResponse = tmRAW.Rebin2D(tmRAW.GetNbinsX()/2,tmRAW.GetNbinsY()/2)
+    for xbin in range(3):
+        for ybin in range(3):
+            print xbin,",",ybin,": ",rebinnedResponse.GetBinContent(xbin,ybin)
+    
+    for ibinT in range(tmRAW.GetNbinsX()):
+        rebinT=0
+        if (tmRAW.GetXaxis().GetBinCenter(ibinT+1)>0.0):
+            rebinT=1
+        efficencies[rebinT]+=tmRAW.GetBinContent(ibinT+1,0)
+        truthHist[rebinT]+=tmRAW.GetBinContent(ibinT+1,0)
+        for ibinM in range(tmRAW.GetNbinsY()):
+            rebinM=0
+            if (tmRAW.GetYaxis().GetBinCenter(ibinM+1)>0.0):
+                rebinM=1
+            responseMatrix[rebinT][rebinM]+=tmRAW.GetBinContent(ibinT+1,ibinM+1)
+            measuredHist[rebinM]+=tmRAW.GetBinContent(ibinT+1,ibinM+1)
+            truthHist[rebinT]+=tmRAW.GetBinContent(ibinT+1,ibinM+1)
+    print responseMatrix
+    for ibinT in range(2):
+        print "detected",ibinT,": ",responseMatrix[0][ibinT]+responseMatrix[1][ibinT]
+        print "missing",ibinT,": ",efficencies[ibinT]
+        print "truth",ibinT,": ",truthHist[ibinT]
+        efficencies[ibinT]=(responseMatrix[ibinT][0]+responseMatrix[ibinT][1])/(responseMatrix[ibinT][0]+responseMatrix[ibinT][1]+efficencies[ibinT])
+    for ibinT in range(2):
+        bin0=responseMatrix[ibinT][0]/(responseMatrix[ibinT][0]+responseMatrix[ibinT][1])
+        bin1=responseMatrix[ibinT][1]/(responseMatrix[ibinT][0]+responseMatrix[ibinT][1])
+        responseMatrix[ibinT][0]=bin0
+        responseMatrix[ibinT][1]=bin1
+
+    det = responseMatrix[0][0]*responseMatrix[1][1]-responseMatrix[0][1]*responseMatrix[1][0]
+    responseMatrix_inv = [[responseMatrix[1][1]/det,-responseMatrix[0][1]/det],[-responseMatrix[1][0]/det,responseMatrix[0][0]/det]]
+    
+    print "response:"
+    print responseMatrix
+    print "response inv:"
+    print responseMatrix_inv
+    print "efficiencies:"
+    print efficencies
+    print "reco:"
+    print measuredHist
+    
+    covarianceMatrix = numpy.dot(responseMatrix_inv,numpy.dot([[(measuredHist[0]),0.0],[0.0,(measuredHist[1])]],numpy.transpose(responseMatrix_inv)))
+    correlation=covarianceMatrix[0][1]/math.sqrt(covarianceMatrix[0][0]*covarianceMatrix[1][1])
+    print "covariance:"
+    print covarianceMatrix
+    print "correlation:"
+    print correlation
+   
+   
+    
+    for cnt in range(int(treein.GetEntries())):
+        treein.GetEntry(cnt)
+        m=[0.0,0.0]
+        t=[0.0,0.0]
+        for ibin in range(histoPE.GetNbinsX()):
+            ibinM=0
+            if (histoPE.GetBinCenter(ibin+1)>0):
+                ibinM=1
+            m[ibinM]+=histoPE.GetBinContent(ibin+1)
+        for i in range(2):
+            # need to multiply with the transposed response matrix because the truth bins are on the x axis
+            t[i]=responseMatrix_inv[0][i]*m[0]+responseMatrix_inv[1][i]*m[1]
+            
+            t[i]=t[i]/efficencies[i]
+            histoOut.SetBinContent(i+1,t[i])
+        treeout.Fill()
+    fileout.cd()
+    treeout.SetDirectory(fileout)
+    treeout.Write()
+    
+    responseFile.Close()
+    fileout.Close()
+    filein.Close()
+
 def dataAfterSubtraction(prefix,folder,subtractedFile,signalFile):
     histoSub=ROOT.TH1D()
     histoSub.SetName("sub")
@@ -266,8 +364,8 @@ def subtrackNominalBackground(fileName,nominalFileName,prefix,binningMeasured,fo
     
     histoSubtracted=ROOT.TH1D("hist","",len(binningMeasured)-1,binningMeasured)
     for cnt in range(len(binningMeasured)-1):
-        histBinPreDistList.append(ROOT.TH1F("binPreSubtraction_"+str(cnt+1),"binPreSubtraction_"+str(cnt+1),500,0.0,2500))
-        histBinPostDistList.append(ROOT.TH1F("binPostSubtraction_"+str(cnt+1),"binPostSubtraction_"+str(cnt+1),500,0.0,2500))
+        histBinPreDistList.append(ROOT.TH1F("binPreSubtraction_"+str(cnt+1),"binPreSubtraction_"+str(cnt+1),1000,0.0,5000))
+        histBinPostDistList.append(ROOT.TH1F("binPostSubtraction_"+str(cnt+1),"binPostSubtraction_"+str(cnt+1),1000,0.0,5000))
     treeOut.Branch("histos", histoSubtracted)
     biasCount=numpy.zeros(len(binningMeasured)-1)
     for cnt in range(int(tree.GetEntries())):
@@ -316,7 +414,14 @@ def subtrackNominalBackground(fileName,nominalFileName,prefix,binningMeasured,fo
             nDownPre_sig+=(histBinPreDistList[cnt].GetRMS())**2
             nDownPost+=histBinPostDistList[cnt].GetMean()
             nDownPost_sig+=(histBinPostDistList[cnt].GetRMS())**2
-            
+        
+        cv = ROOT.TCanvas("cv_"+histBinPreDistList[cnt].GetName(),"",800,600)
+        histBinPreDistList[cnt].Draw()
+        histBinPreDistList[cnt].Fit("gaus","Q")
+        tfPoisson = ROOT.TF1("possion_"+histBinPreDistList[cnt].GetName(),str(histBinPreDistList[cnt].Integral())+"*5.0*TMath::Poisson(x,"+str(histBinPreDistList[cnt].GetMean())+")",0,10000)
+        tfPoisson.Draw("Same")
+        cv.Write()
+
         histBinPreDistList[cnt].Write()
         histBinPostDistList[cnt].Write()
     
@@ -334,20 +439,23 @@ def subtrackNominalBackground(fileName,nominalFileName,prefix,binningMeasured,fo
     
 def runCommand(cmd,breakOnErr=True,cwd=""):
     process = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,cwd=cwd)
-    process.wait()
+    
+    cout=""
+    while True:
+        nextline = process.stdout.readline()
+        if nextline == '' and process.poll() != None:
+            break
+        cout+=nextline
+        sys.stdout.write(nextline)
+        sys.stdout.flush()
+    
+    
     err=""
     while (True):
         line=process.stderr.readline()
         if line=="":
             break
         err+=line+"\r\n"
-        
-    cout=""
-    while (True):
-        line=process.stdout.readline()
-        if line=="":
-            break
-        cout+=line+"\r\n"
         
     if (err!="" and breakOnErr):
         logging.error("error during command execution: '"+str(cmd)+"'")
@@ -363,7 +471,7 @@ def writeLogFile(filename,err,cout):
     thetaLog.write(err)
     thetaLog.close()
     
-def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,outputFile,reg=1.0,cwd="",diceTMUnc=0):
+def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,outputFile,reg=1.0,cwd="",diceTMUnc=0, bootstrap=0):
     return runCommand(["./execute_unfolding.sh",
                         inputFile,
                         treeName,
@@ -371,7 +479,7 @@ def runUnfolding(inputFile,treeName,branchName,reponseFile,reponseMatrixName,out
                         reponseFile,
                         reponseMatrixName,
                         outputFile,
-                        str(reg),str(diceTMUnc)],
+                        str(reg),str(diceTMUnc),str(bootstrap)],
                         False,cwd=cwd)
 
 def calcAsymmetry(histo):
@@ -426,19 +534,28 @@ def getRootObject(name):
 
 def closureTest(asymmetryResult,truth,scale=1.0,outputName=None):
     histoBinInfoList=asymmetryResult["info"]
-
+    print histoBinInfoList
     canvasDist=ROOT.TCanvas("canvas","",800,600)
     histMean=ROOT.TH1D(truth)
     for ibin in range(truth.GetNbinsX()):
+        print truth.GetBinCenter(ibin+1),truth.GetBinContent(ibin+1)
         histMean.SetBinContent(ibin+1, histoBinInfoList[ibin]["mean"])
         histMean.SetBinError(ibin+1, histoBinInfoList[ibin]["rms"])
     histMean.SetMarkerStyle(21)
-    histMean.SetMarkerSize(1.2)
-    histMean.GetYaxis().SetRangeUser(0.0,max(histMean.GetMaximum(),truth.GetMaximum())*1.1)
-    histMean.Draw("PE1")
+    histMean.SetMarkerSize(1.1)
+
+    ymin = min(min(histoBinInfoList[0]["min"],truth.GetMinimum()),0.0)*1.1
+    ymax = max(histoBinInfoList[1]["max"],truth.GetMaximum())*1.1
+    print ymin,ymax
+    axis=ROOT.TH2F("axis",";cos #theta;",50,-1,1,50,ymin,ymax)
+    axis.Draw("AXIS")
+    histMean.SetLineWidth(2)
+    histMean.Draw("Same PE1")
     truth.Scale(scale)
-    truth.SetLineColor(ROOT.kGreen)
-    truth.Draw("LSame")
+    truth.SetLineWidth(2)
+    truth.SetLineColor(ROOT.kGreen+1)
+    truth.SetLineStyle(3)
+    truth.Draw("histSame")
     canvasDist.Print(outputName+"_dist.pdf")
     
     #logging.info("-----pull and bias--------")
@@ -536,6 +653,8 @@ if __name__=="__main__":
     parser.add_option("--noBackground",action="store_true",default=False, dest="noBackground", help="assumes only signal, background and its subtractions is not considered")
     
     parser.add_option("--genHist",action="store", type="string", dest="genHist", default=None, help="optional gen histogram")
+    
+    parser.add_option("--only-2bins",action="store_true", dest="only_2bins", default=False, help="optional merged to 2x2 bin inversion")
     
     ### currently not yet supported options
     parser.add_option("--signal",action="store", type="string", dest="signalHistogram", help="input signal sample, e.g. data.root:cos_theta__tchan")
@@ -795,23 +914,36 @@ if __name__=="__main__":
     #-----------------------------------------------------------------------------
     logging.info("!!! run unfolding !!!")
     responseMatrixFile,responseMatrixName=options.responseMatrix.split(":",1)
-    shutil.copy("execute_unfolding.sh", os.path.join(options.output,"execute_unfolding.sh"))  
-    err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=options.regScale,diceTMUnc=1,cwd=options.output)
-    if not os.path.exists(os.path.join(options.output,"unfolded_"+options.modelName+".root")):
-        logging.error("unfolding output was not created")
-        logging.error(err)
-        logging.error(out)
-        sys.exit(-1)
-    writeLogFile(os.path.join(options.output,"unfolding_"+options.modelName),err,out)
+    if (options.only_2bins):
+        run2DUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),responseMatrixFile,responseMatrixName, os.path.join(options.output,"unfolded_"+options.modelName+".root"))
+    else:    
+        shutil.copy("execute_unfolding.sh", os.path.join(options.output,"execute_unfolding.sh"))  
+        err,out=runUnfolding(os.path.join(options.output,"subtracted_"+options.modelName+".root"),"subtracted","histos",responseMatrixFile,responseMatrixName,os.path.join(options.output,"unfolded_"+options.modelName+".root"),reg=options.regScale,diceTMUnc=1,bootstrap=0,cwd=options.output)
+        if not os.path.exists(os.path.join(options.output,"unfolded_"+options.modelName+".root")):
+            logging.error("unfolding output was not created")
+            logging.error(err)
+            logging.error(out)
+            sys.exit(-1)
+        writeLogFile(os.path.join(options.output,"unfolding_"+options.modelName),err,out)
     #-----------------------------------------------------------------------------
     logging.info("!!! calculate asymmetry !!!")
     
     asymmetryResult = getAsymmetry(os.path.join(options.output,"unfolded_"+options.modelName+".root"),"unfolded","tunfold",outputName=os.path.join(options.output,options.modelName))
     if (not options.runOnData):
+        compareHist=None
         if options.genHist:
-            closureTest(asymmetryResult,getRootObject(options.genHist),scale=1.0,outputName=os.path.join(options.output,options.modelName))
+            compareHist= getRootObject(options.genHist)
         else:
-            closureTest(asymmetryResult,getRootObject(options.responseMatrix).ProjectionX(),scale=1.0,outputName=os.path.join(options.output,options.modelName))
+            compareHist=getRootObject(options.responseMatrix).ProjectionX()
+        if (options.only_2bins):
+            rebinnedCompareHist=ROOT.TH1D("compHistT","",2,-1,1)
+            for ibin in range(compareHist.GetNbinsX()):
+                if compareHist.GetBinCenter(ibin+1)<0:
+                    rebinnedCompareHist.Fill(-0.5,compareHist.GetBinContent(ibin+1))
+                else:
+                    rebinnedCompareHist.Fill(0.5,compareHist.GetBinContent(ibin+1))
+            compareHist=rebinnedCompareHist
+        closureTest(asymmetryResult,compareHist,scale=1.0,outputName=os.path.join(options.output,options.modelName))
     logging.info("final asymmetry: mean="+str(asymmetryResult["mean"])+", rms="+str(asymmetryResult["rms"]))
 
     file=open(os.path.join(options.output,"asymmetry.txt"),"w")
