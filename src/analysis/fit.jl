@@ -18,6 +18,19 @@ Base.display(io::IO, fr::FitResult) = println(io,
     )
 )
 
+fit_classification = {
+    :beta_signal => {:tchan},
+    :wzjets => {:wjets, :gjets, :dyjets, :diboson},
+    :ttjets => {:ttjets, :schan, :twchan}
+}
+
+function get_fit_classification(process)
+    for (k, v) in fit_classification
+        process in v && return k
+    end
+    return :nothing
+end
+
 function cov(fr::FitResult)
     m = zeros(size(fr.corr))
     for i=1:size(m, 1)
@@ -29,9 +42,13 @@ function cov(fr::FitResult)
 end
 
 function getindex(fr::FitResult, k)
+    return fr.means[indexof(fr, k)]
+end
+
+function indexof(fr::FitResult, k)
     sk = string(k)
     sk in fr.names || error("$k not in names")
-    return fr.means[findfirst(fr.names, sk)]
+    return findfirst(fr.names, sk)
 end
 
 function FitResult(fn::ASCIIString)
