@@ -3,7 +3,7 @@ from glob import glob
 import tempfile, shutil, os
 import ROOT
 import ConfigParser
-Config = ConfigParser.ConfigParser()
+Config = ConfigParser.ConfigParser(allow_no_value=True)
 Config.read(sys.argv[2])
 
 infiles = Config.get("input", "filenames").split(" ")
@@ -16,31 +16,33 @@ signal = 'tchan' #name of signal process/histogram
 syst = Config.get("systematics", "systematic", "nominal")
 dir = Config.get("systematics", "direction", "none")
 
-means = {}
-means["ttjets"] = Config.get("priors", "ttjets_mean", 1.0)
-means["wzjets"] = Config.get("priors", "wzjets_mean", 1.0)
-means["tchan"] = Config.get("priors", "tchan_mean", 1.0)
-means = {k:float(v) for (k,v) in means.items()}
-
-sigmas = {}
-sigmas["ttjets"] = Config.get("priors", "ttjets_sigma", inf)
-sigmas["wzjets"] = Config.get("priors", "wzjets_sigma", inf)
-sigmas["tchan"] = Config.get("priors", "tchan_sigma", inf)
-sigmas = {k:float(v) for (k,v) in sigmas.items()}
-print(means, sigmas)
-
 def hfilter(hname):
     spl = hname.split("__")
+    print spl
+
+    #FIXME: currently inflexible W+jets splitting
+    if len(spl)==3 and spl[1] == "wjets":
+        return True
+    if len(spl)==2 and spl[1] == "wjets":
+        return False
 
     if len(spl)!=2:
         return False
 
+
+    if "data_" in hname:
+        return False
     #if "qcd" in hname:
     #    return False
 
     if '__up' in hname or '__down' in hname:
         return False
     return True
+
+def nameconv(n):
+    n = n.replace("wjets__heavy", "wjets_heavy")
+    n = n.replace("wjets__light", "wjets_light")
+    return n
 
 def get_model(infile):
 
@@ -54,11 +56,9 @@ def get_model(infile):
         kn = k.GetName()
         if syst!="nominal" and "%s__%s"%(syst, dir) in kn:
             _kn = "__".join(kn.split("__")[0:2])
-            print("renaming ", kn, _kn)
-            x = tf0.Get(kn).Clone(_kn)
             x.SetDirectory(tf)
             x.Write()
-        if len(kn.split("__"))==2 and not tf.Get(kn):
+        if hfilter(kn) and not tf.Get(kn):
             print("cloning", kn)
             x = tf0.Get(kn).Clone(kn)
             x.SetDirectory(tf)
@@ -74,14 +74,24 @@ def get_model(infile):
         # http://atlas.physics.arizona.edu/~kjohns/teaching/phys586/s06/barlow.pdf
         include_mc_uncertainties = True,
         histogram_filter = hfilter,
-        #root_hname_to_convention = nameconv
+        root_hname_to_convention = nameconv
     )
     os.remove(filename)
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
 
-    add_normal_unc(model, "wzjets", mean=means["wzjets"], unc=sigmas["wzjets"])
-    add_normal_unc(model, "ttjets", mean=means["ttjets"], unc=sigmas["ttjets"])
+    for o in model.get_observables():
+        for p in model.get_processes(o):
+            if p == signal:
+                continue
+            try:
+                add_normal_unc(model,
+                    p,
+                    mean=float(Config.get("priors", "%s_mean"%p)),
+                    unc=float(Config.get("priors", "%s_sigma"%p))
+                )
+            except:
+                print "fixing process ", o, p
     return model
 
 def add_normal_unc(model, par, mean=1.0, unc=1.0):
