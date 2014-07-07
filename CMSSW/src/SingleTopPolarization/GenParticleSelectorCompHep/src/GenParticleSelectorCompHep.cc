@@ -119,8 +119,7 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
     {
         const GenParticle& p = (*genParticles)[iparticle];
         
-        
-        if (!((p.status() == 3) && p.numberOfDaughters ()==0) && !((abs(p.pdgId())==15) && (p.status() == 1)))
+        if (!((p.status() == 3) && p.numberOfMothers ()==2) && !((abs(p.pdgId())==15) && (p.status() == 1)))
         {
             //particle is neither final nor an intermediate tau
             continue;
@@ -161,7 +160,7 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
     for(size_t i = 0; i < genParticles->size(); ++ i) 
     {
         const GenParticle& p = (*genParticles)[i];
-        if (!((p.status() == 3) && p.numberOfDaughters ()==0) && !((abs(p.pdgId())==15) && (p.status() == 1)))
+        if ((p.status() == 3) && (p.numberOfMothers()==2) && (abs(p.pdgId())==5) && (p.pdgId()*lepton->pdgId()<0))
         {
             outBJets->push_back(p);
             bJet=&p;
