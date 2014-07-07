@@ -51,6 +51,8 @@ public:
     static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
     
 private:
+    edm::InputTag _srcTag;
+
     virtual void beginJob() ;
     virtual void produce(edm::Event&, const edm::EventSetup&);
     virtual void endJob() ;
@@ -60,70 +62,20 @@ private:
     virtual void beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
     virtual void endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&);
     
-    // ----------member data ---------------------------
-    int count_mu;
-    int count_antimu;
-    int count_b;
-    int count_nu;
-    int count_events;
-    int count_other;
-    int count_stuff;
-    
-    bool has_mu;
-    bool has_nu;
-    bool has_b;
-    bool has_w;
-    bool has_lj;
 };
 
-//
-// constants, enums and typedefs
-//
 
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
 GenParticleSelectorCompHep::GenParticleSelectorCompHep(const edm::ParameterSet& iConfig)
 {
-    //produces<std::vector<GenParticle>>("trueTop");
+    produces<std::vector<GenParticle>>("trueTop");
     produces<std::vector<GenParticle>>("trueLightJet");
     produces<std::vector<GenParticle>>("trueBJet");
     produces<std::vector<GenParticle>>("trueLepton");
     produces<std::vector<GenParticle>>("trueNeutrino");
     produces<std::vector<GenParticle>>("trueWboson");
     produces<int>("trueLeptonPdgId");
-    //register your products
-    /* Examples
-     produces<ExampleData2>();
-     
-     //if do put with a label
-     produces<ExampleData2>("label");
-     
-     //if you want to put into the Run
-     produces<ExampleData2,InRun>();
-     */
-    //now do what ever other initialization is needed
-    /*count_t = 0;
-     count_other = 0;
-     
-     count_over3 = 0;
-     count_diff = 0;
-     for(size_t i = 0; i < 200; ++ i){
-     for(size_t j = 0; j < 200; ++ j){
-     fstateMothers[i][j] = 0;
-     fstateSiblings[i][j] = 0;
-     }
-     }*/
-    count_events = 0;
-    count_mu = 0;
-    count_antimu = 0;
-    count_other = 0;
-    count_stuff = 0;
+    
+    _srcTag = iConfig.getParameter<edm::InputTag>("src");
     
 }
 
@@ -145,16 +97,10 @@ GenParticleSelectorCompHep::~GenParticleSelectorCompHep()
 void
 GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-    //using namespace edm;
-    //count_siblings = 0;
-    //which_sibling = 0;
-    //s1_mother1 = s1_mother2 = s2_mother1 = s2_mother2 = 0;
+
     Handle<GenParticleCollection> genParticles;
-    iEvent.getByLabel("genParticles", genParticles);
-    count_events++;
-    count_nu = 0;
-    //count_mu = 0;
-    //count_antimu = 0;
+    iEvent.getByLabel(_srcTag, genParticles);
+
     
     //std::auto_ptr<std::vector<GenParticle> > outTops(new std::vector<GenParticle>());
     std::auto_ptr<std::vector<GenParticle> > outLightJets(new std::vector<GenParticle>());
@@ -162,105 +108,96 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
     std::auto_ptr<std::vector<GenParticle> > outLeptons(new std::vector<GenParticle>());
     std::auto_ptr<std::vector<GenParticle> > outNeutrinos(new std::vector<GenParticle>());
     std::auto_ptr<std::vector<GenParticle> > outWbosons(new std::vector<GenParticle>());
+    std::auto_ptr<std::vector<GenParticle> > outTop(new std::vector<GenParticle>());
     
-    int trueLeptonPdgId = 0;
-    GenParticle* lightJet = 0;
-    GenParticle* bJet = 0;
-    GenParticle* wBoson = 0;
-    GenParticle* lepton = 0;
-    GenParticle* neutrino = 0;
-    GenParticle *lj1 = 0, *lj2 = 0;
-    //GenParticle *x;
-    const GenParticle * dau;
-    int which_light = 0;
+    const GenParticle* lightJet = nullptr;
+    const GenParticle* bJet = nullptr;
+    const GenParticle* lepton = nullptr;
+    const GenParticle* neutrino = nullptr;
     
-    for(size_t i = 0; i < genParticles->size(); ++ i) {
-        has_mu = false;
-        has_nu = false;
-        has_b = false;
-        has_w = false;
-        has_lj = false;
-        const GenParticle & p = (*genParticles)[i];
-        int id = p.pdgId();
-        int st = p.status();
-        const GenParticle * mom;// = p.mother();
-        //double pt = p.pt(), eta = p.eta(), phi = p.phi(), mass = p.mass();
-        //double vx = p.vx(), vy = p.vy(), vz = p.vz();
-        //int charge = p.charge();
-        //int n = p.numberOfDaughters();
-        if((abs(id) == 13 || abs(id) == 11 || abs(id) == 15) && st ==3){
-            LogDebug("loop") << "P: " << id << " " << st;
-            mom = (GenParticle*)p.mother(0);  //particle has 2 mothers with the same daughters, just select the first one
-            for(size_t mi = 0; mi < mom->numberOfDaughters(); ++ mi){
-                dau = (GenParticle*)mom->daughter(mi);
-                if(dau->status()==3){
-                    if(abs(dau->pdgId())==13 || abs(dau->pdgId())==11 || abs(dau->pdgId())==15){
-                        has_mu = true;
-                        lepton = const_cast<reco::GenParticle*>(dau);
-                    }
-                    else if(abs(dau->pdgId())==14 || abs(dau->pdgId())==12 || abs(dau->pdgId())==16){
-                        has_nu = true;
-                        neutrino = const_cast<reco::GenParticle*>(dau);
-                    }
-                    else if(abs(dau->pdgId())==5){
-                        has_b = true;
-                        bJet = const_cast<reco::GenParticle*>(dau);
-                    }
-                    else if(abs(dau->pdgId()) == 24){
-                        has_w = true;
-                        wBoson = const_cast<reco::GenParticle*>(dau);
-                    }
-                    else if(abs(dau->pdgId())<5){
-                        if(!has_lj){
-                            lj1 = const_cast<reco::GenParticle*>(dau);
-                            which_light = 1;
-                        }
-                        else{
-                            lj2 = const_cast<reco::GenParticle*>(dau);
-                            if(abs(dau->pdgId())<lj1->pdgId())
-                            which_light = 2;
-                            else
-                            which_light = 1;
-                        }
-                        has_lj = true;
-                    }
-                }
-            }
-            if(has_mu && has_nu && has_b){
-                if(lepton->pdgId()==13) {
-                    count_antimu++;
-                }
-                else if(lepton->pdgId()==-13) {
-                    count_mu++;
-                }
-                else{
-                    count_other++;
-                }
-                outLeptons->push_back(*lepton);
-                outNeutrinos->push_back(*neutrino);
-                outBJets->push_back(*bJet);
-                
-                if (has_w) {
-                    outWbosons->push_back(*wBoson);
-                } 
-
-                if(which_light == 1){
-                    outLightJets->push_back(*lj1);
-                }
-                else if(which_light == 2){
-                    outLightJets->push_back(*lj2);
-                }
-            }
-            else
-            count_stuff++;
+    for(size_t iparticle = 0; iparticle < genParticles->size(); ++ iparticle) 
+    {
+        const GenParticle& p = (*genParticles)[iparticle];
+        
+        
+        if (!((p.status() == 3) && p.numberOfDaughters ()==0) && !((abs(p.pdgId())==15) && (p.status() == 1)))
+        {
+            //particle is neither final nor an intermediate tau
+            continue;
+        }
+        
+        if (!lepton && ((abs(p.pdgId())==11) or (abs(p.pdgId())==13) or (abs(p.pdgId())==15)))
+        {
+            outLeptons->push_back(p);
+            lepton=&p;
+        }
+        
+        if (!neutrino && ((abs(p.pdgId())==12) or (abs(p.pdgId())==14) or abs(p.pdgId())==16))
+        {
+            outNeutrinos->push_back(p);
+            neutrino=&p;
+        }
+        
+        if (!lightJet && (abs(p.pdgId())<5))
+        {
+            outLightJets->push_back(p);
+            lightJet=&p;
+        }
+        
+    }
+    if (!lepton || !neutrino || !lightJet)
+    {
+        LogWarning("lepton, neutrino, or light quark not found in current event");
+        iEvent.put(outLeptons, "trueLepton");
+        iEvent.put(outLightJets, "trueLightJet");
+        iEvent.put(outBJets, "trueBJet");
+        iEvent.put(outNeutrinos, "trueNeutrino");
+        iEvent.put(outWbosons, "trueWboson");
+        iEvent.put(outTop,"trueTop");
+        iEvent.put(std::auto_ptr<int>(new int(0)), "trueLeptonPdgId");
+        return;
+    }
+    
+    for(size_t i = 0; i < genParticles->size(); ++ i) 
+    {
+        const GenParticle& p = (*genParticles)[i];
+        if (!((p.status() == 3) && p.numberOfDaughters ()==0) && !((abs(p.pdgId())==15) && (p.status() == 1)))
+        {
+            outBJets->push_back(p);
+            bJet=&p;
+            break;
         }
     }
+        
+    if (!bJet)
+    {
+        LogWarning("lepton, neutrino, or light quark not found in current event");
+        iEvent.put(outLeptons, "trueLepton");
+        iEvent.put(outLightJets, "trueLightJet");
+        iEvent.put(outBJets, "trueBJet");
+        iEvent.put(outNeutrinos, "trueNeutrino");
+        iEvent.put(outWbosons, "trueWboson");
+        iEvent.put(outTop,"trueTop");
+        iEvent.put(std::auto_ptr<int>(new int(0)), "trueLeptonPdgId");
+        return;
+    }
+    
+    
+    
+   
+    //GenParticle (Charge q, const LorentzVector &p4, const Point &vtx, int pdgId, int status, bool integerCharge)
+    GenParticle wboson(lepton->charge(),lepton->p4()+neutrino->p4(),reco::Candidate::Point(),24*lepton->charge(),1,true);
+    outWbosons->push_back(wboson);
+    
+    GenParticle top(wboson.charge(),bJet->p4()+wboson.p4(),reco::Candidate::Point(),6*wboson.charge(),1,false);
+    outTop->push_back(top);
     
     iEvent.put(outLeptons, "trueLepton");
     iEvent.put(outLightJets, "trueLightJet");
     iEvent.put(outBJets, "trueBJet");
     iEvent.put(outNeutrinos, "trueNeutrino");
     iEvent.put(outWbosons, "trueWboson");
+    iEvent.put(outTop,"trueTop");
     iEvent.put(std::auto_ptr<int>(new int(lepton->pdgId())), "trueLeptonPdgId");
     
 }
@@ -274,7 +211,7 @@ GenParticleSelectorCompHep::beginJob()
 // ------------ method called once each job just after ending the event loop  ------------
 void
 GenParticleSelectorCompHep::endJob() {
-    cout << "Events "<< count_events << " " << count_mu << " " <<  count_antimu <<" " <<count_other <<" " <<count_stuff<<endl;
+
 }
 
 // ------------ method called when starting to processes a run  ------------
