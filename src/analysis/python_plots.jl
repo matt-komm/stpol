@@ -150,7 +150,8 @@ function ratio_hist(hists)
     for i=1:length(mcs)
         m = float(rand(mcs[i], N)) * mc.bin_contents[i] / mc.bin_entries[i]
         d = rand(datas[i], N)
-        v = (d-m)./d
+        #v = (d-m)./d
+        v = d./m
         v = Float32[isna(_v) || isnan(_v) ? 0 : _v for _v in v]
         err_up, mean, err_down = quantile(v, 0.68), quantile(v, 0.5), quantile(v, 0.32)
         errs[1,i] = abs(mean-err_down)
@@ -201,7 +202,7 @@ function ratio_axes(;frac=0.2, w=5, h=5)
     fig = PyPlot.plt.figure(figsize=(w,h))
     a2 = PyPlot.plt.axes((0.0, 0.0, 1.0, frac))
     a1 = PyPlot.plt.axes((0.0,frac, 1.0, 1-frac), sharex=a2)
-    a2[:set_ylim](-1,1)
+    a2[:set_ylim](0,2)
     a2[:yaxis][:tick_right]()
     a2[:yaxis][:set_label_position]("right")
     PyPlot.plt.setp(a1[:get_xticklabels](), visible=false)
@@ -242,7 +243,7 @@ function errorbars(a, h; kwargs...)
     means, errs = ratio_hist(h)
 
     a[:errorbar](midpoints(hdata.bin_edges), means[1:nb-1], errs[:, 1:nb-1], ls="", marker=".", color="black"; kwargs...)
-    a[:axhline](0.0, color="black")
+    a[:axhline](1.0, color="black")
     a[:grid]()
 
     return means, errs
@@ -498,8 +499,8 @@ function combdraw(
         ]);
         #println(hcat(tot_dd, mc.bin_contents[1:end-1], hists["DATA"].bin_contents[1:end-1], tot_du))
 
-        mup = (hists["DATA"].bin_contents[1:end-1] - (mc.bin_contents[1:end-1] + tot_du)) ./ hists["DATA"].bin_contents[1:end-1]
-        mdown = (hists["DATA"].bin_contents[1:end-1] - (mc.bin_contents[1:end-1] - tot_dd)) ./ hists["DATA"].bin_contents[1:end-1]
+        mup = (mc.bin_contents[1:end-1] + tot_du) ./ (mc.bin_contents[1:end-1])
+        mdown = (mc.bin_contents[1:end-1] - tot_dd) ./ (mc.bin_contents[1:end-1])
 
         rax[:bar](
             lowedge(hists["DATA"].bin_edges),
@@ -523,7 +524,7 @@ function combdraw(
     end
     ax[:set_title](plot_title)
     rax[:set_xlabel](VARS[var], fontsize=22)
-    rax[:set_ylabel]("\$ \\frac{D - M}{D} \$")
+    rax[:set_ylabel]("\$ \\frac{D}{M} \$")
     rslegend(ax)
 
     #ax[:set_ylim](top=maximum(contents(hists["DATA"])) * 1.3)

@@ -13,10 +13,10 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
         iso = :unknown
        
         #MC did not match, try data
-        cls = data_cls(fn)
+        cls = data_cls(prefix, fn)
         if cls != nothing
-            samp = cls[2]
-            iso = cls[1]
+            tag, iso, samp = cls
+            syst = ""
         end
     else
         tag = m.captures[2]
@@ -70,17 +70,18 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
     return {:tag => string(tag), :iso => string(iso), :systematic => string(syst), :sample => string(samp)}
 end
 
-function data_cls(fn)
-    if contains(fn, "/iso/SingleMu")
-        return (:iso, :SingleMu)
-    elseif contains(fn, "/antiiso/SingleMu")
-        return (:antiiso, :SingleMu)
-    elseif contains(fn, "/iso/SingleEle")
-        return (:iso, :SingleEle)
-    elseif contains(fn, "/antiiso/SingleEle")
-        return (:antiiso, :SingleEle)
-    end 
-    return nothing
+function data_cls(prefix, fn)
+    r = Regex("$prefix/.*/(.*)/(.*)/(.*)/output_.*.root")
+    m = match(r, fn)
+    if m!=nothing
+        tag = m.captures[1]
+        iso = m.captures[2]
+        sample = m.captures[3]
+        return (tag, iso, sample)
+    else
+        return nothing
+    end
+    return 
 end
 
 fpath = joinpath(
