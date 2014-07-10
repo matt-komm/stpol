@@ -154,4 +154,4 @@ function reweight_hists_to_fitres(fr, hists)
     return hists
 end
 
-export FitResult, reweight_hists_to_fitres, cov
+export FitResult, reweight_hists_to_fitres, cov, indexof
