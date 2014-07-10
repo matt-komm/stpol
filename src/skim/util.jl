@@ -1,6 +1,6 @@
 
-function part(x, y)
-    return symbol(string(x, "_", y))
+function part(args...)
+    return symbol(join(args, "_"))
 end
 
 function ifpresent(arr, n::Integer=1)
