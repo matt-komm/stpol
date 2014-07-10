@@ -90,18 +90,26 @@ df = similar(#Data frame as big as the input
 
 #event-level characteristics
             cos_theta_lj=Float32[],
+            cos_theta_whel_lj=Float32[],
             cos_theta_bl=Float32[],
             cos_theta_lj_gen=Float32[],
+            cos_theta_whel_lj_gen=Float32[],
             cos_theta_bl_gen=Float32[],
             met=Float32[], njets=Int32[], ntags=Int32[], mtw=Float32[],
             met_phi=Float32[],
 
             C=Float32[], D=Float32[], circularity=Float32[], sphericity=Float32[], isotropy=Float32[], aplanarity=Float32[], thrust=Float32[],
             C_with_nu=Float32[],
-            top_mass=Float32[], top_eta=Float32[], top_phi=Float32[], top_pt=Float32[],
+            top_mass=Float32[], top_pt=Float32[],# top_eta=Float32[], top_phi=Float32[],
+            top_mass_gen=Float32[], top_pt_gen=Float32[],
+
+            w_mass_gen=Float32[], w_pt_gen=Float32[], w_eta_gen=Float32[], w_phi_gen=Float32[],
+            w_mass=Float32[], w_pt=Float32[], w_eta=Float32[], w_phi=Float32[],
+
             #wjets_cls=Int32[],
             jet_cls=Int32[],
-            ht=Float32[], shat=Float32[],
+            hadronic_pt=Float32[], hadronic_eta=Float32[], hadronic_phi=Float32[], hadronic_mass=Float32[],
+            shat_pt=Float32[], shat_eta=Float32[], shat_phi=Float32[], shat_mass=Float32[],
 
             nu_soltype=Int32[],
             n_signal_mu=Int32[], n_signal_ele=Int32[],
@@ -233,6 +241,7 @@ for i=1:maxev
 
 
     df[i, :cos_theta_lj_gen] = events[sources[:cos_theta_lj_gen]] |> ifpresent
+    df[i, :cos_theta_whel_lj_gen] = events[sources[:cos_theta_whel_lj_gen]] |> ifpresent
     df[i, :cos_theta_bl_gen] = events[sources[:cos_theta_bl_gen]] |> ifpresent
 
     df[i, :run], df[i, :lumi], df[i, :event] = where(events)
@@ -364,6 +373,7 @@ for i=1:maxev
 
     df[i, :jet_cls] = jet_cls_to_number(jet_classification(df[i, :ljet_id], df[i, :bjet_id]))
     df[i, :cos_theta_lj] = events[sources[:cos_theta_lj]] |> ifpresent
+    df[i, :cos_theta_whel_lj] = events[sources[:cos_theta_whel_lj]] |> ifpresent
     df[i, :cos_theta_bl] = events[sources[:cos_theta_bl]] |> ifpresent
 
     df[i, :n_good_vertices] = events[sources[:n_good_vertices]] |> ifpresent
@@ -444,36 +454,56 @@ for i=1:maxev
     df[i, :C_with_nu] = events[sources[:C_with_nu]]
 
     #df[i, :wjets_cls] = events[sources[:wjets_cls]] |> ifpresent
+    #for k in [:Pt, :Eta, :Phi, :Mass]
+    for k in [:Mass, :Pt]
+        p = part(:top, k, :reco)
+        df[i, lowercase("top_$k")|>symbol] = events[sources[p]] |> ifpresent
+        
+        p = part(:top, k, :gen)
+        df[i, lowercase("top_$(k)_gen")|>symbol] = events[sources[p]] |> ifpresent
+    end
+    
     for k in [:Pt, :Eta, :Phi, :Mass]
-        p = part(:top, k)
-        df[i, lowercase(string(p))] = events[sources[p]] |> ifpresent
+        for x in [:shat, :hadronic]
+            p = part(x, k)
+            df[i, lowercase("$(x)_$(k)")|>symbol] = events[sources[p]] |> ifpresent
+        end
+    end
+    
+    for k in [:Pt, :Eta, :Phi, :Mass]
+        for x in [:W]
+            p = part(x, k, :reco)
+            df[i, lowercase("$(x)_$(k)")|>symbol] = events[sources[p]] |> ifpresent
+            
+            p = part(x, k, :gen)
+            df[i, lowercase("$(x)_$(k)_gen")|>symbol] = events[sources[p]] |> ifpresent
+        end
     end
 
     if lepton_type == :muon || lepton_type == :electron
         df[i, :nu_soltype] = events[sources[part(lepton_type, :nu_soltype)]] |> ifpresent
     end
 
-    #calculate the invariant mass of the system
-    totvec = FourVectorSph(0.0, 0.0, 0.0, 0.0)
-    for particle in [:top, :ljet]
-        vec = Float64[]
-        #this should be in the order of FourVectorSph
-        for k in [:pt, :eta, :phi, :mass]
-            x = df[i, part(particle, k)]
-            if isna(x)
-                break
-            end
-            v = convert(Float64, x)
-            push!(vec, v)
-        end
-        if length(vec)==4
-            v = FourVectorSph(vec...)
-            totvec += v
-        end
-    end
+    ##calculate the invariant mass of the system
+    #totvec = FourVectorSph(0.0, 0.0, 0.0, 0.0)
+    #for particle in [:top, :ljet]
+    #    vec = Float64[]
+    #    #this should be in the order of FourVectorSph
+    #    for k in [:pt, :eta, :phi, :mass]
+    #        x = df[i, part(particle, k)]
+    #        if isna(x)
+    #            break
+    #        end
+    #        v = convert(Float64, x)
+    #        push!(vec, v)
+    #    end
+    #    if length(vec)==4
+    #        v = FourVectorSph(vec...)
+    #        totvec += v
+    #    end
+    #end
 
-    df[i, :shat] = l(totvec)
-    df[i, :ht] = df[i, :bjet_pt] + df[i, :ljet_pt]
+    #df[i, :shat] = l(totvec)
 
     df[i, :passes] = true
 end
