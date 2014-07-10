@@ -92,7 +92,11 @@ end
 
 function eplot{T <: Histogram}(ax::PyObject, h::T;kwargs...)
     #ax[:plot](midpoints(h.bin_edges), h.bin_contents; kwargs...)
-    ax[:errorbar](midpoints(h.bin_edges), h.bin_contents[1:nbins(h)-1], errors(h)[1:nbins(h)-1]; kwargs...)
+    kwargsd = {k=>v for (k,v) in kwargs}
+
+    errmult = pop!(kwargsd, :errmult, 1.0)
+
+    ax[:errorbar](midpoints(h.bin_edges), h.bin_contents[1:nbins(h)-1], errmult * errors(h)[1:nbins(h)-1]; kwargsd...)
 end
 
 
