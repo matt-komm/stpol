@@ -71,3 +71,6 @@ copies:
 	rm -Rf fitconfigs/bdt/ele	
 	cp -R fitconfigs/bdt/mu fitconfigs/bdt/ele
 	sed -i '' 's/mu/ele/g' fitconfigs/bdt/ele/*.cfg
+
+fit_all:
+	find fitconfigs/bdt -name "*.cfg" -exec ./runtheta.sh bgfit.py {} \;
