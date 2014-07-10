@@ -9,6 +9,9 @@ import SingleTopPolarization.Analysis.pileUpDistributions as pileUpDistributions
 from SingleTopPolarization.Analysis.weights_cfg import WeightSetup
 import SingleTopPolarization.Analysis.sample_types as sample_types
 
+#FIXME
+nanval = '-10000000000'
+
 #utility function for creating a VPSet for CandViewNTupleProducer2
 def ntupleCollection(items):
     varVPSet = cms.VPSet()
@@ -348,7 +351,7 @@ def SingleTopStep2():
     process.trueNuNTupleProducer = process.recoNuNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueNeutrino", "STPOLSEL2"),
     )
-    process.trueWNTupleProducer = process.recoNuNTupleProducer.clone(
+    process.trueWNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueWboson", "STPOLSEL2"),
     )
     if Config.isCompHep:
@@ -384,7 +387,6 @@ def SingleTopStep2():
         src=cms.InputTag("genParticleSelector", "trueLightJet", "STPOLSEL2"),
     )
 
-    nanval = '-10000000000'
     def userfloat(key):
         return "? hasUserFloat('{0}') ? userFloat('{0}') : {1}".format(key, nanval)
 
