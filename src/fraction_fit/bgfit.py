@@ -18,11 +18,12 @@ dir = Config.get("systematics", "direction", "none")
 
 def hfilter(hname):
     spl = hname.split("__")
-    print spl
+    #print spl
 
-    #FIXME: currently inflexible W+jets splitting
+    #keep W+jets heavy-light splitting
     if len(spl)==3 and spl[1] == "wjets":
         return True
+    #remove combined W+jets
     if len(spl)==2 and spl[1] == "wjets":
         return False
 
@@ -47,6 +48,7 @@ def nameconv(n):
 def get_model(infile):
 
     (fd, filename) = tempfile.mkstemp()
+    filename += "_fit_templates.root"
     print("temp file", filename)
     #shutil.copy(infile, filename)
     tf0 = ROOT.TFile.Open(infile, "READ")
@@ -54,15 +56,47 @@ def get_model(infile):
     tf.Cd("")
     for k in tf0.GetListOfKeys():
         kn = k.GetName()
+
+        #template is the same systematic scenario we have specified
+        #rename the systematic to the nominal
         if syst!="nominal" and "%s__%s"%(syst, dir) in kn:
             _kn = "__".join(kn.split("__")[0:2])
-            x.SetDirectory(tf)
-            x.Write()
-        if hfilter(kn) and not tf.Get(kn):
-            print("cloning", kn)
-            x = tf0.Get(kn).Clone(kn)
-            x.SetDirectory(tf)
-            x.Write()
+            print "renaming", kn, "to", _kn
+        #keep the nominal name
+        else:
+            _kn = kn
+        _kn = nameconv(kn)
+
+        #template passes the histogram filter
+        if hfilter(_kn):
+
+            sample = _kn.split("__")[1]
+            try:
+                gr = Config.get("grouping", sample, None)
+            except:
+                gr = None
+
+            if gr is None:
+                gr = sample
+            _kn_new = _kn.split("__")[0] + "__" + gr
+            print "grouping",_kn, _kn_new
+            _kn = _kn_new
+            #and is not already present in the output file
+            if not tf.Get(_kn):
+                x = tf0.Get(kn).Clone(_kn)
+                print("cloned", kn, "to", _kn, x.Integral())
+                x.SetDirectory(tf)
+                x.Write()
+            else:
+                x = tf.Get(_kn)
+                x.Sumw2()
+                x1 = x.Integral()
+                x.Add(tf0.Get(kn))
+                x2 = x.Integral()
+                print("added", kn, "to", _kn, x1, x2)
+                x.SetDirectory(tf)
+                x.Write("", ROOT.TObject.kOverwrite)
+
     #tf.Write()
     tf.Close()
 
@@ -76,7 +110,7 @@ def get_model(infile):
         histogram_filter = hfilter,
         root_hname_to_convention = nameconv
     )
-    os.remove(filename)
+    #os.remove(filename)
     model.fill_histogram_zerobins()
     model.set_signal_processes(signal)
 
