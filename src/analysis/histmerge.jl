@@ -59,6 +59,38 @@ classname(o) = ClassName(root_cast(TObject, o))|>bytestring;
 query(inp, q1::Symbol, q2) =
     collect(filter(x -> getfield(x, q1)==q2, collect(inp)))
 
+
+
+function to_histkeys(hd::Associative)
+    hdd = Dict{HistKey, Histogram}()
+    for (k, v) in hd
+        toks = {
+            symbol(x[1]) => string(x[2]) for x in
+            map(x->split(x, "="), split(k, ";"))
+        }
+        hk = HistKey(toks)
+        hdd[hk] = v
+    end
+return hdd
+end
+
+function select_histograms(
+    fn::ASCIIString,
+    lepton::Symbol,
+    object::Symbol;
+    selection_major::Symbol = :preselection, selection_minor::Symbol = :nothing,
+    njets = 2, ntags = 1, dofit = true)
+    hd = load_hists_from_file(fn,
+        x-> contains(x, "object=$object") &&
+        contains(x, "lepton=$lepton") &&
+        contains(x, "selection_major=$selection_major") &&
+        contains(x, "selection_minor=$selection_minor") &&
+        contains(x, "njets=$njets") &&
+        contains(x, "ntags=$ntags")
+    ) |> to_histkeys
+    return select_histograms(hd, lepton, object, selection_major=selection_major, selection_minor=selection_minor, njets=njets, ntags=ntags, dofit=dofit)
+end
+
 function select_histograms(
     hd::Associative,
     lepton::Symbol,
