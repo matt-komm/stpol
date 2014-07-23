@@ -33,8 +33,8 @@ const VARS = {
 const SAMPLENAMES = {
 	:ttjets => "\$ t \\bar{t} \$",
 	:tchan => "t-channel",
-	:wjets__heavy => "W+jets (bc)",
-	:wjets__light => "W+jets (udsg)",
+	:wjets_heavy => "W+jets (bc)",
+	:wjets_light => "W+jets (udsg)",
 	:wjets => "W+jets",
 	:wzjets => "W, DY, \$\\gamma\$-jets"
 }
