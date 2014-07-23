@@ -1,8 +1,11 @@
 using JSON
 
-const infile = ARGS[1]
-const outfile = ARGS[2]
-const PARS = JSON.parse(readall(ARGS[3]))
+const VERBOSE = false
+
+const outfile = ARGS[1]
+const PARS = JSON.parse(readall(ARGS[2]))
+
+const infile = map(x->convert(ASCIIString, x), ARGS[5:end])
 
 #how to cut on QCD?
 const QCD_CUT_TYPE = symbol(PARS["qcd_cut"])
@@ -32,10 +35,13 @@ df_base.tt == C_NULL && (warn("empty TTree for $infile, exiting");exit(0))
 nrow(df_base)>0 || (warn("$infile was emtpy, exiting");exit(0))
 
 #load the TTree with the QCD values, xs weights
-const df_added = TreeDataFrame("$infile.added")
+const df_added = TreeDataFrame(map(x->"$x.added", infile))
 
 #create a combined view of both ttrees
 df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
+
+const FIRST_EVENT = int(ARGS[3]) + 1 #arg3 = skip events
+const LAST_EVENT = min(FIRST_EVENT + int(ARGS[4]) - 1, nrow(df)) #arg4 = nevents
 
 require("$sp/histogram_defaults.jl")
 
@@ -136,14 +142,21 @@ function fill_histogram(
         const w_scenario = scenario.weight_scenario
 
         #scenario not defined for this sample
-        sample != scenario.sample && continue
+        if !((sample == scenario.sample) || get_process(sample)::Symbol==scenario.sample::Symbol)
+            VERBOSE && println("$sample $(scenario.sample) $(get_process(sample))")
+            continue
+        end
 
         #scenario not defined for this systematic processing
-        systematic != scenario.systematic && continue
+        if systematic != scenario.systematic
+            VERBOSE && println("systematic $systematic $(scenario.systematic)") 
+            continue
+        end
 
         if HISTS_NOMINAL_ONLY && !(
                 w_scenario==:nominal || w_scenario==:unweighted
             )
+            VERBOSE && println("nominal_only $w_scenario")
             continue
         end
 
@@ -177,7 +190,7 @@ function fill_histogram(
         h.bin_entries[bin] += 1
 
         #fill W+jets jet flavours separately as well
-        if sample == :wjets
+        if get_process(sample) == :wjets
             for cls in jet_classifications
                 const ev_cls = row[:jet_cls] |> jet_cls_from_number
                 ev_cls == cls || continue
@@ -186,7 +199,7 @@ function fill_histogram(
 
                 const kk = HistKey(
                     hname,
-                    symbol("wjets__$(ev_cls)"),
+                    symbol("$(sample)_$(ev_cls)"),
                     iso,
                     systematic,
                     w_scenario,
@@ -212,6 +225,8 @@ end
 
 #selection function
 sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
+
+fails = {:qcd=>0, :jet_tag=>0}
 
 function process_df(rows::AbstractVector{Int64})
     const t0 = time()
@@ -244,9 +259,11 @@ function process_df(rows::AbstractVector{Int64})
             warn("sample, systematic or isolation were NA")
 
         const sample = hmap_symb_from[row[:sample]::Int64]
+        const subsample = hmap_symb_from[row[:subsample]::Int64]
         const systematic = hmap_symb_from[row[:systematic]::Int64]
         const iso = hmap_symb_from[row[:isolation]::Int64]
         const true_lep = sample==:tchan ? row[:gen_lepton_id] : int64(0)
+        VERBOSE && println("row $cur_row $sample $subsample $systematic $iso")
 
         const isdata = ((sample == :data_mu) || (sample == :data_ele))
         if !isdata && HISTS_NOMINAL_ONLY
@@ -319,7 +336,7 @@ function process_df(rows::AbstractVector{Int64})
 
                         const k2 = HistKey(
                             :transfer_matrix,
-                            sample,
+                            subsample,
                             iso,
                             systematic,
                             scen_name[1],
@@ -348,7 +365,7 @@ function process_df(rows::AbstractVector{Int64})
 
                         const k2 = HistKey(
                             :transfer_matrix,
-                            sample,
+                            subsample,
                             iso,
                             systematic,
                             scen_name[1],
@@ -404,7 +421,7 @@ function process_df(rows::AbstractVector{Int64})
                     row->row[var],
                     ret,
 
-                    sample,
+                    subsample,
                     iso,
                     systematic,
                     :preqcd,
@@ -423,7 +440,10 @@ function process_df(rows::AbstractVector{Int64})
         ### QCD rejection
         ###
         const reco = Cuts.qcd_cut(row, QCD_CUT_TYPE, lepton)
-        reco || continue
+        if !reco
+            fails[:qcd] += 1
+            continue
+        end
 
         ###
         ### project BDT templates and input variables with full systematics
@@ -431,7 +451,10 @@ function process_df(rows::AbstractVector{Int64})
         for (nj, nt) in JET_TAGS
             #pre-bdt selection
             const _reco = reco && sel(row, nj, nt)::Bool && Cuts.nu_soltype(row, SOLTYPE)
-            _reco || continue
+            if !_reco
+                fails[:jet_tag] += 1
+                continue
+            end
 
             for var in crosscheck_vars
 
@@ -449,7 +472,7 @@ function process_df(rows::AbstractVector{Int64})
                     var,
                     row -> f(row),
                     ret,
-                    sample,
+                    subsample,
                     iso,
                     systematic,
                     :preselection,
@@ -485,7 +508,7 @@ function process_df(rows::AbstractVector{Int64})
                         var,
                         f,
                         ret,
-                        sample,
+                        subsample,
                         iso,
                         systematic,
                         :cutbased,
@@ -523,7 +546,7 @@ function process_df(rows::AbstractVector{Int64})
                             var,
                             f,
                             ret,
-                            sample,
+                            subsample,
                             iso,
                             systematic,
                             :bdt,
@@ -550,7 +573,7 @@ function process_df(rows::AbstractVector{Int64})
 end #function
 
 tic()
-ret = process_df(1:nrow(df))
+ret = process_df(FIRST_EVENT:LAST_EVENT)
 q = toc()
 
 ###
@@ -564,7 +587,7 @@ tf = TFile(convert(ASCIIString, tempf), "RECREATE")
 Cd(tf, "")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    println(
+    VERBOSE && println(
         k, " sument=$(sum(entries(v))) ",
         @sprintf(" int=%.2f", integral(v)),
         @sprintf(" sumerr=%.2f", sum(errors(v)))
@@ -593,4 +616,5 @@ for i=1:5
     end
 end
 
+println(fails)
 println("cleaning $tempf...");rm(tempf)
