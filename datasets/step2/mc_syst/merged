@@ -22,7 +22,6 @@ TTJets_scaledown /TTJets_scaledown_TuneZ2star_8TeV-madgraph-tauola/jpata-Jul8_51
 TTJets_scaleup /TTJets_scaleup_TuneZ2star_8TeV-madgraph-tauola/jpata-Jul8_51f69b-d1c6e244c12015ac8c182161016516af/USER
 
 #TToBENu_anomWtb-0100_t-channel /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/jpata-Jul8_51f69b-e6cee8f160cb239f414a74aa40d88ea9/USER
-TToBENu_anomWtb-0100_t-channel /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/atiko-tensor-00e57dc4bdb6faceb99cfeeb82bb099d/USER
 TToBENu_anomWtb-unphys_t-channel /TToBENu_anomWtb-unphys_t-channel_TuneZ2star_8TeV-comphep/jpata-Jul8_51f69b-e6cee8f160cb239f414a74aa40d88ea9/USER
 TToBENu_t-channel /TToBENu_t-channel_TuneZ2star_8TeV-comphep/jpata-Jul8_51f69b-e6cee8f160cb239f414a74aa40d88ea9/USER
 
