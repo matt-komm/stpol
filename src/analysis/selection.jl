@@ -96,7 +96,7 @@ function perform_selection(indata::AbstractDataFrame)
         ##:_qcd_mva => x -> indata[:qcd] .> x,
         :qcd_mva_mu => indata[:bdt_qcd] .> 0.4,
         :qcd_mva_ele => indata[:bdt_qcd] .> 0.55,
-        :dr => (indata[:ljet_dr] .> 0.5) & (indata[:bjet_dr] .> 0.5),
+        :dr => (indata[:ljet_dr] .> 0.3) & (indata[:bjet_dr] .> 0.3),
         :iso => (indata[:isolation] .== ("iso"|>hash|>int)),
         :aiso => (indata[:isolation] .== ("antiiso"|>hash|>int)),
         :njets => {k=>indata[:njets].==k for k in [2,3]},
