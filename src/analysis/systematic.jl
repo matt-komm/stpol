@@ -10,8 +10,10 @@ if !isdefined(:B_WEIGHT_NOMINAL)
 end
 
 const SYSTEMATICS_TABLE = {
+    :mass178_5=>:mass2__up,
     :mass175_5=>:mass__up,
     :mass169_5=>:mass__down,
+    :mass166_5=>:mass2__down,
     :nominal=>:nominal,
     :unweighted=>:unweighted,
 
@@ -29,6 +31,8 @@ const SYSTEMATICS_TABLE = {
 
     :matchingup=>:matching__up,
     :matchingdown=>:matching__down,
+    :matchingdown_v1=>:matching__down,
+    :matchingdown_v2=>:matching__down,
 
     :pu_weight__up => :pu__up,
     :pu_weight__down => :pu__down,
@@ -54,7 +58,18 @@ const SYSTEMATICS_TABLE = {
     symbol("signal_comphep_anomWtb-unphys") => :comphep_anom_unphys,
     symbol("signal_comphep_anomWtb-0100") => :comphep_anom_0100,
     symbol("signal_comphep_nominal") => :comphep_nominal,
+    symbol("signal_comphep__anomWtb-0100_t-channel") => :comphep_anom_0100,
+    symbol("signal_comphep__anomWtb-Lv1Rt3_LVRT") => :comphep_anom_Lv1Rt3_LVRT,
+    symbol("signal_comphep__anomWtb-Lv2Rt2_LVRT") => :comphep_anom_Lv2Rt2_LVRT,
+    symbol("signal_comphep__anomWtb-Lv3Rt1_LVRT") => :comphep_anom_Lv3Rt1_LVRT,
+    symbol("signal_comphep__anomWtb-Rt4_LVRT") => :comphep_anom_Rt4_LVRT,
+    symbol("signal_comphep__anomWtb-unphys_LVLT") => :comphep_anom_unphys_LVLT,
+    symbol("signal_comphep__anomWtb-unphys_t-channel") => :comphep_anom_unphys,
+    symbol("signal_comphep__nominal") => :comphep_nominal,
 }
+
+const systematic_processings = collect(keys(SYSTEMATICS_TABLE))
+const comphep_processings = filter(x->contains(string(x), "comphep"), systematic_processings)
 
 const REV_SYSTEMATICS_TABLE = {v=>k for (k, v) in SYSTEMATICS_TABLE};
 
@@ -193,7 +208,7 @@ for weight in [:top_weight__up, :top_weight__down]
     )
 end
 
-for proc in vcat(mcsamples, :data_mu, :data_ele)
+for proc in vcat(mcsamples)
     scenarios[(:nominal, proc)] = Scenario(
         :nominal,
         proc,
@@ -212,7 +227,7 @@ end
 for proc in [:data_mu, :data_ele]
 
     scenarios[(:unweighted, proc)] = Scenario(
-        :unknown,
+        symbol(""),
         proc,
         (nw::Float64, row::DataFrameRow) -> 1.0,
         :unweighted
@@ -308,10 +323,10 @@ function systematics_to_json(fname::ASCIIString)
         "systematics_table" => {
         string(k) => string(v) for (k,v) in SYSTEMATICS_TABLE
     },
-    })
+    }, 4)
     write(of, js)
     close(of)
 end
 
-export SYSTEMATICS_TABLE, REV_SYSTEMATICS_TABLE
+export SYSTEMATICS_TABLE, REV_SYSTEMATICS_TABLE, systematic_processings
 export weight_scenarios, scenarios, scens_gr, Scenario
