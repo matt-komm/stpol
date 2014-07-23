@@ -32,9 +32,6 @@ TToBENu_anomWtb-0100 /TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Sum
 TToBMuNu_anomWtb-0100 /TToBMuNu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 TToBTauNu_anomWtb-0100 /TToBTauNu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM
 
-#tensor couplings
-TToBENu_anomWtb-Lv2Rt2_LVRT /TToBENu_anomWtb-Lv2Rt2_LVRT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
-
 T_t_mass169_5 /TToLeptons_t-channel_mass169_5_8TeV-powheg-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 Tbar_t_mass169_5 /TBarToLeptons_t-channel_mass169_5_8TeV-powheg-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 T_t_mass175_5 /TToLeptons_t-channel_mass175_5_8TeV-powheg-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
@@ -61,4 +58,14 @@ TTJets_mass169_5_v2 /TTJets_MSDecays_mass169_5_TuneZ2star_8TeV-madgraph-tauola/S
 TTJets_mass175_5_v2 /TTJets_MSDecays_mass175_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 TTJets_mass178_5_v2 /TTJets_MSDecays_mass178_5_TuneZ2star_8TeV-madgraph-tauola/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 
+#tensor couplings
+#LVLT
+TToBENu_anomWtb-unphys_LVLT /TToBENu_anomWtb-unphys_LVLT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TToBTauNu_anomWtb-unphys_LVLT /TToBTauNu_anomWtb-unphys_LVLT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
 
+#LVRT
+#TToBENu_anomWtb-Lv2Rt2_LVRT /TToBENu_anomWtb-Lv2Rt2_LVRT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TToBMuNu_anomWtb-Lv1Rt3_LVRT /TToBMuNu_anomWtb-Lv1Rt3_LVRT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TToBMuNu_anomWtb-Lv3Rt1_LVRT /TToBMuNu_anomWtb-Lv3Rt1_LVRT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TToBMuNu_anomWtb-Rt4_LVRT /TToBMuNu_anomWtb-Rt4_LVRT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
+TToBTauNu_anomWtb-Lv2Rt2_LVRT /TToBTauNu_anomWtb-Lv2Rt2_LVRT_t-channel_TuneZ2star_8TeV-comphep/Summer12_DR53X-PU_S10_START53_V19-v1/AODSIM
