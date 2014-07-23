@@ -354,14 +354,9 @@ def SingleTopStep2():
     process.trueWNTupleProducer = process.recoTopNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueWboson", "STPOLSEL2"),
     )
-    if Config.isCompHep:
-        process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
-            src=cms.InputTag("recoTrueTop"),
-        )
-    else:
-        process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
-            src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
-        )
+    process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
+        src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
+    )
     process.patMETNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag("goodMETs"),
