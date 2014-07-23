@@ -16,8 +16,8 @@ function draw_data_mc_stackplot(ax, hists;order=nothing,wjets_split=false,kwd...
     ]
     if wjets_split
         append!(draws, [
-            ("wjets__light", hists["wjets__light"], {:color=>"lightgreen", :label=>"W+jets (l)"}),
-            ("wjets__heavy", hists["wjets__heavy"], {:color=>"darkgreen", :label=>"W+jets (bc)"})
+            ("wjets_light", hists["wjets_light"], {:color=>"lightgreen", :label=>"W+jets (l)"}),
+            ("wjets_heavy", hists["wjets_heavy"], {:color=>"darkgreen", :label=>"W+jets (bc)"})
         ])
     else
         append!(draws, [
@@ -443,7 +443,7 @@ function draw_errband(
         color="grey",
         fill=false,
         linewidth=0,
-        hatch="///",
+        hatch="////",
         label="uncertainty";
         log=log
     )
