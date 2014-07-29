@@ -1,0 +1,8 @@
+{
+    "qcd_cut":"mva_nominal",
+    "b_weight_nominal": "b_weight",
+    "do_delta_r": true,
+    "bdt_var": "bdt_sig_bg",
+    "soltype": "none",
+    "do_ljet_rms":false 
+}
