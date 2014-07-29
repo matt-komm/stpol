@@ -607,11 +607,11 @@ for (k, v) in ret
     typeof(k) <: HistKey || continue
     dn = "$(k.object)/$(k.iso)/$(k.lepton)/$(k.selection_major)/$(k.selection_minor)/$(k.njets)/$(k.ntags)/$(k.systematic)/$(k.scenario)/$(get_process(k.sample))"
     mkpath(tf, dn)
-    println(
-        k, " sument=$(sum(entries(v))) ",
-        @sprintf(" int=%.2f", integral(v)),
-        @sprintf(" sumerr=%.2f", sum(errors(v)))
-    )
+    #println(
+    #    k, " sument=$(sum(entries(v))) ",
+    #    @sprintf(" int=%.2f", integral(v)),
+    #    @sprintf(" sumerr=%.2f", sum(errors(v)))
+    #)
     #isa(v, Histogram) && println(v)
 
     #hi = to_root(v, tostr(k))
