@@ -1,47 +1,41 @@
 include ../analysis/Makefile.options
 
-INDIR=/hdfs/local/joosep/stpol/skims/chunked
-OFDIR=/home/joosep/singletop/output/batch
+INDIR=../../results/hists/Jul23/output/bdt_scan/hists/
+OUTDIR=../../results/hists/Jul23/merged
 
-.PHONY: hists
-
-hists:
-	rm -Rf $(OFDIR)/hists
-	mkdir -p $(OFDIR)/hists
-	find $(INDIR) -name "*.root" | $(PARCMD) -j32 ./evloop.jl {} $(OFDIR)/hists/hist.{#}.jld > $(OFDIR)/log.txt
-
-hists-jobfiles:
-	mkdir -p $(OFDIR)/hists
-	find $(INDIR) -name "*.root" | ../skim/createscript.jl "./evloop.jl {} $(OFDIR)/hists/hist.{#}.jld" hists-evloop
-	sh hists-evloop.submit.sh
-
-submit-scan:
-	find input/hists -name "*.json" | ~/parallel --delay 0.1 sbatch --exclude=../skim/exclude.txt parrun.sh {}
-
-project-nominal:
-	#find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_nominal.jl {} {}.nominal
-	find $(DIR) -name "output*.root" | ~/parallel -j32 $(JULIA_ROOT_DIR)/julia project_nominal.jl {} {}.nominal
-
-project-tchan:
-	find $(DIR) -name "output*.root" | ~/parallel -j100 srun -p prio --exclude=../skim/exclude.txt $(JULIA_ROOT_DIR)/julia project_tchan.jl {} {}.tchan
-
-test-evloop:
-	julia evloop2.jl T_t.root out infile.json 
+clean:
+	rm -Rf $(OUTDIR)
 
 merge:
-	rm -Rf output
-
-	mkdir -p results/hists/qcd__metmtw_nominal/soltype__real/bdt__bdt_sig_bg/csvt/
-	python histmerge.py /Users/joosep/Dropbox/kbfi/top/stpol/results/hists/qcd__metmtw_nominal/soltype__real/bdt__bdt_sig_bg/csvt/merged.root
-	mv output/bdt_scan/* results/hists/qcd__metmtw_nominal/soltype__real/bdt__bdt_sig_bg/csvt/
+	python regroup.py $(INDIR)/preselection/2j_1t/mu/bdt_sig_bg.root $(OUTDIR)/preselection/2j_1t/mu/merged/bdt_sig_bg.root mu 2j1t fit
+	python regroup.py $(INDIR)/preselection/3j_2t/mu/bdt_sig_bg.root $(OUTDIR)/preselection/3j_2t/mu/merged/bdt_sig_bg.root mu 3j2t fit
 	
-	mkdir -p results/hists/qcd__metmtw_nominal/soltype__cplx/bdt__bdt_sig_bg/csvt/
-	python histmerge.py /Users/joosep/Dropbox/kbfi/top/stpol/results/hists/qcd__metmtw_nominal/soltype__cplx/bdt__bdt_sig_bg/csvt/merged.root
-	mv output/bdt_scan/* results/hists/qcd__metmtw_nominal/soltype__cplx/bdt__bdt_sig_bg/csvt/
+	python regroup.py $(INDIR)/preselection/2j_1t/ele/bdt_sig_bg.root $(OUTDIR)/preselection/2j_1t/ele/merged/bdt_sig_bg.root ele 2j1t fit
+	python regroup.py $(INDIR)/preselection/3j_2t/ele/bdt_sig_bg.root $(OUTDIR)/preselection/3j_2t/ele/merged/bdt_sig_bg.root ele 3j2t fit
 
-recursive-hadd: recursive-hadd-1 recursive-hadd-2
-recursive-hadd-1:
-	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr16/qcd__metmtw_nominal/soltype__none/bdt__bdt_sig_bg/csvt/ /scratch/joosep/hists/csvt_metmtw
+	for lep in mu ele; do \
+		for var in $(INDIR)/preselection/2j_1t/$$lep/*.root; do \
+			fn=`basename $$var` ; \
+			python regroup.py $$var $(OUTDIR)/preselection/2j_1t/$$lep/$$fn $$lep 2j1t plot ; \
+		done ; \
+		
+		for var in $(INDIR)/preselection/3j_2t/$$lep/*.root; do \
+			fn=`basename $$var` ; \
+			python regroup.py $$var $(OUTDIR)/preselection/3j_2t/$$lep/$$fn $lep 3j2t plot ; \
+		done ; \
+		
+		for var in $(INDIR)/preselection/2j_0t/$$lep/*.root; do \
+			fn=`basename $$var` ; \
+			python regroup.py $$var $(OUTDIR)/preselection/2j_0t/$$lep/$$fn $$lep 2j0t plot ; \
+		done ; \
+	done
 
-recursive-hadd-2:
-	./recursive-hadd.sh /hdfs/local/joosep/stpol/hists/Apr16/qcd__mva_nominal/soltype__none/bdt__bdt_sig_bg/csvt/ /scratch/joosep/hists/csvt_mva
+
+
+merge2:
+	mkdir -p $(OUTDIR)/0.60000/mu
+	mkdir -p $(OUTDIR)/0.60000/ele
+	cp $(INDIR)/0.60000/mu/tmatrix*.root $(OUTDIR)/0.60000/mu/
+	cp $(INDIR)/0.60000/ele/tmatrix*.root $(OUTDIR)/0.60000/ele/
+	python regroup.py $(INDIR)/0.60000/mu/cos_theta_lj.root $(OUTDIR)/0.60000/mu/merged/cos_theta_lj.root mu  2j1t fit
+	python regroup.py $(INDIR)/0.60000/ele/cos_theta_lj.root $(OUTDIR)/0.60000/ele/merged/cos_theta_lj.root ele 2j1t fit

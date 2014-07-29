@@ -1,11 +1,11 @@
 using JSON
 
-const VERBOSE = false
+const VERBOSE = bool(int(get(ENV, "VERBOSE", 0)))
 
 const outfile = ARGS[1]
 const PARS = JSON.parse(readall(ARGS[2]))
 
-const infile = map(x->convert(ASCIIString, x), ARGS[5:end])
+infiles = map(x->convert(ASCIIString, x), ARGS[5:end])
 
 #how to cut on QCD?
 const QCD_CUT_TYPE = symbol(PARS["qcd_cut"])
@@ -27,15 +27,29 @@ require("$sp/base.jl")
 using ROOT, ROOTDataFrames
 using ROOT.ROOTHistograms
 
-println("loading dataframe:$infile");
+_infiles = Any[]
+for inf in infiles
+    try
+        df = TreeDataFrame(inf)
+        if nrow(df)<=0
+            error("empty dataframe")
+        end
+        push!(_infiles, inf)
+    catch err
+        warn("$err: skipping file")
+    end
+end
+infiles = _infiles
+
+println("loading dataframe:$infiles");
 
 #Load the main event TTree
-const df_base = TreeDataFrame(infile)
-df_base.tt == C_NULL && (warn("empty TTree for $infile, exiting");exit(0))
-nrow(df_base)>0 || (warn("$infile was emtpy, exiting");exit(0))
+const df_base = TreeDataFrame(infiles)
+df_base.tt == C_NULL && (warn("empty TTree for $infiles, exiting");exit(0))
+nrow(df_base)>0 || (warn("$infiles was emtpy, exiting");exit(0))
 
 #load the TTree with the QCD values, xs weights
-const df_added = TreeDataFrame(map(x->"$x.added", infile))
+const df_added = TreeDataFrame(map(x->"$x.added", infiles))
 
 #create a combined view of both ttrees
 df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
@@ -143,20 +157,20 @@ function fill_histogram(
 
         #scenario not defined for this sample
         if !((sample == scenario.sample) || get_process(sample)::Symbol==scenario.sample::Symbol)
-            VERBOSE && println("$sample $(scenario.sample) $(get_process(sample))")
+            VERBOSE && println("skipping sample=$sample scenario.sample=$(scenario.sample) process=$(get_process(sample))")
             continue
         end
 
         #scenario not defined for this systematic processing
         if systematic != scenario.systematic
-            VERBOSE && println("systematic $systematic $(scenario.systematic)") 
+            VERBOSE && println("skipping systematic=$systematic scenario.systematic=$(scenario.systematic)") 
             continue
         end
 
         if HISTS_NOMINAL_ONLY && !(
                 w_scenario==:nominal || w_scenario==:unweighted
             )
-            VERBOSE && println("nominal_only $w_scenario")
+            VERBOSE && println("skipping nominal_only=$w_scenario")
             continue
         end
 
@@ -178,6 +192,7 @@ function fill_histogram(
             njets,
             ntags,
         )
+        VERBOSE && println("passing=$kk")
 
         #get the histogram for this sample, systematic scenario
         h = getr(ret, kk, hname)::Histogram
@@ -252,7 +267,7 @@ function process_df(rows::AbstractVector{Int64})
         nproc += 1
         if nproc % 10000==0
             dt = time() - tprev
-            println("$nproc $dt $nfsel")
+            println("N $nproc $dt $nfsel")
             tprev = time()
         end
         is_any_na(row, :sample, :systematic, :isolation)::Bool &&
@@ -262,8 +277,11 @@ function process_df(rows::AbstractVector{Int64})
         const subsample = hmap_symb_from[row[:subsample]::Int64]
         const systematic = hmap_symb_from[row[:systematic]::Int64]
         const iso = hmap_symb_from[row[:isolation]::Int64]
-        const true_lep = sample==:tchan ? row[:gen_lepton_id] : int64(0)
-        VERBOSE && println("row $cur_row $sample $subsample $systematic $iso")
+        true_lep = sample==:tchan ? row[:gen_lepton_id] : int64(0)
+        if isna(true_lep) || true_lep==0
+            true_lep = row[:lepton_id]
+        end
+        VERBOSE && println("row $cur_row $sample $subsample $systematic $iso genlep=$true_lep")
 
         const isdata = ((sample == :data_mu) || (sample == :data_ele))
         if !isdata && HISTS_NOMINAL_ONLY
@@ -305,8 +323,9 @@ function process_df(rows::AbstractVector{Int64})
                 if DO_LJET_RMS
                     reco = reco && Cuts.ljet_rms(row)
                 end
+                VERBOSE && println("$reco $x $y") 
 
-                const lep_symb = symbol("gen_$(LEPTON_SYMBOLS[true_lep])__reco_$(reco_lep)")
+                const lep_symb = symbol("gen_$(get(LEPTON_SYMBOLS, true_lep, NA))__reco_$(reco_lep)")
 
                 for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
                     (TM_NOMINAL_ONLY && scen_name[1]!=:nominal) && continue
@@ -333,7 +352,6 @@ function process_df(rows::AbstractVector{Int64})
                         (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
                             error("incorrect index $linind for $nx,$ny $x,$y")
 
-
                         const k2 = HistKey(
                             :transfer_matrix,
                             subsample,
@@ -352,7 +370,7 @@ function process_df(rows::AbstractVector{Int64})
                         h.baseh.bin_entries[linind] += 1.0
                     end
 
-                    #assumes BDT cut points are sorted ascending
+                    #cut-based selection 
                     for (cut_major, cut_minor, cutfn) in {
                             (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime)
                         }
@@ -587,14 +605,17 @@ tf = TFile(convert(ASCIIString, tempf), "RECREATE")
 Cd(tf, "")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    VERBOSE && println(
+    dn = "$(k.object)/$(k.iso)/$(k.lepton)/$(k.selection_major)/$(k.selection_minor)/$(k.njets)/$(k.ntags)/$(k.systematic)/$(k.scenario)/$(get_process(k.sample))"
+    mkpath(tf, dn)
+    println(
         k, " sument=$(sum(entries(v))) ",
         @sprintf(" int=%.2f", integral(v)),
         @sprintf(" sumerr=%.2f", sum(errors(v)))
     )
     #isa(v, Histogram) && println(v)
 
-    hi = to_root(v, tostr(k))
+    #hi = to_root(v, tostr(k))
+    hi = to_root(v, string(k.sample))
 end
 
 println("projected $(length(ret)) objects in $q seconds")

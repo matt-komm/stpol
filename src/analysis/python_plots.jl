@@ -261,6 +261,7 @@ function svfg(fname)
     #savefig("$fname.png", bbox_inches="tight", pad_inches=0.4)
     savefig("$fname.pdf", bbox_inches="tight", pad_inches=0.4)
     close()
+    println("SVFG: $fname.pdf")
 end
 #
 # function channel_comparison(
@@ -467,7 +468,7 @@ end
 
 cmspaper(ax, x, y, lumi=20; additional_text="") = text(
     x, y,
-    "CMS \$ \\sqrt{s}=8\$ TeV \n \$ L_{int}=$lumi\\ fb^{-1}\$\n$additional_text",
+    "CMS \$ \\sqrt{s}=8\$ TeV \n \$ L_{int}=$lumi\\ \\mathrm{fb}^{-1}\$\n$additional_text",
     transform=ax[:transAxes], horizontalalignment="center", verticalalignment="top"
 )
 

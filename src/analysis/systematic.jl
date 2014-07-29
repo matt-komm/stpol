@@ -12,6 +12,7 @@ end
 const SYSTEMATICS_TABLE = {
     :mass178_5=>:mass2__up,
     :mass175_5=>:mass__up,
+
     :mass169_5=>:mass__down,
     :mass166_5=>:mass2__down,
     :nominal=>:nominal,
@@ -55,9 +56,9 @@ const SYSTEMATICS_TABLE = {
     :wjets_shape__up => :wjets_shape__up,
     :wjets_shape__down => :wjets_shape__down,
 
-    symbol("signal_comphep_anomWtb-unphys") => :comphep_anom_unphys,
-    symbol("signal_comphep_anomWtb-0100") => :comphep_anom_0100,
-    symbol("signal_comphep_nominal") => :comphep_nominal,
+#    symbol("signal_comphep_anomWtb-unphys") => :comphep_anom_unphys,
+#    symbol("signal_comphep_anomWtb-0100") => :comphep_anom_0100,
+#    symbol("signal_comphep_nominal") => :comphep_nominal,
     symbol("signal_comphep__anomWtb-0100_t-channel") => :comphep_anom_0100,
     symbol("signal_comphep__anomWtb-Lv1Rt3_LVRT") => :comphep_anom_Lv1Rt3_LVRT,
     symbol("signal_comphep__anomWtb-Lv2Rt2_LVRT") => :comphep_anom_Lv2Rt2_LVRT,
