@@ -4,12 +4,6 @@ include("../analysis/base.jl");
 include("../fraction_fit/hists.jl");
 using SingleTopBase
 import SingleTopBase: FitResult, VARS
-grep(arr, pat) = collect(filter(x->contains(string(x), string(pat)), arr))
-postfix_added(x) = replace(x, ".root", ".root.added");
-
-function nona!(X)
-    X[isna(X)] = false
-end
 
 const SAMPLE = symbol(ARGS[1])
 njets = 2;
@@ -17,13 +11,8 @@ ntags = 1;
 
 files = ARGS[2:]
 
-for c in map(postfix_added, ch)
-    tdf = TreeDataFrame(c)
-    println(c, " ", nrow(tdf))
-end
-
-chd1 = TreeDataFrame(ch);
-chd2 = TreeDataFrame(map(postfix_added, ch));
+chd1 = TreeDataFrame(files);
+chd2 = TreeDataFrame(map(postfix_added, files));
 chd = MultiColumnDataFrame(AbstractDataFrame[chd1, chd2]);
 
 X = chd1[[:hlt_mu, :hlt_ele, :n_signal_mu, :n_veto_mu, :n_signal_ele, :n_veto_ele, :njets, :ntags, :met, :mtw, :ljet_rms, :ljet_dr, :bjet_dr]];
@@ -56,32 +45,17 @@ totw[:w_new] = totw[:w_new] .* totw[:b_weight];
 
 sum(totw[:w_new]), sum(totw[:w_old])
 
-
-# In[ ]:
-
 jet = X[:njets].==njets
 nona!(jet)
-
-
-# In[ ]:
 
 tag = X[:ntags].==ntags
 nona!(tag)
 
-
-# In[ ]:
-
 rms = X[:ljet_rms] .< 0.025
 nona!(rms)
 
-
-# In[ ]:
-
 dr = (X[:ljet_dr] .> 0.3) .* (X[:bjet_dr] .> 0.3);
 nona!(dr)
-
-
-# In[ ]:
 
 met = X[:met].>45
 nona!(met)
@@ -93,9 +67,6 @@ nona!(qcd04)
 qcd055 = X[:bdt_qcd].>0.55
 nona!(qcd055)
 
-
-# In[ ]:
-
 bdt = X[:bdt_sig_bg].>0.6
 nona!(bdt)
 
@@ -104,9 +75,6 @@ nona!(bdtold_mu)
 
 bdtold_ele = X[:bdt_sig_bg_top_13_001].>0.13
 nona!(bdtold_ele)
-
-
-# In[ ]:
 
 cuts = {
     :mu=>{
@@ -119,16 +87,12 @@ cuts = {
     }
 };
 
-
-# In[46]:
-
 function cutflow(A, weighted, weight)
     sel = first(A)
     v = Any[]
     w = Any[]
     for a in A
         sel = sel .* a
-        #println(sum(sel), " ", length(sel))
         nona!(sel)
         push!(v, sum(sel))
         push!(w, sum(
