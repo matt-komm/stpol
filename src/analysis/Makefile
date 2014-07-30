@@ -6,6 +6,12 @@ OUTDIR=../../results/hists/Jul23/merged
 clean:
 	rm -Rf $(OUTDIR)
 
+.PHONY:
+	test
+
+test:
+	julia evloop2.jl test.txt infile.json 0 10000 /hdfs/local/joosep/stpol/skims/step3_v2/Jul4_newsyst_newvars_metshift/iso/nominal/T_t_ToLeptons/837/output.root
+
 merge:
 	python regroup.py $(INDIR)/preselection/2j_1t/mu/bdt_sig_bg.root $(OUTDIR)/preselection/2j_1t/mu/merged/bdt_sig_bg.root mu 2j1t fit
 	python regroup.py $(INDIR)/preselection/3j_2t/mu/bdt_sig_bg.root $(OUTDIR)/preselection/3j_2t/mu/merged/bdt_sig_bg.root mu 3j2t fit
