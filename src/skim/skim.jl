@@ -293,7 +293,13 @@ for i=1:maxev
 
     df[i, :n_signal_mu] = nmu
     df[i, :n_signal_ele] = nele
+    
+    for k in [:Pt, :Eta, :Phi, :Mass]
+        p = part(:top, k, :gen)
+        df[i, lowercase("top_$(k)_gen")|>symbol] = events[sources[p]] |> ifpresent
+    end
 
+    ### Cuts start here
     if isna(nmu) || isna(nele)
         fails[:lepton] += 1
         continue
@@ -460,9 +466,6 @@ for i=1:maxev
     #for k in [:Mass, :Pt]
         p = part(:top, k, :reco)
         df[i, lowercase("top_$k")|>symbol] = events[sources[p]] |> ifpresent
-        
-        p = part(:top, k, :gen)
-        df[i, lowercase("top_$(k)_gen")|>symbol] = events[sources[p]] |> ifpresent
     end
     
     for k in [:Pt, :Eta, :Phi, :Mass]
