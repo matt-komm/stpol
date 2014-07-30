@@ -597,6 +597,7 @@ q = toc()
 ###
 ### OUTPUT
 ###
+tic()
 tempf = mktemp()[1]
 rfile = string(splitext(outfile)[1], ".root")
 println("saving to $rfile, temp file $tempf")
@@ -605,8 +606,8 @@ tf = TFile(convert(ASCIIString, tempf), "RECREATE")
 Cd(tf, "")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    dn = "$(k.object)/$(k.iso)/$(k.lepton)/$(k.selection_major)/$(k.selection_minor)/$(k.njets)/$(k.ntags)/$(k.systematic)/$(k.scenario)/$(get_process(k.sample))"
-    mkpath(tf, dn)
+#    dn = "$(k.object)/$(k.iso)/$(k.lepton)/$(k.selection_major)/$(k.selection_minor)/$(k.njets)/$(k.ntags)/$(k.systematic)/$(k.scenario)/$(get_process(k.sample))"
+#    mkpath(tf, dn)
     #println(
     #    k, " sument=$(sum(entries(v))) ",
     #    @sprintf(" int=%.2f", integral(v)),
@@ -614,12 +615,14 @@ for (k, v) in ret
     #)
     #isa(v, Histogram) && println(v)
 
-    #hi = to_root(v, tostr(k))
-    hi = to_root(v, string(k.sample))
+    hi = to_root(v, tostr(k))
+    #hi = to_root(v, string(k.sample))
 end
 
 println("projected $(length(ret)) objects in $q seconds")
-print("writing...");Write(tf);println("done")
+print("writing...");Write(tf);q=toq();println("done in $q seconds")
+
+#skipping TFile::Close
 Close(tf)
 
 for i=1:5
@@ -639,3 +642,5 @@ end
 
 println(fails)
 println("cleaning $tempf...");rm(tempf)
+
+#gROOT.process_line("gROOT->GetListOfFiles()->Remove((TFile*)$(uint64(tf.p)));");
