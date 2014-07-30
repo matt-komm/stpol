@@ -180,15 +180,17 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
         iEvent.put(std::auto_ptr<int>(new int(0)), "trueLeptonPdgId");
         return;
     }
-    
-    
-    
    
+    LogDebug("part") << "lepton " << lepton->p4(); 
+    LogDebug("part") << "neutrino " << neutrino->p4(); 
     //GenParticle (Charge q, const LorentzVector &p4, const Point &vtx, int pdgId, int status, bool integerCharge)
     GenParticle wboson(lepton->charge(),lepton->p4()+neutrino->p4(),reco::Candidate::Point(),24*lepton->charge(),1,true);
+    LogDebug("part") << "W " << wboson.p4(); 
     outWbosons->push_back(wboson);
     
     GenParticle top(wboson.charge(),bJet->p4()+wboson.p4(),reco::Candidate::Point(),6*wboson.charge(),1,false);
+    LogDebug("part") << "bJet " << bJet->p4(); 
+    LogDebug("part") << "top " << top.mass(); 
     outTop->push_back(top);
     
     iEvent.put(outLeptons, "trueLepton");
