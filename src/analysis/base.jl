@@ -209,6 +209,11 @@ end
 grep(arr::AbstractVector, pat::ASCIIString) =
     collect(filter(x->contains(string(x), string(pat)), arr))
 
+function nona!(X)
+    X[isna(X)] = false
+end
+postfix_added(x) = replace(x, ".root", ".root.added");
+
 const DATAPATH = "/Users/joosep/Dropbox/kbfi/top/stpol/results/skims/May1_metphi_on/"
 
 export BASE
@@ -217,7 +222,7 @@ export procs, mcsamples, TOTAL_SAMPLES
 export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
 export Histograms
 export remove_prefix, hists_varname
-export walk, grep, DATAPATH
+export walk, grep, DATAPATH, nona!, postfix_added
 end
 
 using DataArrays, DataFrames
