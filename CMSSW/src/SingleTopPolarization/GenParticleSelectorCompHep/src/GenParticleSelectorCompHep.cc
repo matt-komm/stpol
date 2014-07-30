@@ -190,7 +190,7 @@ GenParticleSelectorCompHep::produce(edm::Event& iEvent, const edm::EventSetup& i
     
     GenParticle top(wboson.charge(),bJet->p4()+wboson.p4(),reco::Candidate::Point(),6*wboson.charge(),1,false);
     LogDebug("part") << "bJet " << bJet->p4(); 
-    LogDebug("part") << "top " << top.mass(); 
+    LogDebug("part") << "top " << top.p4() << " m=" << top.mass(); 
     outTop->push_back(top);
     
     iEvent.put(outLeptons, "trueLepton");
