@@ -39,8 +39,8 @@ extra_data = {}
 i=-1
 for event in events2:
     i+=1
-    if event.bdt_qcd2 <= 0.4: continue
-    extra_data[i] = [event.bdt_qcd2, event.bdt_sig_bg, event.xsweight, event.wjets_ct_shape_weight, event.wjets_fl_yield_weight]
+    if event.bdt_qcd <= 0.4: continue
+    extra_data[i] = [event.bdt_qcd, event.bdt_sig_bg, event.xsweight, event.wjets_ct_shape_weight, event.wjets_fl_yield_weight]
 
 i=-1
 missing = 0
