@@ -1,12 +1,26 @@
 import ROOT, sys, json, os, numpy
 
+def set_zero(h):
+    for i in range(0, h.GetNbinsX()+2):
+        h.SetBinContent(i, 0)
+        h.SetBinError(i, 0)
+
+def set_zero_if_neg(h):
+    for i in range(0, h.GetNbinsX()+2):
+        if h.GetBinContent(i) < 0:
+            h.SetBinContent(i, 0)
+            h.SetBinError(i, 1)
+
 def histname(hn):
     spl = hn.split("__")
 
-    if "_heavy" in spl[1] or "_light" in spl[1]:
-        print "skipping", spl
+    if spl[1] in [
+            "W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive",
+            "W1JetsToLNu", "W2JetsToLNu", "W3JetsToLNu", "W4JetsToLNu",
+            ]:
         return {}
 
+    #Use new ttbar samples
     if ("TTJets_matching" in hn
         or "TTJets_MSDecays_matchingdown_v1" in hn
         or "TTJets_MSDecays_matchingup_v1" in hn
@@ -14,6 +28,11 @@ def histname(hn):
         or "TTJets_mass169_5" in hn
         or "TTJets_mass175_5" in hn
         or "TTJets_scaledown" in hn):
+        print "skipping", spl
+        return {}
+
+    #skip comphep samples with QCD variations
+    if "TTo" in hn and "qcd_antiiso" in hn:
         print "skipping", spl
         return {}
 
@@ -60,7 +79,7 @@ if grouping=="fit":
     final_groups = {
         "tchan":["tchan"],
         "ttjets": ["ttjets", "twchan", "schan"],
-        "wzjets": ["wjets", "diboson", "dyjets"],
+        "wzjets": ["wjets", "diboson", "dyjets", "gjets"],
         #"qcd": ["qcd"],
     }
 elif grouping=="plot":
@@ -71,6 +90,7 @@ elif grouping=="plot":
         "twchan": ["twchan"],
         "schan": ["schan"],
         "diboson": ["diboson"],
+        "gjets": ["gjets"],
         "dyjets": ["dyjets"]
 }
 
@@ -101,15 +121,26 @@ for (iso, hists) in isosplit.items():
             if parsed_hn == {}:
                 continue
             parsed_hn["sample"] = k
-            print "\t\t", hn, round(lumi * f.Get(hn).Integral(), 3), int(f.Get(hn).GetEntries())
+            print "\t\t", hn, parsed_hn, round(lumi * f.Get(hn).Integral(), 3), int(f.Get(hn).GetEntries())
             hd[frozenset(parsed_hn.items())] = f.Get(hn)
 
 def get_hists(sample, syst, di, iso):
     hks = []
+    subsamps = []
     for k in hd.keys():
         d = dict(k)
         if d["sample"]==sample and d["syst"]==syst and d["dir"]==di and d["iso"]==iso:
             hks.append(k)
+            subsamps.append(d["subsample"])
+
+    #FIXME: hack to get only W+jets heavy light variations
+    if sample == "wjets" and "flavour" in syst:
+        print "subsamps", subsamps
+        for k in hd.keys():
+            d = dict(k)
+            if d["sample"]==sample and d["syst"]=="nominal" and d["iso"]==iso and d["subsample"] not in subsamps:
+                print "extra append", d
+                hks.append(k)
 
     #revert to systematic with no direction
     if len(hks)==0:
@@ -145,7 +176,7 @@ def get_hists(sample, syst, di, iso):
         print "using resetted t-channel instead of ", sample, syst, di, iso
 
         return [r]
-    print "selected: ", [str(hd[k].GetName()) for k in hks]
+    print "selected: ",sample, syst, di, iso, [str(hd[k].GetName()) for k in hks]
 
     return [hd[k] for k in hks]
 
@@ -181,6 +212,8 @@ for (gn, gs) in final_groups.items():
 for (gn, gs) in final_groups.items():
     for (sna, snb) in syst_table.items():
         if gn in ["tchan_inc", "wjets_inc", "DATA"]:
+            continue
+        if "qcd_antiiso" in sna:
             continue
         print sna, snb, gn, gs
         spl = snb.split("__")
@@ -225,16 +258,47 @@ hantiiso_data = sum_hists("DEBUG_%s__antiiso_data" % varname,
     get_hists(final_groups["DATA"][0], "", "none", "antiiso")
 )
 
+hss = sum([get_hists(gr, "nominal", "none", "antiiso") for gr in ["tchan", "ttjets", "wjets", "diboson", "dyjets", "twchan", "schan"]], [])
+for h in hss:
+    print "HSS nom", h.GetName(), h.Integral(), h.GetEntries()
+
 hantiiso_mc = sum_hists("DEBUG_%s__antiiso_mc" % varname,
     sum([get_hists(gr, "nominal", "none", "antiiso") for gr in ["tchan", "ttjets", "wjets", "diboson", "dyjets", "twchan", "schan"]], [])
 )
+hantiiso_mc.Scale(lumi)
 hantiiso_data.Write("", ROOT.TObject.kOverwrite)
 hantiiso_mc.Write("", ROOT.TObject.kOverwrite)
+hmc = hantiiso_mc
+print "hmc", hmc.GetName(), hmc.Integral(), hmc.GetEntries()
 
 hqcd = hantiiso_data.Clone("%s__qcd" % varname)
 hqcd.Add(hantiiso_mc, -1.0)
 hqcd.Scale(qcd_scale)
+set_zero_if_neg(hqcd)
 hqcd.Write("", ROOT.TObject.kOverwrite)
+
+for sd in ["up", "down"]:
+    hdata = sum_hists("DEBUG_%s__antiiso_data__qcd_antiiso__%s" % (varname, sd),
+        get_hists(final_groups["DATA"][0], "qcd_antiiso", sd, "antiiso")
+    )
+
+    hss = sum([get_hists(gr, "qcd_antiiso", sd, "antiiso") for gr in ["tchan", "ttjets", "wjets", "diboson", "dyjets", "twchan", "schan"]], [])
+    for h in hss:
+        print "HSS", h.GetName(), h.Integral(), h.GetEntries()
+
+    hmc = sum_hists("DEBUG_%s__antiiso_mc__qcd_antiiso__%s" % (varname, sd),
+        sum([get_hists(gr, "qcd_antiiso", sd, "antiiso") for gr in ["tchan", "ttjets", "wjets", "diboson", "dyjets", "twchan", "schan"]], [])
+    )
+    hmc.Scale(lumi)
+    print "hmc", hmc.GetName(), hmc.Integral(), hmc.GetEntries()
+    hdata.Write("", ROOT.TObject.kOverwrite)
+    hmc.Write("", ROOT.TObject.kOverwrite)
+    hqcd = hdata.Clone("%s__qcd__qcd_antiiso__%s" % (varname, sd))
+    hqcd.Add(hmc, -1.0)
+    hqcd.Scale(qcd_scale)
+    set_zero_if_neg(hqcd)
+    hqcd.Write("", ROOT.TObject.kOverwrite)
+
 
 ofd = {}
 for k in of.GetListOfKeys():
@@ -246,4 +310,3 @@ for (k, v) in sorted(ofd.items(), key=lambda x:x[0]):
     print k, round(v.Integral(), 2), int(v.GetEntries())
 
 of.Close()
-
