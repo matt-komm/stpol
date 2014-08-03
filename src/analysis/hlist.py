@@ -7,7 +7,6 @@ sks = sorted(ks, key=lambda x: x.GetName())
 for k in sks:
     o = k.ReadObj()
     i = o.Integral()
-    print i
     if i < 1:
         i = int(round(20000 * i))
     print k.GetName(), i, int(o.GetEntries())
