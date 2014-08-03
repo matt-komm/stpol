@@ -368,6 +368,8 @@ function deltaerr(
     systematics::Vector{ASCIIString},
     normed
     )
+
+    length(systematics)==0 && return (0.0, 0.0)
     N = total_mc_variated(hists, "nominal")[1:end-1]
 
     function normf(syst, direction)
@@ -387,7 +389,7 @@ function deltaerr(
     #fully correlated, simple sum of template variations from nominal
     f(direction) = [abs(normf(s, direction) - N) for s in systematics] |> sum
 
-    return f("up"), f("down")
+    return (f("up"), f("down"))
 end
 
 function tot_syst_err(
@@ -412,15 +414,17 @@ function draw_errband(
     hists::Associative;
     log=false,
     systematics_unnormed::Vector{ASCIIString}=ASCIIString[
-        "scale_ttjets", "scale_wjets", "scale_tchan"
     ],
     systematics_normed::Vector{ASCIIString}=[
-        "matching",
+        "ttjets_scale", "wzjets_scale", "tchan_scale",
+        "ttjets_matching", "wzjets_matching",
         "jes", "jer",
         "mass",
         "met",
         "lepton_id", "lepton_iso", "lepton_trigger",
-        "pu", "btag_bc", "btag_l"
+        "pu", "btag_bc", "btag_l",
+        "wjets_shape", "wjets_flavour_light", "wjets_flavour_heavy",
+        "qcd_antiiso",
     ]
     )
 
@@ -472,6 +476,12 @@ cmspaper(ax, x, y, lumi=20; additional_text="") = text(
     transform=ax[:transAxes], horizontalalignment="center", verticalalignment="top"
 )
 
+cmspaper_title(ax, x, y, lumi=20; additional_text="") = text(
+    x, y,
+    "CMS \$\\sqrt{s}=8\$ TeV \$L_{int}=$lumi\\ \\mathrm{fb}^{-1}\$ $additional_text",
+    transform=ax[:transAxes], horizontalalignment="center", verticalalignment="bottom"
+)
+
 function combdraw(
     hists, var::Symbol;
     log=false, plot_title="",
@@ -479,7 +489,7 @@ function combdraw(
     )
     fig, (ax, rax) = ratio_axes()
 
-    draw_data_mc_stackplot(ax, hists;log=log,wjets_split=true);
+    draw_data_mc_stackplot(ax, hists;log=log,wjets_split=false);
     ax[:set_ylim](bottom=log?10:0)
     ax[:grid](true, which="both")
     kwargsd = {k=>v for (k,v) in kwargs}
@@ -525,7 +535,7 @@ function combdraw(
     end
     ax[:set_title](plot_title)
     rax[:set_xlabel](VARS[var], fontsize=22)
-    rax[:set_ylabel]("\$ \\frac{D}{M} \$")
+    rax[:set_ylabel]("\$ \\frac{\\mathrm{data}}{\\mathrm{prediction}} \$")
     rslegend(ax)
 
     #ax[:set_ylim](top=maximum(contents(hists["DATA"])) * 1.3)
