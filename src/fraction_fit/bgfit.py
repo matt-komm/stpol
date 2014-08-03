@@ -81,6 +81,11 @@ def get_model(infile):
         sys.stdout.flush()
         kn = str(k.GetName())
 
+        if "DEBUG" in kn:
+            continue
+        #if not hfilter(kn):
+        #    continue
+
         if kn in toskip or "%s__%s__%s"%(kn, syst, direction) in kns:
             continue
 
