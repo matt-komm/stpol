@@ -56,6 +56,11 @@ const SYSTEMATICS_TABLE = {
     :wjets_shape__up => :wjets_shape__up,
     :wjets_shape__down => :wjets_shape__down,
 
+    :wjets_flavour_heavy__up => :wjets_flavour_heavy__up,
+    :wjets_flavour_heavy__down => :wjets_flavour_heavy__down,
+    :wjets_flavour_light__up => :wjets_flavour_light__up,
+    :wjets_flavour_light__down => :wjets_flavour_light__down,
+
 #    symbol("signal_comphep_anomWtb-unphys") => :comphep_anom_unphys,
 #    symbol("signal_comphep_anomWtb-0100") => :comphep_anom_0100,
 #    symbol("signal_comphep_nominal") => :comphep_nominal,
@@ -67,6 +72,9 @@ const SYSTEMATICS_TABLE = {
     symbol("signal_comphep__anomWtb-unphys_LVLT") => :comphep_anom_unphys_LVLT,
     symbol("signal_comphep__anomWtb-unphys_t-channel") => :comphep_anom_unphys,
     symbol("signal_comphep__nominal") => :comphep_nominal,
+
+    :qcd_antiiso__up => :qcd_antiiso__up,
+    :qcd_antiiso__down => :qcd_antiiso__down,
 }
 
 const systematic_processings = collect(keys(SYSTEMATICS_TABLE))
