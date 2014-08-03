@@ -28,6 +28,7 @@ const VARS = {
 	:met_phi => "\$ \\Phi_{MET} \$",
 	:lepton_eta => "\$ \\eta_{l} \$",
 	:abs_lepton_eta => "\$| \\eta_{l} |\$",
+    :differential_cos_theta => "\$\\frac{\\mathrm{d}\\sigma}{\\sigma\\ \\\mathrm{d}\\cos\\ \\theta^*}\$"
 }
 
 const SAMPLENAMES = {
