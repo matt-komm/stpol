@@ -1,6 +1,6 @@
 module Reweight
 
-    using JSON#import JSON: parse
+    using JSON, DataFrames
     import SingleTopBase: BASE, fromdf
     import DataFrames: isna, DataFrameRow
     import Histograms: findbin
