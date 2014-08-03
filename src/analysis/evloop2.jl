@@ -15,7 +15,10 @@ const DO_LJET_RMS = PARS["do_ljet_rms"]
 const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
 const BDT_VAR = symbol(PARS["bdt_var"])
-const BDT_CUTS = [-0.2:0.1:0.9]
+#const BDT_CUTS = [-0.2:0.1:0.9]
+const BDT_CUTS = [0.6,]
+const VARS_TO_USE = symbol(PARS["vars_to_use"])
+
 #const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
 
 #PAS
@@ -54,8 +57,10 @@ const df_added = TreeDataFrame(map(x->"$x.added", infiles))
 #create a combined view of both ttrees
 df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
 
-const FIRST_EVENT = int(ARGS[3]) + 1 #arg3 = skip events
-const LAST_EVENT = min(FIRST_EVENT + int(ARGS[4]) - 1, nrow(df)) #arg4 = nevents
+#ARGS[3] = number of events to skip from the beginning
+const FIRST_EVENT = int(ARGS[3]) + 1
+#ARGS[4] = number of events to process
+const LAST_EVENT = min(FIRST_EVENT + int(ARGS[4]) - 1, nrow(df))
 
 require("$sp/histogram_defaults.jl")
 
@@ -67,34 +72,62 @@ const HISTS_NOMINAL_ONLY = false
 const TM_NOMINAL_ONLY = false
 const JET_TAGS = [(2, 0), (2, 2), (2, 1), (3, 0), (3, 1), (3, 2), (3, 3)]
 
-const crosscheck_vars = [
-    :bdt_sig_bg, :bdt_sig_bg_top_13_001,
+const wjets_weights = {
+    :heavy => {:up=>2.0, :down=>0.5},
+    :light => {:up=> 1.2, :down=>0.8}
+}
 
-    (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
-    (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
-    (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
-    :C, :shat, :ht,
-    (:C_signalregion, row->row[:C]),
-    (:top_mass_signalregion, row->row[:top_mass]),
+lepton_iso_limits = {
+    :mu => {
+        :up => (0.22, 0.5),
+        :down => (0.2, 0.45),
+    },
+    :ele => {
+        :up => (0.165, 0.5),
+        :down => (0.15, 0.45),
+    }
+}
 
-    :lepton_pt, :lepton_iso, :lepton_eta,
-    (:abs_lepton_eta, r->abs(r[:lepton_eta])),
-    :met_phi, :met, :mtw,
-    :bjet_pt, :ljet_pt,
-    :ljet_eta, :bjet_eta,
-    :bjet_mass, :ljet_mass,
-    :ljet_dr, :bjet_dr,
+crosscheck_vars = Any[]
 
-    :top_mass, :top_pt,
+##Variables to plot
+if VARS_TO_USE == :all_crosscheck
+    crosscheck_vars = [
+        :bdt_sig_bg, :bdt_sig_bg_top_13_001,
 
-    :n_good_vertices,
-    :cos_theta_lj, :cos_theta_bl,
-    :cos_theta_lj_gen, :cos_theta_bl_gen,
-    :nu_soltype,
-    :njets,
-    :ntags,
-    :lepton_charge
-]
+        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+        (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
+        (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
+        :C, :shat, :ht,
+        (:C_signalregion, row->row[:C]),
+        (:top_mass_signalregion, row->row[:top_mass]),
+
+        :lepton_pt, :lepton_iso, :lepton_eta,
+        (:abs_lepton_eta, r->abs(r[:lepton_eta])),
+        :met_phi, :met, :mtw,
+        :bjet_pt, :ljet_pt,
+        :ljet_eta, :bjet_eta,
+        :bjet_mass, :ljet_mass,
+        :ljet_dr, :bjet_dr,
+
+        :top_mass, :top_pt,
+
+        :n_good_vertices,
+        :cos_theta_lj, :cos_theta_bl,
+        :cos_theta_lj_gen, :cos_theta_bl_gen,
+        :nu_soltype,
+        :njets,
+        :ntags,
+        :lepton_charge
+    ]
+elseif VARS_TO_USE == :analysis
+    crosscheck_vars = [
+        :bdt_sig_bg,
+        :cos_theta_lj
+    ]
+else
+    error("Unknown VARS_TO_USE=$VARS_TO_USE")
+end
 
 const SOLTYPE = symbol(PARS["soltype"])
 
@@ -163,7 +196,7 @@ function fill_histogram(
 
         #scenario not defined for this systematic processing
         if systematic != scenario.systematic
-            VERBOSE && println("skipping systematic=$systematic scenario.systematic=$(scenario.systematic)") 
+            VERBOSE && println("skipping systematic=$systematic scenario.systematic=$(scenario.systematic)")
             continue
         end
 
@@ -217,7 +250,7 @@ function fill_histogram(
                     symbol("$(sample)_$(ev_cls)"),
                     iso,
                     systematic,
-                    w_scenario,
+                    wname,
                     selection_major,
                     selection_minor,
                     lepton,
@@ -235,6 +268,62 @@ function fill_histogram(
                 h.bin_entries[bin] += 1
             end
         end
+    end
+
+    if get_process(sample) == :wjets
+        for cls in jet_classifications
+            const ev_cls = row[:jet_cls] |> jet_cls_from_number
+            ev_cls == cls || continue
+
+            ev_cls = jet_cls_heavy_light(ev_cls)
+
+            #W+jets heavy/light flavour reweighting
+            for wdir in [:up, :down]
+                const kk = HistKey(
+                    hname,
+                    symbol("$(sample)_$(ev_cls)"),
+                    iso,
+                    systematic,
+                    symbol("wjets_flavour_$(ev_cls)__$(wdir)"),
+                    selection_major,
+                    selection_minor,
+                    lepton,
+                    njets,
+                    ntags,
+                )
+
+                h = getr(ret, kk, hname)::Histogram
+                const w = nw * wjets_weights[ev_cls][wdir]
+
+                h.bin_contents[bin] += w
+                h.bin_entries[bin] += 1
+            end
+        end
+    end
+
+    #fill QCD anti-iso range variation systematic
+    if iso == :antiiso
+        liso = row[:lepton_iso]
+        for wdir in [:up, :down]
+            if (liso >= lepton_iso_limits[lepton][wdir][1] && liso <= lepton_iso_limits[lepton][wdir][2])
+                const kk = HistKey(
+                    hname,
+                    sample,
+                    iso,
+                    systematic,
+                    symbol("qcd_antiiso__$(wdir)"),
+                    selection_major,
+                    selection_minor,
+                    lepton,
+                    njets,
+                    ntags,
+                )
+                h = getr(ret, kk, hname)::Histogram
+                h.bin_contents[bin] += nw
+                h.bin_entries[bin] += 1
+            end
+        end
+
     end
 end
 
@@ -323,7 +412,7 @@ function process_df(rows::AbstractVector{Int64})
                 if DO_LJET_RMS
                     reco = reco && Cuts.ljet_rms(row)
                 end
-                VERBOSE && println("$reco $x $y") 
+                VERBOSE && println("$reco $x $y")
 
                 const lep_symb = symbol("gen_$(get(LEPTON_SYMBOLS, true_lep, NA))__reco_$(reco_lep)")
 
@@ -370,7 +459,7 @@ function process_df(rows::AbstractVector{Int64})
                         h.baseh.bin_entries[linind] += 1.0
                     end
 
-                    #cut-based selection 
+                    #cut-based selection
                     for (cut_major, cut_minor, cutfn) in {
                             (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime)
                         }
@@ -422,6 +511,10 @@ function process_df(rows::AbstractVector{Int64})
         ###
         is_any_na(row, :njets, :ntags, :cos_theta_lj, :bdt_sig_bg) && continue
 
+        #required to cut away mismodeled high-eta region
+        (abs(row[:ljet_eta]) < 4.5 && abs(row[:bjet_eta]) < 4.5) || continue
+
+
         #cache nominal weight
         const nw = nominal_weight(row)::Float64
 
@@ -431,22 +524,27 @@ function process_df(rows::AbstractVector{Int64})
             const _reco = sel(row, nj, nt)::Bool
             _reco || continue
 
-            for var in [:bdt_qcd, :mtw, :met, :met_phi]
-                fill_histogram(
-                    nw,
-                    row, isdata,
-                    var,
-                    row->row[var],
-                    ret,
+            if VARS_TO_USE != :analysis
+                for var in [
+                    :bdt_qcd, :mtw, :met,
+               #     :met_phi
+                ]
+                    fill_histogram(
+                        nw,
+                        row, isdata,
+                        var,
+                        row->row[var],
+                        ret,
 
-                    subsample,
-                    iso,
-                    systematic,
-                    :preqcd,
-                    :nothing,
-                    lepton,
-                    nj, nt
-                )
+                        subsample,
+                        iso,
+                        systematic,
+                        :preqcd,
+                        :nothing,
+                        lepton,
+                        nj, nt
+                    )
+                end
             end
         end
 
@@ -590,6 +688,10 @@ function process_df(rows::AbstractVector{Int64})
 
 end #function
 
+
+###
+### Process the events
+###
 tic()
 ret = process_df(FIRST_EVENT:LAST_EVENT)
 q = toc()
