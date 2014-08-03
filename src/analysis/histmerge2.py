@@ -73,6 +73,11 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
     if d["iso"] != iso:
         return None
 
+    #is double variated MC
+    #Hacky parsing
+    if d["systematic"]!="nominal" and d["scenario"]!="nominal" and d["systematic"]!="" and "comphep" not in d["systematic"]:
+        return None
+
     #hacky parsing of (systematic variation at generation, weight scenario) tuple
     if d["systematic"]!="" and d["systematic"]!="data":
         s2 = d["scenario"]
@@ -107,9 +112,15 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
             else:
                 syst = "nominal"
     else:
-        syst = "nominal"
+        if d["scenario"] == "unweighted":
+            syst = "nominal"
+        else:
+            s2 = d["scenario"]
+            idx = s2.rfind("__")
+            syst_dir = s2[idx+2:]
+            syst = s2[:idx]
 
-    if "comphep" in d["systematic"]:
+    if "comphep" in d["systematic"] and d["scenario"] == "nominal":
         syst = syst_tables["systematics_table"][d["systematic"]]
         syst_dir = "none"
 
@@ -119,7 +130,7 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
         hk = "%s__%s__%s" % (d["object"], d["sample"], syst)
     else:
         hk = "%s__%s__%s__%s" % (d["object"], d["sample"], syst, syst_dir)
-    print "returning ", k, d
+    print "returning ", hk, k, d
     return hk, d
 
 def set_zero(h):
@@ -186,6 +197,7 @@ def select_transfermatrix(gen_lepton, reco_lepton, selection_major, selection_mi
 
         #x = "tm__pdgid_g%d_r%d__%s" % (pdgid_map[gen_lepton], pdgid_map[reco_lepton], x)
         x = "tm__%s" % (x)
+        x = x.replace("scale", "tchan_scale")
         h = keylist[k].ReadObj()
 
         if hd.has_key(x):
@@ -323,15 +335,17 @@ for lep in ["mu", "ele"]:
         os.makedirs(d)
 
         for variable in [
-                "bdt_sig_bg", "bdt_sig_bg_top_13_001", "abs_ljet_eta",
-                "abs_ljet_eta_16",
-                "C", "met", "mtw", "shat", "ht", "cos_theta_lj",
+                "bdt_sig_bg",
+#                "bdt_sig_bg_top_13_001", "abs_ljet_eta",
+#                "abs_ljet_eta_16",
+#                "C", "met", "mtw", "shat", "ht", "cos_theta_lj",
                 ]:
             x = select_hists(variable, lep, "preselection", "nothing", nj, nt)
             write_hists("%s/%s.root" % (d, variable), x)
 
 #for bdt_cut in [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]:
-for bdt_cut in numpy.arange(-0.2, 0.9, 0.1):
+#for bdt_cut in numpy.arange(-0.2, 0.9, 0.1):
+for bdt_cut in [0.6,]:
     bdts = "%.5f" % bdt_cut
     print(bdts)
     for reco_lep in ["mu", "ele"]:
@@ -341,9 +355,16 @@ for bdt_cut in numpy.arange(-0.2, 0.9, 0.1):
         x = select_hists("cos_theta_lj", reco_lep, "bdt", bdts, 2, 1)
         write_hists("%s/cos_theta_lj.root" % (d), x)
 
-        for gen_lep in ["mu", "ele", "tau", "NA"]:
+        for gen_lep in ["mu", "ele", "tau"]:#, "NA"]:
             tm = select_transfermatrix(gen_lep, reco_lep, "bdt", bdts, 2, 1)
             write_hists("%s/tmatrix_nocharge__gen_%s.root" % (d, gen_lep), tm)
+
+        for (nj, nt) in [(3,1), (3,2), (2,0)]:
+            d = "%s/bdt_scan/hists/%dj_%dt/%s/%s" % (output_dir, nj, nt, bdts, reco_lep)
+            if not os.path.exists(d):
+                os.makedirs(d)
+            x = select_hists("cos_theta_lj", reco_lep, "bdt", bdts, nj, nt)
+            write_hists("%s/cos_theta_lj.root" % (d), x)
 
 for reco_lep in ["mu", "ele"]:
     d = "%s/bdt_scan/hists/%s/%s" % (output_dir, "etajprime_topmass_default", reco_lep)
