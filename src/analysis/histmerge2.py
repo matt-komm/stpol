@@ -42,7 +42,7 @@ def from_json(fn):
     fi.close()
     return ret
 
-syst_tables = from_json("systematics.json")
+syst_tables = from_json("../../metadata/systematics.json")
 lumis = from_json("../../metadata/lumis.json")
 lumis["tau"] = 1.0
 pdgid_map = {"mu":13, "ele":11, "tau":15}
@@ -75,7 +75,7 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
 
     #is double variated MC
     #Hacky parsing
-    if d["systematic"]!="nominal" and d["scenario"]!="nominal" and d["systematic"]!="" and "comphep" not in d["systematic"]:
+    if d["systematic"]!="nominal" and d["scenario"]!="nominal" and d["systematic"]!="" and ("wjets" in d["scenario"] or "qcd" in d["scenario"]):
         return None
 
     #hacky parsing of (systematic variation at generation, weight scenario) tuple
@@ -130,6 +130,7 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
         hk = "%s__%s__%s" % (d["object"], d["sample"], syst)
     else:
         hk = "%s__%s__%s__%s" % (d["object"], d["sample"], syst, syst_dir)
+    hk = hk.replace("comphep_nominal", "comphep__nominal")
     print "returning ", hk, k, d
     return hk, d
 
@@ -326,9 +327,23 @@ def merge_hists(vname, hd):
 
 output_dir = "output"
 
+print("preqcd")
+for lep in ["mu", "ele"]:
+    for (nj, nt) in [(2,1), (3,1), (3,2), (2,0)]:
+        print(nj, nt)
+
+        d = "%s/bdt_scan/hists/preqcd/%dj_%dt/%s" % (output_dir, nj, nt, lep)
+        os.makedirs(d)
+
+        for variable in [
+                "bdt_qcd",
+                ]:
+            x = select_hists(variable, lep, "preqcd", "nothing", nj, nt)
+            write_hists("%s/%s.root" % (d, variable), x)
+
 print("preselection")
 for lep in ["mu", "ele"]:
-    for (nj, nt) in [(2,1), (3,2), (2,0)]:
+    for (nj, nt) in [(2,1), (3,1), (3,2), (2,0)]:
         print(nj, nt)
 
         d = "%s/bdt_scan/hists/preselection/%dj_%dt/%s" % (output_dir, nj, nt, lep)
@@ -338,7 +353,8 @@ for lep in ["mu", "ele"]:
                 "bdt_sig_bg",
 #                "bdt_sig_bg_top_13_001", "abs_ljet_eta",
 #                "abs_ljet_eta_16",
-#                "C", "met", "mtw", "shat", "ht", "cos_theta_lj",
+#                "C", "met", "mtw", "shat", "ht",
+                "cos_theta_lj",
                 ]:
             x = select_hists(variable, lep, "preselection", "nothing", nj, nt)
             write_hists("%s/%s.root" % (d, variable), x)
