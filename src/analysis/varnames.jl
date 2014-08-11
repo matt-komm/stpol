@@ -37,7 +37,16 @@ const SAMPLENAMES = {
 	:wjets_heavy => "W+jets (bc)",
 	:wjets_light => "W+jets (udsg)",
 	:wjets => "W+jets",
-	:wzjets => "W, DY, \$\\gamma\$-jets"
+	:wzjets => "W, DY, \$\\gamma\$-jets",
+    :diboson => "Diboson",
+    :dyjets => "DY-jets",
+    :twchan => "tW-channel",
+    :schan => "s-channel",
+    :gjets => "\$\\gamma\$-jets",
+    :data_mu => "Data",
+    :data_ele => "Data",
+    :total_mc => "Total MC",
+    :qcd => "QCD"
 }
 
 const SAMPLENAMES_MERGED = {
