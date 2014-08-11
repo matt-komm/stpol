@@ -68,7 +68,7 @@ function nominal_weight(df::DataFrameRow)
         const wjets_shape_weight = df[:wjets_ct_shape_weight]
 
         const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id *
-            lepton_weight__iso * lepton_weight__trigger * wjets_shape_weight
+            lepton_weight__iso * lepton_weight__trigger * wjets_shape_weight * top_weight
 
         return w
     else
@@ -147,8 +147,9 @@ flatten(a)=a
 
 #load the fit results
 const FITRESULTS = {
-    :mu=>FitResult("$BASE/results/fits/aug1/nominal/mu.json"),
-    :ele=>FitResult("$BASE/results/fits/aug1/nominal/ele.json")
+    :mu=>FitResult("$BASE/results/fits/Aug5/nominal/mu.json"),
+    :ele=>FitResult("$BASE/results/fits/Aug5/nominal/ele.json"),
+    :combined=>FitResult("$BASE/results/fits/Aug5/nominal/combined.json")
 }
 
 t1 = time()
@@ -214,6 +215,26 @@ function nona!(X)
 end
 postfix_added(x) = replace(x, ".root", ".root.added");
 
+#Calculate the asymmetry of a histogram, splitting in the middle
+#throws an error if NB%2!=0
+function asymmetry(x::AbstractVector)
+    nb = length(x)
+    nb2 = int(nb/2)
+    return -(sum(x[1:nb2]) - sum(x[nb2+1:end])) / (sum(x[1:nb2]) + sum(x[nb2+1:end]))
+end
+
+function asymmetry(x::Histogram)
+    asymmetry(contents(x)[1:end-1])
+end
+
+#compiles a list of files located in pref/sample/N/output.root
+function find_files(pref, sample)
+    fs = map(x->"$pref/$sample/$x/output.root", readdir("$pref/$sample"))
+    fs = filter(f->isfile(f), fs)
+    length(fs)>0 || error("no files selected for $pref/$sample")
+    return fs, map(x->"$x.added", fs)
+end
+
 const DATAPATH = "/Users/joosep/Dropbox/kbfi/top/stpol/results/skims/May1_metphi_on/"
 
 export BASE
@@ -222,7 +243,8 @@ export procs, mcsamples, TOTAL_SAMPLES
 export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
 export Histograms
 export remove_prefix, hists_varname
-export walk, grep, DATAPATH, nona!, postfix_added
+export asymmetry
+export walk, grep, DATAPATH, nona!, postfix_added, find_files
 end
 
 using DataArrays, DataFrames
