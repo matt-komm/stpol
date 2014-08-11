@@ -16,7 +16,7 @@ const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
 const BDT_VAR = symbol(PARS["bdt_var"])
 #const BDT_CUTS = [-0.2:0.1:0.9]
-const BDT_CUTS = [0.6,]
+const BDT_CUTS = [-0.2, 0.0, 0.2, 0.4, 0.6,]
 const VARS_TO_USE = symbol(PARS["vars_to_use"])
 
 #const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
@@ -62,6 +62,8 @@ const FIRST_EVENT = int(ARGS[3]) + 1
 #ARGS[4] = number of events to process
 const LAST_EVENT = min(FIRST_EVENT + int(ARGS[4]) - 1, nrow(df))
 
+eventids = open("eventids_$(FIRST_EVENT)_$(LAST_EVENT).txt", "w")
+
 require("$sp/histogram_defaults.jl")
 
 const BDT_SYMBOLS = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in BDT_CUTS}
@@ -71,6 +73,7 @@ const DO_TRANSFER_MATRIX = true
 const HISTS_NOMINAL_ONLY = false
 const TM_NOMINAL_ONLY = false
 const JET_TAGS = [(2, 0), (2, 2), (2, 1), (3, 0), (3, 1), (3, 2), (3, 3)]
+#const JET_TAGS = [(2,1)]
 
 const wjets_weights = {
     :heavy => {:up=>2.0, :down=>0.5},
@@ -93,29 +96,34 @@ crosscheck_vars = Any[]
 ##Variables to plot
 if VARS_TO_USE == :all_crosscheck
     crosscheck_vars = [
-        :bdt_sig_bg, :bdt_sig_bg_top_13_001,
+        :bdt_sig_bg,
+        :bdt_qcd,
+#        :bdt_sig_bg_top_13_001,
 
-        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
-        (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
-        (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
+#        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+#        (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
+#        (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
         :C, :shat, :ht,
         (:C_signalregion, row->row[:C]),
         (:top_mass_signalregion, row->row[:top_mass]),
 
-        :lepton_pt, :lepton_iso, :lepton_eta,
-        (:abs_lepton_eta, r->abs(r[:lepton_eta])),
-        :met_phi, :met, :mtw,
+#        :lepton_pt, :lepton_iso, :lepton_eta,
+#        (:abs_lepton_eta, r->abs(r[:lepton_eta])),
+#        :met_phi,
+        :met, :mtw,
         :bjet_pt, :ljet_pt,
         :ljet_eta, :bjet_eta,
         :bjet_mass, :ljet_mass,
         :ljet_dr, :bjet_dr,
 
-        :top_mass, :top_pt,
+        :top_mass,
+#       :top_pt,
 
-        :n_good_vertices,
-        :cos_theta_lj, :cos_theta_bl,
-        :cos_theta_lj_gen, :cos_theta_bl_gen,
-        :nu_soltype,
+#       :n_good_vertices,
+        :cos_theta_lj,
+#        :cos_theta_bl,
+#        :cos_theta_lj_gen, :cos_theta_bl_gen,
+#        :nu_soltype,
         :njets,
         :ntags,
         :lepton_charge
@@ -387,108 +395,111 @@ function process_df(rows::AbstractVector{Int64})
             :ele=>{k=>false for k in BDT_CUTS}
         }
 
+        #cache nominal weight
+        const nw = nominal_weight(row)::Float64
+
         if DO_TRANSFER_MATRIX && sample==:tchan && iso==:iso
 
-            const x = row[:cos_theta_lj_gen]::Union(Float32, NAtype)
-            const y = row[:cos_theta_lj]::Union(Float32, NAtype)
-            const ny_ = searchsortedfirst(TM.edges[2], y)
+           const x = row[:cos_theta_lj_gen]::Union(Float32, NAtype)
+           const y = row[:cos_theta_lj]::Union(Float32, NAtype)
+           const ny_ = searchsortedfirst(TM.edges[2], y)
 
-            #can get gen-level index here
-            const nx = (isna(x)||isnan(x)) ? 1 : searchsortedfirst(TM.edges[1], x)-1
+           #can get gen-level index here
+           const nx = (isna(x)||isnan(x)) ? 1 : searchsortedfirst(TM.edges[1], x)-1
 
-            const nw = nominal_weight(row)::Float64
+           const nw = nominal_weight(row)::Float64
 
-            for reco_lep in Symbol[:ele, :mu]
+           for reco_lep in Symbol[:ele, :mu]
 
-                #did event pass reconstruction ?
-                #need to reinitialize for each new cut-tree "branch"
-                local reco = true
-                reco = reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
-                reco = reco && sel(row)
-                reco = reco && Cuts.is_reco_lepton(row, reco_lep)
-                reco = reco && Cuts.qcd_cut(row, QCD_CUT_TYPE, reco_lep)
-                reco = reco && Cuts.nu_soltype(row, SOLTYPE)
+               #did event pass reconstruction ?
+               #need to reinitialize for each new cut-tree "branch"
+               local reco = true
+               reco = reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool
+               reco = reco && sel(row)
+               reco = reco && Cuts.is_reco_lepton(row, reco_lep)
+               reco = reco && Cuts.qcd_cut(row, QCD_CUT_TYPE, reco_lep)
+               reco = reco && Cuts.nu_soltype(row, SOLTYPE)
 
-                if DO_LJET_RMS
-                    reco = reco && Cuts.ljet_rms(row)
-                end
-                VERBOSE && println("$reco $x $y")
+               if DO_LJET_RMS
+                   reco = reco && Cuts.ljet_rms(row)
+               end
+               VERBOSE && println("$reco $x $y")
 
-                const lep_symb = symbol("gen_$(get(LEPTON_SYMBOLS, true_lep, NA))__reco_$(reco_lep)")
+               const lep_symb = symbol("gen_$(get(LEPTON_SYMBOLS, true_lep, NA))__reco_$(reco_lep)")
 
-                for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
-                    (TM_NOMINAL_ONLY && scen_name[1]!=:nominal) && continue
+               for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
+                   (TM_NOMINAL_ONLY && scen_name[1]!=:nominal) && continue
 
-                    const w = scen.weight(nw, row)::Float64
-                    (isnan(w) || isna(w)) && error("$k2: w=$w $(df[row.row, :])")
+                   const w = scen.weight(nw, row)::Float64
+                   (isnan(w) || isna(w)) && error("$k2: w=$w $(df[row.row, :])")
 
-                    #assumes BDT cut points are sorted ascending
-                    for bdt_cut::Float64 in BDT_CUTS::Vector{Float64}
-                        const _reco = reco &&
-                            Cuts.bdt(row, bdt_cut, BDT_VAR)
+                   #assumes BDT cut points are sorted ascending
+                   for bdt_cut::Float64 in BDT_CUTS::Vector{Float64}
+                       const _reco = reco &&
+                           Cuts.bdt(row, bdt_cut, BDT_VAR)
 
-                        #if scen_name[1] == :nominal
-                        #    transfer_matrix_reco[reco_lep][bdt_cut] = reco
-                        #end
+                       #if scen_name[1] == :nominal
+                       #    transfer_matrix_reco[reco_lep][bdt_cut] = reco
+                       #end
 
-                        #need to get the reco-axis index here, it will depend on passing the BDT cut
-                        #unreconstructed events are put to underflow bin
-                        const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
+                       #need to get the reco-axis index here, it will depend on passing the BDT cut
+                       #unreconstructed events are put to underflow bin
+                       const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
 
-                        #get transfer matrix linear index from 2D index
-                        const linind = sub2ind(TM_hsize, nx, ny)
+                       #get transfer matrix linear index from 2D index
+                       const linind = sub2ind(TM_hsize, nx, ny)
 
-                        (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
-                            error("incorrect index $linind for $nx,$ny $x,$y")
+                       (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
+                           error("incorrect index $linind for $nx,$ny $x,$y")
 
-                        const k2 = HistKey(
-                            :transfer_matrix,
-                            subsample,
-                            iso,
-                            systematic,
-                            scen_name[1],
-                            :bdt,
-                            BDT_SYMBOLS[bdt_cut],
-                            lep_symb,
-                            2, 1
-                        )
+                       const k2 = HistKey(
+                           :transfer_matrix,
+                           subsample,
+                           iso,
+                           systematic,
+                           scen_name[1],
+                           :bdt,
+                           BDT_SYMBOLS[bdt_cut],
+                           lep_symb,
+                           2, 1
+                       )
 
-                        const h = getr(ret, k2, :transfer_matrix)::NHistogram
+                       const h = getr(ret, k2, :transfer_matrix)::NHistogram
 
-                        h.baseh.bin_contents[linind] += w
-                        h.baseh.bin_entries[linind] += 1.0
-                    end
+                       h.baseh.bin_contents[linind] += w
+                       h.baseh.bin_entries[linind] += 1.0
+                   end
 
-                    #cut-based selection
-                    for (cut_major, cut_minor, cutfn) in {
-                            (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime)
-                        }
-                        const _reco = reco && cutfn(row)
-                        const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
-                        const linind = sub2ind(TM_hsize, nx, ny)
+                   #cut-based selection
+                   for (cut_major, cut_minor, cutfn) in {
+                           (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime)
+                       }
+                       const _reco = reco && cutfn(row)
+                       const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
+                       const linind = sub2ind(TM_hsize, nx, ny)
 
-                        (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
-                            error("incorrect index $linind for $nx,$ny $x,$y")
+                       (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
+                           error("incorrect index $linind for $nx,$ny $x,$y")
 
-                        const k2 = HistKey(
-                            :transfer_matrix,
-                            subsample,
-                            iso,
-                            systematic,
-                            scen_name[1],
-                            cut_major,
-                            cut_minor,
-                            lep_symb,
-                            2, 1
-                        )
+                       const k2 = HistKey(
+                           :transfer_matrix,
+                           subsample,
+                           iso,
+                           systematic,
+                           scen_name[1],
+                           cut_major,
+                           cut_minor,
+                           lep_symb,
+                           2, 1
+                       )
 
-                        const h = getr(ret, k2, :transfer_matrix)::NHistogram
+                       const h = getr(ret, k2, :transfer_matrix)::NHistogram
 
-                        h.baseh.bin_contents[linind] += w
-                        h.baseh.bin_entries[linind] += 1.0
-                    end
-                end
-            end
+                       h.baseh.bin_contents[linind] += w
+                       h.baseh.bin_entries[linind] += 1.0
+                   end
+               end
+           end
         end
 
         ###
@@ -514,39 +525,34 @@ function process_df(rows::AbstractVector{Int64})
         #required to cut away mismodeled high-eta region
         (abs(row[:ljet_eta]) < 4.5 && abs(row[:bjet_eta]) < 4.5) || continue
 
+       #pre-qcd plots
+       for (nj, nt) in JET_TAGS
+           #pre-bdt selection
+           const _reco = sel(row, nj, nt)::Bool
+           _reco || continue
 
-        #cache nominal weight
-        const nw = nominal_weight(row)::Float64
+           for var in [
+               :bdt_qcd,
+          #    :mtw, :met,
+          #     :met_phi
+           ]
+               fill_histogram(
+                   nw,
+                   row, isdata,
+                   var,
+                   row->row[var],
+                   ret,
 
-        #pre-qcd plots
-        for (nj, nt) in JET_TAGS
-            #pre-bdt selection
-            const _reco = sel(row, nj, nt)::Bool
-            _reco || continue
-
-            if VARS_TO_USE != :analysis
-                for var in [
-                    :bdt_qcd, :mtw, :met,
-               #     :met_phi
-                ]
-                    fill_histogram(
-                        nw,
-                        row, isdata,
-                        var,
-                        row->row[var],
-                        ret,
-
-                        subsample,
-                        iso,
-                        systematic,
-                        :preqcd,
-                        :nothing,
-                        lepton,
-                        nj, nt
-                    )
-                end
-            end
-        end
+                   subsample,
+                   iso,
+                   systematic,
+                   :preqcd,
+                   :nothing,
+                   lepton,
+                   nj, nt
+               )
+           end
+       end
 
         if DO_LJET_RMS
             Cuts.ljet_rms(row) || continue
@@ -561,80 +567,80 @@ function process_df(rows::AbstractVector{Int64})
             continue
         end
 
-        ###
-        ### project BDT templates and input variables with full systematics
-        ###
-        for (nj, nt) in JET_TAGS
-            #pre-bdt selection
-            const _reco = reco && sel(row, nj, nt)::Bool && Cuts.nu_soltype(row, SOLTYPE)
-            if !_reco
-                fails[:jet_tag] += 1
-                continue
-            end
+       ###
+       ### project BDT templates and input variables with full systematics
+       ###
+       for (nj, nt) in JET_TAGS
+           #pre-bdt selection
+           const _reco = reco && sel(row, nj, nt)::Bool && Cuts.nu_soltype(row, SOLTYPE)
+           if !_reco
+               fails[:jet_tag] += 1
+               continue
+           end
 
-            for var in crosscheck_vars
+           for var in crosscheck_vars
 
-                #if a 2-tuple is specified, 2. arg is the function to apply
-                #otherwise, identity
-                if isa(var, Tuple)
-                    var, f = var
-                else
-                    var, f = var, (row::DataFrameRow -> row[var])
-                end
+               #if a 2-tuple is specified, 2. arg is the function to apply
+               #otherwise, identity
+               if isa(var, Tuple)
+                   var, f = var
+               else
+                   var, f = var, (row::DataFrameRow -> row[var])
+               end
 
-                fill_histogram(
-                    nw,
-                    row, isdata,
-                    var,
-                    row -> f(row),
-                    ret,
-                    subsample,
-                    iso,
-                    systematic,
-                    :preselection,
-                    :nothing,
-                    lepton,
-                    nj, nt
-                )
-            end
-        end
+               fill_histogram(
+                   nw,
+                   row, isdata,
+                   var,
+                   row -> f(row),
+                   ret,
+                   subsample,
+                   iso,
+                   systematic,
+                   :preselection,
+                   :nothing,
+                   lepton,
+                   nj, nt
+               )
+           end
+       end
 
-        ###
-        ### cut-based cross-check, 2J1T
-        ###
-        for (nj, nt) in JET_TAGS
-            if (reco &&
-                Cuts.cutbased_etajprime(row) &&
-                sel(row, nj, nt)::Bool &&
-                Cuts.nu_soltype(row, SOLTYPE)
-            )
-                for var in crosscheck_vars
+       ###
+       ### cut-based cross-check, 2J1T
+       ###
+       for (nj, nt) in JET_TAGS
+           if (reco &&
+               Cuts.cutbased_etajprime(row) &&
+               sel(row, nj, nt)::Bool &&
+               Cuts.nu_soltype(row, SOLTYPE)
+           )
+               for var in crosscheck_vars
 
-                    #if a 2-tuple is specified, 2. arg is the function to apply
-                    #otherwise, identity
-                    if isa(var, Tuple)
-                        var, f = var
-                    else
-                        var, f = var, (row::DataFrameRow -> row[var])
-                    end
+                   #if a 2-tuple is specified, 2. arg is the function to apply
+                   #otherwise, identity
+                   if isa(var, Tuple)
+                       var, f = var
+                   else
+                       var, f = var, (row::DataFrameRow -> row[var])
+                   end
 
-                    fill_histogram(
-                        nw,
-                        row, isdata,
-                        var,
-                        f,
-                        ret,
-                        subsample,
-                        iso,
-                        systematic,
-                        :cutbased,
-                        :etajprime_topmass_default,
-                        lepton,
-                        nj, nt
-                    )
-                end
-            end
-        end
+                   fill_histogram(
+                       nw,
+                       row, isdata,
+                       var,
+                       f,
+                       ret,
+                       subsample,
+                       iso,
+                       systematic,
+                       :cutbased,
+                       :etajprime_topmass_default,
+                       lepton,
+                       nj, nt
+                   )
+               end
+           end
+       end
 
         #final selection by BDT
         for (nj, nt) in JET_TAGS
@@ -645,6 +651,9 @@ function process_df(rows::AbstractVector{Int64})
                     sel(row, nj, nt)::Bool &&
                     Cuts.nu_soltype(row, SOLTYPE)
                 )
+###                    if ((nj==2) && (nt == 1) && (bdt_cut==0.6) && (lepton==:mu))
+###                        write(eventids, "$(row[:event]):$(row[:run]):$(row[:lumi]):$(row[:lepton_weight__id]):$(row[:lepton_weight__iso]):$(row[:lepton_weight__trigger]):$(row[:xsweight]):$(row[:pu_weight]):$(row[:top_weight]):$(row[:b_weight]):$(row[:wjets_ct_shape_weight]):$nw\n")
+###                    end
                     for var in crosscheck_vars
                         #if a 2-tuple is specified, 2. arg is the function to apply
                         #otherwise, identity
