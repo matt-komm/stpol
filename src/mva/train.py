@@ -12,7 +12,7 @@ import json
 import sys
 
 def sample_name(fn):
-    return fn.split("/")[-2]
+    return fn.split("/")[-3]
 
 #inputs
 inpdir = sys.argv[1]
@@ -75,8 +75,8 @@ factory.SetWeightExpression("1.0")
 #cut="met>40 && ljet_pt>90"
 
 cuts = {
-    "mu": "((n_signal_mu==1) && (n_signal_ele==0) && (n_veto_mu==0)&&(n_veto_ele==0) && (mtw > 45))",
-    "ele": "((n_signal_mu==0) && (n_signal_ele==1) && (n_veto_mu==0)&&(n_veto_ele==0) && (met > 50))"
+    "mu": "((n_signal_mu==1) && (n_signal_ele==0) && (n_veto_mu==0)&&(n_veto_ele==0))",
+    "ele": "((n_signal_mu==0) && (n_signal_ele==1) && (n_veto_mu==0)&&(n_veto_ele==0))"
 }
 
 cut="(hlt==1) && (njets==2) && (ntags==1) && ((%s) || (%s))" %(cuts["mu"], cuts["ele"])
