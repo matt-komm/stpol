@@ -421,7 +421,7 @@ function draw_errband(
         "jes", "jer",
         "mass",
         "met",
-        "lepton_id", "lepton_iso", "lepton_trigger",
+        "lepton_id", "lepton_iso", "lepton_trigger", "lepton_weight",
         "pu", "btag_bc", "btag_l",
         "wjets_shape", "wjets_flavour_light", "wjets_flavour_heavy",
         "qcd_antiiso",
@@ -448,26 +448,12 @@ function draw_errband(
         color="grey",
         fill=false,
         linewidth=0,
-        hatch="////",
+        hatch="/////",
         label="uncertainty";
         log=log
     )
 
     return tot_du, tot_dd
-
-    # axes[:bar](
-    #     lowedge(hists["DATA"].bin_edges),
-    #     dd+du,
-    #     widths(hists["DATA"].bin_edges),
-    #     N - dd,
-    #     edgecolor="black",
-    #     color="black",
-    #     fill=false,
-    #     linewidth=0,
-    #     hatch="\\\\",
-    #     label="systematic\nuncertainty";
-    #     log=log
-    # )
 end
 
 cmspaper(ax, x, y, lumi=20; additional_text="") = text(
@@ -528,11 +514,12 @@ function combdraw(
     #     rax[:plot](midpoints(hists["DATA"].bin_edges), mup, marker=".")
     end
 
-    if loc_paperstring == (:top, :right)
-        cmspaper(ax, 0.8, 0.97, additional_text=titletext)
-    elseif loc_paperstring == (:top, :left)
-        cmspaper(ax, 0.22, 0.97, additional_text=titletext)
-    end
+    #if loc_paperstring == (:top, :right)
+    #    cmspaper(ax, 0.8, 0.97, additional_text=titletext)
+    #elseif loc_paperstring == (:top, :left)
+    #    cmspaper(ax, 0.22, 0.97, additional_text=titletext)
+    #end
+    cmspaper_title(ax, 0.5, 1.01, additional_text=titletext)
     ax[:set_title](plot_title)
     rax[:set_xlabel](VARS[var], fontsize=22)
     rax[:set_ylabel]("\$ \\frac{\\mathrm{data}}{\\mathrm{prediction}} \$")
