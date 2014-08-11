@@ -53,7 +53,7 @@ def from_json(fn):
 def get_bins(h):
     return numpy.array([h.GetBinContent(i) for i in range(0, h.GetNbinsX()+1)])
 
-syst_table = from_json("systematics.json")["systematics_table"]
+syst_table = from_json("../../metadata/systematics.json")["systematics_table"]
 merges = from_json("merges.json")
 
 
@@ -197,6 +197,8 @@ def sum_hists(newname, hists):
 of.cd()
 for (gn, gs) in final_groups.items():
     print gn, gs
+
+
     h1 = sum_hists("%s__%s" % (varname, gn),
         sum([get_hists(sn, "nominal", "none", "iso")
             for sn in gs],
@@ -205,6 +207,33 @@ for (gn, gs) in final_groups.items():
     )
     if gn != "DATA":
         h1.Scale(lumi)
+    print "toth", h1.GetName(), h1.Integral()
+
+    #loop over subprocess in process
+    subhists = dict()
+    for sn in gs:
+        h = get_hists(sn, "nominal", "none", "iso")
+        subhists[sn] = sum_hists("%s__%s__%s" % (varname, gn, sn), h)
+
+    for sn in gs:
+        others = [h for (k, h) in subhists.items() if k!=sn]
+        print "others", sn, others
+        up = subhists[sn].Clone("%s__%s__%s__up" % (varname, gn, sn))
+        up.Scale(1.5)
+        toth_up = sum_hists("%s__%s__%s__up" % (varname, gn, sn), others + [up])
+        if toth_up.Integral()>0:
+            toth_up.Scale(h1.Integral() / toth_up.Integral())
+        toth_up.Write("", ROOT.TObject.kOverwrite)
+        print "toth_up", toth_up.GetName(), toth_up.Integral()
+
+        down = subhists[sn].Clone("%s__%s__%s__down" % (varname, gn, sn))
+        down.Scale(0.5)
+        toth_down = sum_hists("%s__%s__%s__down" % (varname, gn, sn), others + [down])
+        if toth_down.Integral()>0:
+            toth_down.Scale(h1.Integral() / toth_down.Integral())
+        toth_down.Write("", ROOT.TObject.kOverwrite)
+        print "toth_down", toth_down.GetName(), toth_down.Integral()
+
     h1.Write("", ROOT.TObject.kOverwrite)
     print gn, h1.GetName(), int(round(h1.Integral()))
     #h1.Print()
@@ -213,8 +242,10 @@ for (gn, gs) in final_groups.items():
     for (sna, snb) in syst_table.items():
         if gn in ["tchan_inc", "wjets_inc", "DATA"]:
             continue
+
         if "qcd_antiiso" in sna:
             continue
+
         print sna, snb, gn, gs
         spl = snb.split("__")
 
@@ -228,25 +259,30 @@ for (gn, gs) in final_groups.items():
         else:
             raise Exception(str(spl))
 
+
         hl = sum(
             [get_hists(sn, syst, d, "iso")
             for sn in gs],
             []
         )
-        print "gn=", gn, syst
+
+        #matching and scale systematics should be split according to sample name
         if systs_to_split.has_key(syst):
             print "systs_to_split", systs_to_split[syst], gn
             if gn in systs_to_split[syst]:
                 _snb = gn + "_" + snb
                 print("renamed snb %s->%s" % (snb, _snb))
                 snb = _snb
-        print "snb=",snb, gn, syst
+
+        print "snb=", snb, gn, syst
+
         h1 = sum_hists(
             "%s__%s__%s" % (varname, gn, snb),
             hl
         )
         h1.Scale(lumi)
         nomh = of.Get("__".join(h1.GetName().split("__")[0:2]))
+
         if h1.GetEntries() == nomh.GetEntries() and h1.Integral()==nomh.Integral() and (get_bins(h1) == get_bins(nomh)).all():
             print h1.GetName(), " is same as nominal, not writing"
         else:
@@ -276,6 +312,14 @@ hqcd.Add(hantiiso_mc, -1.0)
 hqcd.Scale(qcd_scale)
 set_zero_if_neg(hqcd)
 hqcd.Write("", ROOT.TObject.kOverwrite)
+hqcd_up = hqcd.Clone(hqcd.GetName() + "__qcd_yield__up")
+hqcd_up.Scale(1.5)
+hqcd_up.Write("", ROOT.TObject.kOverwrite)
+
+hqcd_down = hqcd.Clone(hqcd.GetName() + "__qcd_yield__down")
+hqcd_down.Scale(0.5)
+hqcd_down.Write("", ROOT.TObject.kOverwrite)
+
 
 for sd in ["up", "down"]:
     hdata = sum_hists("DEBUG_%s__antiiso_data__qcd_antiiso__%s" % (varname, sd),
