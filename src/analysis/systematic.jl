@@ -75,6 +75,9 @@ const SYSTEMATICS_TABLE = {
 
     :qcd_antiiso__up => :qcd_antiiso__up,
     :qcd_antiiso__down => :qcd_antiiso__down,
+    :lepton_weight__up => :lepton_weight__up,
+    :lepton_weight__down => :lepton_weight__down,
+
 }
 
 const systematic_processings = collect(keys(SYSTEMATICS_TABLE))
@@ -204,6 +207,66 @@ for weight in [
             weight
         )
     end
+end
+
+###
+### Add "lepton weight" from Andres
+###
+# #Check the effect of the lepton scale factor differing from unity (more correct would be mean weight)
+#    muon_sel["shape"] = (
+#        Weight("1.0 - 0.0*abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_nominal"),
+#        Weight("1.0 + abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_up"),
+#        Weight("1.0 - abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_down")
+#    )
+#
+# #Check the shape variation on top of the nominal weight
+#    electron_sel["shape"] = (
+#        Weight("1.0 - 0*abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_nominal"),
+#        Weight("1.0 + abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_up"),
+#        Weight("1.0 - abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_down")
+#    )
+
+function lepton_weight_func_up(nw::Float64, row::DataFrameRow)
+    const lt = row[:lepton_type]
+    isna(lt) && return nw
+    if lt == 13
+        const x = nw * (1.0 + abs(1.0 - row[:lepton_weight__id] * row[:lepton_weight__iso] * row[:lepton_weight__trigger]));
+        return isna(x)||isnan(x) ? nw : x;
+    elseif lt == 11;
+        const x = nw * (1.0 + abs(1.0 - row[:lepton_weight__iso] * row[:lepton_weight__trigger]));
+        return isna(x)||isnan(x) ? nw : x
+    else
+        error("Unknown lepton type: ", row[:lepton_type])
+    end
+end
+
+function lepton_weight_func_down(nw::Float64, row::DataFrameRow)
+    const lt = row[:lepton_type]
+    isna(lt) && return nw
+    if lt == 13
+        const x = nw * (1.0 - abs(1.0 - row[:lepton_weight__id] * row[:lepton_weight__iso] * row[:lepton_weight__trigger]));
+        return isna(x)||isnan(x) ? nw : x;
+    elseif lt == 11;
+        const x = nw * (1.0 - abs(1.0 - row[:lepton_weight__iso] * row[:lepton_weight__trigger]));
+        return isna(x)||isnan(x) ? nw : x
+    else
+        error("Unknown lepton type: ", row[:lepton_type])
+    end
+end
+
+for samp in [:ttjets, :tchan, :wjets]
+    scenarios[(:lepton_weight__up, samp)] = Scenario(
+        :nominal,
+        samp,
+        lepton_weight_func_up,
+        :lepton_weight__up
+    )
+    scenarios[(:lepton_weight__down, samp)] = Scenario(
+        :nominal,
+        samp,
+        lepton_weight_func_down,
+        :lepton_weight__down
+    )
 end
 
 for weight in [:top_weight__up, :top_weight__down]
