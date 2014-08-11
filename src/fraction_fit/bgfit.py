@@ -7,6 +7,12 @@ Config = ConfigParser.ConfigParser(allow_no_value=True)
 Config.read(sys.argv[2])
 
 infiles = Config.get("input", "filenames").split(" ")
+try:
+    prefixes = Config.get("input", "prefixes", []).split(" ")
+except ConfigParser.NoOptionError:
+    prefixes = []
+if len(prefixes)!=len(infiles):
+    prefixes = [""]*len(infiles)
 outfile = Config.get("output", "filename")
 
 import os
@@ -14,6 +20,8 @@ import os.path
 dn = os.path.dirname(outfile)
 if not os.path.exists(dn):
     os.makedirs(dn)
+if not os.path.exists(outfile):
+    os.makedirs(outfile)
 
 print("outfile=", outfile)
 print("infiles=", infiles)
@@ -58,6 +66,9 @@ def hfilter(hname):
 
     return True
 
+def htransform(h):
+    return Histogram(h.get_xmin(), 0.6, h.get_values()[0:24], uncertainties=h.get_uncertainties()[0:24], name=h.get_name())
+
 def nameconv(n):
     n = n.replace("wjets__heavy", "wjets_heavy")
     n = n.replace("wjets__light", "wjets_light")
@@ -65,7 +76,7 @@ def nameconv(n):
 
 all_hists = []
 
-def get_model(infile):
+def get_model(infile, pref):
 
     (fd, filename) = tempfile.mkstemp()
     filename += "_fit_templates.root"
@@ -98,6 +109,8 @@ def get_model(infile):
         else:
             #keep the nominal name
             _kn = kn
+
+        _kn = pref + _kn
 
         #template passes the histogram filter
         if hfilter(_kn):
@@ -147,7 +160,7 @@ def get_model(infile):
     hists["wzjets"].DrawNormalized("E1 SAME")
     hists["ttjets"].DrawNormalized("E1 SAME")
     hists["qcd"].DrawNormalized("E1 SAME")
-    canv.Print(dn + "/" + hists["DATA"].GetName() + "_shapes.pdf")
+    canv.Print(outfile + "/" + hists["DATA"].GetName() + "_shapes.pdf")
 
     canv = ROOT.TCanvas()
     hs = ROOT.THStack("stack", "stack")
@@ -157,7 +170,7 @@ def get_model(infile):
     hs.Add(hists["tchan"])
     hs.Draw("BAR HIST")
     hists["DATA"].Draw("E1 SAME")
-    canv.Print(dn + "/" + hists["DATA"].GetName() + "_unscaled.pdf")
+    canv.Print(outfile + "/" + hists["DATA"].GetName() + "_unscaled.pdf")
     tf.Close()
 
     all_hists.append(filename)
@@ -170,7 +183,8 @@ def get_model(infile):
         # http://atlas.physics.arizona.edu/~kjohns/teaching/phys586/s06/barlow.pdf
         include_mc_uncertainties = True,
         histogram_filter = hfilter,
-        root_hname_to_convention = nameconv
+        transform_histo = htransform,
+        root_hname_to_convention = nameconv,
     )
     #os.remove(filename)
     model.fill_histogram_zerobins()
@@ -188,7 +202,11 @@ def get_model(infile):
                 )
             except:
                 print "fixing process ", o, p
-
+    add_normal_unc(model,
+        "beta_signal",
+        mean=float(Config.get("priors", "signal_mean")),
+        unc=float(Config.get("priors", "signal_sigma"))
+    )
 
     return model
 
@@ -199,16 +217,16 @@ def add_normal_unc(model, par, mean=1.0, unc=1.0):
     )
     for o in model.get_observables():
         for p in model.get_processes(o):
-            if par != p:
-                continue
-            print "adding parameters for", o, p
-            model.get_coeff(o,p).add_factor('id', parameter=par)
+            print("p=",p)
+            if par == p or (par == "beta_signal" and p == "tchan"):
+                print "adding parameters for", o, p
+                model.get_coeff(o,p).add_factor('id', parameter=par)
 
 def build_model(infiles):
     model = None
-    for inf in infiles:
+    for (inf, pref) in zip(infiles, prefixes):
         print "loading model from ",inf
-        m = get_model(inf)
+        m = get_model(inf, pref)
         if model is None:
             model = m
         else:
@@ -232,8 +250,12 @@ options.set("minimizer","strategy","robust")
 options.set("global", "debug", "true")
 
 #print "options=", options
-
-result = mle(model, input = 'data', n=1, with_covariance=True, options=options, chi2=True, ks=True)
+dist = "gauss:1.0,0.01"
+result = mle(model,
+    input = 'data', n=1, with_covariance=True, options=options, chi2=True, ks=True,
+#    signal_prior="flat:[0,1.01]"
+    signal_prior=dist
+)
 print "result=", result
 fitresults = {}
 values = {}
@@ -296,7 +318,7 @@ for fn in all_hists:
     hs.Add(hists["tchan"])
     hs.Draw("BAR HIST")
     hists["DATA"].Draw("E1 SAME")
-    canv.Print(dn + "/" + hn + "_scaled.pdf")
+    canv.Print(outfile + "/" + hn + "_scaled.pdf")
 
 print("pars:", pars)
 print("outpars:", outpars)
