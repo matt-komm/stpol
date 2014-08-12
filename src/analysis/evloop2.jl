@@ -1,8 +1,11 @@
 using JSON
 
-const infile = ARGS[1]
-const outfile = ARGS[2]
-const PARS = JSON.parse(readall(ARGS[3]))
+const VERBOSE = bool(int(get(ENV, "VERBOSE", 0)))
+
+const outfile = ARGS[1]
+const PARS = JSON.parse(readall(ARGS[2]))
+
+infiles = map(x->convert(ASCIIString, x), ARGS[5:end])
 
 #how to cut on QCD?
 const QCD_CUT_TYPE = symbol(PARS["qcd_cut"])
@@ -12,7 +15,10 @@ const DO_LJET_RMS = PARS["do_ljet_rms"]
 const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
 const BDT_VAR = symbol(PARS["bdt_var"])
-const BDT_CUTS = [-0.2:0.1:0.9]
+#const BDT_CUTS = [-0.2:0.1:0.9]
+const BDT_CUTS = [0.6,]
+const VARS_TO_USE = symbol(PARS["vars_to_use"])
+
 #const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
 
 #PAS
@@ -24,18 +30,37 @@ require("$sp/base.jl")
 using ROOT, ROOTDataFrames
 using ROOT.ROOTHistograms
 
-println("loading dataframe:$infile");
+_infiles = Any[]
+for inf in infiles
+    try
+        df = TreeDataFrame(inf)
+        if nrow(df)<=0
+            error("empty dataframe")
+        end
+        push!(_infiles, inf)
+    catch err
+        warn("$err: skipping file")
+    end
+end
+infiles = _infiles
+
+println("loading dataframe:$infiles");
 
 #Load the main event TTree
-const df_base = TreeDataFrame(infile)
-df_base.tt == C_NULL && (warn("empty TTree for $infile, exiting");exit(0))
-nrow(df_base)>0 || (warn("$infile was emtpy, exiting");exit(0))
+const df_base = TreeDataFrame(infiles)
+df_base.tt == C_NULL && (warn("empty TTree for $infiles, exiting");exit(0))
+nrow(df_base)>0 || (warn("$infiles was emtpy, exiting");exit(0))
 
 #load the TTree with the QCD values, xs weights
-const df_added = TreeDataFrame("$infile.added")
+const df_added = TreeDataFrame(map(x->"$x.added", infiles))
 
 #create a combined view of both ttrees
 df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
+
+#ARGS[3] = number of events to skip from the beginning
+const FIRST_EVENT = int(ARGS[3]) + 1
+#ARGS[4] = number of events to process
+const LAST_EVENT = min(FIRST_EVENT + int(ARGS[4]) - 1, nrow(df))
 
 require("$sp/histogram_defaults.jl")
 
@@ -47,34 +72,62 @@ const HISTS_NOMINAL_ONLY = false
 const TM_NOMINAL_ONLY = false
 const JET_TAGS = [(2, 0), (2, 2), (2, 1), (3, 0), (3, 1), (3, 2), (3, 3)]
 
-const crosscheck_vars = [
-    :bdt_sig_bg, :bdt_sig_bg_top_13_001,
+const wjets_weights = {
+    :heavy => {:up=>2.0, :down=>0.5},
+    :light => {:up=> 1.2, :down=>0.8}
+}
 
-    (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
-    (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
-    (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
-    :C, :shat, :ht,
-    (:C_signalregion, row->row[:C]),
-    (:top_mass_signalregion, row->row[:top_mass]),
+lepton_iso_limits = {
+    :mu => {
+        :up => (0.22, 0.5),
+        :down => (0.2, 0.45),
+    },
+    :ele => {
+        :up => (0.165, 0.5),
+        :down => (0.15, 0.45),
+    }
+}
 
-    :lepton_pt, :lepton_iso, :lepton_eta,
-    (:abs_lepton_eta, r->abs(r[:lepton_eta])),
-    :met_phi, :met, :mtw,
-    :bjet_pt, :ljet_pt,
-    :ljet_eta, :bjet_eta,
-    :bjet_mass, :ljet_mass,
-    :ljet_dr, :bjet_dr,
+crosscheck_vars = Any[]
 
-    :top_mass, :top_pt,
+##Variables to plot
+if VARS_TO_USE == :all_crosscheck
+    crosscheck_vars = [
+        :bdt_sig_bg, :bdt_sig_bg_top_13_001,
 
-    :n_good_vertices,
-    :cos_theta_lj, :cos_theta_bl,
-    :cos_theta_lj_gen, :cos_theta_bl_gen,
-    :nu_soltype,
-    :njets,
-    :ntags,
-    :lepton_charge
-]
+        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+        (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
+        (:abs_bjet_eta, row::DataFrameRow -> abs(row[:bjet_eta])),
+        :C, :shat, :ht,
+        (:C_signalregion, row->row[:C]),
+        (:top_mass_signalregion, row->row[:top_mass]),
+
+        :lepton_pt, :lepton_iso, :lepton_eta,
+        (:abs_lepton_eta, r->abs(r[:lepton_eta])),
+        :met_phi, :met, :mtw,
+        :bjet_pt, :ljet_pt,
+        :ljet_eta, :bjet_eta,
+        :bjet_mass, :ljet_mass,
+        :ljet_dr, :bjet_dr,
+
+        :top_mass, :top_pt,
+
+        :n_good_vertices,
+        :cos_theta_lj, :cos_theta_bl,
+        :cos_theta_lj_gen, :cos_theta_bl_gen,
+        :nu_soltype,
+        :njets,
+        :ntags,
+        :lepton_charge
+    ]
+elseif VARS_TO_USE == :analysis
+    crosscheck_vars = [
+        :bdt_sig_bg,
+        :cos_theta_lj
+    ]
+else
+    error("Unknown VARS_TO_USE=$VARS_TO_USE")
+end
 
 const SOLTYPE = symbol(PARS["soltype"])
 
@@ -136,14 +189,21 @@ function fill_histogram(
         const w_scenario = scenario.weight_scenario
 
         #scenario not defined for this sample
-        sample != scenario.sample && continue
+        if !((sample == scenario.sample) || get_process(sample)::Symbol==scenario.sample::Symbol)
+            VERBOSE && println("skipping sample=$sample scenario.sample=$(scenario.sample) process=$(get_process(sample))")
+            continue
+        end
 
         #scenario not defined for this systematic processing
-        systematic != scenario.systematic && continue
+        if systematic != scenario.systematic
+            VERBOSE && println("skipping systematic=$systematic scenario.systematic=$(scenario.systematic)")
+            continue
+        end
 
         if HISTS_NOMINAL_ONLY && !(
                 w_scenario==:nominal || w_scenario==:unweighted
             )
+            VERBOSE && println("skipping nominal_only=$w_scenario")
             continue
         end
 
@@ -165,6 +225,7 @@ function fill_histogram(
             njets,
             ntags,
         )
+        VERBOSE && println("passing=$kk")
 
         #get the histogram for this sample, systematic scenario
         h = getr(ret, kk, hname)::Histogram
@@ -177,7 +238,7 @@ function fill_histogram(
         h.bin_entries[bin] += 1
 
         #fill W+jets jet flavours separately as well
-        if sample == :wjets
+        if get_process(sample) == :wjets
             for cls in jet_classifications
                 const ev_cls = row[:jet_cls] |> jet_cls_from_number
                 ev_cls == cls || continue
@@ -186,10 +247,10 @@ function fill_histogram(
 
                 const kk = HistKey(
                     hname,
-                    symbol("wjets__$(ev_cls)"),
+                    symbol("$(sample)_$(ev_cls)"),
                     iso,
                     systematic,
-                    w_scenario,
+                    wname,
                     selection_major,
                     selection_minor,
                     lepton,
@@ -208,10 +269,68 @@ function fill_histogram(
             end
         end
     end
+
+    if get_process(sample) == :wjets
+        for cls in jet_classifications
+            const ev_cls = row[:jet_cls] |> jet_cls_from_number
+            ev_cls == cls || continue
+
+            ev_cls = jet_cls_heavy_light(ev_cls)
+
+            #W+jets heavy/light flavour reweighting
+            for wdir in [:up, :down]
+                const kk = HistKey(
+                    hname,
+                    symbol("$(sample)_$(ev_cls)"),
+                    iso,
+                    systematic,
+                    symbol("wjets_flavour_$(ev_cls)__$(wdir)"),
+                    selection_major,
+                    selection_minor,
+                    lepton,
+                    njets,
+                    ntags,
+                )
+
+                h = getr(ret, kk, hname)::Histogram
+                const w = nw * wjets_weights[ev_cls][wdir]
+
+                h.bin_contents[bin] += w
+                h.bin_entries[bin] += 1
+            end
+        end
+    end
+
+    #fill QCD anti-iso range variation systematic
+    if iso == :antiiso
+        liso = row[:lepton_iso]
+        for wdir in [:up, :down]
+            if (liso >= lepton_iso_limits[lepton][wdir][1] && liso <= lepton_iso_limits[lepton][wdir][2])
+                const kk = HistKey(
+                    hname,
+                    sample,
+                    iso,
+                    systematic,
+                    symbol("qcd_antiiso__$(wdir)"),
+                    selection_major,
+                    selection_minor,
+                    lepton,
+                    njets,
+                    ntags,
+                )
+                h = getr(ret, kk, hname)::Histogram
+                h.bin_contents[bin] += nw
+                h.bin_entries[bin] += 1
+            end
+        end
+
+    end
 end
 
 #selection function
 sel(row::DataFrameRow, nj=2, nt=1) = (Cuts.njets(row, nj) & Cuts.ntags(row, nt) & Cuts.dr(row))::Bool
+
+fails = {:qcd=>0, :jet_tag=>0}
 
 function process_df(rows::AbstractVector{Int64})
     const t0 = time()
@@ -237,16 +356,21 @@ function process_df(rows::AbstractVector{Int64})
         nproc += 1
         if nproc % 10000==0
             dt = time() - tprev
-            println("$nproc $dt $nfsel")
+            println("N $nproc $dt $nfsel")
             tprev = time()
         end
         is_any_na(row, :sample, :systematic, :isolation)::Bool &&
             warn("sample, systematic or isolation were NA")
 
         const sample = hmap_symb_from[row[:sample]::Int64]
+        const subsample = hmap_symb_from[row[:subsample]::Int64]
         const systematic = hmap_symb_from[row[:systematic]::Int64]
         const iso = hmap_symb_from[row[:isolation]::Int64]
-        const true_lep = sample==:tchan ? row[:gen_lepton_id] : int64(0)
+        true_lep = sample==:tchan ? row[:gen_lepton_id] : int64(0)
+        if isna(true_lep) || true_lep==0
+            true_lep = row[:lepton_id]
+        end
+        VERBOSE && println("row $cur_row $sample $subsample $systematic $iso genlep=$true_lep")
 
         const isdata = ((sample == :data_mu) || (sample == :data_ele))
         if !isdata && HISTS_NOMINAL_ONLY
@@ -288,8 +412,9 @@ function process_df(rows::AbstractVector{Int64})
                 if DO_LJET_RMS
                     reco = reco && Cuts.ljet_rms(row)
                 end
+                VERBOSE && println("$reco $x $y")
 
-                const lep_symb = symbol("gen_$(LEPTON_SYMBOLS[true_lep])__reco_$(reco_lep)")
+                const lep_symb = symbol("gen_$(get(LEPTON_SYMBOLS, true_lep, NA))__reco_$(reco_lep)")
 
                 for (scen_name::(Symbol, Symbol), scen::Scenario) in scens_gr[systematic]
                     (TM_NOMINAL_ONLY && scen_name[1]!=:nominal) && continue
@@ -316,10 +441,9 @@ function process_df(rows::AbstractVector{Int64})
                         (linind>=1 && linind<=length(TM.baseh.bin_contents)) ||
                             error("incorrect index $linind for $nx,$ny $x,$y")
 
-
                         const k2 = HistKey(
                             :transfer_matrix,
-                            sample,
+                            subsample,
                             iso,
                             systematic,
                             scen_name[1],
@@ -335,7 +459,7 @@ function process_df(rows::AbstractVector{Int64})
                         h.baseh.bin_entries[linind] += 1.0
                     end
 
-                    #assumes BDT cut points are sorted ascending
+                    #cut-based selection
                     for (cut_major, cut_minor, cutfn) in {
                             (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime)
                         }
@@ -348,7 +472,7 @@ function process_df(rows::AbstractVector{Int64})
 
                         const k2 = HistKey(
                             :transfer_matrix,
-                            sample,
+                            subsample,
                             iso,
                             systematic,
                             scen_name[1],
@@ -387,6 +511,10 @@ function process_df(rows::AbstractVector{Int64})
         ###
         is_any_na(row, :njets, :ntags, :cos_theta_lj, :bdt_sig_bg) && continue
 
+        #required to cut away mismodeled high-eta region
+        (abs(row[:ljet_eta]) < 4.5 && abs(row[:bjet_eta]) < 4.5) || continue
+
+
         #cache nominal weight
         const nw = nominal_weight(row)::Float64
 
@@ -396,22 +524,27 @@ function process_df(rows::AbstractVector{Int64})
             const _reco = sel(row, nj, nt)::Bool
             _reco || continue
 
-            for var in [:bdt_qcd, :mtw, :met, :met_phi]
-                fill_histogram(
-                    nw,
-                    row, isdata,
-                    var,
-                    row->row[var],
-                    ret,
+            if VARS_TO_USE != :analysis
+                for var in [
+                    :bdt_qcd, :mtw, :met,
+               #     :met_phi
+                ]
+                    fill_histogram(
+                        nw,
+                        row, isdata,
+                        var,
+                        row->row[var],
+                        ret,
 
-                    sample,
-                    iso,
-                    systematic,
-                    :preqcd,
-                    :nothing,
-                    lepton,
-                    nj, nt
-                )
+                        subsample,
+                        iso,
+                        systematic,
+                        :preqcd,
+                        :nothing,
+                        lepton,
+                        nj, nt
+                    )
+                end
             end
         end
 
@@ -423,7 +556,10 @@ function process_df(rows::AbstractVector{Int64})
         ### QCD rejection
         ###
         const reco = Cuts.qcd_cut(row, QCD_CUT_TYPE, lepton)
-        reco || continue
+        if !reco
+            fails[:qcd] += 1
+            continue
+        end
 
         ###
         ### project BDT templates and input variables with full systematics
@@ -431,7 +567,10 @@ function process_df(rows::AbstractVector{Int64})
         for (nj, nt) in JET_TAGS
             #pre-bdt selection
             const _reco = reco && sel(row, nj, nt)::Bool && Cuts.nu_soltype(row, SOLTYPE)
-            _reco || continue
+            if !_reco
+                fails[:jet_tag] += 1
+                continue
+            end
 
             for var in crosscheck_vars
 
@@ -449,7 +588,7 @@ function process_df(rows::AbstractVector{Int64})
                     var,
                     row -> f(row),
                     ret,
-                    sample,
+                    subsample,
                     iso,
                     systematic,
                     :preselection,
@@ -485,7 +624,7 @@ function process_df(rows::AbstractVector{Int64})
                         var,
                         f,
                         ret,
-                        sample,
+                        subsample,
                         iso,
                         systematic,
                         :cutbased,
@@ -523,7 +662,7 @@ function process_df(rows::AbstractVector{Int64})
                             var,
                             f,
                             ret,
-                            sample,
+                            subsample,
                             iso,
                             systematic,
                             :bdt,
@@ -549,13 +688,18 @@ function process_df(rows::AbstractVector{Int64})
 
 end #function
 
+
+###
+### Process the events
+###
 tic()
-ret = process_df(1:nrow(df))
+ret = process_df(FIRST_EVENT:LAST_EVENT)
 q = toc()
 
 ###
 ### OUTPUT
 ###
+tic()
 tempf = mktemp()[1]
 rfile = string(splitext(outfile)[1], ".root")
 println("saving to $rfile, temp file $tempf")
@@ -564,18 +708,23 @@ tf = TFile(convert(ASCIIString, tempf), "RECREATE")
 Cd(tf, "")
 for (k, v) in ret
     typeof(k) <: HistKey || continue
-    println(
-        k, " sument=$(sum(entries(v))) ",
-        @sprintf(" int=%.2f", integral(v)),
-        @sprintf(" sumerr=%.2f", sum(errors(v)))
-    )
+#    dn = "$(k.object)/$(k.iso)/$(k.lepton)/$(k.selection_major)/$(k.selection_minor)/$(k.njets)/$(k.ntags)/$(k.systematic)/$(k.scenario)/$(get_process(k.sample))"
+#    mkpath(tf, dn)
+    #println(
+    #    k, " sument=$(sum(entries(v))) ",
+    #    @sprintf(" int=%.2f", integral(v)),
+    #    @sprintf(" sumerr=%.2f", sum(errors(v)))
+    #)
     #isa(v, Histogram) && println(v)
 
     hi = to_root(v, tostr(k))
+    #hi = to_root(v, string(k.sample))
 end
 
 println("projected $(length(ret)) objects in $q seconds")
-print("writing...");Write(tf);println("done")
+print("writing...");Write(tf);q=toq();println("done in $q seconds")
+
+#skipping TFile::Close
 Close(tf)
 
 for i=1:5
@@ -593,4 +742,7 @@ for i=1:5
     end
 end
 
+println(fails)
 println("cleaning $tempf...");rm(tempf)
+
+#gROOT.process_line("gROOT->GetListOfFiles()->Remove((TFile*)$(uint64(tf.p)));");

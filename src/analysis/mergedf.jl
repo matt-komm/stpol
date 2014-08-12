@@ -81,14 +81,34 @@ for fi in inf
         tag = :nothing
         try
             tag = hmap[:from][int(df[j, :processing_tag])]
+        catch err
+            error("tag=$tag: $fi, could not load key $err")
+        end
+        try
             subsample = hmap[:from][int(df[j, :subsample])]
+        catch err
+            error("subsample=$subsample: $fi, could not load key $err")
+        end
+        try
             sample = hmap[:from][int(df[j, :sample])]
+        catch err
+            error("sample=$sample: $fi, could not load key $err")
+        end
+        try
             iso = hmap[:from][int(df[j, :isolation])]
+        catch err
+            error("iso=$iso: $fi, could not load key $err")
+        end
+        try
             systematic = hmap[:from][int(df[j, :systematic])]
         catch err
-            error("$fi, could not load key $err")
+            warn("systematic=$systematic: $fi, could not load key $err")
         end
-        const ngen = tot_res["$(tag)/$(subsample)/$(iso)/$(systematic)/counters/generated"]
+        if systematic != :nothing
+            const ngen = tot_res["$(tag)/$(subsample)/$(iso)/$(systematic)/counters/generated"]
+        else #Data, systematic=""
+            const ngen = tot_res["$(tag)/$(subsample)/$(iso)//counters/generated"]
+        end
         const cls = jet_cls_from_number(df[j, :jet_cls])
         added_df[j, :ngen] = ngen
         added_df[j, :xsweight] = haskey(cross_sections, subsample) ? cross_sections[subsample] / ngen : 1

@@ -16,8 +16,8 @@ function draw_data_mc_stackplot(ax, hists;order=nothing,wjets_split=false,kwd...
     ]
     if wjets_split
         append!(draws, [
-            ("wjets__light", hists["wjets__light"], {:color=>"lightgreen", :label=>"W+jets (l)"}),
-            ("wjets__heavy", hists["wjets__heavy"], {:color=>"darkgreen", :label=>"W+jets (bc)"})
+            ("wjets_light", hists["wjets_light"], {:color=>"lightgreen", :label=>"W+jets (l)"}),
+            ("wjets_heavy", hists["wjets_heavy"], {:color=>"darkgreen", :label=>"W+jets (bc)"})
         ])
     else
         append!(draws, [
@@ -261,6 +261,7 @@ function svfg(fname)
     #savefig("$fname.png", bbox_inches="tight", pad_inches=0.4)
     savefig("$fname.pdf", bbox_inches="tight", pad_inches=0.4)
     close()
+    println("SVFG: $fname.pdf")
 end
 #
 # function channel_comparison(
@@ -367,6 +368,8 @@ function deltaerr(
     systematics::Vector{ASCIIString},
     normed
     )
+
+    length(systematics)==0 && return (0.0, 0.0)
     N = total_mc_variated(hists, "nominal")[1:end-1]
 
     function normf(syst, direction)
@@ -386,7 +389,7 @@ function deltaerr(
     #fully correlated, simple sum of template variations from nominal
     f(direction) = [abs(normf(s, direction) - N) for s in systematics] |> sum
 
-    return f("up"), f("down")
+    return (f("up"), f("down"))
 end
 
 function tot_syst_err(
@@ -411,15 +414,17 @@ function draw_errband(
     hists::Associative;
     log=false,
     systematics_unnormed::Vector{ASCIIString}=ASCIIString[
-        "scale_ttjets", "scale_wjets", "scale_tchan"
     ],
     systematics_normed::Vector{ASCIIString}=[
-        "matching",
+        "ttjets_scale", "wzjets_scale", "tchan_scale",
+        "ttjets_matching", "wzjets_matching",
         "jes", "jer",
         "mass",
         "met",
         "lepton_id", "lepton_iso", "lepton_trigger",
-        "pu", "btag_bc", "btag_l"
+        "pu", "btag_bc", "btag_l",
+        "wjets_shape", "wjets_flavour_light", "wjets_flavour_heavy",
+        "qcd_antiiso",
     ]
     )
 
@@ -443,7 +448,7 @@ function draw_errband(
         color="grey",
         fill=false,
         linewidth=0,
-        hatch="///",
+        hatch="////",
         label="uncertainty";
         log=log
     )
@@ -467,8 +472,14 @@ end
 
 cmspaper(ax, x, y, lumi=20; additional_text="") = text(
     x, y,
-    "CMS \$ \\sqrt{s}=8\$ TeV \n \$ L_{int}=$lumi\\ fb^{-1}\$\n$additional_text",
+    "CMS \$ \\sqrt{s}=8\$ TeV \n \$ L_{int}=$lumi\\ \\mathrm{fb}^{-1}\$\n$additional_text",
     transform=ax[:transAxes], horizontalalignment="center", verticalalignment="top"
+)
+
+cmspaper_title(ax, x, y, lumi=20; additional_text="") = text(
+    x, y,
+    "CMS \$\\sqrt{s}=8\$ TeV \$L_{int}=$lumi\\ \\mathrm{fb}^{-1}\$ $additional_text",
+    transform=ax[:transAxes], horizontalalignment="center", verticalalignment="bottom"
 )
 
 function combdraw(
@@ -478,7 +489,7 @@ function combdraw(
     )
     fig, (ax, rax) = ratio_axes()
 
-    draw_data_mc_stackplot(ax, hists;log=log,wjets_split=true);
+    draw_data_mc_stackplot(ax, hists;log=log,wjets_split=false);
     ax[:set_ylim](bottom=log?10:0)
     ax[:grid](true, which="both")
     kwargsd = {k=>v for (k,v) in kwargs}
@@ -524,7 +535,7 @@ function combdraw(
     end
     ax[:set_title](plot_title)
     rax[:set_xlabel](VARS[var], fontsize=22)
-    rax[:set_ylabel]("\$ \\frac{D}{M} \$")
+    rax[:set_ylabel]("\$ \\frac{\\mathrm{data}}{\\mathrm{prediction}} \$")
     rslegend(ax)
 
     #ax[:set_ylim](top=maximum(contents(hists["DATA"])) * 1.3)

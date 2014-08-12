@@ -22,6 +22,9 @@ test_step2: test_step2_tchan_nominal test_step2_tchan_mass test_step2_tchan_scal
 test_step2_tchan_nominal:
 	cmsRun $(STEP2CFG) inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD outputFile=tests/step2/tchan/nominal.root
 
+test_step2_tchan_comphep_sm:
+	cmsRun $(STEP2CFG) doDebug=True subChannel=TToBMuNu_t-channel srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD isComphep=True inputFiles=file:/hdfs/cms/store/user/jpata/TToBMuNu_t-channel_TuneZ2star_8TeV-comphep/Jul8_51f69b/e6cee8f160cb239f414a74aa40d88ea9/output_noSkim_1_2_u2k.root outputFile=tests/step2/tchan/comphep_sm
+
 test_step2_tchan_comphep_anom_tensor:
 	cmsRun $(STEP2CFG) subChannel=TToBENu_anomWtb-Lv2Rt2_LVRT srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD isComphep=True inputFiles=file:/hdfs/cms/store/user/atiko/TToBENu_anomWtb-Lv2Rt2_LVRT_t-channel_TuneZ2star_8TeV-comphep/tensor/572aa3280a64b07f7208c06b702633e8/output_noSkim_1_1_ga4.root outputFile=tests/step2/tchan/comphep_anom_tensor
 

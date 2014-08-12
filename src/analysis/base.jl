@@ -81,24 +81,24 @@ const mcsamples = Symbol[:tchan, :ttjets, :wjets, :twchan, :schan, :gjets, :dyje
 const TOTAL_SAMPLES = vcat(mcsamples, :qcd)
 
 #lists the various systematic sample types
-const systematic_processings = Symbol[
-   :nominal,
-   :EnUp, :EnDown,
-   :UnclusteredEnUp, :UnclusteredEnDown,
-   :ResUp, :ResDown,
-   symbol("signal_comphep_anomWtb-0100"), symbol("signal_comphep_anomWtb-unphys"), symbol("signal_comphep_nominal"),
-   :mass166_5, :mass169_5, :mass175_5, :mass178_5,
-   :scaleup, :scaledown,
-   :matchingup, :matchingdown,
-   :wjets_fsim_nominal,
-   :unknown
-]
+##const systematic_processings = Symbol[
+##   :nominal,
+##   :EnUp, :EnDown,
+##   :UnclusteredEnUp, :UnclusteredEnDown,
+##   :ResUp, :ResDown,
+##   symbol("signal_comphep_anomWtb-0100"), symbol("signal_comphep_anomWtb-unphys"), symbol("signal_comphep_nominal"),
+##   :mass166_5, :mass169_5, :mass175_5, :mass178_5,
+##   :scaleup, :scaledown,
+##   :matchingup, :matchingdown,
+##   :wjets_fsim_nominal,
+##   :unknown
+##]
 
-const comphep_processings = Symbol[
-    symbol("signal_comphep_anomWtb-0100"),
-    symbol("signal_comphep_anomWtb-unphys"),
-    symbol("signal_comphep_nominal")
-]
+##const comphep_processings = Symbol[
+##    symbol("signal_comphep_anomWtb-0100"),
+##    symbol("signal_comphep_anomWtb-unphys"),
+##    symbol("signal_comphep_nominal")
+##]
 
 include("$BASE/src/analysis/util.jl")
 include("$BASE/src/fraction_fit/hists.jl")
@@ -147,8 +147,8 @@ flatten(a)=a
 
 #load the fit results
 const FITRESULTS = {
-    :mu=>FitResult("$BASE/results/fits/may28_2/nominal/mu.json"),
-    :ele=>FitResult("$BASE/results/fits/may28_2/nominal/ele.json")
+    :mu=>FitResult("$BASE/results/fits/aug1/nominal/mu.json"),
+    :ele=>FitResult("$BASE/results/fits/aug1/nominal/ele.json")
 }
 
 t1 = time()
@@ -197,12 +197,32 @@ function hists_varname(hists::Associative)
     end
 end
 
+function walk(p, f::Function)
+    for x in readdir(p)
+        y = joinpath(p, x)
+        f(y)
+        isdir(y) && walk(y, f)
+    end
+    return
+end
+
+grep(arr::AbstractVector, pat::ASCIIString) =
+    collect(filter(x->contains(string(x), string(pat)), arr))
+
+function nona!(X)
+    X[isna(X)] = false
+end
+postfix_added(x) = replace(x, ".root", ".root.added");
+
+const DATAPATH = "/Users/joosep/Dropbox/kbfi/top/stpol/results/skims/May1_metphi_on/"
+
 export BASE
 export infb, chunk, chunks, flatten, FITRESULTS, hmap, writedf, readdf, systematic_processings
 export procs, mcsamples, TOTAL_SAMPLES
 export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
 export Histograms
 export remove_prefix, hists_varname
+export walk, grep, DATAPATH, nona!, postfix_added
 end
 
 using DataArrays, DataFrames

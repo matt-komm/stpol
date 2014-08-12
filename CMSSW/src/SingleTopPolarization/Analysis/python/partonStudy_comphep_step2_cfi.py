@@ -19,10 +19,18 @@ def PartonStudySetup(process):
         Ecm=cms.double(8000)
     )
 
+    process.cosThetaProducerWHelicityTrueAll = cms.EDProducer('CosThetaProducer',
+        topSrc=cms.InputTag("genParticleSelector", "trueWboson"),
+        jetSrc=cms.InputTag("genParticleSelector", "trueTop"),
+        leptonSrc=cms.InputTag("genParticleSelector", "trueLepton"),
+        Ecm=cms.double(8000)
+    )
+
     #these parton-study samples are run only for t-channel MC
     process.partonStudyTrueSequence = cms.Sequence(
         process.genParticleSelector *
 #        process.recoTrueTop *
+        process.cosThetaProducerWHelicityTrueAll *
         process.cosThetaProducerTrueAll
     )
 

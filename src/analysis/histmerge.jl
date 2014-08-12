@@ -123,7 +123,7 @@ function select_histograms(
 
     hists["DATA"] = hd[d]
 
-    for x in vcat(mcsamples, :wjets__light, :wjets__heavy)
+    for x in vcat(mcsamples, :wjets_light, :wjets_heavy)
         q = query(ks, :sample, x) |> z -> query(z, :iso, :iso)
 
         #get systematic variations
