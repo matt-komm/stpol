@@ -131,7 +131,14 @@ if VARS_TO_USE == :all_crosscheck
 elseif VARS_TO_USE == :analysis
     crosscheck_vars = [
         :bdt_sig_bg,
-        :cos_theta_lj
+        :bdt_sig_bg_2,
+        :bdt_sig_bg_top_13_001,
+        :cos_theta_lj,
+        :C,
+#        :ljet_eta,
+        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
+        (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
+        :top_mass
     ]
 else
     error("Unknown VARS_TO_USE=$VARS_TO_USE")
@@ -533,7 +540,7 @@ function process_df(rows::AbstractVector{Int64})
 
            for var in [
                :bdt_qcd,
-          #    :mtw, :met,
+               :mtw, :met,
           #     :met_phi
            ]
                fill_histogram(
