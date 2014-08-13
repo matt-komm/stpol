@@ -131,7 +131,7 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
     else:
         hk = "%s__%s__%s__%s" % (d["object"], d["sample"], syst, syst_dir)
     hk = hk.replace("comphep_nominal", "comphep__nominal")
-    print "returning ", hk, k, d
+    #print "returning ", hk, k, d
     return hk, d
 
 def set_zero(h):
@@ -202,10 +202,10 @@ def select_transfermatrix(gen_lepton, reco_lepton, selection_major, selection_mi
         h = keylist[k].ReadObj()
 
         if hd.has_key(x):
-            print "Adding", hk, "to", x
+            #print "Adding", hk, "to", x
             hd[x].Add(h)
         else:
-            print "Creating", hk, "to", x
+            #print "Creating", hk, "to", x
             hd[x] = h
 
     if len(hd) == 0:
@@ -337,6 +337,7 @@ for lep in ["mu", "ele"]:
 
         for variable in [
                 "bdt_qcd",
+                "met", "mtw",
                 ]:
             x = select_hists(variable, lep, "preqcd", "nothing", nj, nt)
             write_hists("%s/%s.root" % (d, variable), x)
@@ -351,9 +352,11 @@ for lep in ["mu", "ele"]:
 
         for variable in [
                 "bdt_sig_bg",
-#                "bdt_sig_bg_top_13_001", "abs_ljet_eta",
+                "bdt_sig_bg_top_13_001",
+                "ljet_eta",
 #                "abs_ljet_eta_16",
-#                "C", "met", "mtw", "shat", "ht",
+                "C",
+#                "met", "mtw", "shat", "ht",
                 "cos_theta_lj",
                 ]:
             x = select_hists(variable, lep, "preselection", "nothing", nj, nt)
@@ -361,7 +364,7 @@ for lep in ["mu", "ele"]:
 
 #for bdt_cut in [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]:
 #for bdt_cut in numpy.arange(-0.2, 0.9, 0.1):
-for bdt_cut in [0.6,]:
+for bdt_cut in [0.0, 0.2, 0.4, 0.6,]:
     bdts = "%.5f" % bdt_cut
     print(bdts)
     for reco_lep in ["mu", "ele"]:
