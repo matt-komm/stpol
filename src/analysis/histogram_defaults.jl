@@ -21,6 +21,7 @@ const defaults_func = {
     :cos_theta_lj_gen => () -> Histogram(binnings[:cos_theta_lj][:gen]),
     :cos_theta_bl_gen => () -> Histogram(binnings[:cos_theta_lj][:gen]),
     :bdt_sig_bg => () -> Histogram(binnings[:bdt]),
+    :bdt_sig_bg_2 => () -> Histogram(binnings[:bdt]),
     :bdt_sig_bg_top_13_001 => () -> Histogram(infb(linspace(-1, 1, 21))),
     :bdt_qcd => () -> Histogram(infb(linspace(-1, 1.0, 31))),
     :bdt_qcd2 => () -> Histogram(infb(linspace(-1, 1.0, 31))),
