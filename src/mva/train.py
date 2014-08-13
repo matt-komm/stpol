@@ -88,19 +88,21 @@ factory.PrepareTrainingAndTestTree(
 )
 
 # Book the MVA method
-mva_args = ""\
-    "H:VerbosityLevel=Debug:"\
-    "NTrees=2000:"\
-    "BoostType=Grad:"\
-    "Shrinkage=0.1:"\
-    "!UseBaggedGrad:"\
-    "nCuts=2000:"\
-    "nEventsMin=100:"\
-    "NNodesMax=5:"\
-    "UseNvars=4:"\
-    "PruneStrength=5:"\
-    "PruneMethod=CostComplexity:"\
-    "MaxDepth=6"
+#mva_args = ""\
+#    "H:VerbosityLevel=Debug:"\
+#    "NTrees=50:"\
+#    "BoostType=Grad:"\
+#    "Shrinkage=0.1:"\
+#    "!UseBaggedGrad:"\
+#    "nCuts=200:"\
+#    "SeparationType=CrossEntropy:"\
+#    "NNodesMax=5:"\
+#    "UseNvars=4:"\
+#    "PruneStrength=7:"\
+#    "PruneMethod=CostComplexity:"\
+#    "MaxDepth=2"
+
+mva_args = sys.argv[3]
 
 #categorize by lepton flavour
 lepton_cat = factory.BookMethod(
