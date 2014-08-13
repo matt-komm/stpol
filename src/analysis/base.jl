@@ -147,9 +147,9 @@ flatten(a)=a
 
 #load the fit results
 const FITRESULTS = {
-    :mu=>FitResult("$BASE/results/fits/Aug5/nominal/mu.json"),
-    :ele=>FitResult("$BASE/results/fits/Aug5/nominal/ele.json"),
-    :combined=>FitResult("$BASE/results/fits/Aug5/nominal/combined.json")
+    :mu=>FitResult("$BASE/results/fits/Aug8_bdt_bgregion_sigconstrain/nominal/mu.json"),
+    :ele=>FitResult("$BASE/results/fits/Aug8_bdt_bgregion_sigconstrain/nominal/ele.json"),
+    :combined=>FitResult("$BASE/results/fits/Aug8_bdt_bgregion_sigconstrain/nominal/combined.json")
 }
 
 t1 = time()
