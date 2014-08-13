@@ -51,7 +51,8 @@ function indexof(fr::FitResult, k)
     return findfirst(fr.names, sk)
 end
 
-function FitResult(fn::ASCIIString)
+function FitResult(fn::String)
+    fn = convert(ASCIIString, fn)
     fit = JSON.parse(readall(fn));
     n = length(fit["names"])
     FitResult(
