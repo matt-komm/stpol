@@ -11,8 +11,8 @@ for k in sks:
         i = int(round(20000 * i))
     nom_name = "__".join(k.GetName().split("__")[0:2])
     nom = f.Get(nom_name)
-    if nom and not nom.IsZombie():
-        chi2 = nom.Chi2Test(o, "WW CHI2/NDF")
-    else:
-        chi2 = "NA"
-    print k.GetName(), o.GetNbinsX(), "I=", i, "E=", int(o.GetEntries()), "chi2=", chi2
+#    if nom and not nom.IsZombie():
+#        chi2 = nom.Chi2Test(o, "WW CHI2/NDF")
+#    else:
+#        chi2 = "NA"
+    print k.GetName(), o.GetNbinsX(), "I=", i, "E=", int(o.GetEntries())
