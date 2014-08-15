@@ -141,12 +141,16 @@ df = similar(#Data frame as big as the input
             top_weight__down=Float32[],
 
             b_weight=Float32[],
-            b_weight_old=Float32[],
-            b_weight_simple=Float32[],
             b_weight__bc__up=Float32[],
             b_weight__bc__down=Float32[],
             b_weight__l__up=Float32[],
             b_weight__l__down=Float32[],
+            b_weight_simple=Float32[],
+            b_weight_tchpt=Float32[],
+            b_weight_tchpt__bc__up=Float32[],
+            b_weight_tchpt__bc__down=Float32[],
+            b_weight_tchpt__l__up=Float32[],
+            b_weight_tchpt__l__down=Float32[],
 
 #file-level metadata
             run=Int64[], lumi=Int64[], event=Int64[],
@@ -263,13 +267,18 @@ for i=1:maxev
 
 
     df[i, :b_weight] = events[sources[weight(:btag)]]
-    df[i, :b_weight_old] = events[sources[weight(:btag, :tchpt)]]|>ifpresent
+    df[i, :b_weight_tchpt] = events[sources[weight(:btag, :tchpt)]]|>ifpresent
     df[i, :b_weight_simple] = events[sources[weight(:btag, :simple)]]|>ifpresent
 
     df[i, :b_weight__bc__up] = events[sources[weight(:btag, :bc, :up)]]
     df[i, :b_weight__bc__down] = events[sources[weight(:btag, :bc, :down)]]
     df[i, :b_weight__l__up] = events[sources[weight(:btag, :l, :up)]]
     df[i, :b_weight__l__down] = events[sources[weight(:btag, :l, :down)]]
+    
+    df[i, :b_weight_tchpt__bc__up] = events[sources[weight(:btag, :tchpt, :bc, :up)]]
+    df[i, :b_weight_tchpt__bc__down] = events[sources[weight(:btag, :tchpt, :bc, :down)]]
+    df[i, :b_weight_tchpt__l__up] = events[sources[weight(:btag, :tchpt, :l, :up)]]
+    df[i, :b_weight_tchpt__l__down] = events[sources[weight(:btag, :tchpt, :l, :down)]]
 
     df[i, :top_weight] = events[sources[weight(:top)]]
     df[i, :top_weight__up] = df[i, :top_weight]^2
