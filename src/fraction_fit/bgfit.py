@@ -66,9 +66,21 @@ def hfilter(hname):
 
     return True
 
-def htransform(h):
-    return Histogram(h.get_xmin(), 0.6, h.get_values()[0:24], uncertainties=h.get_uncertainties()[0:24], name=h.get_name())
-
+sr = Config.get("fit", "range", "all")
+#def htransform(h):
+#    return Histogram(h.get_xmin(), 0.6, h.get_values()[0:24], uncertainties=h.get_uncertainties()[0:24], name=h.get_name())
+if sr == "all":
+    print "selecting full range"
+    def htransform(h):
+        return h
+elif sr == "sub":
+    mx = float(Config.get("fit", "max"))
+    mn = float(Config.get("fit", "min"))
+    n1 = int(Config.get("fit", "firstbin"))
+    n2 = int(Config.get("fit", "lastbin"))
+    print "selecting subrange", mn, mx, n1, n2
+    def htransform(h):
+        return Histogram(mn, mx, h.get_values()[n1:n2], uncertainties=h.get_uncertainties()[n1:n2], name=h.get_name())
 def nameconv(n):
     n = n.replace("wjets__heavy", "wjets_heavy")
     n = n.replace("wjets__light", "wjets_light")
@@ -139,35 +151,49 @@ def get_model(infile, pref):
         hists[hi.GetName().split("__")[1]] = hi
         print "hist", hi.GetName(), hi.Integral()
 
-    hists["DATA"].SetMarkerStyle(ROOT.kDot)
+    k1 = "ttjets" if "ttjets" in hists.keys() else "other"
+    hists["wzjets"].SetMarkerSize(0)
+    hists["tchan"].SetMarkerSize(0)
+    hists[k1].SetMarkerSize(0)
+
+    hists["wzjets"].SetFillStyle(1001)
+    hists["tchan"].SetFillStyle(1001)
+    hists[k1].SetFillStyle(1001)
 
     hists["DATA"].SetLineColor(ROOT.kBlack)
+    hists["DATA"].SetMarkerStyle(ROOT.kDot)
     hists["tchan"].SetLineColor(ROOT.kRed)
     hists["wzjets"].SetLineColor(ROOT.kGreen)
-    hists["ttjets"].SetLineColor(ROOT.kOrange)
-    hists["qcd"].SetLineColor(ROOT.kGray)
+    hists[k1].SetLineColor(ROOT.kOrange)
+    if "qcd" in hists.keys():
+        hists["qcd"].SetLineColor(ROOT.kGray)
 
-    hists["DATA"].SetFillColor(ROOT.kBlack)
+    #hists["DATA"].SetFillColor(ROOT.kBlack)
     hists["tchan"].SetFillColor(ROOT.kRed)
     hists["wzjets"].SetFillColor(ROOT.kGreen)
-    hists["ttjets"].SetFillColor(ROOT.kOrange)
-    hists["qcd"].SetFillColor(ROOT.kGray)
+    hists[k1].SetFillColor(ROOT.kOrange)
+    if "qcd" in hists.keys():
+        hists["qcd"].SetLineColor(ROOT.kGray)
+        hists["qcd"].SetFillColor(ROOT.kGray)
 
     canv = ROOT.TCanvas()
     hists["DATA"].GetXaxis().SetTitle(hists["DATA"].GetName().split("__")[0])
     hists["DATA"].DrawNormalized("E1")
     hists["tchan"].DrawNormalized("E1 SAME")
     hists["wzjets"].DrawNormalized("E1 SAME")
-    hists["ttjets"].DrawNormalized("E1 SAME")
-    hists["qcd"].DrawNormalized("E1 SAME")
+    hists[k1].DrawNormalized("E1 SAME")
+    if "qcd" in hists.keys():
+        hists["qcd"].DrawNormalized("E1 SAME")
     canv.Print(outfile + "/" + hists["DATA"].GetName() + "_shapes.pdf")
 
     canv = ROOT.TCanvas()
     hs = ROOT.THStack("stack", "stack")
-    hs.Add(hists["qcd"])
+    if "qcd" in hists.keys():
+        hs.Add(hists["qcd"])
     hs.Add(hists["wzjets"])
-    hs.Add(hists["ttjets"])
+    hs.Add(hists[k1])
     hs.Add(hists["tchan"])
+    hs.Draw("BAR HIST")
     hs.Draw("BAR HIST")
     hists["DATA"].Draw("E1 SAME")
     canv.Print(outfile + "/" + hists["DATA"].GetName() + "_unscaled.pdf")
@@ -291,30 +317,35 @@ for fn in all_hists:
     hn = hists["DATA"].GetName()
     canv = ROOT.TCanvas()
 
+    k1 = "ttjets" if "ttjets" in hists.keys() else "other"
     hists["DATA"].SetMarkerStyle(ROOT.kDot)
 
     hists["DATA"].SetLineColor(ROOT.kBlack)
     hists["tchan"].SetLineColor(ROOT.kRed)
     hists["wzjets"].SetLineColor(ROOT.kGreen)
-    hists["ttjets"].SetLineColor(ROOT.kOrange)
-    hists["qcd"].SetLineColor(ROOT.kGray)
+    hists[k1].SetLineColor(ROOT.kOrange)
+    if "qcd" in hists.keys():
+        hists["qcd"].SetLineColor(ROOT.kGray)
 
-    hists["DATA"].SetFillColor(ROOT.kBlack)
+    #hists["DATA"].SetFillColor(ROOT.kBlack)
     hists["tchan"].SetFillColor(ROOT.kRed)
     hists["wzjets"].SetFillColor(ROOT.kGreen)
-    hists["ttjets"].SetFillColor(ROOT.kOrange)
-    hists["qcd"].SetFillColor(ROOT.kGray)
+    hists[k1].SetFillColor(ROOT.kOrange)
+    if "qcd" in hists.keys():
+        hists["qcd"].SetFillColor(ROOT.kGray)
 
     hs = ROOT.THStack("stack", "stack")
 
-    hists["qcd"].Scale(values["qcd"])
-    hists["ttjets"].Scale(values["ttjets"])
+    if "qcd" in hists.keys():
+        hists["qcd"].Scale(values["qcd"])
+    hists[k1].Scale(values[k1])
     hists["wzjets"].Scale(values["wzjets"])
     hists["tchan"].Scale(values["beta_signal"])
 
-    hs.Add(hists["qcd"])
+    if "qcd" in hists.keys():
+        hs.Add(hists["qcd"])
     hs.Add(hists["wzjets"])
-    hs.Add(hists["ttjets"])
+    hs.Add(hists[k1])
     hs.Add(hists["tchan"])
     hs.Draw("BAR HIST")
     hists["DATA"].Draw("E1 SAME")
