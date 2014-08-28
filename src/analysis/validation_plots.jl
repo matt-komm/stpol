@@ -10,37 +10,37 @@ include("hplot.jl")
 rb4(x) = rebin(x, 2:4:nbins(x)-5)
 drb4(d) = {k=>rb4(v) for (k, v) in d}
 
-#const p = ARGS[1]
-const p = "../../results/hists/Aug5/merged"
-#const out = ARGS[2]
+const p = "../../results/hists/Aug13_metmtw/merged"
 const out = "temp"
 
 for lepton in [:mu, :ele]
     
-    hd = load_hists_from_file("$p/2j_0t/0.60000/$lepton/cos_theta_lj.root") |> remove_prefix;
-    wjets_sf = integral(hd["DATA"]) / integral(hd["wjets"] + hd["ttjets"] + hd["qcd"] + hd["tchan"] + hd["diboson"] + hd["dyjets"])
-    println(wjets_sf)
-    hd["wjets"] = wjets_sf * hd["wjets"]
+    for bdtcut in ["0.60000", "0.40000", "0.20000"]
+        bdtcut2 = replace(bdtcut, ".", "_")
+        hd = load_hists_from_file("$p/2j_0t/$bdtcut/$lepton/cos_theta_lj.root") |> remove_prefix;
+        wjets_sf = integral(hd["DATA"]) / integral(hd["wjets"] + hd["ttjets"] + hd["qcd"] + hd["tchan"] + hd["diboson"] + hd["dyjets"])
+        println(wjets_sf)
+        hd["wjets"] = wjets_sf * hd["wjets"]
 
-    # hd = reweight_hists_to_fitres(FITRESULTS[lepton], hd)
-    combdraw(hd|>drb4, :cos_theta_lj)
-    svfg("$out/cos_theta_lj__2j_0t__bdt_0_60__$(lepton)")
+        # hd = reweight_hists_to_fitres(FITRESULTS[lepton], hd)
+        combdraw(hd|>drb4, :cos_theta_lj)
+        svfg("$out/cos_theta_lj__2j_0t__bdt_$(bdtcut2)__$(lepton)")
  
-    hd = load_hists_from_file("$p/0.60000/$lepton/cos_theta_lj.root") |> remove_prefix;
-    hd = reweight_hists_to_fitres(FITRESULTS[lepton], hd)
-    combdraw(hd|>drb4, :cos_theta_lj)
-    svfg("$out/cos_theta_lj__2j_1t__bdt_0_60__$(lepton)")
-    
-    hd = load_hists_from_file("$p/3j_2t/0.60000/$lepton/cos_theta_lj.root") |> remove_prefix;
-    hd = reweight_hists_to_fitres(FITRESULTS[lepton], hd)
-    combdraw(hd|>drb4, :cos_theta_lj)
-    svfg("$out/cos_theta_lj__3j_2t__bdt_0_60__$(lepton)")
-    
-    hd = load_hists_from_file("$p/3j_1t/0.60000/$lepton/cos_theta_lj.root") |> remove_prefix;
-    hd = reweight_hists_to_fitres(FITRESULTS[lepton], hd)
-    combdraw(hd|>drb4, :cos_theta_lj)
-    svfg("$out/cos_theta_lj__3j_1t__bdt_0_60__$(lepton)")
-   
+        hd = load_hists_from_file("$p/$bdtcut/$lepton/cos_theta_lj.root") |> remove_prefix;
+        hd = reweight_hists_to_fitres(FITRESULTS[lepton], hd)
+        combdraw(hd|>drb4, :cos_theta_lj)
+        svfg("$out/cos_theta_lj__2j_1t__bdt_$(bdtcut2)__$(lepton)")
+        
+        hd = load_hists_from_file("$p/3j_2t/$(bdtcut)/$lepton/cos_theta_lj.root") |> remove_prefix;
+        hd = reweight_hists_to_fitres(FITRESULTS[lepton], hd)
+        combdraw(hd|>drb4, :cos_theta_lj)
+        svfg("$out/cos_theta_lj__3j_2t__bdt_$(bdtcut2)__$(lepton)")
+        
+        hd = load_hists_from_file("$p/3j_1t/$(bdtcut)/$lepton/cos_theta_lj.root") |> remove_prefix;
+        hd = reweight_hists_to_fitres(FITRESULTS[lepton], hd)
+        combdraw(hd|>drb4, :cos_theta_lj)
+        svfg("$out/cos_theta_lj__3j_1t__bdt_$(bdtcut2)__$(lepton)")
+    end 
    
     for (nj, nt) in [(2, 1), (2, 0), (3, 1), (3, 2)]
         #for var in [:abs_ljet_eta, :C, :bdt_sig_bg, :met, :mtw, :cos_theta_lj]
