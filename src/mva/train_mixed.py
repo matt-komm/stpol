@@ -91,6 +91,7 @@ for fn in sigfiles + bgfiles:
             factory.AddSignalTree(tree, xsweight, file_type(fn))
         else:
             raise Exception("%s not in signal or background" % fn)
+    tf.Close()
 
 # Set the per event weights string
 factory.SetWeightExpression("1.0")
