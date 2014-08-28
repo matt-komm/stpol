@@ -140,6 +140,10 @@ const merges = {
         "TToBTauNu_anomWtb-Lv2Rt2_LVRT",
         "TToBTauNu_anomWtb-Lv3Rt1_LVRT",
         "TToBTauNu_anomWtb-Rt4_LVRT",
+        
+        "TToBENu_anomWtb-0010_LVLT",
+        "TToBMuNu_anomWtb-0010_LVLT",
+        "TToBTauNu_anomWtb-0010_LVLT",
 
         "T_t_ToLeptons_mass166_5", 
         "T_t_ToLeptons_mass169_5", 
@@ -298,6 +302,7 @@ const tomap = ASCIIString[
     "scaleup",
     "schan",
     "signal_comphep__anomWtb-0100_t-channel",
+    "signal_comphep__anomWtb-0010_LVLT",
     "signal_comphep__anomWtb-Lv1Rt3_LVRT",
     "signal_comphep__anomWtb-Lv2Rt2_LVRT",
     "signal_comphep__anomWtb-Lv3Rt1_LVRT",
@@ -374,7 +379,12 @@ const tomap = ASCIIString[
     "TToBTauNu_anomWtb-Lv2Rt2_LVRT",
     "TToBTauNu_anomWtb-Lv3Rt1_LVRT",
     "TToBTauNu_anomWtb-Rt4_LVRT",
+    
+    "TToBENu_anomWtb-0010_LVLT",
+    "TToBMuNu_anomWtb-0010_LVLT",
+    "TToBTauNu_anomWtb-0010_LVLT",
 
+    
     "twchan",
     "UnclusteredEnDown",
     "UnclusteredEnUp",
@@ -423,6 +433,7 @@ const tomap = ASCIIString[
     "343e0a9_Aug22",
     "May1_metphi_on",
     "Jul4_newsyst_newvars_metshift",
+    "Aug8_tchpt",
     "TTJets_MSDecays",
     "TTJets_MSDecays_scaleup",
     "TTJets_MSDecays_scaledown",
