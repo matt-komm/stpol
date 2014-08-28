@@ -1,7 +1,7 @@
 include ../analysis/Makefile.options
 
-INDIR=../../results/hists/Aug12/bdt_scan/hists/
-OUTDIR=../../results/hists/Aug12/merged
+INDIR=../../results/hists/Aug13_metmtw/bdt_scan/hists/
+OUTDIR=../../results/hists/Aug13_metmtw/merged
 
 clean:
 	rm -Rf $(OUTDIR)
@@ -193,5 +193,12 @@ merge3:
 	
 	python regroup.py $(INDIR)/etajprime_topmass_default/mu/cos_theta_lj.root $(OUTDIR)/etajprime_topmass_default/mu/cos_theta_lj.root mu  2j1t plot
 	python regroup.py $(INDIR)/etajprime_topmass_default/ele/cos_theta_lj.root $(OUTDIR)/etajprime_topmass_default/ele/cos_theta_lj.root ele 2j1t plot
+	
+	mkdir -p $(OUTDIR)/etajprime_topmass_default/combined/merged
+	hadd -f $(OUTDIR)/etajprime_topmass_default/combined/merged/cos_theta_lj.root $(OUTDIR)/etajprime_topmass_default/mu/merged/cos_theta_lj.root $(OUTDIR)/etajprime_topmass_default/ele/merged/cos_theta_lj.root
+	hadd -f $(OUTDIR)/etajprime_topmass_default/combined/cos_theta_lj.root $(OUTDIR)/etajprime_topmass_default/mu/cos_theta_lj.root $(OUTDIR)/etajprime_topmass_default/ele/cos_theta_lj.root
+	hadd -f $(OUTDIR)/etajprime_topmass_default/combined/tmatrix_nocharge__gen_ele.root $(OUTDIR)/etajprime_topmass_default/mu/tmatrix_nocharge__gen_ele.root $(OUTDIR)/etajprime_topmass_default/ele/tmatrix_nocharge__gen_ele.root
+	hadd -f $(OUTDIR)/etajprime_topmass_default/combined/tmatrix_nocharge__gen_mu.root $(OUTDIR)/etajprime_topmass_default/mu/tmatrix_nocharge__gen_mu.root $(OUTDIR)/etajprime_topmass_default/ele/tmatrix_nocharge__gen_mu.root
+	hadd -f $(OUTDIR)/etajprime_topmass_default/combined/tmatrix_nocharge__gen_tau.root $(OUTDIR)/etajprime_topmass_default/mu/tmatrix_nocharge__gen_tau.root $(OUTDIR)/etajprime_topmass_default/ele/tmatrix_nocharge__gen_tau.root
 
 .PHONY: test
