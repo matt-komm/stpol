@@ -16,7 +16,7 @@ const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
 const BDT_VAR = symbol(PARS["bdt_var"])
 #const BDT_CUTS = [-0.2:0.1:0.9]
-const BDT_CUTS = [-0.2, 0.0, 0.2, 0.4, 0.6,]
+const BDT_CUTS = [-0.2, 0.0, 0.06, 0.13, 0.2, 0.4, 0.6,]
 const VARS_TO_USE = symbol(PARS["vars_to_use"])
 
 #const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
@@ -131,7 +131,7 @@ if VARS_TO_USE == :all_crosscheck
 elseif VARS_TO_USE == :analysis
     crosscheck_vars = [
         :bdt_sig_bg,
-        :bdt_sig_bg_2,
+        :bdt_sig_bg_old,
         :bdt_sig_bg_top_13_001,
         :cos_theta_lj,
         :C,
