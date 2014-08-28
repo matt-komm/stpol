@@ -353,7 +353,8 @@ for lep in ["mu", "ele"]:
         for variable in [
                 "bdt_sig_bg",
                 "bdt_sig_bg_top_13_001",
-                "ljet_eta",
+                #"ljet_eta",
+                "abs_ljet_eta",
 #                "abs_ljet_eta_16",
                 "C",
 #                "met", "mtw", "shat", "ht",
