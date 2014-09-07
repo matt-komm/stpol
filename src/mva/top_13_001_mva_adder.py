@@ -23,6 +23,7 @@ def main():
         "eta_lj":"ljet_eta",
         "mass_lj":"ljet_mass",
         "pt_bj":"bjet_pt",
+        "C":"C_with_nu",
     }
 
     varmaps[13] = {"mt_mu":"mtw", "mu_pt":"lepton_pt"}
