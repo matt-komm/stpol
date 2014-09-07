@@ -59,6 +59,11 @@ module Cuts
         (indata[:top_mass] < 220) &
         (indata[:top_mass] > 130)
     )
+    
+    cutbased_topmass(indata) = (
+        (indata[:top_mass] < 220) &
+        (indata[:top_mass] > 130)
+    )
 
     function truelepton(indata, x::Symbol)
         x == :mu && return abs(indata[:gen_lepton_id]) .== 13
