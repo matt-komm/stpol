@@ -104,12 +104,16 @@ SimpleJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   for(auto& o : objectsOfInterest) {
    edm::Handle<edm::View<reco::Candidate>> objects;
    iEvent.getByLabel(o, objects);
+   if (!objects.isValid()) {
+       edm::LogWarning("analyze()") << o.label() << " is not valid";
+       return;
+   }
    //for (edm::View<reco::Candidate>::const_iterator obj = objects->begin(); obj != objects->end(); obj++) {
    edm::LogInfo("analyze()") << "Collection " << o.label() << " has " << objects->size() << " items";
    unsigned int i = 0;
    for (auto& pobj : *objects) {
     const pat::Jet& obj = (const pat::Jet& )pobj;
-    edm::LogInfo("analyze()") << o.label() << "(" << i << "):" <<
+    edm::LogInfo("analyze() obj") << o.label() << "(" << i << "):" <<
     " pt: " << obj.pt() << 
     //" pt_smear: " << obj.userFloat("pt_smear") << 
     " eta: " << obj.eta() <<

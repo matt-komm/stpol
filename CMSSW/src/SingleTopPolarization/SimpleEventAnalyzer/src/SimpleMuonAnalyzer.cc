@@ -103,12 +103,15 @@ SimpleMuonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   for(auto& o : objectsOfInterest) {
    edm::Handle<edm::View<reco::Candidate>> objects;
    iEvent.getByLabel(o, objects);
-   //for (edm::View<reco::Candidate>::const_iterator obj = objects->begin(); obj != objects->end(); obj++) {
+   if (!objects.isValid()) {
+       edm::LogWarning("analyze()") << o.label() << " is not valid";
+       return;
+   }
    edm::LogInfo("analyze()") << "Collection " << o.label() << " has " << objects->size() << " items";
    int i = 0;
    for (auto& pobj : *objects) {
     const pat::Muon& obj = (const pat::Muon& )pobj;
-    edm::LogInfo("analyze()") << o.label() << "(" << i << "):" <<
+    edm::LogInfo("analyze() obj") << o.label() << "(" << i << "):" <<
     " pt: " << obj.pt() << 
     " eta: " << obj.eta() <<
     " phi: " << obj.phi() << 
