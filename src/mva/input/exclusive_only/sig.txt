@@ -1,0 +1,4 @@
+/hdfs/local/joosep/stpol/skims/step3_v2/Jul4_newsyst_newvars_metshift/iso/nominal/Tbar_t_ToLeptons/5622/output.root
+/hdfs/local/joosep/stpol/skims/step3_v2/Jul4_newsyst_newvars_metshift/iso/nominal/T_t_ToLeptons/837/output.root
+/hdfs/local/joosep/stpol/skims/step3_v2/Jul4_newsyst_newvars_metshift/iso/nominal/T_t/58/output.root
+/hdfs/local/joosep/stpol/skims/step3_v2/Jul4_newsyst_newvars_metshift/iso/nominal/Tbar_t/3431/output.root
