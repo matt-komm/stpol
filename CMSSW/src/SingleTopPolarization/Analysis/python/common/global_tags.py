@@ -9,7 +9,7 @@ global_tags["mc"] = dict()
 #gt_data = "FT_53_V21_AN4::All"
 
 #https://hypernews.cern.ch/HyperNews/CMS/get/JetMET/1461.html
-gt_data = "FT_53_V21_AN5::All"
+gt_data = "FT_53_V21_AN6::All"
 gt_mc = "START53_V27::All"
 
 #step1
