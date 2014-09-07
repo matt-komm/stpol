@@ -1,7 +1,7 @@
 include("base.jl")
 #include("../src/fraction_fit/hists.jl")
 
-using ROOT, ROOT.ROOTHistograms, DataFrames, SingleTopBase
+using ROOT, ROOTHistograms, DataFrames, SingleTopBase
 import SingleTopBase: VARS
 include("python_plots.jl")
 include("hplot.jl")
@@ -10,12 +10,12 @@ include("hplot.jl")
 rb4(x) = rebin(x, 2:4:nbins(x)-5)
 drb4(d) = {k=>rb4(v) for (k, v) in d}
 
-const p = "../../results/hists/Aug13_metmtw/merged"
+const p = "../../results/hists/Aug26_tchpt/merged"
 const out = "temp"
 
 for lepton in [:mu, :ele]
     
-    for bdtcut in ["0.60000", "0.40000", "0.20000"]
+    for bdtcut in ["0.60000", "0.40000", "0.20000", "0.06000", "0.13000"]
         bdtcut2 = replace(bdtcut, ".", "_")
         hd = load_hists_from_file("$p/2j_0t/$bdtcut/$lepton/cos_theta_lj.root") |> remove_prefix;
         wjets_sf = integral(hd["DATA"]) / integral(hd["wjets"] + hd["ttjets"] + hd["qcd"] + hd["tchan"] + hd["diboson"] + hd["dyjets"])
