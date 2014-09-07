@@ -365,7 +365,7 @@ for lep in ["mu", "ele"]:
 
 #for bdt_cut in [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]:
 #for bdt_cut in numpy.arange(-0.2, 0.9, 0.1):
-for bdt_cut in [0.0, 0.2, 0.4, 0.6,]:
+for bdt_cut in [0.0, 0.06, 0.13, 0.2, 0.4, 0.6,]:
     bdts = "%.5f" % bdt_cut
     print(bdts)
     for reco_lep in ["mu", "ele"]:
