@@ -11,6 +11,12 @@ copies:
 	cp -R fitconfigs/abs_ljet_eta/mu fitconfigs/abs_ljet_eta/ele
 	sed -i '' 's/mu/ele/g' fitconfigs/abs_ljet_eta/ele/*.cfg
 	./copy_cfgs.sh fitconfigs/abs_ljet_eta/combined/nominal.cfg
+	
+	./copy_cfgs.sh fitconfigs/bdt_old/mu/nominal.cfg
+	rm -Rf fitconfigs/bdt_old/ele	
+	cp -R fitconfigs/bdt_old/mu fitconfigs/bdt_old/ele
+	sed -i '' 's/mu/ele/g' fitconfigs/bdt_old/ele/*.cfg
+	./copy_cfgs.sh fitconfigs/bdt_old/combined/nominal.cfg
 
 fit_all:
-	find fitconfigs/bdt -name "*.cfg" -exec ./runtheta.sh bgfit.py {} \;
+	find fitconfigs/bdt_old -name "*.cfg" -exec ./runtheta.sh bgfit.py {} \;
