@@ -97,8 +97,9 @@ crosscheck_vars = Any[]
 if VARS_TO_USE == :all_crosscheck
     crosscheck_vars = [
         :bdt_sig_bg,
+        :bdt_sig_bg_old,
         :bdt_qcd,
-#        :bdt_sig_bg_top_13_001,
+        :bdt_sig_bg_top_13_001,
 
 #        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
 #        (:abs_ljet_eta_16, row::DataFrameRow -> abs(row[:ljet_eta])),
@@ -115,6 +116,7 @@ if VARS_TO_USE == :all_crosscheck
         :ljet_eta, :bjet_eta,
         :bjet_mass, :ljet_mass,
         :ljet_dr, :bjet_dr,
+        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
 
         :top_mass,
 #       :top_pt,
@@ -479,7 +481,8 @@ function process_df(rows::AbstractVector{Int64})
 
                    #cut-based selection
                    for (cut_major, cut_minor, cutfn) in {
-                           (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime)
+                           (:cutbased, :etajprime_topmass_default, Cuts.cutbased_etajprime),
+                           (:cutbased, :topmass, Cuts.cutbased_topmass)
                        }
                        const _reco = reco && cutfn(row)
                        const ny = (isna(y)||isnan(y)||!_reco) ? 1 : ny_ - 1
