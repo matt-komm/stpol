@@ -102,7 +102,7 @@ def SingleTopStep2():
     Config.subChannel = options.subChannel
     Config.doDebug = options.doDebug
     Config.isMC = options.isMC
-    Config.doSkim = not sample_types.is_signal(Config.subChannel)
+    Config.doSkim = options.doSync or not sample_types.is_signal(Config.subChannel)
     Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
     Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
     Config.systematic = options.systematic
@@ -542,10 +542,6 @@ def SingleTopStep2():
     from SingleTopPolarization.Analysis.leptons_cfg import LeptonSetup
     LeptonSetup(process, Config)
 
-    if Config.doDebug:
-        from SingleTopPolarization.Analysis.debugAnalyzers_step2_cfi import DebugAnalyzerSetup
-        DebugAnalyzerSetup(process)
-
     if Config.isMC:
         WeightSetup(process, Config)
 
@@ -637,6 +633,10 @@ def SingleTopStep2():
     )
     if Config.doDebug:
         process.out.outputCommands.append("keep *")
+        process.debugpath = cms.Path(
+            process.muAnalyzer * process.eleAnalyzer *
+            process.jetAnalyzer * process.metAnalyzer
+        )
     process.outpath = cms.EndPath(process.out)
     if Config.doSkim:
         process.out.SelectEvents.SelectEvents = []
