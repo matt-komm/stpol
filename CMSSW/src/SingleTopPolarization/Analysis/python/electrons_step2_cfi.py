@@ -139,8 +139,7 @@ def ElectronSetup(process, conf):
     )
 
     if conf.doDebug:
-        process.electronAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("electronsWithIso"))
-        process.electronVetoAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("looseVetoElectrons"))
+        process.eleAnalyzer = cms.EDAnalyzer('SimpleElectronAnalyzer', interestingCollections=cms.untracked.VInputTag("electronsWithID", "electronsWithIDAll", "electronsWithIso", "goodSignalElectrons", "looseVetoElectrons"))
 
 def ElectronPath(process, conf):
     process.elePathPreCount = cms.EDProducer("EventCountProducer")
@@ -167,14 +166,6 @@ def ElectronPath(process, conf):
         process.mBTags *
         process.topRecoSequenceEle
     )
-
-    #Insert debugging modules for printout
-    if conf.doDebug:
-
-        process.elePath.insert(
-            process.elePath.index(process.oneIsoEle),
-            process.electronAnalyzer
-        )
 
     if conf.isMC:
         process.elePath.insert(

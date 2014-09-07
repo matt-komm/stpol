@@ -70,3 +70,10 @@ def TopRecoSetup(process, conf, leptonSource="goodSignalLeptons", bTagSource="hi
         process.cosTheta *
         process.cosThetaWHelicity
     )
+
+    if conf.doDebug:
+        process.metAnalyzer = cms.EDAnalyzer("SimpleMETAnalyzer",
+            interestingCollections = cms.untracked.VInputTag(["patMETs", conf.metSource, "patPFMet", "goodMETs"])
+        )
+        process.topRecoSequenceMu += process.metAnalyzer
+        process.topRecoSequenceEle += process.metAnalyzer
