@@ -44,7 +44,7 @@ def calculateMetPhiCorrectedMET(process, prefix, conf, src):
         applyType1Corrections = cms.bool(True),
         srcType1Corrections = cms.VInputTag(
             cms.InputTag(
-            prep(prefix, "systShiftMETCorr")
+                prep(prefix, "systShiftMETCorr"),
             )
         ),
         type0Rsoft = cms.double(0.6),
