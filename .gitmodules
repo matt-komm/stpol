@@ -16,3 +16,6 @@
 [submodule "CMSSW/src/RecoMET/METAnalyzers"]
 	path = CMSSW/src/RecoMET/METAnalyzers
 	url = git@github.com:cms-analysis/RecoMET-METAnalyzers.git
+[submodule "CMSSW/src/UserCode/TTHPAT"]
+	path = CMSSW/src/UserCode/TTHPAT
+	url = https://github.com/HEP-KBFI/tth-pfbreco
