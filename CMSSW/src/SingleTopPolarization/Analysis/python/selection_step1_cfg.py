@@ -142,8 +142,6 @@ def SingleTopStep1(
 
     #process.pfSelectedMuons.cut = 'abs(eta)<2.5 && pt>10.'
     process.pfSelectedMuons.cut = '(pt > 10.) && (abs(eta) < 2.5) && (muonRef.isAvailable) && (muonRef.isPFMuon) && (muonRef.isGlobalMuon || isTrackerMuon)'
-    process.pfIsolatedMuons.doDeltaBetaCorrection = True
-    process.pfIsolatedMuons.deltaBetaFactor = -0.5
     process.patMuons.embedTrack = True
     process.patMuons.usePV = False
     #process.selectedPatMuons.cut = "(abs(eta) < 2.5) && (pt > 10.0) && ((chargedHadronIso+max(0.,neutralHadronIso+photonIso-0.50*puChargedHadronIso))/pt < 0.20) && (isPFMuon && (isGlobalMuon || isTrackerMu)"
@@ -193,12 +191,6 @@ def SingleTopStep1(
     # Implemented as in https://indico.cern.ch/getFile.py/access?contribId=1&resId=0&materialId=slides&confId=208765
     #-------------------------------------------------
 
-    #if not maxLeptonIso is None:
-    #        process.pfIsolatedElectrons.isolationCut = maxLeptonIso
-    #Use both isolated and un-isolated electrons as patElectrons.
-    #NB: no need to change process.electronMatch.src to pfElectrons,
-    #        it's already gsfElectrons, which is a superset of the pfElectrons
-
     #From EgammaAnalysis/ElectronTools/test/patTuple_electronId_cfg.py
     process.load('EgammaAnalysis.ElectronTools.electronIdMVAProducer_cfi')
     process.load('EgammaAnalysis.ElectronTools.electronIsolatorFromEffectiveArea_cfi')
@@ -210,7 +202,6 @@ def SingleTopStep1(
     )
     process.patPF2PATSequence.replace(process.patElectrons, process.mvaID * process.patElectrons)
     #process.selectedPatElectrons.cut = "pt>20 && abs(eta)<3.0"
-    process.pfIsolatedElectrons.isolationCut = 0.2
 
     process.electronsWithID = cms.EDProducer(
         'ElectronIDProducer',
@@ -369,7 +360,7 @@ def SingleTopStep1(
     #for type 0
 
     process.load('JetMETCorrections.Type1MET.pfMETsysShiftCorrections_cfi')
-    if Config.isMC:
+    if options.isMC:
             corrpars = process.pfMEtSysShiftCorrParameters_2012runABCDvsNvtx_mc
     else:
             corrpars = process.pfMEtSysShiftCorrParameters_2012runABCDvsNvtx_data
