@@ -8,10 +8,16 @@ from subprocess import call
 
 data_files = get_data_files()
 #pdfconfs = ["ct10", "nnpdf", "nnpdf_down", "nnpdf_up"] #,"mstw"]
-    
+
+print data_files
+
 for dataset, fileset in data_files.items():
         i = 0
+        print
+        print dataset
+        
         for (base_file, added_file) in fileset:
+            print i, base_file
             bf_name = "/tmp/andres/evlist_pdf_%s_%d.sh" % (dataset, i)
             batch_outfile = open(bf_name, "w")
             batch_outfile.write("#!/bin/bash\n")
@@ -28,4 +34,5 @@ for dataset, fileset in data_files.items():
                     print "XXX"
                     time.sleep(3)
             i+=1
+            
         

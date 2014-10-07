@@ -2,6 +2,7 @@ import sys
 import os
 from parse_input import *
 from utils import pdfs
+import time
 #Monkey-patch the system path to import the stpol header
 sys.path.append(os.path.join(os.environ["STPOL_DIR"], "src/headers"))
 from subprocess import call
@@ -32,7 +33,9 @@ for channel in ["mu", "ele"]:
                     print bf_name, suc
                     if not suc == 0:
                         print "XXX"
-                        time.sleep(3)
+                        time.sleep(10)
                 i+=1
+                time.sleep(1)
             os.chdir(savedPath )
+            
         
