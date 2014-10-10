@@ -86,10 +86,10 @@ def SingleTopStep2():
               "A string Run{A,B,C,D} to specify the data period")
 
     options.register(
-        'doSync', False,
-        VarParsing.multiplicity.singleton,
-        VarParsing.varType.bool,
-        "Synchronization exercise"
+             'doSync', False,
+             VarParsing.multiplicity.singleton,
+             VarParsing.varType.bool,
+             "Synchronization exercise"
     )
 
     options.parseArguments()

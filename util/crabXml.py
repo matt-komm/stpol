@@ -127,10 +127,11 @@ class Task:
         if lfn:
             lfn = lfn[2:-2]
         state = get(running_job, "state", str)
+        statusScheduler = get(running_job, "statusScheduler", str)
         return Job(
             name, id, submission, schedulerId,
             submissionTime, getOutputTime, applicationReturnCode,
-            wrapperReturnCode, state, lfn, outputFiles
+            wrapperReturnCode, state, statusScheduler, lfn, outputFiles
         )
 
 
@@ -198,6 +199,7 @@ class Job:
         wrapper_ret_code,
         app_ret_code,
         state,
+        statusScheduler,
         lfn,
         outputFiles
     ):
@@ -210,6 +212,7 @@ class Job:
         self.wrapper_ret_code = wrapper_ret_code if wrapper_ret_code is not None else -1
         self.app_ret_code = app_ret_code if app_ret_code is not None else -1
         self.state = state
+        self.statusScheduler = statusScheduler
         self.lfn = lfn
         self.outputFiles = outputFiles
 
@@ -223,10 +226,10 @@ class Job:
         return self.state == "Terminated"
 
     def isPending(self):
-        return self.state == "SubSuccess"
+        return self.state == "SubSuccess" or self.statusScheduler == "Running"
 
     def needsResubmit(self):
-        return (self.state == "Cleared" or self.state=="Terminated") and not self.isCompleted()
+        return (self.state == "Cleared" or self.state=="Terminated" or self.statusScheduler=="Cancelled") and not self.isCompleted()
 
     def totalTime(self):
         t1 = self.get_output_time if self.get_output_time else datetime.datetime.now()
@@ -264,9 +267,16 @@ if __name__=="__main__":
             raise ValueError("Couldn't understand pattern: %s" % r)
         filelist_path = match.group(1) + "/" + match.group(2) + ".files.txt"
         of = open(filelist_path, "w")
+
+        to_kill = []
         for job in t.jobs:
             if job.isCompleted() and job.lfn:
                 of.write(job.lfn + "\n")
+            if job.needsResubmit():
+                to_kill += [job.job_id]
+        if len(to_kill)>0:
+            print "crab -c", "/".join(r.split("/")[:-2]), "-kill", ",".join(map(str, to_kill))
+
         of.close()
         if t.isCompleted():
             completed.append(t)
