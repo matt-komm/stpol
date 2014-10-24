@@ -1,6 +1,6 @@
 
 @pyimport fitted_scale_factors
-const sfs = fitted_scale_factors.scale_factors
+const sfs = fitted_scale_factors.qcd_scale_factors
 get_sf(nj, nt, lepton, fit_variables={:mu=>"qcd_mva", :ele=>"qcd_mva"}) = sfs[string(lepton)]["$(nj)j$(nt)t"][fit_variables[lepton]]
 
 function reweight_qcd(indata::AbstractDataFrame, inds)
