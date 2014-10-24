@@ -12,7 +12,6 @@ t0 = time()
 
 using DataArrays, DataFrames
 using JSON
-using HDF5, JLD
 using Histograms
 
 include("basedir.jl")
@@ -252,7 +251,6 @@ end
 
 using DataArrays, DataFrames
 using JSON
-using HDF5, JLD
 using Histograms
 import Histograms.Histogram
 using PyCall

@@ -1,4 +1,4 @@
-#!/home/joosep/.julia/CMSSW/julia
+#!/home/software/.julia/CMSSW/julia
 println("running skim.jl")
 tstart = time()
 println(
