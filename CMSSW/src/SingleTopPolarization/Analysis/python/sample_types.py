@@ -46,7 +46,7 @@ def is_ttbar(sample_name):
     return sample_name.lower().startswith("ttjets") or sample_name.lower().startswith("ttbar")
 
 def is_signal(sample_name):
-    return (sample_name.lower() in ["t_t_toleptons", "tbar_t_toleptons", "t_t", "tbar_t"] or
+    return ((sample_name.lower() in ["t_t_toleptons", "tbar_t_toleptons", "t_t", "tbar_t"] or
         sample_name.lower().startswith("ttob") or
         sample_name.lower().startswith("t_t_toleptons") or
         sample_name.lower().startswith("tbar_t_toleptons") or
@@ -54,7 +54,7 @@ def is_signal(sample_name):
         sample_name.lower().startswith("tbar_t")) 
         and not
         (sample_name.lower().startswith("tbar_tw") or
-        sample_name.lower().startswith("t_tw"))
+        sample_name.lower().startswith("t_tw")))
 
 def is_mc(name):
     return not ("SingleMu" in name or "SingleEle" in name or "data" in name)
