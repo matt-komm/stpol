@@ -3,11 +3,10 @@ from SingleTopPolarization.Analysis.met_phi_corr_cfg import calculateMetPhiCorre
 from SingleTopPolarization.Analysis.utils import *
 
 def metSequence(process, conf, prefix, met_src, lepton_src):
-    seqCorr = calculateMetPhiCorrectedMET(process, prefix, conf, met_src)
+    #seqCorr = calculateMetPhiCorrectedMET(process, prefix, conf, met_src)
+    #met_name = prep(prefix, "phiCorrMETs") if conf.doMETSystShift else met_src
     goodMETs = cms.EDFilter("CandViewSelector",
-        src=cms.InputTag(
-            prep(prefix, "phiCorrMETs") if conf.doMETSystShift else met_src
-        ),
+        src=cms.InputTag(met_src),
         cut=cms.string("pt>%f" % conf.Leptons.transverseMassDef)
     )
     print("goodMETs=", goodMETs)
@@ -21,7 +20,6 @@ def metSequence(process, conf, prefix, met_src, lepton_src):
     )
 
     seq = cms.Sequence(
-        seqCorr *
         goodMETs *
         MTW
     )
@@ -30,6 +28,7 @@ def metSequence(process, conf, prefix, met_src, lepton_src):
     goodMETdest = sa(process, prefix, "goodMETs", goodMETs)
     sa(process, prefix, "MTW", MTW)
     sa(process, prefix, "metSequence", seq)
+
     return goodMETdest
 
 

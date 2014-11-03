@@ -5,63 +5,31 @@ skim:
 
 all: train
 
-train: train_bdt_sig_wjets train_bdt_sig_ttjets train_bdt_wjets_ttjets train_bdt_sig_bg 
 
-inputs:
-	find skims/$1/tchan -name "*.root" > input/$2/sig.txt
-	find skims/$1/ttjets -name "*.root" > input/$2/bg.txt
-	find skims/$1/wjets -name "*.root" >> input/$2/bg.txt
-
-train_bdt_sig_wjets:
-	$(ROOTWRAP) && python train.py input/bdt_sig_bg1 stpol_bdt_sig_wjets &> input/bdt_sig_bg1/log
+ARGSdef="H:VerbosityLevel=Debug:NTrees=2000:BoostType=Grad:Shrinkage=0.1:!UseBaggedGrad:nCuts=2000:nEventsMin=100:NNodesMax=5:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"
+ARGSmixed="H:VerbosityLevel=Debug:NTrees=200:BoostType=Grad:Shrinkage=0.1:nCuts=50:UseNvars=2:MaxDepth=2"
 
 train_bdt_sig_bg:
-	$(ROOTWRAP) && python train.py input/bdt_sig_bg stpol_bdt_sig_bg &> input/bdt_sig_bg/log
+	cp -R input/default input/bdt_sig_bg 
+	python train.py input/bdt_sig_bg stpol_bdt_sig_bg $(ARGSdef) &> input/bdt_sig_bg/log
 
-train_bdt_sig_bg_tchpt:
-	$(ROOTWRAP) && python train.py input/tchpt/bdt_sig_bg stpol_bdt_sig_bg_tchpt &> input/tchpt/bdt_sig_bg/log
+train_bdt_sig_bg_exclusive_only:
+	cp -R input/exclusive_only input/bdt_sig_bg_exclusive_only 
+	python train.py input/bdt_sig_bg_exclusive_only stpol_bdt_sig_bg_exclusive_only $(ARGSdef) &> input/bdt_sig_bg_exclusive_only/log
 
-train_bdt_sig_bg_antiw:
-	$(ROOTWRAP) && python train.py input/bdt_sig_bg_antiw stpol_bdt_sig_bg_antiw &> input/bdt_sig_bg_antiw/log
+train_bdt_sig_bg_mixed:
+	cp -R input/default input/bdt_sig_bg_mixed 
+	python train_mixed.py input/bdt_sig_bg_mixed stpol_bdt_sig_bg_mixed $(ARGSmixed) &> input/bdt_sig_bg_mixed/log
 
-train_bdt_sig_ttjets:
-	$(ROOTWRAP) && python train.py input/bdt_sig_bg2 stpol_bdt_sig_ttjets &> input/bdt_sig_bg2/log
+evaluate:
+	find ~/singletop/ntuples/nominal/ -name "*.root" | ~/parallel python adder.py bdt_sig_bg weights/stpol_bdt_sig_bg_lepton_flavour.weights.xml {}
+	find ~/singletop/ntuples/nominal/ -name "*.root" | ~/parallel python adder.py bdt_sig_bg_A3 weights/stpol_bdt_sig_bg_ARGS3_lepton_flavour.weights.xml {}
+	find ~/singletop/ntuples/nominal/ -name "*.root" | ~/parallel python adder.py bdt_sig_bg_mixed_A3 weights/stpol_bdt_sig_bg_mixed_ARGS3_lepton_flavour.weights.xml {}
 
-train_bdt_wjets_ttjets:
-	$(ROOTWRAP) && python train.py input/bdt_bg1_bg2 stpol_bdt_wjets_ttjets &> input/bdt_bg1_bg2/log
-
-addvars: add_bdt_sig_bg1 add_bdt_sig_bg2 add_bdt_bg1_bg2 add_bdt_sig_bg
-
-add_bdt_sig_bg1:
-	find skims/csvt* -name "*.root" | sort | ~/parallel -t --verbose --resume --joblog=`mktemp` -j1 -n5 python adder.py bdt_sig_bg1 weights/stpol_bdt_sig_wjets_lepton_flavour.weights.xml {} 
- 
-add_bdt_sig_bg:
-	find skims/csvt* -name "*.root" | sort | ~/parallel -t --verbose --resume --joblog=`mktemp` -j1 -n5 python adder.py bdt_sig_bg weights/stpol_bdt_sig_bg_lepton_flavour.weights.xml {} 
-
-add_bdt_sig_bg2:
-	find skims/csvt* -name "*.root" | sort | ~/parallel -t --verbose --resume --joblog=`mktemp` -j1 -n5 python adder.py bdt_sig_bg2 weights/stpol_bdt_sig_ttjets_lepton_flavour.weights.xml {}
-
-add_bdt_bg1_bg2:
-	find skims/csvt* -name "*.root" | sort | ~/parallel -t --verbose --resume --joblog=`mktemp` -j1 -n5 python adder.py bdt_bg1_bg2 weights/stpol_bdt_wjets_ttjets_lepton_flavour.weights.xml {} 
- 
-hadd:
-	find -L skims -name "*.root" > files.txt
-	../skim/hadd.jl files.txt skims.csv
-
-effcurves: eff_csvm eff_csvt
-
-eff_csvm:
-	julia roc.jl skims/csvm mva_csvm input/csvm/effs.csv
-
-eff_csvt:
-	julia roc.jl skims/csvt mva_csvt input/csvt/effs.csv
-
-update_results:
-	rsync -r cms.hep.kbfi.ee:~/singletop/stpol2/src/mva/input ./
-
-
-CUT_STR='(hlt==1) && (njets==2) && (ntags==1) && ((((n_signal_mu==1) && (n_signal_ele==0) && (n_veto_mu==0)&&(n_veto_ele==0) && (mtw > 45))) || (((n_signal_mu==0) && (n_signal_ele==1) && (n_veto_mu==0)&&(n_veto_ele==0) && (met > 50))))'
-
-nevents:
-	python ../analysis/filesum.py $(CUT_STR) `cat input/bdt_sig_bg/sig.txt`
-	python ../analysis/filesum.py $(CUT_STR) `cat input/bdt_sig_bg/bg.txt`
+print_statistics:
+	echo "TTJets_SemiLept"
+	cat input/default/bg.txt | grep "TTJets_SemiLept" | python list_entries.py
+	echo "TTJets_FullLept"
+	cat input/default/bg.txt | grep "TTJets_FullLept" | python list_entries.py
+	echo "TTJets_MassiveBinDECAY"
+	cat input/default/bg.txt | grep "TTJets_MassiveBinDECAY" | python list_entries.py

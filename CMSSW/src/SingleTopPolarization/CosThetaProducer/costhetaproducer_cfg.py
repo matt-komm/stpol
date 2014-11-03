@@ -23,14 +23,15 @@ process.combinedLeptons = cms.EDProducer(
 process.cosThetaProducer = cms.EDProducer('CosThetaProducer',
 	topSrc=cms.InputTag("recoTop"),
 	jetSrc=cms.InputTag("bTagsTCHPtight"),
-	leptonSrc=cms.InputTag("combinedLeptons")
+	leptonSrc=cms.InputTag("combinedLeptons"),
+    Ecm=cms.double(8000)
 )
 
 process.out = cms.OutputModule("PoolOutputModule",
     fileName = cms.untracked.string('myOutputFile.root')
 )
 
-  
+
 process.p = cms.Path(
 	process.combinedLeptons *
 	process.cosThetaProducer

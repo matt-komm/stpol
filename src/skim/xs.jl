@@ -13,10 +13,10 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
         iso = :unknown
        
         #MC did not match, try data
-        cls = data_cls(fn)
+        cls = data_cls(prefix, fn)
         if cls != nothing
-            samp = cls[2]
-            iso = cls[1]
+            tag, iso, samp = cls
+            syst = ""
         end
     else
         tag = m.captures[2]
@@ -30,30 +30,30 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
     while true #hack to have 'break' to match only once
     if syst == "SYST"
         ss = string(samp)
-        m = match(r".*_(mass.*)", ss)
+        m = match(r".*_(mass(166_5|169_5|175_5|178_5)).*", ss)
         if m != nothing
             syst = m.captures[1]
             break
         end
         
-        m = match(r".*_(scale.*)", ss)
+        m = match(r".*_(scale(up|down)).*", ss)
         if m != nothing
             syst = m.captures[1]
             break
         end
         
-        m = match(r".*_(matching.*)", ss)
+        m = match(r".*_(matching(up|down)).*", ss)
         if m != nothing
             syst = m.captures[1]
             break
         end
 
-        m = match(r"TToB.*Nu(.*)_t-channel", ss)
+        m = match(r".*TToB.*Nu_(.*)", ss)
         if m != nothing
-            if m.captures[1] == ""
-                syst = "signal_comphep_nominal"
+            if m.captures[1] == "t-channel"
+                syst = "signal_comphep__nominal"
             else
-                syst = string("signal_comphep", m.captures[1])
+                syst = string("signal_comphep__", m.captures[1])
             end
             break
         end
@@ -70,22 +70,24 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
     return {:tag => string(tag), :iso => string(iso), :systematic => string(syst), :sample => string(samp)}
 end
 
-function data_cls(fn)
-    if contains(fn, "/iso/SingleMu")
-        return (:iso, :SingleMu)
-    elseif contains(fn, "/antiiso/SingleMu")
-        return (:antiiso, :SingleMu)
-    elseif contains(fn, "/iso/SingleEle")
-        return (:iso, :SingleEle)
-    elseif contains(fn, "/antiiso/SingleEle")
-        return (:antiiso, :SingleEle)
-    end 
-    return nothing
+function data_cls(prefix, fn)
+    r = Regex("$prefix/.*/(.*)/(.*)/(.*)/output_.*.root")
+    m = match(r, fn)
+    if m!=nothing
+        tag = m.captures[1]
+        iso = m.captures[2]
+        sample = m.captures[3]
+        return (tag, iso, sample)
+    else
+        return nothing
+    end
+    return 
 end
 
 fpath = joinpath(
-    BASE, "metadata", "cross_sections.txt"
+    BASE, "metadata", "cross_sections.csv"
 )
+println("loading cross-sections from $fpath")
 
 df = readtable(fpath, allowcomments=true)
 cross_sections = Dict{String, Float64}()
@@ -123,6 +125,26 @@ const merges = {
         "TToBMuNu_anomWtb-unphys_t-channel", "TToBMuNu_anomWtb-0100_t-channel", "TToBMuNu_t-channel",
         "TToBTauNu_anomWtb-unphys_t-channel", "TToBTauNu_anomWtb-0100_t-channel", "TToBTauNu_t-channel",
         
+        "TToBENu_anomWtb-unphys_LVLT",
+        "TToBENu_anomWtb-Lv1Rt3_LVRT",
+        "TToBENu_anomWtb-Lv2Rt2_LVRT",
+        "TToBENu_anomWtb-Lv3Rt1_LVRT",
+        "TToBENu_anomWtb-Rt4_LVRT",
+        "TToBMuNu_anomWtb-unphys_LVLT",
+        "TToBMuNu_anomWtb-Lv1Rt3_LVRT",
+        "TToBMuNu_anomWtb-Lv2Rt2_LVRT",
+        "TToBMuNu_anomWtb-Lv3Rt1_LVRT",
+        "TToBMuNu_anomWtb-Rt4_LVRT",
+        "TToBTauNu_anomWtb-unphys_LVLT",
+        "TToBTauNu_anomWtb-Lv1Rt3_LVRT",
+        "TToBTauNu_anomWtb-Lv2Rt2_LVRT",
+        "TToBTauNu_anomWtb-Lv3Rt1_LVRT",
+        "TToBTauNu_anomWtb-Rt4_LVRT",
+        
+        "TToBENu_anomWtb-0010_LVLT",
+        "TToBMuNu_anomWtb-0010_LVLT",
+        "TToBTauNu_anomWtb-0010_LVLT",
+
         "T_t_ToLeptons_mass166_5", 
         "T_t_ToLeptons_mass169_5", 
         "Tbar_t_ToLeptons_mass166_5", 
@@ -177,6 +199,17 @@ const merges = {
         "TTJets_mass169_5",
         "TTJets_mass175_5",
         "TTJets_mass178_5",
+        "TTJets_MSDecays",
+        "TTJets_MSDecays_scaleup",
+        "TTJets_MSDecays_scaledown",
+        "TTJets_MSDecays_matchingup",
+        "TTJets_MSDecays_matchingdown",
+        "TTJets_MSDecays_matchingdown_v1",
+        "TTJets_MSDecays_matchingdown_v2",
+        "TTJets_MSDecays_mass166_5",
+        "TTJets_MSDecays_mass169_5",
+        "TTJets_MSDecays_mass175_5",
+        "TTJets_MSDecays_mass178_5",
     ],
 
     "ttjets_inc"=>["TTJets_MassiveBinDECAY"],
@@ -228,6 +261,7 @@ hmap = {:to=>Dict(), :from=>Dict()}
 
 #list of all hashmappable strings
 const tomap = ASCIIString[
+    "", #for data
     "antiiso",
     "data_ele",
     "data_mu",
@@ -267,9 +301,15 @@ const tomap = ASCIIString[
     "scaledown",
     "scaleup",
     "schan",
-    "signal_comphep_anomWtb-0100",
-    "signal_comphep_anomWtb-unphys",
-    "signal_comphep_nominal",
+    "signal_comphep__anomWtb-0100_t-channel",
+    "signal_comphep__anomWtb-0010_LVLT",
+    "signal_comphep__anomWtb-Lv1Rt3_LVRT",
+    "signal_comphep__anomWtb-Lv2Rt2_LVRT",
+    "signal_comphep__anomWtb-Lv3Rt1_LVRT",
+    "signal_comphep__anomWtb-Rt4_LVRT",
+    "signal_comphep__anomWtb-unphys_LVLT",
+    "signal_comphep__anomWtb-unphys_t-channel",
+    "signal_comphep__nominal",
     "SingleEle",
     "SingleEle1",
     "SingleEle2",
@@ -324,6 +364,27 @@ const tomap = ASCIIString[
     "TToBTauNu_anomWtb-0100_t-channel",
     "TToBTauNu_anomWtb-unphys_t-channel",
     "TToBTauNu_t-channel",
+    "TToBENu_anomWtb-unphys_LVLT",
+    "TToBENu_anomWtb-Lv1Rt3_LVRT",
+    "TToBENu_anomWtb-Lv2Rt2_LVRT",
+    "TToBENu_anomWtb-Lv3Rt1_LVRT",
+    "TToBENu_anomWtb-Rt4_LVRT",
+    "TToBMuNu_anomWtb-unphys_LVLT",
+    "TToBMuNu_anomWtb-Lv1Rt3_LVRT",
+    "TToBMuNu_anomWtb-Lv2Rt2_LVRT",
+    "TToBMuNu_anomWtb-Lv3Rt1_LVRT",
+    "TToBMuNu_anomWtb-Rt4_LVRT",
+    "TToBTauNu_anomWtb-unphys_LVLT",
+    "TToBTauNu_anomWtb-Lv1Rt3_LVRT",
+    "TToBTauNu_anomWtb-Lv2Rt2_LVRT",
+    "TToBTauNu_anomWtb-Lv3Rt1_LVRT",
+    "TToBTauNu_anomWtb-Rt4_LVRT",
+    
+    "TToBENu_anomWtb-0010_LVLT",
+    "TToBMuNu_anomWtb-0010_LVLT",
+    "TToBTauNu_anomWtb-0010_LVLT",
+
+    
     "twchan",
     "UnclusteredEnDown",
     "UnclusteredEnUp",
@@ -369,7 +430,22 @@ const tomap = ASCIIString[
     "Mar13",
     "Nov29_tW_etabl_CSVT_genwhgt_2fdd84",
     "signal_costheta_systb",
-    "343e0a9_Aug22"
+    "343e0a9_Aug22",
+    "May1_metphi_on",
+    "Jul4_newsyst_newvars_metshift",
+    "Aug8_tchpt",
+    "TTJets_MSDecays",
+    "TTJets_MSDecays_scaleup",
+    "TTJets_MSDecays_scaledown",
+    "TTJets_MSDecays_matchingup",
+    "TTJets_MSDecays_matchingdown",
+    "TTJets_MSDecays_matchingdown_v1",
+    "TTJets_MSDecays_matchingdown_v2",
+    "TTJets_MSDecays_mass166_5",
+    "TTJets_MSDecays_mass169_5",
+    "TTJets_MSDecays_mass175_5",
+    "TTJets_MSDecays_mass178_5",
+    "SYST"
 ]
 
 #convert all strings to hash, create a two-way dict

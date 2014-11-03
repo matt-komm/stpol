@@ -32,7 +32,7 @@ cd $CURRENT_DIR
 #
 ## Add plotfw to python library path
 ##FIXME: is this really necessary?
-#PYTHONPATH=$PYTHONPATH:$STPOL_DIR/:$STPOL_DIR/plots/:$STPOL_DIR/mvatools:$STPOL_DIR/local/lib/python2.6/site-packages/:$STPOL_DIR/local/lib/python2.7/site-packages/
+PYTHONPATH=$PYTHONPATH:$STPOL_DIR/local/lib/python2.6/site-packages/:$STPOL_DIR/local/lib/python2.7/site-packages/
 #
 ##Add QCD estimation stuff
 ##FIXME: this is probably not really necessary, and should actually be considered harmful
@@ -64,4 +64,4 @@ cd $CURRENT_DIR
 #
 ## Return to original directory
 #cd $CURRENT_DIR
-#export PYTHONPATH
+export PYTHONPATH

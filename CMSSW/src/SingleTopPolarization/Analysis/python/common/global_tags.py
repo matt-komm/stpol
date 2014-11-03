@@ -9,7 +9,7 @@ global_tags["mc"] = dict()
 #gt_data = "FT_53_V21_AN4::All"
 
 #https://hypernews.cern.ch/HyperNews/CMS/get/JetMET/1461.html
-gt_data = "FT_53_V21_AN5::All"
+gt_data = "FT_53_V21_AN6::All"
 gt_mc = "START53_V27::All"
 
 #step1
@@ -20,15 +20,20 @@ global_tags["mc"]["wjets_FSIM_Summer12"] = gt_mc
 global_tags["data"]["22Jan_ReReco_Runs2012ABCD"] = gt_data
 
 #step2
-global_tags["mc"]["Apr19"] = gt_mc
-global_tags["mc"]["Apr19_qcd"] = gt_mc
-global_tags["data"]["May20"] = gt_data
+#global_tags["mc"]["Apr19"] = gt_mc
+#global_tags["mc"]["Apr19_qcd"] = gt_mc
+#global_tags["data"]["May20"] = gt_data
+#
+#global_tags["mc"]["merged"] = gt_mc
+#global_tags["mc"]["Jul15"] = gt_mc
+#global_tags["mc"]["Jul15_qcd"] = gt_mc
+#global_tags["mc"]["Jun16_2014"] = gt_mc
+#global_tags["mc"]["Sep4"] = gt_mc
+#
+#global_tags["data"]["Jul15"] = gt_data
+#global_tags["data"]["Aug1"] = gt_data
+#
 
-global_tags["mc"]["merged"] = gt_mc
-global_tags["mc"]["Jul15"] = gt_mc
-global_tags["mc"]["Jul15_qcd"] = gt_mc
-global_tags["mc"]["Sep4"] = gt_mc
-
-global_tags["data"]["Jul15"] = gt_data
-global_tags["data"]["Aug1"] = gt_data
-
+global_tags["data"]["Sep8"] = gt_data
+global_tags["mc"]["Sep8"] = gt_mc
+global_tags["mc"]["Sep8_qcd"] = gt_mc

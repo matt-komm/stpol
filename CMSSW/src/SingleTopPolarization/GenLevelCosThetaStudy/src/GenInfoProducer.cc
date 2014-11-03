@@ -277,10 +277,10 @@ GenInfoProducer::filter(edm::Event &iEvent, const edm::EventSetup &iSetup)
     reco::CompositeCandidate &jet2 = jetColl->at(1);
     const int id1 = abs(jet1.pdgId());
     const int id2 = abs(jet2.pdgId());
-    auto define_b_l = [&] (int b, int l)
+    auto define_b_l = [&] (int b_idx, int l_idx)
     {
-        bJetColl->push_back(CompositeCandidate(jetColl->at(b - 1)));
-        lightJetColl->push_back(CompositeCandidate(jetColl->at(l - 1)));
+        bJetColl->push_back(CompositeCandidate(jetColl->at(b_idx - 1)));
+        lightJetColl->push_back(CompositeCandidate(jetColl->at(l_idx - 1)));
     };
     auto define_randomly = [&] ()
     {

@@ -10,6 +10,7 @@ const VARS = {
 	:bdt_sig_bg=>"\$BDT_{W,t\\bar{t}}\$\ output",
 	:top_mass=>"\$ M_{bl\\nu} \$ [GeV]",
 	:lepton_pt=>"\$ p_{t,l} \$ [GeV]",
+	:lepton_iso=>"\$ I_{rel,l} \$",
 	:ljet_pt=>"\$ p_{t,j'} \$ [GeV]",
 	:bjet_pt=>"\$ p_{t,b} \$ [GeV]",
 	:mtw=>"\$ M_{l,\\nu} \$ [GeV]",
@@ -27,15 +28,25 @@ const VARS = {
 	:met_phi => "\$ \\Phi_{MET} \$",
 	:lepton_eta => "\$ \\eta_{l} \$",
 	:abs_lepton_eta => "\$| \\eta_{l} |\$",
+    :differential_cos_theta => "\$\\frac{\\mathrm{d}\\sigma}{\\sigma\\ \\\mathrm{d}\\cos\\ \\theta^*}\$"
 }
 
 const SAMPLENAMES = {
 	:ttjets => "\$ t \\bar{t} \$",
 	:tchan => "t-channel",
-	:wjets__heavy => "W+jets (bc)",
-	:wjets__light => "W+jets (udsg)",
+	:wjets_heavy => "W+jets (bc)",
+	:wjets_light => "W+jets (udsg)",
 	:wjets => "W+jets",
-	:wzjets => "W, DY, \$\\gamma\$-jets"
+	:wzjets => "W, DY, \$\\gamma\$-jets",
+    :diboson => "Diboson",
+    :dyjets => "DY-jets",
+    :twchan => "tW-channel",
+    :schan => "s-channel",
+    :gjets => "\$\\gamma\$-jets",
+    :data_mu => "Data",
+    :data_ele => "Data",
+    :total_mc => "Total MC",
+    :qcd => "QCD"
 }
 
 const SAMPLENAMES_MERGED = {

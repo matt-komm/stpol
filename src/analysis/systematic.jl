@@ -10,8 +10,11 @@ if !isdefined(:B_WEIGHT_NOMINAL)
 end
 
 const SYSTEMATICS_TABLE = {
+    :mass178_5=>:mass2__up,
     :mass175_5=>:mass__up,
+
     :mass169_5=>:mass__down,
+    :mass166_5=>:mass2__down,
     :nominal=>:nominal,
     :unweighted=>:unweighted,
 
@@ -29,6 +32,8 @@ const SYSTEMATICS_TABLE = {
 
     :matchingup=>:matching__up,
     :matchingdown=>:matching__down,
+    :matchingdown_v1=>:matching__down,
+    :matchingdown_v2=>:matching__down,
 
     :pu_weight__up => :pu__up,
     :pu_weight__down => :pu__down,
@@ -51,10 +56,32 @@ const SYSTEMATICS_TABLE = {
     :wjets_shape__up => :wjets_shape__up,
     :wjets_shape__down => :wjets_shape__down,
 
-    symbol("signal_comphep_anomWtb-unphys") => :comphep_anom_unphys,
-    symbol("signal_comphep_anomWtb-0100") => :comphep_anom_0100,
-    symbol("signal_comphep_nominal") => :comphep_nominal,
+    :wjets_flavour_heavy__up => :wjets_flavour_heavy__up,
+    :wjets_flavour_heavy__down => :wjets_flavour_heavy__down,
+    :wjets_flavour_light__up => :wjets_flavour_light__up,
+    :wjets_flavour_light__down => :wjets_flavour_light__down,
+
+#    symbol("signal_comphep_anomWtb-unphys") => :comphep_anom_unphys,
+#    symbol("signal_comphep_anomWtb-0100") => :comphep_anom_0100,
+#    symbol("signal_comphep_nominal") => :comphep_nominal,
+    symbol("signal_comphep__anomWtb-0100_t-channel") => :comphep_anom_0100,
+    symbol("signal_comphep__anomWtb-Lv1Rt3_LVRT") => :comphep_anom_Lv1Rt3_LVRT,
+    symbol("signal_comphep__anomWtb-Lv2Rt2_LVRT") => :comphep_anom_Lv2Rt2_LVRT,
+    symbol("signal_comphep__anomWtb-Lv3Rt1_LVRT") => :comphep_anom_Lv3Rt1_LVRT,
+    symbol("signal_comphep__anomWtb-Rt4_LVRT") => :comphep_anom_Rt4_LVRT,
+    symbol("signal_comphep__anomWtb-unphys_LVLT") => :comphep_anom_unphys_LVLT,
+    symbol("signal_comphep__anomWtb-unphys_t-channel") => :comphep_anom_unphys,
+    symbol("signal_comphep__nominal") => :comphep_nominal,
+
+    :qcd_antiiso__up => :qcd_antiiso__up,
+    :qcd_antiiso__down => :qcd_antiiso__down,
+    :lepton_weight__up => :lepton_weight__up,
+    :lepton_weight__down => :lepton_weight__down,
+
 }
+
+const systematic_processings = collect(keys(SYSTEMATICS_TABLE))
+const comphep_processings = filter(x->contains(string(x), "comphep"), systematic_processings)
 
 const REV_SYSTEMATICS_TABLE = {v=>k for (k, v) in SYSTEMATICS_TABLE};
 
@@ -182,6 +209,66 @@ for weight in [
     end
 end
 
+###
+### Add "lepton weight" from Andres
+###
+# #Check the effect of the lepton scale factor differing from unity (more correct would be mean weight)
+#    muon_sel["shape"] = (
+#        Weight("1.0 - 0.0*abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_nominal"),
+#        Weight("1.0 + abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_up"),
+#        Weight("1.0 - abs(1.0 - muon_IsoWeight*muon_TriggerWeight*muon_IDWeight)", "lepton_weight_shape_down")
+#    )
+#
+# #Check the shape variation on top of the nominal weight
+#    electron_sel["shape"] = (
+#        Weight("1.0 - 0*abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_nominal"),
+#        Weight("1.0 + abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_up"),
+#        Weight("1.0 - abs(1.0 - electron_IDWeight*electron_TriggerWeight)", "lepton_weight_shape_down")
+#    )
+
+function lepton_weight_func_up(nw::Float64, row::DataFrameRow)
+    const lt = row[:lepton_type]
+    isna(lt) && return nw
+    if lt == 13
+        const x = nw * (1.0 + abs(1.0 - row[:lepton_weight__id] * row[:lepton_weight__iso] * row[:lepton_weight__trigger]));
+        return isna(x)||isnan(x) ? nw : x;
+    elseif lt == 11;
+        const x = nw * (1.0 + abs(1.0 - row[:lepton_weight__iso] * row[:lepton_weight__trigger]));
+        return isna(x)||isnan(x) ? nw : x
+    else
+        error("Unknown lepton type: ", row[:lepton_type])
+    end
+end
+
+function lepton_weight_func_down(nw::Float64, row::DataFrameRow)
+    const lt = row[:lepton_type]
+    isna(lt) && return nw
+    if lt == 13
+        const x = nw * (1.0 - abs(1.0 - row[:lepton_weight__id] * row[:lepton_weight__iso] * row[:lepton_weight__trigger]));
+        return isna(x)||isnan(x) ? nw : x;
+    elseif lt == 11;
+        const x = nw * (1.0 - abs(1.0 - row[:lepton_weight__iso] * row[:lepton_weight__trigger]));
+        return isna(x)||isnan(x) ? nw : x
+    else
+        error("Unknown lepton type: ", row[:lepton_type])
+    end
+end
+
+for samp in [:ttjets, :tchan, :wjets]
+    scenarios[(:lepton_weight__up, samp)] = Scenario(
+        :nominal,
+        samp,
+        lepton_weight_func_up,
+        :lepton_weight__up
+    )
+    scenarios[(:lepton_weight__down, samp)] = Scenario(
+        :nominal,
+        samp,
+        lepton_weight_func_down,
+        :lepton_weight__down
+    )
+end
+
 for weight in [:top_weight__up, :top_weight__down]
     nomw = nominal_weights[weight]
 
@@ -193,7 +280,7 @@ for weight in [:top_weight__up, :top_weight__down]
     )
 end
 
-for proc in vcat(mcsamples, :data_mu, :data_ele)
+for proc in vcat(mcsamples)
     scenarios[(:nominal, proc)] = Scenario(
         :nominal,
         proc,
@@ -212,7 +299,7 @@ end
 for proc in [:data_mu, :data_ele]
 
     scenarios[(:unweighted, proc)] = Scenario(
-        :unknown,
+        symbol(""),
         proc,
         (nw::Float64, row::DataFrameRow) -> 1.0,
         :unweighted
@@ -264,17 +351,17 @@ scenarios[(:unweighted, :tchan)] =
 #t-channel asymmetry re-weighting
 scenarios[(:asym_028, :tchan)] =
     Scenario(:nominal, :tchan,
-    (nw::Float64, row::DataFrameRow)-> (0.28 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
+    (nw::Float64, row::DataFrameRow)-> nw * (0.28 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
     :asym_028
 )
 scenarios[(:asym_008, :tchan)] =
     Scenario(:nominal, :tchan,
-    (nw::Float64, row::DataFrameRow)-> (0.08 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
+    (nw::Float64, row::DataFrameRow)-> nw * (0.08 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
     :asym_008
 )
 scenarios[(:asym_000, :tchan)] =
     Scenario(:nominal, :tchan,
-    (nw::Float64, row::DataFrameRow)-> (0.00 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
+    (nw::Float64, row::DataFrameRow)-> nw * (0.00 * row[:cos_theta_lj_gen] + 0.5) / (0.44 * row[:cos_theta_lj_gen] + 0.5),
     :asym_000
 )
 
@@ -308,10 +395,10 @@ function systematics_to_json(fname::ASCIIString)
         "systematics_table" => {
         string(k) => string(v) for (k,v) in SYSTEMATICS_TABLE
     },
-    })
+    }, 4)
     write(of, js)
     close(of)
 end
 
-export SYSTEMATICS_TABLE, REV_SYSTEMATICS_TABLE
+export SYSTEMATICS_TABLE, REV_SYSTEMATICS_TABLE, systematic_processings
 export weight_scenarios, scenarios, scens_gr, Scenario

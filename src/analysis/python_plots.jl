@@ -16,8 +16,8 @@ function draw_data_mc_stackplot(ax, hists;order=nothing,wjets_split=false,kwd...
     ]
     if wjets_split
         append!(draws, [
-            ("wjets__light", hists["wjets__light"], {:color=>"lightgreen", :label=>"W+jets (l)"}),
-            ("wjets__heavy", hists["wjets__heavy"], {:color=>"darkgreen", :label=>"W+jets (bc)"})
+            ("wjets_light", hists["wjets_light"], {:color=>"lightgreen", :label=>"W+jets (l)"}),
+            ("wjets_heavy", hists["wjets_heavy"], {:color=>"darkgreen", :label=>"W+jets (bc)"})
         ])
     else
         append!(draws, [
@@ -139,19 +139,21 @@ function ratio_hist(hists)
         +, Histogram(hists["DATA"].bin_edges),
         [v for (k,v) in filter(x -> x[1] == "DATA", collect(hists))]
     )
-    
+
     mcs = [(!isna(x) && x>0) ? Poisson(int(round(x))) : Poisson(1) for x in entries(mc)]
     datas = [(!isna(x) && x>0) ? Poisson(int(round(x))) : Poisson(1) for x in entries(data)]
     N = 10000
 
     errs = Array(Float64, (2, length(mcs)))
     means = Array(Float64, length(mcs))
+
     for i=1:length(mcs)
         m = float(rand(mcs[i], N)) * mc.bin_contents[i] / mc.bin_entries[i]
         d = rand(datas[i], N)
-        v = (d-m)./d
+        #v = (d-m)./d
+        v = d./m
         v = Float32[isna(_v) || isnan(_v) ? 0 : _v for _v in v]
-        err_up, mean, err_down = quantile(v, 0.99), quantile(v, 0.5), quantile(v, 0.01)
+        err_up, mean, err_down = quantile(v, 0.68), quantile(v, 0.5), quantile(v, 0.32)
         errs[1,i] = abs(mean-err_down)
         errs[2,i] = abs(mean-err_up)
         means[i] = mean
@@ -200,7 +202,7 @@ function ratio_axes(;frac=0.2, w=5, h=5)
     fig = PyPlot.plt.figure(figsize=(w,h))
     a2 = PyPlot.plt.axes((0.0, 0.0, 1.0, frac))
     a1 = PyPlot.plt.axes((0.0,frac, 1.0, 1-frac), sharex=a2)
-    a2[:set_ylim](-1,1)
+    a2[:set_ylim](0,2)
     a2[:yaxis][:tick_right]()
     a2[:yaxis][:set_label_position]("right")
     PyPlot.plt.setp(a1[:get_xticklabels](), visible=false)
@@ -241,7 +243,7 @@ function errorbars(a, h; kwargs...)
     means, errs = ratio_hist(h)
 
     a[:errorbar](midpoints(hdata.bin_edges), means[1:nb-1], errs[:, 1:nb-1], ls="", marker=".", color="black"; kwargs...)
-    a[:axhline](0.0, color="black")
+    a[:axhline](1.0, color="black")
     a[:grid]()
 
     return means, errs
@@ -259,6 +261,7 @@ function svfg(fname)
     #savefig("$fname.png", bbox_inches="tight", pad_inches=0.4)
     savefig("$fname.pdf", bbox_inches="tight", pad_inches=0.4)
     close()
+    println("SVFG: $fname.pdf")
 end
 #
 # function channel_comparison(
@@ -365,6 +368,8 @@ function deltaerr(
     systematics::Vector{ASCIIString},
     normed
     )
+
+    length(systematics)==0 && return (0.0, 0.0)
     N = total_mc_variated(hists, "nominal")[1:end-1]
 
     function normf(syst, direction)
@@ -384,7 +389,7 @@ function deltaerr(
     #fully correlated, simple sum of template variations from nominal
     f(direction) = [abs(normf(s, direction) - N) for s in systematics] |> sum
 
-    return f("up"), f("down")
+    return (f("up"), f("down"))
 end
 
 function tot_syst_err(
@@ -409,15 +414,17 @@ function draw_errband(
     hists::Associative;
     log=false,
     systematics_unnormed::Vector{ASCIIString}=ASCIIString[
-        "ttjets_scale", "wzjets_scale", "tchan_scale"
     ],
     systematics_normed::Vector{ASCIIString}=[
-        "matching",
+        "ttjets_scale", "wzjets_scale", "tchan_scale",
+        "ttjets_matching", "wzjets_matching",
         "jes", "jer",
         "mass",
         "met",
-        "lepton_id", "lepton_iso", "lepton_trigger",
-        "pu", "btag_bc", "btag_l"
+        "lepton_id", "lepton_iso", "lepton_trigger", "lepton_weight",
+        "pu", "btag_bc", "btag_l",
+        "wjets_shape", "wjets_flavour_light", "wjets_flavour_heavy",
+        "qcd_antiiso",
     ]
     )
 
@@ -441,87 +448,87 @@ function draw_errband(
         color="grey",
         fill=false,
         linewidth=0,
-        hatch="///",
+        hatch="/////",
         label="uncertainty";
         log=log
     )
 
     return tot_du, tot_dd
-
-    # axes[:bar](
-    #     lowedge(hists["DATA"].bin_edges),
-    #     dd+du,
-    #     widths(hists["DATA"].bin_edges),
-    #     N - dd,
-    #     edgecolor="black",
-    #     color="black",
-    #     fill=false,
-    #     linewidth=0,
-    #     hatch="\\\\",
-    #     label="systematic\nuncertainty";
-    #     log=log
-    # )
 end
 
 cmspaper(ax, x, y, lumi=20; additional_text="") = text(
     x, y,
-    "CMS \$ \\sqrt{s}=8\$ TeV \n \$ L_{int}=$lumi\\ fb^{-1}\$\n$additional_text",
+    "CMS \$ \\sqrt{s}=8\$ TeV \n \$ L_{int}=$lumi\\ \\mathrm{fb}^{-1}\$\n$additional_text",
     transform=ax[:transAxes], horizontalalignment="center", verticalalignment="top"
+)
+
+cmspaper_title(ax, x, y, lumi=20; additional_text="") = text(
+    x, y,
+    "CMS \$\\sqrt{s}=8\$ TeV \$L_{int}=$lumi\\ \\mathrm{fb}^{-1}\$ $additional_text",
+    transform=ax[:transAxes], horizontalalignment="center", verticalalignment="bottom"
 )
 
 function combdraw(
     hists, var::Symbol;
     log=false, plot_title="",
-    loc_paperstring=(:top, :right), titletext=""
+    loc_paperstring=(:top, :right), titletext="", kwargs...
     )
     fig, (ax, rax) = ratio_axes()
 
-    draw_data_mc_stackplot(ax, hists;log=log,wjets_split=true);
+    draw_data_mc_stackplot(ax, hists;log=log,wjets_split=false);
     ax[:set_ylim](bottom=log?10:0)
     ax[:grid](true, which="both")
-    tot_du, tot_dd = draw_errband(ax, hists;
-        log=log
-    )
-    means, errs = errorbars(rax, hists)
+    kwargsd = {k=>v for (k,v) in kwargs}
+    do_errband = pop!(kwargsd, :do_errorband, true)
+    if do_errband
+        tot_du, tot_dd = draw_errband(ax, hists;
+            log=log
+        )
+        means, errs = errorbars(rax, hists)
 
-    mc = reduce(
-    +, Histogram(hists["DATA"].bin_edges), [
-            hists[k] for k in [
-                "tchan", "ttjets", "wjets",
-                "qcd", "gjets", "twchan",
-                "schan", "diboson", "dyjets"
-            ]
-    ]);
-    #println(hcat(tot_dd, mc.bin_contents[1:end-1], hists["DATA"].bin_contents[1:end-1], tot_du))
+        mc = reduce(
+        +, Histogram(hists["DATA"].bin_edges), [
+                hists[k] for k in [
+                    "tchan", "ttjets", "wjets",
+                    "qcd", "gjets", "twchan",
+                    "schan", "diboson", "dyjets"
+                ]
+        ]);
+        #println(hcat(tot_dd, mc.bin_contents[1:end-1], hists["DATA"].bin_contents[1:end-1], tot_du))
 
-    mup = (hists["DATA"].bin_contents[1:end-1] - (mc.bin_contents[1:end-1] + tot_du)) ./ hists["DATA"].bin_contents[1:end-1]
-    mdown = (hists["DATA"].bin_contents[1:end-1] - (mc.bin_contents[1:end-1] - tot_dd)) ./ hists["DATA"].bin_contents[1:end-1]
+        mup = (mc.bin_contents[1:end-1] + tot_du) ./ (mc.bin_contents[1:end-1])
+        mdown = (mc.bin_contents[1:end-1] - tot_dd) ./ (mc.bin_contents[1:end-1])
 
-    rax[:bar](
-        lowedge(hists["DATA"].bin_edges),
-        mdown - mup,
-        widths(hists["DATA"].bin_edges),
-        mup,
-        edgecolor="grey",
-        color="grey",
-        fill=false,
-        linewidth=0,
-        hatch="///",
-    )
-#     rax[:plot](midpoints(hists["DATA"].bin_edges), mdown, marker=".")
-#     rax[:plot](midpoints(hists["DATA"].bin_edges), mup, marker=".")
-
-    if loc_paperstring == (:top, :right)
-        cmspaper(ax, 0.8, 0.97, additional_text=titletext)
-    elseif loc_paperstring == (:top, :left)
-        cmspaper(ax, 0.22, 0.97, additional_text=titletext)
+        rax[:bar](
+            lowedge(hists["DATA"].bin_edges),
+            mdown - mup,
+            widths(hists["DATA"].bin_edges),
+            mup,
+            edgecolor="grey",
+            color="grey",
+            fill=false,
+            linewidth=0,
+            hatch="///",
+        )
+    #     rax[:plot](midpoints(hists["DATA"].bin_edges), mdown, marker=".")
+    #     rax[:plot](midpoints(hists["DATA"].bin_edges), mup, marker=".")
     end
+
+    #if loc_paperstring == (:top, :right)
+    #    cmspaper(ax, 0.8, 0.97, additional_text=titletext)
+    #elseif loc_paperstring == (:top, :left)
+    #    cmspaper(ax, 0.22, 0.97, additional_text=titletext)
+    #end
+    cmspaper_title(ax, 0.5, 1.01, additional_text=titletext)
     ax[:set_title](plot_title)
     rax[:set_xlabel](VARS[var], fontsize=22)
-    rax[:set_ylabel]("\$ \\frac{D - M}{D} \$")
+    rax[:set_ylabel]("\$ \\frac{\\mathrm{data}}{\\mathrm{prediction}} \$")
     rslegend(ax)
 
-    return ax, rax, mup, mdown, means[1:end-1]
+    #ax[:set_ylim](top=maximum(contents(hists["DATA"])) * 1.3)
+
+    #return ax, rax, mup, mdown, means[1:end-1]
+    return ax, rax
 end
 
 lepton_string = {:mu=>"\$\\mu^\\pm \$", :ele=>"\$e^\\pm \$"}

@@ -132,23 +132,7 @@ def MuonPath(process, conf):
     )
 
     if conf.doDebug:
-        process.goodSignalMuAnalyzer = cms.EDAnalyzer("SimpleMuonAnalyzer", interestingCollections=cms.untracked.VInputTag("muonsWithID", "muonsWithIDAll", "muonsWithIso", "goodSignalMuons", "looseVetoMuons"))
-        process.vetoEleAnalyzer = cms.EDAnalyzer("SimpleElectronAnalyzer", interestingCollections=cms.untracked.VInputTag("looseVetoElectrons"))
-        process.muPrintOutSequence = cms.Sequence(process.goodSignalMuAnalyzer*process.vetoEleAnalyzer)
-        process.muPath.insert(
-            process.muPath.index(process.oneIsoMu),
-            process.muPrintOutSequence
-        )
-        process.oneIsoMuID = cms.EDAnalyzer("EventIDAnalyzer", name=cms.untracked.string("oneIsoMuID"))
-        process.muPath.insert(
-            process.muPath.index(process.oneIsoMu)+1,
-            process.oneIsoMuID
-        )
-        process.nJetID = cms.EDAnalyzer("EventIDAnalyzer", name=cms.untracked.string("nJetID"))
-        process.muPath.insert(
-            process.muPath.index(process.nJets)+1,
-            process.nJetID
-        )
+        process.muAnalyzer = cms.EDAnalyzer("SimpleMuonAnalyzer", interestingCollections=cms.untracked.VInputTag("muonsWithID", "muonsWithIDAll", "muonsWithIso", "goodSignalMuons", "looseVetoMuons"))
 
     if conf.isMC:
       #Add muon scale factors

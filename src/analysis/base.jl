@@ -12,7 +12,6 @@ t0 = time()
 
 using DataArrays, DataFrames
 using JSON
-using HDF5, JLD
 using Histograms
 
 include("basedir.jl")
@@ -68,7 +67,7 @@ function nominal_weight(df::DataFrameRow)
         const wjets_shape_weight = df[:wjets_ct_shape_weight]
 
         const w = df[:xsweight]::Float64 * b_weight * pu_weight * lepton_weight__id *
-            lepton_weight__iso * lepton_weight__trigger * wjets_shape_weight
+            lepton_weight__iso * lepton_weight__trigger * wjets_shape_weight * top_weight
 
         return w
     else
@@ -76,29 +75,29 @@ function nominal_weight(df::DataFrameRow)
     end
 end
 
-const procs = Symbol[:wjets, :ttjets, :tchan, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
-const mcsamples = Symbol[:ttjets, :wjets, :tchan, :dyjets, :diboson, :twchan, :schan, :gjets];
+const procs = Symbol[:tchan, :wjets, :ttjets, :gjets, :dyjets, :schan, :twchan, :diboson, :qcd_mc_mu, :qcd_mc_ele]
+const mcsamples = Symbol[:tchan, :ttjets, :wjets, :twchan, :schan, :gjets, :dyjets, :diboson];
 const TOTAL_SAMPLES = vcat(mcsamples, :qcd)
 
 #lists the various systematic sample types
-const systematic_processings = Symbol[
-   :nominal,
-   :EnUp, :EnDown,
-   :UnclusteredEnUp, :UnclusteredEnDown,
-   :ResUp, :ResDown,
-   symbol("signal_comphep_anomWtb-0100"), symbol("signal_comphep_anomWtb-unphys"), symbol("signal_comphep_nominal"),
-   :mass166_5, :mass169_5, :mass175_5, :mass178_5,
-   :scaleup, :scaledown,
-   :matchingup, :matchingdown,
-   :wjets_fsim_nominal,
-   :unknown
-]
+##const systematic_processings = Symbol[
+##   :nominal,
+##   :EnUp, :EnDown,
+##   :UnclusteredEnUp, :UnclusteredEnDown,
+##   :ResUp, :ResDown,
+##   symbol("signal_comphep_anomWtb-0100"), symbol("signal_comphep_anomWtb-unphys"), symbol("signal_comphep_nominal"),
+##   :mass166_5, :mass169_5, :mass175_5, :mass178_5,
+##   :scaleup, :scaledown,
+##   :matchingup, :matchingdown,
+##   :wjets_fsim_nominal,
+##   :unknown
+##]
 
-const comphep_processings = Symbol[
-    symbol("signal_comphep_anomWtb-0100"),
-    symbol("signal_comphep_anomWtb-unphys"),
-    symbol("signal_comphep_nominal")
-]
+##const comphep_processings = Symbol[
+##    symbol("signal_comphep_anomWtb-0100"),
+##    symbol("signal_comphep_anomWtb-unphys"),
+##    symbol("signal_comphep_nominal")
+##]
 
 include("$BASE/src/analysis/util.jl")
 include("$BASE/src/fraction_fit/hists.jl")
@@ -147,8 +146,12 @@ flatten(a)=a
 
 #load the fit results
 const FITRESULTS = {
-    :mu=>FitResult("$BASE/results/fits/apr21/bdt/mu.json"),
-    :ele=>FitResult("$BASE/results/fits/apr21/bdt/ele.json")
+    #:mu=>FitResult("$BASE/results/fits/Aug12_topweight/nominal/mu.json"),
+    #:ele=>FitResult("$BASE/results/fits/Aug12_topweight/nominal/ele.json"),
+    #:combined=>FitResult("$BASE/results/fits/Aug12_topweight/nominal/combined.json")
+    :mu=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/mu.json"),
+    :ele=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/ele.json"),
+    :combined=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/combined.json")
 }
 
 t1 = time()
@@ -197,18 +200,59 @@ function hists_varname(hists::Associative)
     end
 end
 
+function walk(p, f::Function)
+    for x in readdir(p)
+        y = joinpath(p, x)
+        f(y)
+        isdir(y) && walk(y, f)
+    end
+    return
+end
+
+grep(arr::AbstractVector, pat::ASCIIString) =
+    collect(filter(x->contains(string(x), string(pat)), arr))
+
+function nona!(X)
+    X[isna(X)] = false
+end
+postfix_added(x) = replace(x, ".root", ".root.added");
+
+#Calculate the asymmetry of a histogram, splitting in the middle
+#throws an error if NB%2!=0
+function asymmetry(x::AbstractVector)
+    nb = length(x)
+    nb2 = int(nb/2)
+    return -(sum(x[1:nb2]) - sum(x[nb2+1:end])) / (sum(x[1:nb2]) + sum(x[nb2+1:end]))
+end
+
+function asymmetry(x::Histogram)
+    asymmetry(contents(x)[1:end-1])
+end
+
+#compiles a list of files located in pref/sample/N/output.root
+function find_files(pref, sample)
+    fs = map(x->"$pref/$sample/$x/output.root", readdir("$pref/$sample"))
+    fs = filter(f->isfile(f), fs)
+    length(fs)>0 || error("no files selected for $pref/$sample")
+    return fs, map(x->"$x.added", fs)
+end
+
+const DATAPATH = "/Users/joosep/Dropbox/kbfi/top/stpol/results/skims/May1_metphi_on/"
+
 export BASE
 export infb, chunk, chunks, flatten, FITRESULTS, hmap, writedf, readdf, systematic_processings
 export procs, mcsamples, TOTAL_SAMPLES
 export qcd_weight, nominal_weight, is_data, is_mc, get_no_na, is_any_na
 export Histograms
 export remove_prefix, hists_varname
+export asymmetry
+export walk, grep, DATAPATH, nona!, postfix_added, find_files
 end
 
 using DataArrays, DataFrames
 using JSON
-using HDF5, JLD
 using Histograms
+import Histograms.Histogram
 using PyCall
 using SingleTopBase
 

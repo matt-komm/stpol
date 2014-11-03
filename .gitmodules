@@ -3,7 +3,7 @@
 	url = git@github.com:jpata/ntuple.git
 [submodule "CMSSW/src/CMGTools/External"]
 	path = CMSSW/src/CMGTools/External
-	url = https://github.com/latinos/UserCode-CMG-CMGTools-External
+	url = https://github.com/jpata/UserCode-CMG-CMGTools-External
 [submodule "CMSSW/src/QScaleISRWeightProducer"]
 	path = CMSSW/src/QScaleISRWeightProducer
 	url = git@github.com:jpata/QScaleISRWeightProducer.git
@@ -13,3 +13,9 @@
 [submodule "src/stpol-unfold"]
 	path = src/stpol-unfold
 	url = git@github.com:jpata/stpol-unfold.git
+[submodule "CMSSW/src/RecoMET/METAnalyzers"]
+	path = CMSSW/src/RecoMET/METAnalyzers
+	url = git@github.com:cms-analysis/RecoMET-METAnalyzers.git
+[submodule "CMSSW/src/UserCode/TTHPAT"]
+	path = CMSSW/src/UserCode/TTHPAT
+	url = https://github.com/HEP-KBFI/tth-pfbreco

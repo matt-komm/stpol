@@ -6,8 +6,7 @@ import sys
 import ROOT
 from ROOT import TMVA
 import numpy as np
-import time
-
+import time, os
 from xml.dom import minidom
 from path import STPOL_DIR
 
@@ -38,6 +37,9 @@ def main():
             raise Exception("Could not open TTree '%s' in %s" % (treename, infn))
 
         ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
+
+        if os.path.exists(ofn):
+            os.remove(ofn)
 
         ofile = open(ofn, "w", 1)
         ofile.write("# filename=%s\n" % infn)
@@ -163,6 +165,9 @@ def mva_loop_lepton_separate(mvaname, infiles, mvas, varmaps):
             raise Exception("Could not open TTree '%s' in %s" % (treename, infn))
 
         ofn = infn.replace(".root", "_mva_%s.csv" % mvaname)
+
+        if os.path.exists(ofn):
+            os.remove(ofn)
 
         ofile = open(ofn, "w")
         ofile.write("# filename=%s\n" % infn)

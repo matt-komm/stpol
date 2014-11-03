@@ -19,7 +19,9 @@ for s in [:Pt, :Eta, :Phi, :Mass, :partonFlavour, :bDiscriminatorCSV, :bDiscrimi
 end
 
 sources[:cos_theta_lj] = Source(:cosTheta, :cosThetaLightJet, :STPOLSEL2, Float64)
+sources[:cos_theta_whel_lj] = Source(:cosThetaWHelicity, :cosThetaLightJet, :STPOLSEL2, Float64)
 sources[:cos_theta_bl] = Source(:cosTheta, :cosThetaEtaBeamline, :STPOLSEL2, Float64)
+sources[:cos_theta_whel_lj_gen] = Source(:cosThetaProducerWHelicityTrueAll, :cosThetaLightJet, :STPOLSEL2, Float64)
 sources[:cos_theta_lj_gen] = Source(:cosThetaProducerTrueAll, :cosThetaLightJet, :STPOLSEL2, Float64)
 sources[:cos_theta_bl_gen] = Source(:cosThetaProducerTrueAll, :cosThetaEtaBeamline, :STPOLSEL2, Float64)
 sources[:met] = Source(:patMETNTupleProducer, :Pt, :STPOLSEL2)
@@ -40,7 +42,12 @@ sources[:nsignalmu] = Source(:muonCount, symbol(""), :STPOLSEL2, Int32)
 sources[:nsignalele] = Source(:electronCount, symbol(""), :STPOLSEL2, Int32)
 
 for s in [:Pt, :Eta, :Phi, :Mass]
-    sources[part(:top, s)] = Source(:recoTopNTupleProducer, s, :STPOLSEL2)
+    sources[part(:top, s, :reco)] = Source(:recoTopNTupleProducer, s, :STPOLSEL2)
+    sources[part(:top, s, :gen)] = Source(:trueTopNTupleProducer, s, :STPOLSEL2)
+    sources[part(:W, s, :reco)] = Source(:recoWNTupleProducer, s, :STPOLSEL2)
+    sources[part(:W, s, :gen)] = Source(:trueWNTupleProducer, s, :STPOLSEL2)
+    sources[part(:shat, s)] = Source(:shatNTupleProducer, s, :STPOLSEL2)
+    sources[part(:hadronic, s)] = Source(:htNTupleProducer, s, :STPOLSEL2)
 end
 
 for v in [:C, :D, :circularity, :isotropy, :sphericity, :aplanarity, :thrust]
@@ -61,6 +68,10 @@ sources[weight(:pu, :down)] = Source(:puWeightProducer, :PUWeightNtrueDown, :STP
 
 sources[weight(:btag)] = Source(:bTagWeightProducerNoCut, :bTagWeight, :STPOLSEL2, Float32)
 sources[weight(:btag, :tchpt)] = Source(:bTagWeightProducerNoCutTCHPT, :bTagWeight, :STPOLSEL2, Float32)
+sources[weight(:btag, :tchpt, :bc, :up)] = Source(:bTagWeightProducerNoCutTCHPT, :bTagWeightSystBCUp, :STPOLSEL2, Float32)
+sources[weight(:btag, :tchpt, :bc, :down)] = Source(:bTagWeightProducerNoCutTCHPT, :bTagWeightSystBCDown, :STPOLSEL2, Float32)
+sources[weight(:btag, :tchpt, :l, :up)] = Source(:bTagWeightProducerNoCutTCHPT, :bTagWeightSystLUp, :STPOLSEL2, Float32)
+sources[weight(:btag, :tchpt, :l, :down)] = Source(:bTagWeightProducerNoCutTCHPT, :bTagWeightSystLDown, :STPOLSEL2, Float32)
 sources[weight(:btag, :simple)] = Source(:bTagWeightProducerNoCutSimple, :bTagWeight, :STPOLSEL2, Float32)
 sources[weight(:btag, :bc, :up)] = Source(:bTagWeightProducerNoCut, :bTagWeightSystBCUp, :STPOLSEL2, Float32)
 sources[weight(:btag, :bc, :down)] = Source(:bTagWeightProducerNoCut, :bTagWeightSystBCDown, :STPOLSEL2, Float32)

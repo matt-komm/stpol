@@ -103,12 +103,16 @@ SimpleMETAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   for(auto& o : objectsOfInterest) {
    edm::Handle<edm::View<reco::Candidate>> objects;
    iEvent.getByLabel(o, objects);
+   if (!objects.isValid()) {
+       edm::LogWarning("analyze()") << o.label() << " is not valid";
+       return;
+   }
    //for (edm::View<reco::Candidate>::const_iterator obj = objects->begin(); obj != objects->end(); obj++) {
    edm::LogInfo("analyze()") << "Collection " << o.label() << " has " << objects->size() << " items";
    int i = 0;
    for (auto& pobj : *objects) {
     const pat::MET& obj = (const pat::MET& )pobj;
-    edm::LogInfo("analyze()") << o.label() << "(" << i << "):" <<
+    edm::LogInfo("analyze() obj") << o.label() << "(" << i << "):" <<
     " pt: " << obj.pt() << 
     " px: " << obj.p4().Px() <<
     " py: " << obj.p4().Py() <<

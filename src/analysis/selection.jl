@@ -59,6 +59,11 @@ module Cuts
         (indata[:top_mass] < 220) &
         (indata[:top_mass] > 130)
     )
+    
+    cutbased_topmass(indata) = (
+        (indata[:top_mass] < 220) &
+        (indata[:top_mass] > 130)
+    )
 
     function truelepton(indata, x::Symbol)
         x == :mu && return abs(indata[:gen_lepton_id]) .== 13
@@ -80,53 +85,6 @@ module Cuts
     ljet_rms(indata) = indata[:ljet_rms] .< 0.025
 end
 
-if !isdefined(:SELECTION)
-
-using DataFrames
-
-function perform_selection(indata::AbstractDataFrame)
-    inds = {
-        :mu => Cuts.is_mu(indata),
-        :ele => Cuts.is_ele(indata),
-        :ljet_rms =>indata[:ljet_rms] .> 0.025,
-        :mtw =>indata[:mtw] .> 50,
-        :met =>indata[:met] .> 45,
-        ##:_mtw => x -> indata[:mtw] .> x,
-        ##:_met => x -> indata[:met] .> x,
-        ##:_qcd_mva => x -> indata[:qcd] .> x,
-        :qcd_mva_mu => indata[:bdt_qcd] .> 0.4,
-        :qcd_mva_ele => indata[:bdt_qcd] .> 0.55,
-        :dr => (indata[:ljet_dr] .> 0.5) & (indata[:bjet_dr] .> 0.5),
-        :iso => (indata[:isolation] .== ("iso"|>hash|>int)),
-        :aiso => (indata[:isolation] .== ("antiiso"|>hash|>int)),
-        :njets => {k=>indata[:njets].==k for k in [2,3]},
-        :ntags => {k=>indata[:ntags].==k for k in [0,1,2]},
-        ##:bdt_grid => {k=>indata[:bdt_sig_bg].>k for k in linspace(-1, 1, 11)},
-        :hlt => {k=>indata[symbol("hlt_$k")] for k in [:mu, :ele]},
-        :sample => {k=>indata[:sample].==(k|>string|>hash|>int) for k in [:data_mu, :data_ele, :tchan, :ttjets, :wjets, :dyjets, :diboson, :gjets, :schan, :twchan, :qcd_mc_mu, :qcd_mc_ele]},
-        :systematic => {k=>indata[:systematic].==(k|>string|>hash|>int) for k in [
-            :nominal, :unknown,
-            :EnUp, :EnDown,
-            :ResUp, :ResDown,
-            :UnclusteredEnUp, :UnclusteredEnDown,
-            symbol("signal_comphep_anomWtb-unphys"),
-            symbol("signal_comphep_anomWtb-0100"),
-            symbol("signal_comphep_nominal")
-        ]},
-        :truelepton => {
-            :mu=>abs(indata[:gen_lepton_id]).==13,
-            :ele=>abs(indata[:gen_lepton_id]).==11
-        }
-    }
-
-    inds[:data] = (inds[:sample][:data_mu] | inds[:sample][:data_ele])
-    inds[:mc] = !inds[:data]
-    return inds
-end
-
-const SELECTION = 1
-
-end
 
 function pass_selection(reco::Bool, bdt_cut::Float64, reco_lepton::Symbol, row::DataFrameRow)
     if reco && !is_any_na(row, :njets, :ntags, :bdt_sig_bg, :n_signal_mu, :n_signal_ele, :n_veto_mu, :n_veto_ele)::Bool

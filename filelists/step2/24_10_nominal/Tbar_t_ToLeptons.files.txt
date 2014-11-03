@@ -1,0 +1,11 @@
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_1_1_GJC.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_2_1_WbT.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_3_1_VPJ.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_4_1_Bq2.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_5_2_fOk.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_6_1_Red.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_7_1_NzT.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_8_1_zbQ.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_9_1_Wuc.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_10_1_VtV.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_t_ToLeptons/output_11_1_00i.root

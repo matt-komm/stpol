@@ -12,7 +12,7 @@ import json
 import sys
 
 def sample_name(fn):
-    return fn.split("/")[-2]
+    return fn.split("/")[-3]
 
 #inputs
 inpdir = sys.argv[1]
@@ -75,8 +75,8 @@ factory.SetWeightExpression("1.0")
 #cut="met>40 && ljet_pt>90"
 
 cuts = {
-    "mu": "((n_signal_mu==1) && (n_signal_ele==0) && (n_veto_mu==0)&&(n_veto_ele==0) && (mtw > 45))",
-    "ele": "((n_signal_mu==0) && (n_signal_ele==1) && (n_veto_mu==0)&&(n_veto_ele==0) && (met > 50))"
+    "mu": "((n_signal_mu==1) && (n_signal_ele==0) && (n_veto_mu==0)&&(n_veto_ele==0))",
+    "ele": "((n_signal_mu==0) && (n_signal_ele==1) && (n_veto_mu==0)&&(n_veto_ele==0))"
 }
 
 cut="(hlt==1) && (njets==2) && (ntags==1) && ((%s) || (%s))" %(cuts["mu"], cuts["ele"])
@@ -88,19 +88,21 @@ factory.PrepareTrainingAndTestTree(
 )
 
 # Book the MVA method
-mva_args = ""\
-    "H:VerbosityLevel=Debug:"\
-    "NTrees=2000:"\
-    "BoostType=Grad:"\
-    "Shrinkage=0.1:"\
-    "!UseBaggedGrad:"\
-    "nCuts=2000:"\
-    "nEventsMin=100:"\
-    "NNodesMax=5:"\
-    "UseNvars=4:"\
-    "PruneStrength=5:"\
-    "PruneMethod=CostComplexity:"\
-    "MaxDepth=6"
+#mva_args = ""\
+#    "H:VerbosityLevel=Debug:"\
+#    "NTrees=50:"\
+#    "BoostType=Grad:"\
+#    "Shrinkage=0.1:"\
+#    "!UseBaggedGrad:"\
+#    "nCuts=200:"\
+#    "SeparationType=CrossEntropy:"\
+#    "NNodesMax=5:"\
+#    "UseNvars=4:"\
+#    "PruneStrength=7:"\
+#    "PruneMethod=CostComplexity:"\
+#    "MaxDepth=2"
+
+mva_args = sys.argv[3]
 
 #categorize by lepton flavour
 lepton_cat = factory.BookMethod(

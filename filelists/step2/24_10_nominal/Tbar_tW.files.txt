@@ -1,0 +1,4 @@
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_tW/output_1_1_KH7.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_tW/output_2_1_pfL.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_tW/output_3_1_amJ.root
+/store/user/andres/s2_Oct22/iso/nominal/Tbar_tW/output_4_1_RBu.root

@@ -19,7 +19,27 @@ def WeightSetup(process, conf):
             "TTJets_mass166_5", "TTJets_mass178_5",
             "TTJets_mass169_5", "TTJets_mass175_5",
             "TTJets_matchingdown", "TTJets_matchingup",
-            "TTJets_scaleup", "TTJets_scaledown"
+            "TTJets_scaleup", "TTJets_scaledown",
+            "TTJets_MSDecays",
+            "TTJets_MSDecays_mass166_5",
+            "TTJets_MSDecays_mass169_5",
+            "TTJets_MSDecays_mass175_5",
+            "TTJets_MSDecays_mass178_5",
+            "TTJets_MSDecays_matchingdown_v1",
+            "TTJets_MSDecays_matchingdown_v2",
+            "TTJets_MSDecays_matchingup",
+            "TTJets_MSDecays_scaledown",
+            "TTJets_MSDecays_scaleup",
+            "TTJets_MS",
+            "TTJets_MS_mass166_5",
+            "TTJets_MS_mass169_5",
+            "TTJets_MS_mass175_5",
+            "TTJets_MS_mass178_5",
+            "TTJets_MS_matchingdown_v1",
+            "TTJets_MS_matchingdown_v2",
+            "TTJets_MS_matchingup",
+            "TTJets_MS_scaledown",
+            "TTJets_MS_scaleup",
         ]:
             channel[s] = "FullSemiLept"
 

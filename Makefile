@@ -22,6 +22,12 @@ test_step2: test_step2_tchan_nominal test_step2_tchan_mass test_step2_tchan_scal
 test_step2_tchan_nominal:
 	cmsRun $(STEP2CFG) inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD outputFile=tests/step2/tchan/nominal.root
 
+test_step2_tchan_comphep_anom_tensor:
+	cmsRun $(STEP2CFG) subChannel=TToBENu_anomWtb-Lv2Rt2_LVRT srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD isComphep=True inputFiles=file:/hdfs/cms/store/user/atiko/TToBENu_anomWtb-Lv2Rt2_LVRT_t-channel_TuneZ2star_8TeV-comphep/tensor/572aa3280a64b07f7208c06b702633e8/output_noSkim_1_1_ga4.root outputFile=tests/step2/tchan/comphep_anom_tensor
+
+test_step2_tchan_comphep_anom_vector:
+	cmsRun $(STEP2CFG) subChannel=TToBENu_anomWtb-0100_t-channel srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD isComphep=True inputFiles=file:/hdfs/cms/store/user/joosep/TToBENu_anomWtb-0100_t-channel_TuneZ2star_8TeV-comphep/Dec3_anom_2b3b43/2a771fe5d008406ebf97c1e21558b199/output_noSkim_1_4_7q1.root outputFile=tests/step2/tchan/comphep_anom_vector
+
 test_step2_tchan_mass:
 	cmsRun $(STEP2CFG) inputFiles=file:$(infile_step2_tchan_mass) subChannel=T_t_ToLeptons_mass166_5 srcPUDistribution=S10 destPUDistribution=data dataRun=RunABCD outputFile=tests/step2/tchan/mass.root          
 
@@ -32,41 +38,15 @@ test_step2_metphi:
 	cmsRun step2_csvt_metshift_off.py inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons outputFile=tests/step2/tchan/metphi_off.root
 	cmsRun step2_csvt_metshift_on.py inputFiles=file:$(infile_step2_tchan_nominal) subChannel=T_t_ToLeptons outputFile=tests/step2/tchan/metphi_on.root
 
-###   all: update step2_ntuple
-###   .PHONY: setup
-###   
-###   setup:
-###   	./setup.sh
-###   
-###   update:
-###   	git pull
-###   	git submodule init
-###   	git submodule update --remote --recursive
-###   
-###   step2_ntuple:
-###   	cd src/ntuple; make
-###   
-###   test:
-###   	cd src/ntuple;make test
-###   ##ROOTCC=c++ -std=c++11 `root-config --cflags --libs`
-###   #ROOTCC=c++ -std=c++0x `root-config --cflags --libs` -lTreePlayer
-###   #
-###   #BOOSTLIBS=-I/cvmfs/cms.cern.ch/slc5_amd64_gcc462/external/boost/1.47.0/include -L/cvmfs/cms.cern.ch/slc5_amd64_gcc462/external/boost/1.47.0/lib -I/Users/joosep/CMSSW/osx107_amd64_gcc462/external/boost/1.47.0-cms/include -L/Users/joosep/CMSSW/osx107_amd64_gcc462/external/boost/1.47.0-cms/lib -lboost_program_options
-###   ##BOOSTLIBS=-lboost_program_options-m#ut
-###   #
-###   #SRC_DIR=$(STPOL_DIR)/CMSSW_5_3_11/src/SingleTopPolarization/Analysis/bin
-###   #
-###   #all: example
-###   #
-###   #example:
-###   #	cd CMSSW*/src/SingleTopPolarization/Analysis/bin; touch BuildFile.xml; scram b -j 2
-###   #
-###   #wjets_rew:
-###   #	mkdir -p $(STPOL_DIR)/bin
-###   #	$(ROOTCC) $(BOOSTLIBS) $(SRC_DIR)/WJets_reweighting.cc -o bin/WJets_reweighting
-###   #	#FIXME: compile using CMSSW-only libs
-###   #	#$(ROOTCC) $(BOOSTLIBS) $(SRC_DIR)/histograms.cc -o bin/histograms
-###   #
-###   #.PHONY : test
-###   #test:
-###   #	./tests/step2.py
+cmssw_debug:
+	cd CMSSW; scram b -j16 USER_CXXFLAGS="-DEDM_ML_DEBUG"
+
+update_an:
+	cp results/tables/*.csv notes/notes/AN-14-001/trunk/data/
+	cp results/plots/unfolded* notes/notes/AN-14-001/trunk/figures/results/
+	cp results/plots/results/* notes/notes/AN-14-001/trunk/figures/results/
+	cp results/plots/unfolding/* notes/notes/AN-14-001/trunk/figures/unfolding/
+	rm -Rf notes/notes/AN-14-001/trunk/data/fits/*
+	cp -R results/fits/aug5/* notes/notes/AN-14-001/trunk/data/fits/
+	rm -Rf notes/notes/AN-14-001/trunk/data/hists_for_fit_unfolding/*
+	cp -R results/hists/Aug5/merged/* notes/notes/AN-14-001/trunk/data/hists_for_fit_unfolding/

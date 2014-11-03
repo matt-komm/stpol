@@ -103,12 +103,16 @@ SimpleElectronAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
   for(auto& o : objectsOfInterest) {
    edm::Handle<edm::View<reco::Candidate>> objects;
    iEvent.getByLabel(o, objects);
+   if (!objects.isValid()) {
+       edm::LogWarning("analyze()") << o.label() << " is not valid";
+       return;
+   }
    //for (edm::View<reco::Candidate>::const_iterator obj = objects->begin(); obj != objects->end(); obj++) {
    edm::LogInfo("analyze()") << "Collection " << o.label() << " has " << objects->size() << " items";
    int i = 0;
    for (auto& pobj : *objects) {
     const pat::Electron& obj = (const pat::Electron& )pobj;
-    edm::LogInfo("analyze()") << o.label() << "(" << i << "):" <<
+    edm::LogInfo("analyze() lep") << o.label() << "(" << i << "):" <<
     " pt: " << obj.pt() << 
     " ecalPt: " << obj.ecalDrivenMomentum().Pt() << 
     " eta: " << obj.eta() <<

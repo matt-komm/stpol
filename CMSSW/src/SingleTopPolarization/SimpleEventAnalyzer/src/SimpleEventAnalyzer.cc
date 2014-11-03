@@ -80,7 +80,7 @@ class SimpleEventAnalyzer : public edm::EDAnalyzer {
 //
 SimpleEventAnalyzer::SimpleEventAnalyzer(const edm::ParameterSet& iConfig)
 : objectsOfInterest(iConfig.getUntrackedParameter<std::vector<edm::InputTag> >("interestingCollections"))
-, maxObjects(iConfig.getUntrackedParameter<unsigned int>("maxObjects"))
+, maxObjects(iConfig.getUntrackedParameter<unsigned int>("maxObjects", 5))
 {
 }
 
@@ -105,6 +105,10 @@ SimpleEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   for(auto& o : objectsOfInterest) {
    edm::Handle<edm::View<reco::Candidate>> objects;
    iEvent.getByLabel(o, objects);
+   if (!objects.isValid()) {
+      edm::LogWarning("analyze()") << o.label() << " is not valid";
+      return;
+   }
    const edm::Provenance& prov = iEvent.getProvenance(objects.id());
    std::stringstream ss; 
    prov.write(ss);

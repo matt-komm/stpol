@@ -1,0 +1,3 @@
+/store/user/andres/s2_Oct22/iso/nominal/T_tW/output_1_1_BGZ.root
+/store/user/andres/s2_Oct22/iso/nominal/T_tW/output_2_1_LQO.root
+/store/user/andres/s2_Oct22/iso/nominal/T_tW/output_3_1_mGv.root

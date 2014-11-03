@@ -54,6 +54,13 @@ def PartonStudySetup(process, untaggedSrc="fwdMostLightJet"):
         Ecm=cms.double(8000)
     )
 
+    process.cosThetaProducerWHelicityTrueAll = cms.EDProducer('CosThetaProducer',
+        topSrc=cms.InputTag("genParticleSelector", "trueWboson"),
+        jetSrc=cms.InputTag("genParticleSelector", "trueTop"),
+        leptonSrc=cms.InputTag("genParticleSelector", "trueLepton"),
+        Ecm=cms.double(8000)
+    )
+
     process.matrixCreator = cms.EDAnalyzer('TransferMatrixCreator',
         src = cms.InputTag("cosTheta", "cosThetaLightJet"),
         trueSrc = cms.InputTag("cosThetaProducerTrueAll", "cosThetaLightJet")
@@ -87,7 +94,8 @@ def PartonStudySetup(process, untaggedSrc="fwdMostLightJet"):
     process.partonStudyTrueSequence = cms.Sequence(
         process.genParticleSelector *
         process.hasGenLepton *
-        process.cosThetaProducerTrueAll
+        process.cosThetaProducerTrueAll *
+        process.cosThetaProducerWHelicityTrueAll
     )
 
     #Creates histograms (only available via TFileService)

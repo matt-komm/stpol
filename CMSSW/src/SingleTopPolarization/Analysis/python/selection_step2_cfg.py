@@ -9,6 +9,21 @@ import SingleTopPolarization.Analysis.pileUpDistributions as pileUpDistributions
 from SingleTopPolarization.Analysis.weights_cfg import WeightSetup
 import SingleTopPolarization.Analysis.sample_types as sample_types
 
+#FIXME
+nanval = '-10000000000'
+
+#utility function for creating a VPSet for CandViewNTupleProducer2
+def ntupleCollection(items):
+    varVPSet = cms.VPSet()
+    for item in items:
+        pset = cms.untracked.PSet(
+            tag=cms.untracked.string(item[0]),
+            quantity=cms.untracked.string(item[1])
+        )
+        varVPSet.append(pset)
+    return varVPSet
+
+
 def SingleTopStep2():
 
     options = VarParsing('analysis')
@@ -71,10 +86,10 @@ def SingleTopStep2():
               "A string Run{A,B,C,D} to specify the data period")
 
     options.register(
-        'doSync', False,
-        VarParsing.multiplicity.singleton,
-        VarParsing.varType.bool,
-        "Synchronization exercise"
+             'doSync', False,
+             VarParsing.multiplicity.singleton,
+             VarParsing.varType.bool,
+             "Synchronization exercise"
     )
 
     options.parseArguments()
@@ -87,7 +102,7 @@ def SingleTopStep2():
     Config.subChannel = options.subChannel
     Config.doDebug = options.doDebug
     Config.isMC = options.isMC
-    Config.doSkim = not sample_types.is_signal(Config.subChannel)
+    Config.doSkim = options.doSync or not sample_types.is_signal(Config.subChannel)
     Config.isCompHep = options.isComphep or "comphep" in Config.subChannel
     Config.isSherpa = options.isSherpa or "sherpa" in Config.subChannel
     Config.systematic = options.systematic
@@ -209,6 +224,14 @@ def SingleTopStep2():
          logErrors=cms.bool(False)
     )
 
+    process.hadronicEventObjects = cms.EDProducer(
+         'CandRefCombiner',
+         sources=cms.vstring(["goodJets"]),
+         maxOut=cms.uint32(9999),
+         minOut=cms.uint32(0),
+         logErrors=cms.bool(False)
+    )
+
     process.allEventObjectsWithNu = cms.EDProducer(
          'CandRefCombiner',
          sources=cms.vstring([
@@ -229,39 +252,53 @@ def SingleTopStep2():
         'EventShapeVarsProducer',
         src = cms.InputTag("allEventObjectsWithNu")
     )
+
+    #Vector sum of all reconstructed objects
+    process.shat = cms.EDProducer('SimpleCompositeCandProducer',
+        sources=cms.VInputTag(["allEventObjects"
+        ])
+    )
+
+    #Hadronic final state
+    process.ht = cms.EDProducer('SimpleCompositeCandProducer',
+        sources=cms.VInputTag(["hadronicEventObjects"])
+    )
+
+    process.shatNTupleProducer = cms.EDProducer(
+        "CandViewNtpProducer2",
+        src = cms.InputTag("shat"),
+        lazyParser = cms.untracked.bool(True),
+        prefix = cms.untracked.string(""),
+        #eventInfo = cms.untracked.bool(True),
+        variables = ntupleCollection(
+            [
+                ["Pt", "pt"],
+                ["Eta", "eta"],
+                ["Phi", "phi"],
+                ["Mass", "mass"],
+            ]
+      )
+    )
+
+    process.htNTupleProducer = process.shatNTupleProducer.clone(
+        src = cms.InputTag("ht")
+    )
+
     process.eventShapeSequence = cms.Sequence(
         process.allEventObjects
+        * process.hadronicEventObjects
         * process.eventShapeVars
         * process.allEventObjectsWithNu
         * process.eventShapeVarsWithNu
+        * process.shat
+        * process.ht
+        * process.shatNTupleProducer
+        * process.htNTupleProducer
     )
 
     #-----------------------------------------------
     # Treemaking
     #-----------------------------------------------
-
-
-    def treeCollection(collection_, maxElems_, varlist):
-        varVPSet = cms.untracked.VPSet()
-        for v in varlist:
-            pset = cms.untracked.PSet(tag=cms.untracked.string(v[0]), expr=cms.untracked.string(v[1]), )
-            varVPSet.append(pset)
-        ret = cms.untracked.PSet(
-            collection=collection_,
-            maxElems=cms.untracked.int32(maxElems_),
-            variables=varVPSet
-        )
-        return ret
-
-    def ntupleCollection(items):
-        varVPSet = cms.VPSet()
-        for item in items:
-            pset = cms.untracked.PSet(
-                tag=cms.untracked.string(item[0]),
-                quantity=cms.untracked.string(item[1])
-            )
-            varVPSet.append(pset)
-        return varVPSet
 
     process.recoTopNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
@@ -296,17 +333,30 @@ def SingleTopStep2():
       )
     )
 
+    process.recoWNTupleProducer = cms.EDProducer(
+        "CandViewNtpProducer2",
+        src = cms.InputTag("recoW"),
+        lazyParser = cms.untracked.bool(True),
+        prefix = cms.untracked.string(""),
+        variables = ntupleCollection(
+            [
+                ["Pt", "pt"],
+                ["Eta", "eta"],
+                ["Phi", "phi"],
+                ["Mass", "mass"],
+            ]
+      )
+    )
+
     process.trueNuNTupleProducer = process.recoNuNTupleProducer.clone(
         src=cms.InputTag("genParticleSelector", "trueNeutrino", "STPOLSEL2"),
     )
-    if Config.isCompHep:
-        process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
-            src=cms.InputTag("recoTrueTop"),
-        )
-    else:
-        process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
-            src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
-        )
+    process.trueWNTupleProducer = process.recoTopNTupleProducer.clone(
+        src=cms.InputTag("genParticleSelector", "trueWboson", "STPOLSEL2"),
+    )
+    process.trueTopNTupleProducer = process.recoTopNTupleProducer.clone(
+        src=cms.InputTag("genParticleSelector", "trueTop", "STPOLSEL2"),
+    )
     process.patMETNTupleProducer = cms.EDProducer(
         "CandViewNtpProducer2",
         src = cms.InputTag("goodMETs"),
@@ -332,7 +382,6 @@ def SingleTopStep2():
         src=cms.InputTag("genParticleSelector", "trueLightJet", "STPOLSEL2"),
     )
 
-    nanval = '-10000000000'
     def userfloat(key):
         return "? hasUserFloat('{0}') ? userFloat('{0}') : {1}".format(key, nanval)
 
@@ -453,8 +502,10 @@ def SingleTopStep2():
         process.patMETNTupleProducer *
         process.recoTopNTupleProducer *
         process.recoNuNTupleProducer *
+        process.recoWNTupleProducer *
         process.trueTopNTupleProducer *
         process.trueNuNTupleProducer *
+        process.trueWNTupleProducer *
         process.trueLeptonNTupleProducer *
         process.trueLightJetNTupleProducer *
         process.goodJetsNTupleProducer *
@@ -490,10 +541,6 @@ def SingleTopStep2():
 
     from SingleTopPolarization.Analysis.leptons_cfg import LeptonSetup
     LeptonSetup(process, Config)
-
-    if Config.doDebug:
-        from SingleTopPolarization.Analysis.debugAnalyzers_step2_cfi import DebugAnalyzerSetup
-        DebugAnalyzerSetup(process)
 
     if Config.isMC:
         WeightSetup(process, Config)
@@ -555,6 +602,7 @@ def SingleTopStep2():
          ),
         outputCommands=cms.untracked.vstring(
             'drop *',
+            #'keep *',
             'keep edmMergeableCounter_*__*',
             'keep *_generator__*',
             #'keep *_genParticles__*', #hack for powheg PDF sets
@@ -585,6 +633,10 @@ def SingleTopStep2():
     )
     if Config.doDebug:
         process.out.outputCommands.append("keep *")
+        process.debugpath = cms.Path(
+            process.muAnalyzer * process.eleAnalyzer *
+            process.jetAnalyzer * process.metAnalyzer
+        )
     process.outpath = cms.EndPath(process.out)
     if Config.doSkim:
         process.out.SelectEvents.SelectEvents = []
