@@ -186,9 +186,19 @@ i = 1
 for fi in good_filelist
     #filename
     prfiles[i, :files] = fi
+   
+    x = 0
 
-    #total number of processed (generated) events
-    x = CMSSW.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
+    #in case of data, LumiBlock counters do not exist any more due to new configuration, just load number of events from file
+    if contains(fi, "Single")
+        ev = Events([fi])
+        x = length(fi)
+    #for old MC config, still load number of processed events from luminosity block
+    #if crashes with product not found, modify if sentence to include crashing
+    else
+        #total number of processed (generated) events
+        x = CMSSW.get_counter_sum([fi], "singleTopPathStep1MuPreCount")
+    end
     prfiles[i, :total_processed] = x
 
     #classify sample according to file name
