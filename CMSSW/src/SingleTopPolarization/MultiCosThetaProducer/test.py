@@ -22,9 +22,9 @@ process.multiCosTheta=cms.EDProducer("MultiCosThetaProducer",
         restFrame=cms.InputTag("genParticleSelector","trueTop"),
         particles=cms.VInputTag(cms.InputTag("genParticleSelector","trueLepton"),cms.InputTag("genParticleSelector","trueLightJet"))
     ),
-    lqLabCosTheta=cms.PSet(
-        restFrame=cms.InputTag("none"),
-        particles=cms.VInputTag(cms.InputTag("genParticleSelector","trueLepton"),cms.InputTag("genParticleSelector","trueLightJet"))
+    wHelicityCosTheta=cms.PSet(
+        restFrame=cms.InputTag("genParticleSelector","trueWboson"),
+        particles=cms.VInputTag(cms.InputTag("genParticleSelector","trueLepton"),cms.InputTag("genParticleSelector","trueTop"))
     )
 )
 
