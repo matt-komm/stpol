@@ -42,10 +42,10 @@ using namespace reco;
 // class declaration
 //
 
-class GenParticleSelector : public edm::EDProducer {
+class GenParticleSelectorPowheg : public edm::EDProducer {
 public:
-    explicit GenParticleSelector(const edm::ParameterSet&);
-    ~GenParticleSelector();
+    explicit GenParticleSelectorPowheg(const edm::ParameterSet&);
+    ~GenParticleSelectorPowheg();
     
     static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
     
@@ -81,7 +81,7 @@ private:
 //
 // constructors and destructor
 //
-GenParticleSelector::GenParticleSelector(const edm::ParameterSet& iConfig)
+GenParticleSelectorPowheg::GenParticleSelectorPowheg(const edm::ParameterSet& iConfig)
 {
     produces<std::vector<GenParticle>>("trueTop");
     produces<std::vector<GenParticle>>("trueLightJet");
@@ -104,7 +104,7 @@ GenParticleSelector::GenParticleSelector(const edm::ParameterSet& iConfig)
 }
 
 
-GenParticleSelector::~GenParticleSelector()
+GenParticleSelectorPowheg::~GenParticleSelectorPowheg()
 {
     
     // do anything here that needs to be done at desctruction time
@@ -119,7 +119,7 @@ GenParticleSelector::~GenParticleSelector()
 
 // ------------ method called to produce the data  ------------
 void
-GenParticleSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
+GenParticleSelectorPowheg::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
     LogDebug("") << "GenParticleSelector";
     count_siblings = 0;
@@ -274,25 +274,25 @@ GenParticleSelector::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
 void
-GenParticleSelector::beginJob()
+GenParticleSelectorPowheg::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void
-GenParticleSelector::endJob() {
+GenParticleSelectorPowheg::endJob() {
     //cout << "a " << count_t << " " <<count_other << " "<< count_events << endl;
 }
 
 // ------------ method called when starting to processes a run  ------------
 void
-GenParticleSelector::beginRun(edm::Run&, edm::EventSetup const&)
+GenParticleSelectorPowheg::beginRun(edm::Run&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a run  ------------
 void
-GenParticleSelector::endRun(edm::Run&, edm::EventSetup const&)
+GenParticleSelectorPowheg::endRun(edm::Run&, edm::EventSetup const&)
 {
     cout << count_t << " " <<count_other << " "<< count_events << " " <<count_over3 << " " << count_diff << endl;
     cout << "fstateMothers" << endl;
@@ -331,19 +331,19 @@ GenParticleSelector::endRun(edm::Run&, edm::EventSetup const&)
 
 // ------------ method called when starting to processes a luminosity block  ------------
 void
-GenParticleSelector::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
+GenParticleSelectorPowheg::beginLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
 }
 
 // ------------ method called when ending the processing of a luminosity block  ------------
 void
-GenParticleSelector::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
+GenParticleSelectorPowheg::endLuminosityBlock(edm::LuminosityBlock&, edm::EventSetup const&)
 {
 }
 
 // ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
 void
-GenParticleSelector::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
+GenParticleSelectorPowheg::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
     //The following says we do not know what parameters are allowed so do no validation
     // Please change this to state exactly what you do use, even if it is no parameters
     edm::ParameterSetDescription desc;
@@ -352,4 +352,4 @@ GenParticleSelector::fillDescriptions(edm::ConfigurationDescriptions& descriptio
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(GenParticleSelector);
+DEFINE_FWK_MODULE(GenParticleSelectorPowheg);

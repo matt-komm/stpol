@@ -17,10 +17,20 @@ process.hasGenLepton = cms.EDFilter(
     minNumber=cms.uint32(1),
     maxNumber=cms.uint32(1),
 )
+process.beamlineProjector=cms.EDProducer("BeamlineProjectorProducer",
+    src=cms.VInputTag(
+        cms.InputTag("genParticleSelector","trueLightJet")
+    )
+)
+
 process.multiCosTheta=cms.EDProducer("MultiCosThetaProducer",
-    lqTopCosTheta=cms.PSet(
+    ljLeptonTopCosTheta=cms.PSet(
         restFrame=cms.InputTag("genParticleSelector","trueTop"),
         particles=cms.VInputTag(cms.InputTag("genParticleSelector","trueLepton"),cms.InputTag("genParticleSelector","trueLightJet"))
+    ),
+    lqBeamlineLeptonTopCosTheta=cms.PSet(
+        restFrame=cms.InputTag("genParticleSelector","trueTop"),
+        particles=cms.VInputTag(cms.InputTag("genParticleSelector","trueLepton"),cms.InputTag("beamlineProjector","trueLightJet-genParticleSelector"))
     ),
     wHelicityCosTheta=cms.PSet(
         restFrame=cms.InputTag("genParticleSelector","trueWboson"),
@@ -28,7 +38,7 @@ process.multiCosTheta=cms.EDProducer("MultiCosThetaProducer",
     )
 )
 
-process.p0 = cms.Path(process.genParticleSelector*process.hasGenLepton*process.multiCosTheta)
+process.p0 = cms.Path(process.genParticleSelector*process.hasGenLepton*process.beamlineProjector*process.multiCosTheta)
 
 process.out= cms.OutputModule("PoolOutputModule",
     splitLevel=cms.untracked.int32(99),
