@@ -52,7 +52,8 @@ class GenJetLightQuarkMatcher:
         virtual void produce(edm::Event&, const edm::EventSetup&);
 
         double calculateDR(const reco::Candidate& p1, const reco::Candidate& p2);
-    
+        bool findBHadronAncestor(std::vector<const reco::GenParticle*> particles);
+        
         edm::InputTag _trueLightQuark;
         edm::InputTag _genJetCollection;
 
@@ -64,7 +65,7 @@ GenJetLightQuarkMatcher::GenJetLightQuarkMatcher(const edm::ParameterSet& iConfi
     _trueLightQuark = iConfig.getParameter<edm::InputTag>("trueLightQuark");
     _genJetCollection = iConfig.getParameter<edm::InputTag>("genJets");
     produces<std::vector<reco::LeafCandidate>>("dRMatch");
-    //produces<reco::GenParticle>("decayMatch");
+    produces<std::vector<reco::GenJet>>("lightDecayingJets");
     //produces<reco::GenParticle>("pT");
 }
 
@@ -99,6 +100,45 @@ GenJetLightQuarkMatcher::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     std::auto_ptr<std::vector<reco::LeafCandidate> > dRMatchCollection(new std::vector<reco::LeafCandidate>());
     dRMatchCollection->push_back(reco::LeafCandidate(*dRMatch));
     iEvent.put(dRMatchCollection,"dRMatch");
+    
+    std::auto_ptr<std::vector<reco::GenJet> > lightDecayingJets(new std::vector<reco::GenJet>());
+    for (unsigned int igenJet=0;igenJet<genJetCollection->size();++igenJet)
+    {
+        if (!findBHadronAncestor(genJetCollection->at(igenJet).getGenConstituents ()))
+        {
+            lightDecayingJets->push_back(genJetCollection->at(igenJet));
+        }
+    }
+    iEvent.put(lightDecayingJets,"lightDecayingJets");
+}
+
+bool GenJetLightQuarkMatcher::findBHadronAncestor(std::vector<const reco::GenParticle*> particles)
+{
+    std::vector<const reco::GenParticle*> mothers;
+    for (unsigned int iparticle=0; iparticle<particles.size();++iparticle)
+    {
+        for (unsigned int imother=0;imother<particles[iparticle]->numberOfMothers();++imother)
+        {
+            const reco::GenParticle* mother = dynamic_cast<const reco::GenParticle*>(particles[iparticle]->mother(imother));
+            if (std::find(mothers.begin(),mothers.end(),mother)==mothers.end())
+            {
+                mothers.push_back(mother);
+            }
+        }
+    }
+    if (mothers.size()==0)
+    {
+        return false;
+    }
+    
+    for (unsigned int imother=0;imother<mothers.size();++imother)
+    {
+        if ((abs(mothers[imother]->pdgId()) / 100) % 10 == 5 or (abs(mothers[imother]->pdgId()) / 1000) % 10 == 5)
+        {
+            return true;
+        }
+    }
+    return findBHadronAncestor(mothers);
 }
 
 
