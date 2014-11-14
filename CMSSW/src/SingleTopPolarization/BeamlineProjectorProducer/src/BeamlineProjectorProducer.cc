@@ -106,7 +106,7 @@ BeamlineProjectorProducer::produce(edm::Event& iEvent, const edm::EventSetup& iS
             reco::Candidate::Vector projectedVect = beamline*vect.Dot(beamline);
             
             reco::Candidate::LorentzVector projectedLVect;
-            projectedLVect.SetPxPyPzE(projectedVect.X(),projectedVect.Y(),projectedVect.Z(),sqrt(projectedVect.Z()*projectedVect.Z()+particle.mass()*particle.mass()));
+            projectedLVect.SetPxPyPzE(projectedVect.X(),projectedVect.Y(),projectedVect.Z(),sqrt(projectedVect.Mag2()+particle.mass()*particle.mass()));
             reco::LeafCandidate projectedParticle(
                 particle.threeCharge(), 
                 projectedLVect,
