@@ -205,6 +205,8 @@ fails = {
     :lepton => 0,
     :met => 0,
     :jet => 0,
+    :bweight => 0,
+    :nan => 0
 }
 
 tic()
@@ -519,6 +521,23 @@ for i=1:maxev
     
     df[i, :shat] = l(totvec)
     df[i, :ht] = df[i, :ljet_pt] + df[i, :bjet_pt]
+
+    bweight = events[sources[weight(:btag)]]
+    if isna(bweight)
+        fails[:bweight] += 1
+        continue
+    end
+
+    met = events[sources[:met]]
+    tsee = events[sources[:C]]
+    isotropy = events[sources[:isotropy]]
+    masstw = events[sources[part(lepton_type, :mtw)]]
+    bjet_pt = events[sources[:bjet_Pt]]
+    top_mass = df[i, part(:top, :mass)]
+    if isna(masstw) || isna(df[i, :mtw]) || masstw == NaN || masstw == "NaN" || !(masstw>0) || string(masstw) == "Nan"        
+        fails[:nan] += 1
+        continue
+    end
 
     df[i, :passes] = true
 end
