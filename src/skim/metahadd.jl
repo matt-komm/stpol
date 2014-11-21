@@ -1,13 +1,15 @@
 #!/home/joosep/.julia/ROOT/julia
 include("$(homedir())/.juliarc.jl")
-using DataFrames, JSON
+using JSON
 
 include("../analysis/base.jl")
 
+#input filename with a list of all step3 root files
 fname = ARGS[1]
+
+#output filename with aggregated metadata
 ofile = ARGS[2]
-#infile = ARGS[3]
-#infiles = sort(map(x -> convert(ASCIIString, strip(x)), readall(infile)|>split))|>collect
+
 processed = ASCIIString[]
 
 flist = sort(filter(x->contains(x, ".root"), map(

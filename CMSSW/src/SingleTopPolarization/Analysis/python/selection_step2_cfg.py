@@ -164,9 +164,16 @@ def SingleTopStep2():
 
     process.options = cms.untracked.PSet(wantSummary=cms.untracked.bool(True))
 
+    import os
+    from FWCore.PythonUtilities.LumiList import LumiList
+
+    if not Config.isMC:
+        ll1 = LumiList(os.environ["CMSSW_BASE"]+ "/../crabs/lumis/Cert_190456-208686_8TeV_22Jan2013ReReco_Collisions12_JSON.txt")
+
     process.source = cms.Source("PoolSource",
         fileNames=cms.untracked.vstring(options.inputFiles),
         cacheSize = cms.untracked.uint32(50*1024*1024),
+        lumisToProcess = ll1.getVLuminosityBlockRange() if not Config.isMC else cms.untracked.VLuminosityBlockRange()
     )
 
     print options
