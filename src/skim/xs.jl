@@ -2,8 +2,10 @@ using DataFrames
 
 #returns a dict with :tag, :iso, :systematic, :sample classifying the sample based on the file path
 function sample_type(fn, prefix="file:/hdfs/cms/store/user")
+#function sample_type(fn, prefix="/home/andres/single_top/stpol_pdf/src/step3/output")
     #MC match
-    r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/(.*)/output_(.*).root")
+    r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/(.*)/output(.*).root")
+    #r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/output(.*).root")
     m = match(r, fn)
     
     if m==nothing
@@ -262,6 +264,7 @@ hmap = {:to=>Dict(), :from=>Dict()}
 #list of all hashmappable strings
 const tomap = ASCIIString[
     "", #for data
+    "s2_Oct22",
     "antiiso",
     "data_ele",
     "data_mu",
@@ -434,6 +437,7 @@ const tomap = ASCIIString[
     "May1_metphi_on",
     "Jul4_newsyst_newvars_metshift",
     "Aug8_tchpt",
+    "Oct28_reproc",
     "TTJets_MSDecays",
     "TTJets_MSDecays_scaleup",
     "TTJets_MSDecays_scaledown",
