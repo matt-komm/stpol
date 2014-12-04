@@ -33,8 +33,8 @@ for fi in flist
     acc = accompanying(fi)
     md = nothing
 
-    println(fi, " ", join(keys(acc), ","))
-
+    #println(fi, " ", join(keys(acc), ","))
+    
     try
         md = readtable(acc["processed"], allowcomments=true)
     catch err
@@ -55,7 +55,12 @@ for fi in flist
         push!(processed, f)
 
         st = sample_type(f)
-        #println("$f $st")
+	#cls_s = replace(md[i, :cls], "\"", "\\\"")	
+	#println(cls_s)
+	#println(parse(cls_s))
+       	#st = eval(parse(cls_s))
+	#i<10 && println("$f $st")
+
         tag, sample, iso, systematic = st[:tag], st[:sample], st[:iso], st[:systematic]
         k = "$(tag)/$(sample)/$(iso)/$(systematic)"
         if !haskey(res, k)
@@ -74,6 +79,6 @@ processed = sort(processed)|>collect
 #    warn("incomplete processing, some files in input file but not in root")
 
 of = open(ofile, "w")
-write(of, json(res))
+write(of, json(res, 4))
 close(of)
 
