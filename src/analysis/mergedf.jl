@@ -52,6 +52,9 @@ for fi in inf
                 warn("mismatch in mva file $(acc[mva]) df=$(nrow(df)), mva($mva)=$(nrow(t))") 
             end
         end
+    else #empty input file, skip
+        writetree_temp("$fi.added", added_df)
+        continue
     end
     
     added_df[:ngen] = int64(0)
