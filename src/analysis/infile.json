@@ -1,9 +1,9 @@
 {
-    "qcd_cut":"mva_nominal",
+    "qcd_cut":"metmtw_nominal",
     "b_weight_nominal": "b_weight",
     "do_delta_r": true,
-    "bdt_var": "bdt_sig_bg",
+    "bdt_var": "bdt_sig_bg_old",
     "soltype": "none",
-    "vars_to_use": "analysis",
+    "vars_to_use": "all_crosscheck",
     "do_ljet_rms":false 
 }

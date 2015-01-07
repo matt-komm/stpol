@@ -32,7 +32,7 @@ module Cuts
 
     njets(indata, x) = indata[:njets] .== x
     ntags(indata, x) = indata[:ntags] .== x
-    qcd_mva(indata, x::Real) = indata[:bdt_qcd] .> x
+    qcd_mva(indata, x::Real) = indata[:bdt_qcd_before_reproc] .> x
     bdt(indata, x::Real, bdtvar=:bdt_sig_bg) = indata[bdtvar] .> x
 
     function qcd_cut(indata, cut_type::Symbol, lepton::Symbol)
