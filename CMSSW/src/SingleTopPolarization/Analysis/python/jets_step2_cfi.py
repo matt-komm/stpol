@@ -17,6 +17,7 @@ def JetSetup(process, conf):
     jetCut += ' && (chargedEmEnergyFraction < 0.99 || abs(eta) >= 2.4)'
     jetCut += ' && (chargedHadronEnergyFraction > 0. || abs(eta) >= 2.4)'
     jetCut += ' && (chargedMultiplicity > 0 || abs(eta) >= 2.4)'
+    jetCut += " && userFloat('deltaR')>0.3"
 
     process.noPUJets = cms.EDProducer('CleanNoPUJetProducer',
         jetSrc = cms.InputTag(conf.Jets.source),
