@@ -129,7 +129,7 @@ ratios = {x => normed(hd[x][:sherpa]) / normed(hd[x][:madgraph]) for x in jet_cl
 
 #save ratios to csv
 for (k, v) in ratios
-    p = "$BASE/results/wjets_shape_weight_jan7/$k.csv"
+    p = "$BASE/results/wjets_shape_weight_jan13_deltaR/$k.csv"
     mkpath(dirname(p))
     writetable(p, htodf(v))
 end
