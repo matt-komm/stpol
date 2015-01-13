@@ -63,7 +63,11 @@ df = MultiColumnDataFrame(TreeDataFrame[df_base, df_added])
 #ARGS[3] = number of events to skip from the beginning
 const FIRST_EVENT = int(ARGS[3]) + 1
 #ARGS[4] = number of events to process
-const LAST_EVENT = min(FIRST_EVENT + int(ARGS[4]) - 1, nrow(df))
+nevents = int(ARGS[4])
+if nevents<0
+    nevents = nrow(df)
+end
+LAST_EVENT = min(FIRST_EVENT + nevents - 1, nrow(df))
 
 #eventids = open("eventids_$(FIRST_EVENT)_$(LAST_EVENT).txt", "w")
 
@@ -74,8 +78,8 @@ const BDT_REVERSE_SYMBOLS = {bdt=>symbol(@sprintf("LESSTHAN_%.5f", bdt)) for bdt
 const LEPTON_SYMBOLS = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau, NA=>NA}
 
 const DO_TRANSFER_MATRIX = true
-const HISTS_NOMINAL_ONLY = false
-const TM_NOMINAL_ONLY = false
+const HISTS_NOMINAL_ONLY = true
+const TM_NOMINAL_ONLY = true
 const JET_TAGS = [(2, 0), (2, 2), (2, 1), (3, 0), (3, 1), (3, 2), (3, 3)]
 #const JET_TAGS = [(2,1)]
 
@@ -102,7 +106,7 @@ if VARS_TO_USE == :all_crosscheck
     crosscheck_vars = [
         :bdt_sig_bg,
         :bdt_sig_bg_old,
-        :bdt_qcd,
+        :bdt_qcd_before_reproc,
         :bdt_sig_bg_top_13_001,
 
 #        (:abs_ljet_eta, row::DataFrameRow -> abs(row[:ljet_eta])),
@@ -549,7 +553,7 @@ function process_df(rows::AbstractVector{Int64})
            const _reco = sel(row, nj, nt)::Bool
            _reco || continue
            for var in [
-               :bdt_qcd,
+               :bdt_qcd_before_reproc,
                :mtw, :met,
           #     :met_phi
            ]
@@ -797,10 +801,10 @@ Close(tf)
 
 for i=1:5
     try
-        println("cleaning $outfile...");isfile(outfile) && rm(outfile)
-        mkpath(dirname(outfile))
-        println("copying...");cp(tempf, outfile)
-        s = stat(outfile)
+        println("cleaning $rfile...");isfile(rfile) && rm(rfile)
+        mkpath(dirname(rfile))
+        println("copying...");cp(tempf, rfile)
+        s = stat(rfile)
         #run(`sync`)
         s.size == 0 && error("file corrupted")
         break
