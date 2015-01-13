@@ -1,7 +1,6 @@
 using JSON
 
 const VERBOSE = bool(int(get(ENV, "VERBOSE", 0)))
-
 const outfile = ARGS[1]
 const PARS = JSON.parse(readall(ARGS[2]))
 
@@ -16,7 +15,11 @@ const B_WEIGHT_NOMINAL = symbol(PARS["b_weight_nominal"])
 
 const BDT_VAR = symbol(PARS["bdt_var"])
 #const BDT_CUTS = [-0.2:0.1:0.9]
-const BDT_CUTS = [-0.2, 0.0, 0.06, 0.13, 0.2, 0.4, 0.6,]
+#const BDT_CUTS = [-0.2, 0.0, 0.06, 0.13, 0.2, 0.4, 0.6,]
+const BDT_CUTS = [-0.2, -0.10, 0.0, 0.06, 0.10, 0.13, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.50, 0.55, 0.6, 0.65, 0.70, 0.75, 0.80]
+#const BDT_CUTS = [0.6]
+#const BDT_REVERSE_CUTS = [-0.2, -0.10, 0.0, 0.06, 0.10, 0.13, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.50, 0.55, 0.6, 0.65, 0.70, 0.75, 0.80]
+const BDT_REVERSE_CUTS = [0.6]
 const VARS_TO_USE = symbol(PARS["vars_to_use"])
 
 #const BDT_CUTS = [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]
@@ -28,7 +31,7 @@ const sp = dirname(Base.source_path())
 require("$sp/base.jl")
 
 using ROOT, ROOTDataFrames
-using ROOT.ROOTHistograms
+using ROOTHistograms
 
 _infiles = Any[]
 for inf in infiles
@@ -62,11 +65,12 @@ const FIRST_EVENT = int(ARGS[3]) + 1
 #ARGS[4] = number of events to process
 const LAST_EVENT = min(FIRST_EVENT + int(ARGS[4]) - 1, nrow(df))
 
-eventids = open("eventids_$(FIRST_EVENT)_$(LAST_EVENT).txt", "w")
+#eventids = open("eventids_$(FIRST_EVENT)_$(LAST_EVENT).txt", "w")
 
 require("$sp/histogram_defaults.jl")
 
 const BDT_SYMBOLS = {bdt=>symbol(@sprintf("%.5f", bdt)) for bdt in BDT_CUTS}
+const BDT_REVERSE_SYMBOLS = {bdt=>symbol(@sprintf("LESSTHAN_%.5f", bdt)) for bdt in BDT_REVERSE_CUTS}
 const LEPTON_SYMBOLS = {13=>:mu, 11=>:ele, -13=>:mu, -11=>:ele, 15=>:tau, -15=>:tau, NA=>NA}
 
 const DO_TRANSFER_MATRIX = true
@@ -128,7 +132,6 @@ if VARS_TO_USE == :all_crosscheck
 #        :nu_soltype,
         :njets,
         :ntags,
-        :lepton_charge
     ]
 elseif VARS_TO_USE == :analysis
     crosscheck_vars = [
@@ -229,7 +232,7 @@ function fill_histogram(
         else
             const wname = w_scenario
         end
-
+        
         const kk = HistKey(
             hname,
             sample,
@@ -255,7 +258,7 @@ function fill_histogram(
         h.bin_entries[bin] += 1
 
         #fill W+jets jet flavours separately as well
-        if get_process(sample) == :wjets
+        if get_process(sample) == :wjets || get_process(sample) == :wjets_fsim
             for cls in jet_classifications
                 const ev_cls = row[:jet_cls] |> jet_cls_from_number
                 ev_cls == cls || continue
@@ -383,11 +386,12 @@ function process_df(rows::AbstractVector{Int64})
         const subsample = hmap_symb_from[row[:subsample]::Int64]
         const systematic = hmap_symb_from[row[:systematic]::Int64]
         const iso = hmap_symb_from[row[:isolation]::Int64]
+
         true_lep = sample==:tchan ? row[:gen_lepton_id] : int64(0)
         if isna(true_lep) || true_lep==0
             true_lep = row[:lepton_id]
         end
-        VERBOSE && println("row $cur_row $sample $subsample $systematic $iso genlep=$true_lep")
+        #VERBOSE && println("row $cur_row $sample $subsample $systematic $iso genlep=$true_lep")
 
         const isdata = ((sample == :data_mu) || (sample == :data_ele))
         if !isdata && HISTS_NOMINAL_ONLY
@@ -442,6 +446,8 @@ function process_df(rows::AbstractVector{Int64})
                    const w = scen.weight(nw, row)::Float64
                    (isnan(w) || isna(w)) && error("$k2: w=$w $(df[row.row, :])")
 
+                   const _prebdtcut_reco = reco
+
                    #assumes BDT cut points are sorted ascending
                    for bdt_cut::Float64 in BDT_CUTS::Vector{Float64}
                        const _reco = reco &&
@@ -478,6 +484,8 @@ function process_df(rows::AbstractVector{Int64})
                        h.baseh.bin_contents[linind] += w
                        h.baseh.bin_entries[linind] += 1.0
                    end
+
+                   reco = _prebdtcut_reco
 
                    #cut-based selection
                    for (cut_major, cut_minor, cutfn) in {
@@ -534,13 +542,12 @@ function process_df(rows::AbstractVector{Int64})
 
         #required to cut away mismodeled high-eta region
         (abs(row[:ljet_eta]) < 4.5 && abs(row[:bjet_eta]) < 4.5) || continue
-
+        
        #pre-qcd plots
        for (nj, nt) in JET_TAGS
            #pre-bdt selection
            const _reco = sel(row, nj, nt)::Bool
            _reco || continue
-
            for var in [
                :bdt_qcd,
                :mtw, :met,
@@ -561,13 +568,13 @@ function process_df(rows::AbstractVector{Int64})
                    lepton,
                    nj, nt
                )
+               #println ("siiin ",row[:njets], " ", row[:ntags], " ", row[:bdt_qcd], " ", row[:n_signal_mu], " ", row[:n_signal_ele], " ", row[:n_veto_mu], " ", row[:n_veto_ele])
            end
        end
-
+       
         if DO_LJET_RMS
             Cuts.ljet_rms(row) || continue
         end
-
         ###
         ### QCD rejection
         ###
@@ -576,7 +583,8 @@ function process_df(rows::AbstractVector{Int64})
             fails[:qcd] += 1
             continue
         end
-
+        
+        
        ###
        ### project BDT templates and input variables with full systematics
        ###
@@ -613,6 +621,47 @@ function process_df(rows::AbstractVector{Int64})
                    nj, nt
                )
            end
+       end
+       
+
+       ###
+       ### project BDT templates and input variables with full systematics, reverse BDT cut for fit
+       ###
+       for (nj, nt) in JET_TAGS
+           #pre-bdt selection
+           for bdt_cut in BDT_REVERSE_CUTS
+               const _reco = reco && sel(row, nj, nt)::Bool && Cuts.nu_soltype(row, SOLTYPE) && Cuts.bdt_reverse(row, bdt_cut, BDT_VAR)
+               if !_reco
+                   fails[:jet_tag] += 1
+                   continue
+               end
+
+               for var in crosscheck_vars
+
+                   #if a 2-tuple is specified, 2. arg is the function to apply
+                   #otherwise, identity
+                   if isa(var, Tuple)
+                       var, f = var
+                   else
+                       var, f = var, (row::DataFrameRow -> row[var])
+                   end
+
+                   fill_histogram(
+                       nw,
+                       row, isdata,
+                       var,
+                       row -> f(row),
+                       ret,
+                       subsample,
+                       iso,
+                       systematic,
+                       :preselection,
+                       BDT_REVERSE_SYMBOLS[bdt_cut],
+                       lepton,
+                       nj, nt
+                   )
+               end
+            end
        end
 
        ###

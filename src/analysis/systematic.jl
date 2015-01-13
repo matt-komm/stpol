@@ -321,6 +321,13 @@ scenarios[(:nominal, :wjets_sherpa)] = Scenario(
     :nominal
 )
 
+scenarios[(:nominal, :wjets_fsim)] = Scenario(
+    :wjets_fsim_nominal,
+    :wjets_fsim,
+    (nw::Float64, row::DataFrameRow) -> nw,
+    :nominal
+)
+
 scenarios[(:wjets_shape__up, :wjets)] = Scenario(
     :nominal,
     :wjets,
@@ -402,3 +409,4 @@ end
 
 export SYSTEMATICS_TABLE, REV_SYSTEMATICS_TABLE, systematic_processings
 export weight_scenarios, scenarios, scens_gr, Scenario
+

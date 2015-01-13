@@ -72,6 +72,7 @@ df = similar(#Data frame as big as the input
             bjet_pt=Float32[], bjet_eta=Float32[], bjet_mass=Float32[], bjet_id=Float32[],
             #bjet_bd_a=Float32[],
             bjet_bd_b=Float32[],
+            bjet_rms=Float32[],
             bjet_phi=Float32[],
             bjet_dr=Float32[],
             bjet_pumva=Float32[],
@@ -85,8 +86,8 @@ df = similar(#Data frame as big as the input
             ljet_pumva=Float32[],
 #
 ##spectator jets
-            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[],
-            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[],
+            sjet1_pt=Float32[], sjet1_eta=Float32[], sjet1_id=Float32[], sjet1_bd=Float32[], sjet1_rms=Float32[], sjet1_dr=Float32[],
+            sjet2_pt=Float32[], sjet2_eta=Float32[], sjet2_id=Float32[], sjet2_bd=Float32[], sjet2_rms=Float32[], sjet2_dr=Float32[],
 
 #event-level characteristics
             cos_theta_lj=Float32[],
@@ -384,6 +385,7 @@ for i=1:maxev
     df[i, :bjet_id] = events[sources[:bjet_partonFlavour]] |> ifpresent |> totype_i
     #df[i, :bjet_bd_a] = events[sources[:bjet_bDiscriminatorTCHP]] |> ifpresent
     df[i, :bjet_bd_b] = events[sources[:bjet_bDiscriminatorCSV]] |> ifpresent
+    df[i, :bjet_rms] = events[sources[:bjet_rms]] |> ifpresent
     df[i, :bjet_phi] = events[sources[:bjet_Phi]] |> ifpresent
     df[i, :bjet_dr] = events[sources[:bjet_deltaR]] |> ifpresent
     df[i, :bjet_pumva] = events[sources[:bjet_puMva]] |> ifpresent
@@ -438,6 +440,8 @@ for i=1:maxev
         jet_etas = events[sources[part(:jets, :Eta)]]
         jet_ids  = map(totype_i, events[sources[part(:jets, :partonFlavour)]])
         jet_bds  = events[sources[part(:jets, :bDiscriminatorCSV)]]
+        jet_rmss  = events[sources[part(:jets, :rms)]]
+        jet_drs  = events[sources[part(:jets, :deltaR)]]
 
         if all(map(ispresent, Any[jet_pts, jet_etas, jet_ids, jet_bds]))
             #get the indices of the b-tagged jet and the light jet by comparing with pt
@@ -455,8 +459,8 @@ for i=1:maxev
             #get all the other jets
             #order by pt-descending
             j = 1
-            for (pt, eta, id, bd, ind) in sort(
-                [z for z in zip(jet_pts, jet_etas, jet_ids, jet_bds, [1:length(jet_pts)])],
+            for (pt, eta, id, bd, rms, dr, ind) in sort(
+                [z for z in zip(jet_pts, jet_etas, jet_ids, jet_bds, jet_rmss, jet_drs, [1:length(jet_pts)])],
                 rev=true
             )
                 #is a 'spectator jet'
@@ -465,7 +469,9 @@ for i=1:maxev
                     df[i, symbol("sjet$(j)_eta")] = eta
                     df[i, symbol("sjet$(j)_id")] = id
                     df[i, symbol("sjet$(j)_bd")] = bd
-
+                    df[i, symbol("sjet$(j)_rms")] = rms
+                    df[i, symbol("sjet$(j)_dr")] = dr
+    
                     #up to two
                     if j==2
                         break
@@ -533,10 +539,10 @@ for i=1:maxev
     df[i, :ht] = df[i, :ljet_pt] + df[i, :bjet_pt]
 
     bweight = events[sources[weight(:btag)]]
-    if isna(bweight)
-        fails[:bweight] += 1
-        continue
-    end
+    #if isna(bweight) || string(bweight) == "Nan" || !(bweight>0)
+    #    fails[:bweight] += 1
+    #    continue
+    #end
 
     met = events[sources[:met]]
     tsee = events[sources[:C]]

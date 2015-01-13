@@ -79,7 +79,7 @@ if grouping=="fit":
     final_groups = {
         "tchan":["tchan"],
         "ttjets": ["ttjets", "twchan", "schan"],
-        "wzjets": ["wjets", "diboson", "dyjets", "gjets"],
+        "wzjets": ["wjets", "diboson", "dyjets"],# "gjets"],
         #"qcd": ["qcd"],
     }
 elif grouping=="plot":
@@ -90,7 +90,7 @@ elif grouping=="plot":
         "twchan": ["twchan"],
         "schan": ["schan"],
         "diboson": ["diboson"],
-        "gjets": ["gjets"],
+        #"gjets": ["gjets"],
         "dyjets": ["dyjets"]
 }
 
@@ -127,15 +127,18 @@ for (iso, hists) in isosplit.items():
 def get_hists(sample, syst, di, iso):
     hks = []
     subsamps = []
+
     for k in hd.keys():
         d = dict(k)
+        if "TTJets" in sample:
+            print "sample1", d["sample"], d["syst"], d["dir"], d["iso"]
         if d["sample"]==sample and d["syst"]==syst and d["dir"]==di and d["iso"]==iso:
             hks.append(k)
             subsamps.append(d["subsample"])
 
     #FIXME: hack to get only W+jets heavy light variations
     if sample == "wjets" and "flavour" in syst:
-        print "subsamps", subsamps
+        #print "subsamps", subsamps
         for k in hd.keys():
             d = dict(k)
             if d["sample"]==sample and d["syst"]=="nominal" and d["iso"]==iso and d["subsample"] not in subsamps:
@@ -216,6 +219,7 @@ for (gn, gs) in final_groups.items():
         subhists[sn] = sum_hists("%s__%s__%s" % (varname, gn, sn), h)
 
     for sn in gs:
+        if sn in ["tchan", "ttjets", "wjets"]: continue #don't do for main components
         others = [h for (k, h) in subhists.items() if k!=sn]
         print "others", sn, others
         up = subhists[sn].Clone("%s__%s__%s__up" % (varname, gn, sn))

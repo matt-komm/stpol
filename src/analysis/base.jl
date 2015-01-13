@@ -4,7 +4,7 @@ include("histo.jl")
 
 module SingleTopBase
 
-#println("loading base.jl...")
+println("loading base.jl...")
 
 include(joinpath(ENV["HOME"], ".juliarc.jl"))
 
@@ -149,9 +149,9 @@ const FITRESULTS = {
     #:mu=>FitResult("$BASE/results/fits/Aug12_topweight/nominal/mu.json"),
     #:ele=>FitResult("$BASE/results/fits/Aug12_topweight/nominal/ele.json"),
     #:combined=>FitResult("$BASE/results/fits/Aug12_topweight/nominal/combined.json")
-    :mu=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/mu.json"),
-    :ele=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/ele.json"),
-    :combined=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/combined.json")
+    #:mu=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/mu.json"),
+    #:ele=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/ele.json"),
+    #:combined=>FitResult("$BASE/results/fits/Aug26_tchpt/nominal/combined.json")
 }
 
 t1 = time()

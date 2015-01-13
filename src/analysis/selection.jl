@@ -34,6 +34,7 @@ module Cuts
     ntags(indata, x) = indata[:ntags] .== x
     qcd_mva(indata, x::Real) = indata[:bdt_qcd] .> x
     bdt(indata, x::Real, bdtvar=:bdt_sig_bg) = indata[bdtvar] .> x
+    bdt_reverse(indata, x::Real, bdtvar=:bdt_sig_bg) = indata[bdtvar] .< x
 
     function qcd_cut(indata, cut_type::Symbol, lepton::Symbol)
         cut_type == :mva_nominal && return qcd_mva_wp(indata, lepton)

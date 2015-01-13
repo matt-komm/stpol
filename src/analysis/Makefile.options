@@ -5,5 +5,5 @@ ROOTWRAP=source ~/local-sl6/root/bin/thisroot.sh
 #DIR=/hdfs/local/joosep/stpol/skims/mar19
 DIR=/hdfs/local/joosep/stpol/skims/input/csvt
 JULIA_ROOT_DIR=/home/joosep/.julia/CMSSW
-EMAIL=joosep.pata@cern.ch
+EMAIL=andres.tiko@cern.ch
 ENVSCRIPT=../../setenv.sh
