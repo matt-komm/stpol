@@ -151,8 +151,8 @@ if __name__ == "__main__":
 
     fitvars = []
     fitvars.append("qcd_mva")
-    #fitvars.append("mtw")
-    #fitvars.append("met")
+    fitvars.append("mtw")
+    fitvars.append("met")
     #fitvars.append(Variable("qcd_mva", -1, 1, bins=20, shortName="qcd_mva", displayName="BDT"))
     #fitvars.append(Variable("met", 0, 200, bins=40, shortName="met", displayName="MET"))
     #fitvars.append(Variable("mtw", 0, 200, bins=20, shortName="mtw", displayName="MTW"))
@@ -197,7 +197,7 @@ if __name__ == "__main__":
                             results_tex[channel+jt+var+cuttype+varmc] = result_tex"""
     print "\n\n\n\n\n"
     #make_results_tables_old(results_tex, channels, jtset, fitvars, ["reversecut", "nocut", ], ["isovar"])
-    make_results_tables_old(results_tex, channels, jtset, fitvars, ["reversecut"])
+    make_results_tables_old(results_tex, channels, jtset, ["mtw"], ["reversecut"])
 
 
 

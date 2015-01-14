@@ -139,8 +139,8 @@ if __name__=="__main__":
     ROOT.gROOT.SetBatch()
     for channel in ["mu", "ele"]:
         myvars = ["qcd_mva", "met"]
-        if channel == "mu":
-            myvars.append("mtw")
+        #if channel == "mu":
+        myvars.append("mtw")
         added = "11Jan_deltaR" ##Nov_reproc"
     	for varname in myvars:
             for jt in ["2j1t", "2j0t", "3j1t", "3j2t"]:
