@@ -1,44 +1,52 @@
 {
     "mu": {
         "3j1t": {
-            "qcd_mva": 0.586, 
+            "qcd_mva": 0.599, 
+            "qcd_mva_deltaR": 0.493, 
             "met": 0.611, 
             "mtw": 0.524
         }, 
         "3j2t": {
-            "qcd_mva": 2.015, 
+            "qcd_mva": 1.558, 
+            "qcd_mva_deltaR": 1.603,
             "met": 2.176, 
             "mtw": 0.682
         }, 
         "2j0t": {
-            "qcd_mva": 1.097, 
+            "qcd_mva": 1.050, 
+            "qcd_mva_deltaR": 0.831,
             "met": 1.148, 
             "mtw": 0.740
         }, 
         "2j1t": {
-            "qcd_mva": 0.668, 
+            "qcd_mva": 0.649, 
+            "qcd_mva_deltaR": 0.590,
             "met": 0.594, 
             "mtw": 0.643
         }
     }, 
     "ele": {
         "3j1t": {
-            "qcd_mva": 1.168, 
+            "qcd_mva": 1.134, 
+            "qcd_mva_deltaR": 1.124,
             "met": 0.893, 
             "mtw": 0.486
         }, 
         "3j2t": {
-            "qcd_mva": 1.677, 
+            "qcd_mva": 1.495, 
+            "qcd_mva_deltaR": 1.446,
             "met": 1.220, 
             "mtw": 0.000
         }, 
         "2j0t": {
-            "qcd_mva": 1.113, 
+            "qcd_mva": 1.099, 
+            "qcd_mva_deltaR": 1.110,
             "met": 1.094, 
             "mtw": 0.597
         }, 
         "2j1t": {
-            "qcd_mva": 0.864, 
+            "qcd_mva": 0.830, 
+            "qcd_mva_deltaR": 0.810,
             "met": 0.689, 
             "mtw": 0.499
         }
