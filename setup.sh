@@ -22,7 +22,7 @@ git stash #temporaryily store changes
 rm -Rf CMSSW #remove the source tree for cmsrel to work
 export SCRAM_ARCH=slc5_amd64_gcc462
 
-scram project -n CMSSW CMSSW CMSSW_5_3_17
+scram project -n CMSSW CMSSW CMSSW_5_3_18
 #scramv1 project CMSSW $CMSVERSION #Base code
 
 #git reset --hard #bring back the source tree
