@@ -1,12 +1,14 @@
 import math
-import matplotlib
-matplotlib.use('Agg')
+#import matplotlib
+#matplotlib.use('Agg')
 
-import ROOT, sys, json, numpy, os
+import ROOT, sys, json
+#import numpy
+import os
 ROOT.TH1.AddDirectory(False)
 
-from matplotlib import pyplot as plt
-plt.ioff()
+#from matplotlib import pyplot as plt
+#plt.ioff()
 
 inf = sys.argv[1]
 tf = ROOT.TFile(inf)
@@ -25,10 +27,10 @@ print("loading keys from ", inf)
 keylist = {k.GetName(): k for k in tf.GetListOfKeys()}
 keydicts = {k: to_dict(k) for k in keylist.keys()}
 print("loaded keys: ", len(keylist))
-
+#sys.exit(1)
 mc_samples = [
     "tchan", "wjets", "ttjets",
-    "twchan", "schan", "gjets", "diboson",
+    "twchan", "schan", "diboson", #"gjets", 
     "dyjets",
     "wjets__heavy", "wjets__light"
 ]
@@ -49,9 +51,7 @@ pdgid_map = {"mu":13, "ele":11, "tau":15}
 qcd_sfs = from_json("../../metadata/qcd_sfs.json")
 
 def select_hist(k, histname, lepton, selection_major, selection_minor, njets, ntags, iso):
-
     d = keydicts[k]
-
     if d["object"] != histname:
         return None
 
@@ -75,9 +75,10 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
 
     #is double variated MC
     #Hacky parsing
-    if d["systematic"]!="nominal" and d["scenario"]!="nominal" and d["systematic"]!="" and ("wjets" in d["scenario"] or "qcd" in d["scenario"]):
+    if d["systematic"]!="nominal" and d["scenario"]!="nominal" and d["systematic"]!="" and ("wjets" in d["scenario"] or "qcd" in d["scenario"]) and "FSIM" not in k:
         return None
 
+    
     #hacky parsing of (systematic variation at generation, weight scenario) tuple
     if d["systematic"]!="" and d["systematic"]!="data":
         s2 = d["scenario"]
@@ -98,10 +99,13 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
         else:
             s2 = d["systematic"]
             s2 = syst_tables["systematics_table"].get(s2, None)
-            if not s2:
+            if not s2 and d["systematic"] != "wjets_fsim_nominal":
                 raise Exception("systematic %s not understood" % s2)
 
-            if s2!="nominal":
+            if d["systematic"] == "wjets_fsim_nominal":
+                syst = "wjets_fsim_nominal"
+                syst_dir = "none"
+            elif s2!="nominal":
                 idx = s2.rfind("__")
                 if idx>0:
                     syst_dir = s2[idx+2:]
@@ -131,7 +135,6 @@ def select_hist(k, histname, lepton, selection_major, selection_minor, njets, nt
     else:
         hk = "%s__%s__%s__%s" % (d["object"], d["sample"], syst, syst_dir)
     hk = hk.replace("comphep_nominal", "comphep__nominal")
-    #print "returning ", hk, k, d
     return hk, d
 
 def set_zero(h):
@@ -168,7 +171,34 @@ def select_hists(histname, lepton, selection_major, selection_minor, njets, ntag
             if ret.has_key(kn):
                 raise Exception("Already exists: %s" % kn)
             ret[kn] = h
+    
+            if "JetsToLNu_matching" in k or "JetsToLNu_scale" in k:
+                try:
+                    #get corresponding nominal fullsim and fastsim histograms and scale accordingly
+                    fullsim_k = k.replace("JetsToLNu_scaleup", "Jets_exclusive").replace("JetsToLNu_scaledown", "Jets_exclusive").replace("JetsToLNu_matchingup", "Jets_exclusive").replace("JetsToLNu_matchingdown", "Jets_exclusive").replace("systematic=scaleup", "systematic=nominal").replace("systematic=scaledown", "systematic=nominal").replace("systematic=matchingup", "systematic=nominal").replace("systematic=matchingdown", "systematic=nominal").replace("_light","").replace("_heavy","")
 
+                    h_fullsim = keylist[fullsim_k].ReadObj()
+                    set_neg_zero(h_fullsim)
+                    fastsim_k = k.replace("JetsToLNu_scaleup", "Jets_exclusive_FSIM").replace("JetsToLNu_scaledown", "Jets_exclusive_FSIM").replace("JetsToLNu_matchingup", "Jets_exclusive_FSIM").replace("JetsToLNu_matchingdown", "Jets_exclusive_FSIM").replace("systematic=scaleup", "systematic=wjets_fsim_nominal").replace("systematic=scaledown", "systematic=wjets_fsim_nominal").replace("systematic=matchingup", "systematic=wjets_fsim_nominal").replace("systematic=matchingdown", "systematic=wjets_fsim_nominal").replace("_light","").replace("_heavy","")
+                    
+                    
+                    h_fastsim = keylist[fastsim_k].ReadObj()
+                    set_neg_zero(h_fastsim)
+                    for i in range(0, h.GetNbinsX() + 2):
+                        if h_fastsim.GetBinContent(i) > 0:
+                            scaleby = h_fullsim.GetBinContent(i) / h_fastsim.GetBinContent(i)
+                            
+                            #Otherwise introduces statistical anomalies
+                            if h_fullsim.GetBinContent(i) > 0.1 and h_fastsim.GetBinContent(i) > 0.1 and (scaleby > 3 or scaleby < 0.33): 
+                                #if scaleby>2 or scaleby < 0.5: 
+                                #    print "scaled bin", i, "by", scaleby, "from", h.GetBinContent(i), "to", h.GetBinContent(i) *scaleby, h_fullsim.GetBinContent(i), h_fastsim.GetBinContent(i)
+                                h.SetBinContent(i, h.GetBinContent(i) * scaleby)
+                            
+                except KeyError:
+                    print "KEYERROR", fullsim_k#, "or", fastsim_k
+                    #happens only rarely for unnecessary case, just ignore and don't rescale
+                    continue
+                    
     if len(ret)==0:
         raise Exception("no histograms produced for %s:%s:%s:%s:%s:%s" % (histname, lepton, selection_major, selection_minor, njets, ntags))
 
@@ -227,6 +257,7 @@ def write_hists(fname, hd):
     of = ROOT.TFile(fname, "RECREATE")
     of.cd()
     for (k, v) in hd.items():
+        if "FSIM" in k: continue
         v = v.Clone(k)
         v.SetDirectory(of)
         v.Write()
@@ -326,7 +357,6 @@ def merge_hists(vname, hd):
     return out
 
 output_dir = "output"
-
 print("preqcd")
 for lep in ["mu", "ele"]:
     for (nj, nt) in [(2,1), (3,1), (3,2), (2,0)]:
@@ -341,6 +371,7 @@ for lep in ["mu", "ele"]:
                 ]:
             x = select_hists(variable, lep, "preqcd", "nothing", nj, nt)
             write_hists("%s/%s.root" % (d, variable), x)
+sys.exit(1)
 
 print("preselection")
 for lep in ["mu", "ele"]:
@@ -353,6 +384,7 @@ for lep in ["mu", "ele"]:
         for variable in [
                 "bdt_sig_bg",
                 "bdt_sig_bg_top_13_001",
+                #"bdt_sig_bg_before_reproc",
                 #"ljet_eta",
                 "abs_ljet_eta",
 #                "abs_ljet_eta_16",
@@ -363,9 +395,39 @@ for lep in ["mu", "ele"]:
             x = select_hists(variable, lep, "preselection", "nothing", nj, nt)
             write_hists("%s/%s.root" % (d, variable), x)
 
+
+print("reverse BDT cut for fit")
+#for bdt_cut in [-0.20, -0.15, -0.10, -0.05, 0.0, 0.05, 0.06, 0.10, 0.13, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.50, 0.55, 0.6, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90]:
+for bdt_cut in [0.6]:
+    bdts = "%.5f" % bdt_cut
+    print(bdts)
+    for lep in ["mu", "ele"]:
+        for (nj, nt) in [(2,1), (3,1), (3,2), (2,0)]:
+            print(nj, nt)
+
+            d = "%s/bdt_scan/hists/reverseBDT/%s/%dj_%dt/%s" % (output_dir, bdts, nj, nt, lep)
+            os.makedirs(d)
+
+            for variable in [
+                    "bdt_sig_bg",
+                    "bdt_sig_bg_top_13_001",
+                    #"bdt_sig_bg_before_reproc",
+                    #"ljet_eta",
+                    "abs_ljet_eta",
+    #                "abs_ljet_eta_16",
+                    "C",
+    #                "met", "mtw", "shat", "ht",
+                    "cos_theta_lj",
+                    ]:
+                x = select_hists(variable, lep, "preselection", "LESSTHAN_%s" % bdts, nj, nt)
+                write_hists("%s/%s.root" % (d, variable), x)
+
+
 #for bdt_cut in [0.0, 0.06, 0.13, 0.2, 0.4, 0.6, 0.8, 0.9]:
 #for bdt_cut in numpy.arange(-0.2, 0.9, 0.1):
-for bdt_cut in [0.0, 0.06, 0.13, 0.2, 0.4, 0.6,]:
+#for bdt_cut in [0.0, 0.06, 0.13, 0.2, 0.4, 0.6,]:
+#for bdt_cut in [0.6]:
+for bdt_cut in [-0.20, -0.10, 0.00, 0.06, 0.10, 0.13, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.50, 0.55, 0.6, 0.65, 0.70, 0.75, 0.80]:
     bdts = "%.5f" % bdt_cut
     print(bdts)
     for reco_lep in ["mu", "ele"]:

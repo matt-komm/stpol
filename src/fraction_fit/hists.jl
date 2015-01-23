@@ -111,8 +111,23 @@ end
 #     return tot_df
 # end
 
+#reconstruct a Histogram from a DataFrame
 function fromdf(df::DataFrame)
-    return Histogram(df[3], df[2], df[1])
+    ns = names(df)
+    function find_ind(x)
+        i = 1 
+        for n in ns
+            n = string(n)
+            if contains(n, string(x))
+                return i
+            end
+            i += 1
+        end
+        return nothing
+    end
+    
+    #entries, contents, edges
+    return Histogram(df[find_ind(:entries)], df[find_ind(:contents)], df[find_ind(:edges)])
 end
 
 function reweight_to_fitres(frd, indata, inds)

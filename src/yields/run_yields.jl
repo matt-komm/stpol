@@ -1,4 +1,4 @@
-p = "../../results/nominal"
+p = "/home/andres/single_top/stpol_pdf/src/step3/output/Oct28_reproc/iso/nominal/"
 
 for x in [
     (:tchan, ["T_t_ToLeptons", "Tbar_t_ToLeptons"]),

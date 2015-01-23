@@ -2,8 +2,10 @@ using DataFrames
 
 #returns a dict with :tag, :iso, :systematic, :sample classifying the sample based on the file path
 function sample_type(fn, prefix="file:/hdfs/cms/store/user")
+#function sample_type(fn, prefix="/home/andres/single_top/stpol_pdf/src/step3/output")
     #MC match
-    r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/(.*)/output_(.*).root")
+    r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/(.*)/output(.*).root")
+    #r = Regex("$prefix/(.*)/(.*)/(.*)/(.*)/output(.*).root")
     m = match(r, fn)
     
     if m==nothing
@@ -14,6 +16,7 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
        
         #MC did not match, try data
         cls = data_cls(prefix, fn)
+        #cls = data_cls("/hdfs/local/joosep/stpol", fn)
         if cls != nothing
             tag, iso, samp = cls
             syst = ""
@@ -58,11 +61,17 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
             break
         end
         
-        m = match(r"W*JetsToLNu", ss)
+        m = match(r"exclusive_FSIM", ss)
         if m != nothing
             syst = "wjets_fsim_nominal"
             break
         end
+
+        #m = match(r"W*JetsToLNu2", ss)
+        #if m != nothing
+        #    syst = "wjets_fsim_nominal"
+        #    break
+        #end
     end
     break #in case of no match, we also want to break
     end #while
@@ -71,17 +80,24 @@ function sample_type(fn, prefix="file:/hdfs/cms/store/user")
 end
 
 function data_cls(prefix, fn)
+    #temp for current location
+    #println("prefix")
+    #println(prefix," ",fn)    
     r = Regex("$prefix/.*/(.*)/(.*)/(.*)/output_.*.root")
+    #r = Regex("$prefix/.*/(.*)/(.*)/output_.*.root")
     m = match(r, fn)
     if m!=nothing
+        #println(m.captures)
         tag = m.captures[1]
+        #tag = "s2_1101_data"
         iso = m.captures[2]
         sample = m.captures[3]
+        #sample = m.captures[1]
         return (tag, iso, sample)
     else
         return nothing
     end
-    return 
+    return
 end
 
 fpath = joinpath(
@@ -153,33 +169,37 @@ const merges = {
         "T_t_ToLeptons_mass175_5", 
         "T_t_ToLeptons_mass178_5", 
         "Tbar_t_ToLeptons_mass175_5", 
-        "Tbar_t_ToLeptons_mass178_5", 
+        "Tbar_t_ToLeptons_mass178_5",
+    
+        "T_t_ToLeptons_mass169_5",
+        "T_t_ToLeptons_mass175_5",
         
         "T_t_ToLeptons_scaleup", 
         "T_t_ToLeptons_scaledown", 
+        "T_t_ToLeptons_scaledown_split",
         "Tbar_t_ToLeptons_scaleup", 
         "Tbar_t_ToLeptons_scaledown", 
     ],
 
-    "tchan_inc"=>["T_t", "Tbar_t"],
+    "tchan_inc"=>["T_t", "T_t_v2", "Tbar_t"],
     "wjets"=>[
         "W1Jets_exclusive", "W2Jets_exclusive", "W3Jets_exclusive", "W4Jets_exclusive",
-        "W1JetsToLNu",
+        #"W1JetsToLNu",
         "W1JetsToLNu_matchingdown",
         "W1JetsToLNu_matchingup",
         "W1JetsToLNu_scaleup",
         "W1JetsToLNu_scaledown",
-        "W2JetsToLNu",
+        #"W2JetsToLNu2",
         "W2JetsToLNu_matchingdown",
         "W2JetsToLNu_matchingup",
         "W2JetsToLNu_scaleup",
         "W2JetsToLNu_scaledown",
-        "W3JetsToLNu",
+        #"W3JetsToLNu2",
         "W3JetsToLNu_matchingdown",
         "W3JetsToLNu_matchingup",
         "W3JetsToLNu_scaleup",
         "W3JetsToLNu_scaledown",
-        "W4JetsToLNu",
+        #"W4JetsToLNu2",
         "W4JetsToLNu_matchingdown",
         "W4JetsToLNu_matchingup",
         "W4JetsToLNu_scaleup",
@@ -187,7 +207,8 @@ const merges = {
     ],
     "wjets_inc"=>["WJets_inclusive"],
     "wjets_sherpa"=>["WJets_sherpa"],
-    
+    "wjets_fsim"=>["W1Jets_exclusive_FSIM", "W2Jets_exclusive_FSIM", "W3Jets_exclusive_FSIM", "W4Jets_exclusive_FSIM"],
+
     "ttjets"=>[
         "TTJets_FullLept", "TTJets_SemiLept",
         "TTJets_matchingdown",
@@ -210,6 +231,17 @@ const merges = {
         "TTJets_MSDecays_mass169_5",
         "TTJets_MSDecays_mass175_5",
         "TTJets_MSDecays_mass178_5",
+        "TTJets_MS",
+        "TTJets_MS_scaleup",
+        "TTJets_MS_scaledown",
+        "TTJets_MS_matchingup",
+        "TTJets_MS_matchingdown",
+        "TTJets_MS_matchingdown_v1",
+        "TTJets_MS_matchingdown_v2",
+        "TTJets_MS_mass166_5",
+        "TTJets_MS_mass169_5",
+        "TTJets_MS_mass175_5",
+        "TTJets_MS_mass178_5",
     ],
 
     "ttjets_inc"=>["TTJets_MassiveBinDECAY"],
@@ -218,8 +250,8 @@ const merges = {
     "diboson"=>["WW", "WZ", "ZZ"],
     "dyjets"=>["DYJets"],
     "gjets"=>["GJets1", "GJets2"],
-    "data_mu"=>["SingleMu", "SingleMu1", "SingleMu2", "SingleMu3", "SingleMu_miss"],
-    "data_ele"=>["SingleEle", "SingleEle1", "SingleEle2", "SingleEle3", "SingleEle_miss"],
+    "data_mu"=>["SingleMuon", "SingleMu", "SingleMu1", "SingleMu2", "SingleMu3", "SingleMu_miss"],
+    "data_ele"=>["SingleElectron", "SingleEle", "SingleEle1", "SingleEle2", "SingleEle3", "SingleEle_miss"],
     "qcd_mc_mu"=>["QCDMu"],
     "qcd_mc_ele"=>[
         "QCD_Pt_170_250_BCtoE",
@@ -262,6 +294,7 @@ hmap = {:to=>Dict(), :from=>Dict()}
 #list of all hashmappable strings
 const tomap = ASCIIString[
     "", #for data
+    "s2_Oct22",
     "antiiso",
     "data_ele",
     "data_mu",
@@ -310,11 +343,21 @@ const tomap = ASCIIString[
     "signal_comphep__anomWtb-unphys_LVLT",
     "signal_comphep__anomWtb-unphys_t-channel",
     "signal_comphep__nominal",
+    "signal_comphep__nominal_t-channel",
+    "signal_comphep__anomWtb-0010_LVLT_t-channel",
+    "signal_comphep__anomWtb-Lv1Rt3_LVRT_t-channel",
+    "signal_comphep__anomWtb-Lv2Rt2_LVRT_t-channel",
+    "signal_comphep__anomWtb-Lv3Rt1_LVRT_t-channel",
+    "signal_comphep__anomWtb-Rt4_LVRT_t-channel",
+    "signal_comphep__anomWtb-unphys_LVLT_t-channel",
+    "SingleElectron",
     "SingleEle",
+    "SingleElectron",
     "SingleEle1",
     "SingleEle2",
     "SingleEle3",
     "SingleEle_miss",
+    "SingleMuon",
     "SingleMu",
     "SingleMu1",
     "SingleMu2",
@@ -322,12 +365,14 @@ const tomap = ASCIIString[
     "SingleMu_miss",
     "T_s",
     "T_t",
+    "T_t_v2",
     "T_t_ToLeptons",
     "T_t_ToLeptons_mass166_5",
     "T_t_ToLeptons_mass169_5",
     "T_t_ToLeptons_mass175_5",
     "T_t_ToLeptons_mass178_5",
     "T_t_ToLeptons_scaledown",
+    "T_t_ToLeptons_scaledown_split",
     "T_t_ToLeptons_scaleup",
     "T_tW",
     "Tbar_s",
@@ -380,9 +425,28 @@ const tomap = ASCIIString[
     "TToBTauNu_anomWtb-Lv3Rt1_LVRT",
     "TToBTauNu_anomWtb-Rt4_LVRT",
     
-    "TToBENu_anomWtb-0010_LVLT",
-    "TToBMuNu_anomWtb-0010_LVLT",
-    "TToBTauNu_anomWtb-0010_LVLT",
+    "TToBENu_anomWtb-0010_LVLT_t-channel",
+    "TToBMuNu_anomWtb-0010_LVLT_t-channel",
+    "TToBTauNu_anomWtb-0010_LVLT_t-channel",
+    "TToBENu_anomWtb-unphys_LVLT_t-channel",
+    "TToBENu_anomWtb-Lv1Rt3_LVRT_t-channel",
+    "TToBENu_anomWtb-Lv2Rt2_LVRT_t-channel",
+    "TToBENu_anomWtb-Lv3Rt1_LVRT_t-channel",
+    "TToBENu_anomWtb-Rt4_LVRT_t-channel",
+    "TToBMuNu_anomWtb-unphys_LVLT_t-channel",
+    "TToBMuNu_anomWtb-Lv1Rt3_LVRT_t-channel",
+    "TToBMuNu_anomWtb-Lv2Rt2_LVRT_t-channel",
+    "TToBMuNu_anomWtb-Lv3Rt1_LVRT_t-channel",
+    "TToBMuNu_anomWtb-Rt4_LVRT_t-channel",
+    "TToBTauNu_anomWtb-unphys_LVLT_t-channel",
+    "TToBTauNu_anomWtb-Lv1Rt3_LVRT_t-channel",
+    "TToBTauNu_anomWtb-Lv2Rt2_LVRT_t-channel",
+    "TToBTauNu_anomWtb-Lv3Rt1_LVRT_t-channel",
+    "TToBTauNu_anomWtb-Rt4_LVRT_t-channel",
+    
+    "TToBENu_anomWtb-0010_LVLT_t-channel",
+    "TToBMuNu_anomWtb-0010_LVLT_t-channel",
+    "TToBTauNu_anomWtb-0010_LVLT_t-channel",
 
     
     "twchan",
@@ -395,34 +459,46 @@ const tomap = ASCIIString[
     "WJetsToLNu_matchingdown",
     "W1Jets_exclusive",
     "W1JetsToLNu",
+    "W1JetsToLNu2",
     "W1JetsToLNu_matchingdown",
     "W1JetsToLNu_matchingup",
     "W1JetsToLNu_scaledown",
     "W1JetsToLNu_scaleup",
     "W2Jets_exclusive",
     "W2JetsToLNu",
+    "W2JetsToLNu2",
     "W2JetsToLNu_matchingdown",
     "W2JetsToLNu_matchingup",
     "W2JetsToLNu_scaledown",
     "W2JetsToLNu_scaleup",
     "W3Jets_exclusive",
     "W3JetsToLNu",
+    "W3JetsToLNu2",
     "W3JetsToLNu_matchingdown",
     "W3JetsToLNu_matchingup",
     "W3JetsToLNu_scaledown",
     "W3JetsToLNu_scaleup",
     "W4Jets_exclusive",
     "W4JetsToLNu",
+    "W4JetsToLNu2",
     "W4JetsToLNu_matchingdown",
     "W4JetsToLNu_matchingup",
     "W4JetsToLNu_scaledown",
     "W4JetsToLNu_scaleup",
+    "W1Jets_exclusive_FSIM",
+    "W2Jets_exclusive_FSIM",
+    "W3Jets_exclusive_FSIM",
+    "W4Jets_exclusive_FSIM",
     "wjets",
     "wjets_fsim_nominal",
     "wjets_inc",
     "WJets_inclusive",
     "WJets_sherpa",
     "wjets_sherpa",
+    "WJets_scaleup",
+    "WJets_scaledown",
+    "WJets_matchingup",
+    "WJets_matchingdown",
     "WW",
     "WZ",
     "ZZ",
@@ -434,6 +510,13 @@ const tomap = ASCIIString[
     "May1_metphi_on",
     "Jul4_newsyst_newvars_metshift",
     "Aug8_tchpt",
+    "Oct28_reproc",
+    "Oct28_reproc_small",
+    "Dec17_wjets",
+    "wjets_nominals_clear",
+    "s2_0801_deltaRChange",
+    "s2_1101_data",
+    "s2_1101_deltaRChange",
     "TTJets_MSDecays",
     "TTJets_MSDecays_scaleup",
     "TTJets_MSDecays_scaledown",
@@ -445,6 +528,17 @@ const tomap = ASCIIString[
     "TTJets_MSDecays_mass169_5",
     "TTJets_MSDecays_mass175_5",
     "TTJets_MSDecays_mass178_5",
+    "TTJets_MS",
+    "TTJets_MS_scaleup",
+    "TTJets_MS_scaledown",
+    "TTJets_MS_matchingup",
+    "TTJets_MS_matchingdown",
+    "TTJets_MS_matchingdown_v1",
+    "TTJets_MS_matchingdown_v2",
+    "TTJets_MS_mass166_5",
+    "TTJets_MS_mass169_5",
+    "TTJets_MS_mass175_5",
+    "TTJets_MS_mass178_5",
     "SYST"
 ]
 
@@ -477,4 +571,4 @@ function write_hmap(fname)
     )
 end
 
-export cross_sections, hmap_symb_from, hmap_symb_to, get_process, sample_type
+export cross_sections, hmap_symb_from, hmap_symb_to, get_process, sample_type, write_hmap
