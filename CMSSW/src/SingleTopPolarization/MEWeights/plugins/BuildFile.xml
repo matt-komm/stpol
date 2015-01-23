@@ -1,0 +1,11 @@
+<use name="FWCore/PluginManager"/>
+<use name="DataFormats/Common"/>
+<use name="FWCore/Framework"/>
+<use name="FWCore/ParameterSet"/>
+<use name="SimGeneral/HepPDTRecord"/>
+<use name="SimDataFormats/GeneratorProducts"/>
+<use name="FWCore/MessageLogger"/>
+<use name="LHAPDF"/>
+<library file="MEWeightProducer.cc" name="MEWeightProducerPlugin">
+    <flags EDM_PLUGIN="1"/>
+</library>
