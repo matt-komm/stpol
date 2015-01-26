@@ -65,12 +65,13 @@ class MEWeightProducer: public edm::EDProducer
             const GenEventInfoProduct& genEventInfo = *(genInfo.product());
             const gen::PdfInfo* pdf = genEventInfo.pdf();
 
-            edm::Handle<LHEEventProduct> lheevent;
-            iEvent.getByLabel("source", lheevent);
+            //edm::Handle<LHEEventProduct> lheevent;
+            //iEvent.getByLabel("source", lheevent);
             
-            double factorization_scale = lheevent->hepeup().SCALUP;
+            //double factorization_scale = lheevent->hepeup().SCALUP;
 
             double Q_scale = genEventInfo.qScale();
+            double factorization_scale = Q_scale;
 
             int id1=pdf->id.first;
             int id2=pdf->id.second;
