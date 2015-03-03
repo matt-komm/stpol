@@ -1,0 +1,11 @@
+<use name="FWCore/PluginManager"/>
+<use   name="hepmc"/>
+<use   name="DataFormats/Common"/>
+<use   name="FWCore/Framework"/>
+<use   name="FWCore/ParameterSet"/>
+<use   name="DataFormats/Math"/>
+<use   name="DataFormats/HepMCCandidate"/>
+<use   name="DataFormats/Provenance"/>
+
+<flags EDM_PLUGIN="1"/>
+
