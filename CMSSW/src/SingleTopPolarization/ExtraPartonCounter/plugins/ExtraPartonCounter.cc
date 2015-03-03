@@ -48,7 +48,7 @@ class ExtraPartonCounter : public edm::EDProducer{
 //
 ExtraPartonCounter::ExtraPartonCounter(const edm::ParameterSet& iConfig)
 {
-  produces<std::vector<double> >("qcdvertices");
+  produces<std::vector<double> >("nExtraPartons");
 }
 
 
@@ -67,7 +67,7 @@ ExtraPartonCounter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   
   
-  std::auto_ptr<std::vector<double>>  nExtraParton(new std::vector<double>(1));
+  std::auto_ptr<std::vector<double>>  nExtraPartons(new std::vector<double>(1));
   
  
   
@@ -102,11 +102,11 @@ ExtraPartonCounter::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
             
             if (is_final && is_extra)
             {
-                ++(*nExtraParton)[0];
+                ++(*nExtraPartons)[0];
             }
         }
     }
-  iEvent.put(nExtraParton, "nExtraParton");
+  iEvent.put(nExtraPartons, "nExtraPartons");
 }
 
 // ------------ method called once each job just before starting event loop  ------------
